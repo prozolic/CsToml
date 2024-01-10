@@ -5,14 +5,9 @@ using System.Runtime.CompilerServices;
 
 namespace CsToml.Utility;
 
-internal ref struct Utf8Writer
+internal ref struct Utf8Writer(IBufferWriter<byte> writer)
 {
-    private IBufferWriter<byte> bufferWriter;
-
-    public Utf8Writer(IBufferWriter<byte> writer)
-    {
-        bufferWriter = writer;
-    }
+    private IBufferWriter<byte> bufferWriter = writer;
 
     [DebuggerStepThrough]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

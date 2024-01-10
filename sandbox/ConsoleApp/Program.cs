@@ -15,13 +15,13 @@ CsTomlSerializer.ReadAndDeserialize(ref package, "./../../../Toml/test.toml");
 
 var package2 = new CsTomlPackage();
 CsTomlSerializer.ReadAndDeserialize(ref package2, "./../../../Toml/test2.toml");
-var toml2 = CsTomlSerializer.Serialize(package2);
+var toml2 = CsTomlSerializer.Serialize(ref package2);
 var tomlUTf16 = Encoding.UTF8.GetString(toml2);
 
 var package3 = new CsTomlPackage();
 package3.IsThrowCsTomlException = true;
 CsTomlSerializer.Deserialize(ref package3, toml2);
-var toml3 = CsTomlSerializer.Serialize(package3);
+var toml3 = CsTomlSerializer.Serialize(ref package3);
 var toml2UTf16 = Encoding.UTF8.GetString(toml3);
 
 Console.WriteLine("END");

@@ -925,12 +925,11 @@ internal ref struct CsTomlReader
 
     private CsTomlInt64 ReadDecimalNumeric()
     {
-        using var writer = new ArrayPoolBufferWriter<byte>(32);
-        var utf8Writer = new Utf8Writer(writer);
+        var writer = new SpanWriter(stackalloc byte[32]);
 
         if (TryPeek(out var plusOrMinusCh) && CsTomlSyntax.IsPlusOrMinusSign(plusOrMinusCh))
         {
-            utf8Writer.Write(plusOrMinusCh);
+            writer.Write(plusOrMinusCh);
             Skip(1);
         }
         if (TryPeek(out var underScoreCh) && CsTomlSyntax.IsUnderScore(underScoreCh))
@@ -944,7 +943,7 @@ internal ref struct CsTomlReader
             if (CsTomlSyntax.IsNumber(ch))
             {
                 underscore = false;
-                utf8Writer.Write(ch);
+                writer.Write(ch);
                 Skip(1);
                 continue;
             }
@@ -991,10 +990,9 @@ internal ref struct CsTomlReader
             ExceptionHelper.ThrowUnderscoreUsedConsecutively();
         }
 
-        using var writer = new ArrayPoolBufferWriter<byte>(32);
-        var utf8Writer = new Utf8Writer(writer);
-        utf8Writer.Write(CsTomlSyntax.Number.Value10[0]);
-        utf8Writer.Write(CsTomlSyntax.AlphaBet.x);
+        var writer = new SpanWriter(stackalloc byte[32]);
+        writer.Write(CsTomlSyntax.Number.Value10[0]);
+        writer.Write(CsTomlSyntax.AlphaBet.x);
 
         var underscore = false;
         while (TryPeek(out var ch))
@@ -1002,7 +1000,7 @@ internal ref struct CsTomlReader
             if (CsTomlSyntax.IsNumber(ch) || CsTomlSyntax.IsLowerHexAlphabet(ch) || CsTomlSyntax.IsUpperHexAlphabet(ch))
             {
                 underscore = false;
-                utf8Writer.Write(ch);
+                writer.Write(ch);
                 Skip(1);
                 continue;
             }
@@ -1048,10 +1046,9 @@ internal ref struct CsTomlReader
             ExceptionHelper.ThrowUnderscoreUsedConsecutively();
         }
 
-        using var writer = new ArrayPoolBufferWriter<byte>(32);
-        var utf8Writer = new Utf8Writer(writer);
-        utf8Writer.Write(CsTomlSyntax.Number.Value10[0]);
-        utf8Writer.Write(CsTomlSyntax.AlphaBet.o);
+        var writer = new SpanWriter(stackalloc byte[32]);
+        writer.Write(CsTomlSyntax.Number.Value10[0]);
+        writer.Write(CsTomlSyntax.AlphaBet.o);
 
         var underscore = false;
         while (TryPeek(out var ch))
@@ -1059,7 +1056,7 @@ internal ref struct CsTomlReader
             if (CsTomlSyntax.IsOctal(ch))
             {
                 underscore = false;
-                utf8Writer.Write(ch);
+                writer.Write(ch);
                 Skip(1);
                 continue;
             }
@@ -1105,11 +1102,9 @@ internal ref struct CsTomlReader
             ExceptionHelper.ThrowUnderscoreUsedConsecutively();
         }
 
-        using var writer = new ArrayPoolBufferWriter<byte>(32);
-        var utf8Writer = new Utf8Writer(writer);
-
-        utf8Writer.Write(CsTomlSyntax.Number.Value10[0]);
-        utf8Writer.Write(CsTomlSyntax.AlphaBet.b);
+        var writer = new SpanWriter(stackalloc byte[32]);
+        writer.Write(CsTomlSyntax.Number.Value10[0]);
+        writer.Write(CsTomlSyntax.AlphaBet.b);
 
         var underscore = false;
         while (TryPeek(out var ch))
@@ -1117,7 +1112,7 @@ internal ref struct CsTomlReader
             if (CsTomlSyntax.IsBinary(ch))
             {
                 underscore = false;
-                utf8Writer.Write(ch);
+                writer.Write(ch);
                 Skip(1);
                 continue;
             }
@@ -1158,12 +1153,11 @@ internal ref struct CsTomlReader
 
     private CsTomlDouble ReadDouble()
     {
-        using var writer = new ArrayPoolBufferWriter<byte>(32);
-        var utf8Writer = new Utf8Writer(writer);
+        var writer = new SpanWriter(stackalloc byte[32]);
 
         if (TryPeek(out var plusOrMinusCh) && CsTomlSyntax.IsPlusOrMinusSign(plusOrMinusCh))
         {
-            utf8Writer.Write(plusOrMinusCh);
+            writer.Write(plusOrMinusCh);
             Skip(1);
         }
 
@@ -1192,7 +1186,7 @@ internal ref struct CsTomlReader
             {
                 number = true;
                 underline = false;
-                utf8Writer.Write(ch);
+                writer.Write(ch);
                 Skip(1);
                 continue;
             }
@@ -1210,7 +1204,7 @@ internal ref struct CsTomlReader
                 case CsTomlSyntax.Symbol.PERIOD:
                     if (!number) ExceptionHelper.ThrowPeriodUsedWhereNotSurroundedByNumbers();
                     number = false;
-                    utf8Writer.Write(ch);
+                    writer.Write(ch);
                     Skip(1);
                     continue;
                 case CsTomlSyntax.AlphaBet.e:
@@ -1218,14 +1212,14 @@ internal ref struct CsTomlReader
                     if (!number) ExceptionHelper.ThrowExponentPartUsedWhereNotSurroundedByNumbers();
                     number = false;
                     exp = true;
-                    utf8Writer.Write(ch);
+                    writer.Write(ch);
                     Skip(1);
                     continue;
                 case CsTomlSyntax.Symbol.PLUS:
                 case CsTomlSyntax.Symbol.MINUS:
                     if (!exp) ExceptionHelper.ThrowIncorrectTomlFormat();
                     number = false;
-                    utf8Writer.Write(ch);
+                    writer.Write(ch);
                     Skip(1);
                     continue;
                 case CsTomlSyntax.Symbol.TAB:
