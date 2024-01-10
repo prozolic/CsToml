@@ -48,22 +48,22 @@ hosts = [
   ""omega""
 ]"u8.ToArray();
 
+
         tomlUtf16Text = Encoding.UTF8.GetString(tomlUtf8Text);
     }
-
 
     [BenchmarkCategory("Sample"), Benchmark]
     public void TestCsToml()
     {
         var package = new CsTomlPackage();
-        CsTomlSerializer.Deserialize(tomlUtf8Text, ref package);
+        CsTomlSerializer.Deserialize(ref package, tomlUtf8Text);
     }
 
     [BenchmarkCategory("Sample"), Benchmark]
     public void TestTommy()
     {
         using var reader = new StringReader(tomlUtf16Text);
-        var table = Tommy.TOML.Parse(reader);                                                                                             
+        var table = Tommy.TOML.Parse(reader);
     }
 
 

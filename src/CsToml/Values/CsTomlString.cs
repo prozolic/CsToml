@@ -6,16 +6,10 @@ using System.Diagnostics;
 namespace CsToml.Values;
 
 [DebuggerDisplay("CsTomlString: {Value}")]
-internal class CsTomlString : CsTomlValue
+internal class CsTomlString(ReadOnlySpan<byte> value, CsTomlString.CsTomlStringType type = CsTomlString.CsTomlStringType.Basic) : CsTomlValue(CsTomlType.String)
 {
     public static readonly char doubleQuoted = '"';
     public static readonly char singleQuoted = '\'';
-
-    public static CsTomlString Equal { get; } = new CsTomlString("="u8);
-
-    public static CsTomlString NewLine { get; } = new CsTomlString("\n"u8);
-
-    public static CsTomlString CrNewLine { get; } = new CsTomlString("\r\n"u8);
 
     public enum CsTomlStringType : byte
     {
@@ -26,15 +20,9 @@ internal class CsTomlString : CsTomlValue
         MultiLineLiteral
     }
 
-    public CsTomlStringType StringType { get; }
+    public CsTomlStringType StringType { get; } = type;
 
-    public Utf8FixString Value { get;}
-
-    public CsTomlString(ReadOnlySpan<byte> value, CsTomlStringType type = CsTomlStringType.Basic) : base(CsTomlType.String)
-    {
-        this.Value = new Utf8FixString(value);
-        this.StringType = type;
-    }
+    public Utf8FixString Value { get; } = new Utf8FixString(value);
 
     internal override bool ToTomlString(ref Utf8Writer writer)
     {

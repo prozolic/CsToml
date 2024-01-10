@@ -33,7 +33,7 @@ internal ref struct Utf8Writer
             span[i] = bytes[i];
         }
 
-        bufferWriter.Advance(bytes.Length);
+        Advance(bytes.Length);
     }
 
     [DebuggerStepThrough]

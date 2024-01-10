@@ -83,6 +83,11 @@ internal ref struct CsTomlReader
         var keys = new List<CsTomlString>();
         while(TryPeek(out var c))
         {
+            if (CsTomlSyntax.IsAlphabet(c) || CsTomlSyntax.IsNumber(c))
+            {
+                keys.Add(ReadKeyString(isTableHeader));
+                continue;
+            }
             switch(c)
             {
                 case CsTomlSyntax.Symbol.TAB:
@@ -115,8 +120,6 @@ internal ref struct CsTomlReader
                         goto BREAK;
                     }
                     return ExceptionHelper.NotReturnThrow<CsTomlKey>(ExceptionHelper.ThrowIncorrectTomlFormat);
-                case var _ when CsTomlSyntax.IsAlphabet(c):
-                case var _ when CsTomlSyntax.IsNumber(c):
                 case var _ when CsTomlSyntax.IsUnderScore(c):
                 case var _ when CsTomlSyntax.IsMinusSign(c):
                     keys.Add(ReadKeyString(isTableHeader));
@@ -255,10 +258,11 @@ internal ref struct CsTomlReader
 
     private CsTomlString ReadDoubleQuoteString()
     {
-        var doubleQuoteCount = 0;
-        while (TryPeek(out var first))
+        Skip(1);
+        var doubleQuoteCount = 1;
+        while (TryPeek(out var first) && (CsTomlSyntax.IsDoubleQuoted(first)))
         {
-            if (CsTomlSyntax.IsDoubleQuoted(first) && doubleQuoteCount < 3)
+            if (doubleQuoteCount < 3)
             {
                 doubleQuoteCount++;
                 Skip(1);
@@ -274,6 +278,8 @@ internal ref struct CsTomlReader
                 Skip(-doubleQuoteCount);
                 return ReadDoubleQuoteSingleLineString();
             case 3:
+            case 4: 
+            case 5:
                 Skip(-doubleQuoteCount);
                 return ReadDoubleQuoteMultiLineString();
         }
@@ -303,7 +309,7 @@ internal ref struct CsTomlReader
             Skip(1);
         }
 
-        Skip(1);
+        Skip(1); // "
 
         return new CsTomlString(writer.WrittenSpan, CsTomlString.CsTomlStringType.Basic);
     }
@@ -456,6 +462,7 @@ internal ref struct CsTomlReader
                     SkipWhiteSpaceAndNewLine();
                     return;
                 }
+                ExceptionHelper.ThrowIncorrectTomlFormat();
             }
         }
         else
@@ -984,7 +991,7 @@ internal ref struct CsTomlReader
             ExceptionHelper.ThrowUnderscoreUsedConsecutively();
         }
 
-        using var writer = new ArrayPoolBufferWriter<byte>(24);
+        using var writer = new ArrayPoolBufferWriter<byte>(32);
         var utf8Writer = new Utf8Writer(writer);
         utf8Writer.Write(CsTomlSyntax.Number.Value10[0]);
         utf8Writer.Write(CsTomlSyntax.AlphaBet.x);
@@ -1041,7 +1048,7 @@ internal ref struct CsTomlReader
             ExceptionHelper.ThrowUnderscoreUsedConsecutively();
         }
 
-        using var writer = new ArrayPoolBufferWriter<byte>(24);
+        using var writer = new ArrayPoolBufferWriter<byte>(32);
         var utf8Writer = new Utf8Writer(writer);
         utf8Writer.Write(CsTomlSyntax.Number.Value10[0]);
         utf8Writer.Write(CsTomlSyntax.AlphaBet.o);
@@ -1098,7 +1105,7 @@ internal ref struct CsTomlReader
             ExceptionHelper.ThrowUnderscoreUsedConsecutively();
         }
 
-        using var writer = new ArrayPoolBufferWriter<byte>(64);
+        using var writer = new ArrayPoolBufferWriter<byte>(32);
         var utf8Writer = new Utf8Writer(writer);
 
         utf8Writer.Write(CsTomlSyntax.Number.Value10[0]);

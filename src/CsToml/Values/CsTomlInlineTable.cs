@@ -25,7 +25,7 @@ internal class CsTomlInlineTable : CsTomlValue
 
     public bool TryAddTableHeader(CsTomlKey csTomlKey, out CsTomlTableNode? newNode)
     {
-        return inlineTable.TryAddTableHeader(csTomlKey, out newNode);
+        return inlineTable.TryAddTableHeader(csTomlKey, out newNode, null);
     }
 
     public bool TryGetValue(ReadOnlySpan<byte> key, out CsTomlValue? value, CsTomlTableNode? searchRootNode = null)

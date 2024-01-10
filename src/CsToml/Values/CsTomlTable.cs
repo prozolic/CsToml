@@ -20,7 +20,7 @@ internal class CsTomlTable : CsTomlValue
 
     public CsTomlTable() : base(CsTomlType.Table) { }
 
-    public bool TryAddValue(CsTomlKey csTomlKey, CsTomlValue value, CsTomlTableNode? searchRootNode = null)
+    public bool TryAddValue(CsTomlKey csTomlKey, CsTomlValue value, CsTomlTableNode? searchRootNode = null, IEnumerable<CsTomlString> comments = null)
     {
         var currentNode = searchRootNode ?? RootNode;
         var dotKeyStrings = csTomlKey.DotKeyStrings;
@@ -40,10 +40,10 @@ internal class CsTomlTable : CsTomlValue
 
         var key = dotKeyStrings[dotKeyStrings.Count - 1];
 
-        return currentNode.TryAddValue(key, value);
+        return currentNode.TryAddValue(key, value, comments);
     }
 
-    public bool TryAddTableHeader(CsTomlKey csTomlKey, out CsTomlTableNode? newNode)
+    public bool TryAddTableHeader(CsTomlKey csTomlKey, out CsTomlTableNode? newNode, IEnumerable<CsTomlString>? comments)
     {
         var currentNode = RootNode;
         var dotKeyStrings = csTomlKey.DotKeyStrings;
@@ -72,11 +72,12 @@ internal class CsTomlTable : CsTomlValue
         }
 
         newNode = currentNode;
+        newNode.AddComment(comments);
         newNode.IsTableHeader = true;
         return true;
     }
 
-    public bool TryAddTableArrayHeader(CsTomlKey csTomlKey, out CsTomlTableNode? newNode)
+    public bool TryAddTableArrayHeader(CsTomlKey csTomlKey, out CsTomlTableNode? newNode, IEnumerable<CsTomlString>? comments)
     {
         var currentNode = RootNode;
         var dotKeyStrings = csTomlKey.DotKeyStrings;
@@ -127,6 +128,7 @@ internal class CsTomlTable : CsTomlValue
         }
         var table = new CsTomlTable();
         (currentNode.Value as CsTomlArray)?.Add(table);
+        currentNode.AddComment(comments);
         newNode = table.RootNode;
 
         return true;

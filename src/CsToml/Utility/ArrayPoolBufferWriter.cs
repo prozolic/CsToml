@@ -19,7 +19,7 @@ internal sealed class ArrayPoolBufferWriter<T> : IBufferWriter<T>, IDisposable
 
     public ArrayPoolBufferWriter()
     {
-        buffer = Array.Empty<T>();
+        buffer = [];
         index = 0;
         isRent = false;
     }

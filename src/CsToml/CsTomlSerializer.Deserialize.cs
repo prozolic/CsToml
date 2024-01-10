@@ -6,7 +6,7 @@ namespace CsToml;
 
 public partial class CsTomlSerializer
 {
-    public static void ReadAndDeserialize(string? path, ref CsTomlPackage package)
+    public static void ReadAndDeserialize(ref CsTomlPackage package, string? path)
     {
         if (Path.GetExtension(path) != ".toml") throw new FormatException($"TOML files should use the extension .toml");
         if (!File.Exists(path)) throw new FileNotFoundException(nameof(path));
@@ -18,7 +18,7 @@ public partial class CsTomlSerializer
 
         var startIndex = Utf8Helper.ContainBOM(bytes) ? 3 : 0;
         var byteSpan = bytes.AsSpan(startIndex);
-        Deserialize(byteSpan, ref package);
+        Deserialize(ref package, byteSpan);
     }
 
     public static async ValueTask<CsTomlPackage> ReadAndDeserializeAsync<TFactory>(string? path, CancellationToken cancellationToken = default)
@@ -33,21 +33,21 @@ public partial class CsTomlSerializer
 
         var startIndex = Utf8Helper.ContainBOM(bytes) ? 3 : 0;
         var package = TFactory.GetPackage();
-        Deserialize(bytes.AsSpan(startIndex), ref package);
+        Deserialize(ref package, bytes.AsSpan(startIndex));
         return package;
     }
 
-    public static void Deserialize(ReadOnlySpan<byte> tomlUtf8Text, ref CsTomlPackage package)
+    public static void Deserialize(ref CsTomlPackage package, ReadOnlySpan<byte> tomlUtf8Text)
     {
-        package.Clear();
-
         var reader = new CsTomlReader(tomlUtf8Text);
         CsTomlTableNode? currentNode = package.Node;
 
+        var comments = new List<CsTomlString>();
         while (reader.Peek())
         {
             // comment
-            DeserializeComment(ref package, ref reader);
+            DeserializeComment(ref package, ref reader, out var comment);
+            if (comment != null) comments.Add(comment);
             if (!reader.Peek()) goto BREAK;
 
             if (DeserializeNewLine(ref package, ref reader))
@@ -74,9 +74,10 @@ public partial class CsTomlSerializer
                 reader.Skip(-1);
                 if (CsTomlSyntax.IsLeftSquareBrackets(tableArrayCh))
                 {
-                    if (DeserializeTableArray(ref package, ref reader, out currentNode))
+                    if (DeserializeTableArray(ref package, ref reader, out currentNode, comments))
                     {
-                        DeserializeComment(ref package, ref reader);
+                        comments.Clear();
+                        DeserializeComment(ref package, ref reader, out var arrayComment);
                         if (!reader.Peek()) goto BREAK;
 
                         DeserializeNewLine(ref package, ref reader);
@@ -87,9 +88,10 @@ public partial class CsTomlSerializer
                     continue;
                 }
 
-                if (DeserializeTableSection(ref package, ref reader, out currentNode))
+                if (DeserializeTableSection(ref package, ref reader, out currentNode, comments))
                 {
-                    DeserializeComment(ref package, ref reader);
+                    comments.Clear();
+                    DeserializeComment(ref package, ref reader, out var arrayTableComment);
                     if (!reader.Peek()) goto BREAK;
 
                     DeserializeNewLine(ref package, ref reader);
@@ -103,13 +105,17 @@ public partial class CsTomlSerializer
             }
 
             // key and value
-            if (!DeserializeKeyValue(ref package, ref reader, currentNode!))
+            if (DeserializeKeyValue(ref package, ref reader, currentNode!, comments))
+            {
+                comments.Clear();
+            }
+            else
             {
                 reader.SkipOneLine();
                 continue;
             }
 
-            DeserializeComment(ref package, ref reader);
+            DeserializeComment(ref package, ref reader, out var endComment);
             if (!reader.Peek()) goto BREAK;
 
             DeserializeNewLine(ref package, ref reader);
@@ -119,8 +125,9 @@ public partial class CsTomlSerializer
         package.LineNumber = reader.LineNumber;
     }
 
-    private static bool DeserializeComment(ref CsTomlPackage package, ref CsTomlReader reader)
+    private static bool DeserializeComment(ref CsTomlPackage package, ref CsTomlReader reader, out CsTomlString? comment)
     {
+        comment = null;
         reader.SkipWhiteSpace();
         if (!reader.TryPeek(out var commentCh)) return false;
 
@@ -128,8 +135,7 @@ public partial class CsTomlSerializer
         {
             try
             {
-                var comment = reader.ReadComment();
-                package.Comments.Add(comment);
+                comment = reader.ReadComment();
                 return true;
             }
             catch(CsTomlException e)
@@ -172,7 +178,7 @@ public partial class CsTomlSerializer
 
     }
 
-    private static bool DeserializeKeyValue(ref CsTomlPackage package, ref CsTomlReader reader, CsTomlTableNode? currentNode)
+    private static bool DeserializeKeyValue(ref CsTomlPackage package, ref CsTomlReader reader, CsTomlTableNode? currentNode, IEnumerable<CsTomlString>? comments)
     {
         try
         {
@@ -189,7 +195,7 @@ public partial class CsTomlSerializer
             if (!reader.Peek()) return false; // value is nothing
             var value = reader.ReadValue();
 
-            if (package.TryAddKeyValue(key, value, currentNode))
+            if (package.TryAddKeyValue(key, value, currentNode, comments))
             {
                 // add key and value
                 return true;
@@ -210,13 +216,13 @@ public partial class CsTomlSerializer
         }
     }
 
-    private static bool DeserializeTableSection(ref CsTomlPackage package, ref CsTomlReader reader, out CsTomlTableNode? currentNode)
+    private static bool DeserializeTableSection(ref CsTomlPackage package, ref CsTomlReader reader, out CsTomlTableNode? currentNode, IEnumerable<CsTomlString>? comments)
     {
         try
         {
             var tableKey = reader.ReadKey();
 
-            return package.TryAddTableHeader(tableKey, out currentNode);
+            return package.TryAddTableHeader(tableKey, out currentNode, comments);
         }
         catch (CsTomlException e)
         {
@@ -234,13 +240,13 @@ public partial class CsTomlSerializer
         }
     }
 
-    private static bool DeserializeTableArray(ref CsTomlPackage package, ref CsTomlReader reader, out CsTomlTableNode? currentNode)
+    private static bool DeserializeTableArray(ref CsTomlPackage package, ref CsTomlReader reader, out CsTomlTableNode? currentNode, IEnumerable<CsTomlString>? comments)
     {
         try
         {
             var tableKey = reader.ReadKey();
 
-            if (!package.TryAddTableArrayHeader(tableKey, out currentNode))
+            if (!package.TryAddTableArrayHeader(tableKey, out currentNode, comments))
             {
                 return false;
             }

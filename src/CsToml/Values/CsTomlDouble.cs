@@ -6,7 +6,7 @@ using System.Diagnostics;
 namespace CsToml.Values;
 
 [DebuggerDisplay("CsTomlDouble: {Value}")]
-internal class CsTomlDouble : CsTomlValue
+internal class CsTomlDouble(double value, CsTomlDouble.DoubleKind kind = CsTomlDouble.DoubleKind.Normal) : CsTomlValue(CsTomlType.Float)
 {
     public readonly static CsTomlDouble Inf = new(CsTomlSyntax.Double.Inf, DoubleKind.Inf);
     public readonly static CsTomlDouble NInf = new (CsTomlSyntax.Double.NInf, DoubleKind.NInf);
@@ -22,15 +22,9 @@ internal class CsTomlDouble : CsTomlValue
         PNan
     }
 
-    public double Value { get; set; }
+    public double Value { get; set; } = value;
 
-    internal DoubleKind Kind { get; }
-
-    public CsTomlDouble(double value, DoubleKind kind = DoubleKind.Normal) : base(CsTomlType.Float)
-    {
-        Value = value;
-        Kind = kind;
-    }
+    internal DoubleKind Kind { get; } = kind;
 
     internal override bool ToTomlString(ref Utf8Writer writer)
     {

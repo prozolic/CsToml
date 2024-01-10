@@ -6,14 +6,9 @@ using System.Diagnostics;
 namespace CsToml.Values;
 
 [DebuggerDisplay("CsTomlLocalTime: {Value}")]
-internal class CsTomlLocalTime : CsTomlValue
+internal class CsTomlLocalTime(TimeOnly value) : CsTomlValue(CsTomlType.LocalTime)
 {
-    public TimeOnly Value { get; set; }
-
-    public CsTomlLocalTime(TimeOnly value) : base(CsTomlType.LocalTime)
-    {
-        this.Value = value;
-    }
+    public TimeOnly Value { get; set; } = value;
 
     internal override bool ToTomlString(ref Utf8Writer writer)
     {

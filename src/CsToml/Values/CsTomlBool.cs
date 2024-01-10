@@ -6,14 +6,9 @@ using System.Diagnostics;
 namespace CsToml.Values;
 
 [DebuggerDisplay("CsTomlBool: {Value}")]
-internal class CsTomlBool : CsTomlValue
+internal class CsTomlBool(bool value) : CsTomlValue(CsTomlType.Boolean)
 {
-    public bool Value { get; set; }
-
-    public CsTomlBool(bool value) : base(CsTomlType.Boolean)
-    {
-        this.Value = value;
-    }
+    public bool Value { get; set; } = value;
 
     internal override bool ToTomlString(ref Utf8Writer writer)
     {

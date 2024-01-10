@@ -6,14 +6,9 @@ using System.Diagnostics;
 namespace CsToml.Values;
 
 [DebuggerDisplay("CsTomlInt: {Value}")]
-internal class CsTomlInt64 : CsTomlValue
+internal class CsTomlInt64(long value) : CsTomlValue(CsTomlType.Integar)
 {
-    public long Value { get; set; } // 64-bit signed integers
-
-    public CsTomlInt64(long value) : base(CsTomlType.Integar)
-    {
-        this.Value = value;
-    }
+    public long Value { get; set; } = value;
 
     internal override bool ToTomlString(ref Utf8Writer writer)
     {

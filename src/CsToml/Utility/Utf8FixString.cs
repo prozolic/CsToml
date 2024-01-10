@@ -10,10 +10,9 @@ namespace CsToml.Utility;
 
 [DebuggerTypeProxy(typeof(Utf8FixStringDebugView))]
 [DebuggerDisplay("{Utf16String}")]
-internal sealed class Utf8FixString : IEquatable<Utf8FixString?>
+internal readonly struct Utf8FixString : IEquatable<Utf8FixString>
 {
     private readonly byte[] bytes;
-    private int? hashCode;
 
     internal Span<byte> BytesSpan => bytes.AsSpan();
 
@@ -34,12 +33,13 @@ internal sealed class Utf8FixString : IEquatable<Utf8FixString?>
     }
 
     public override bool Equals(object? obj)
-        => Equals(obj as Utf8FixString);
-
-    public bool Equals(Utf8FixString? other)
     {
-        if (other == null) return false;
-        if (ReferenceEquals(this, other)) return true;
+        if (obj == null) return false;
+        return Equals((Utf8FixString)obj);
+    }
+
+    public bool Equals(Utf8FixString other)
+    {
         if (Length != other.Length) return false;
         if (Length == 0) return true;
 
@@ -56,13 +56,7 @@ internal sealed class Utf8FixString : IEquatable<Utf8FixString?>
     }
 
     public override int GetHashCode()
-    {
-        if (!hashCode.HasValue)
-        {
-            hashCode = Hash.ToUInt32(BytesSpan);
-        }
-        return hashCode.Value;
-    }
+        => Hash.ToUInt32(BytesSpan);
 
     private readonly struct Hash
     {

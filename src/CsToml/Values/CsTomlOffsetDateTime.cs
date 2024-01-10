@@ -6,14 +6,10 @@ using System.Diagnostics;
 namespace CsToml.Values;
 
 [DebuggerDisplay("CsTomlOffsetDateTime: {Value}")]
-internal class CsTomlOffsetDateTime : CsTomlValue
+internal class CsTomlOffsetDateTime(DateTimeOffset value, bool byNumber) 
+    : CsTomlValue(byNumber ? CsTomlType.OffsetDateTimeByNumber : CsTomlType.OffsetDateTime)
 {
-    public DateTimeOffset Value { get; set; }
-
-    public CsTomlOffsetDateTime(DateTimeOffset value, bool byNumber) : base(byNumber ? CsTomlType.OffsetDateTimeByNumber : CsTomlType.OffsetDateTime)
-    {
-        this.Value = value;
-    }
+    public DateTimeOffset Value { get; set; } = value;
 
     internal override bool ToTomlString(ref Utf8Writer writer)
     {
