@@ -8,6 +8,7 @@ namespace CsToml.Values;
 [DebuggerDisplay("CsTomlOffsetDateTime: {Value}")]
 internal class CsTomlOffsetDateTime(DateTimeOffset value, bool byNumber) 
     : CsTomlValue(byNumber ? CsTomlType.OffsetDateTimeByNumber : CsTomlType.OffsetDateTime)
+    , IEquatable<CsTomlOffsetDateTime?>
 {
     public DateTimeOffset Value { get; set; } = value;
 
@@ -16,4 +17,22 @@ internal class CsTomlOffsetDateTime(DateTimeOffset value, bool byNumber)
         DateTimeOffsetFormatter.Serialize(ref writer, Value);
         return true;
     }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj == null) return false;
+        if (obj.GetType() != typeof(CsTomlOffsetDateTime)) return false;
+
+        return Equals((CsTomlOffsetDateTime)obj);
+    }
+
+    public bool Equals(CsTomlOffsetDateTime? other)
+    {
+        if (other == null) return false;
+
+        return Value.Equals(other.Value);
+    }
+
+    public override int GetHashCode()
+        => Value.GetHashCode();
 }

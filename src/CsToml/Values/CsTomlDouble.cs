@@ -6,7 +6,8 @@ using System.Diagnostics;
 namespace CsToml.Values;
 
 [DebuggerDisplay("CsTomlDouble: {Value}")]
-internal class CsTomlDouble(double value, CsTomlDouble.DoubleKind kind = CsTomlDouble.DoubleKind.Normal) : CsTomlValue(CsTomlType.Float)
+internal class CsTomlDouble(double value, CsTomlDouble.DoubleKind kind = CsTomlDouble.DoubleKind.Normal) 
+    : CsTomlValue(CsTomlType.Float), IEquatable<CsTomlDouble?>
 {
     public readonly static CsTomlDouble Inf = new(CsTomlSyntax.Double.Inf, DoubleKind.Inf);
     public readonly static CsTomlDouble NInf = new (CsTomlSyntax.Double.NInf, DoubleKind.NInf);
@@ -22,7 +23,7 @@ internal class CsTomlDouble(double value, CsTomlDouble.DoubleKind kind = CsTomlD
         PNan
     }
 
-    public double Value { get; set; } = value;
+    public double Value { get; private set; } = value;
 
     internal DoubleKind Kind { get; } = kind;
 
@@ -53,5 +54,23 @@ internal class CsTomlDouble(double value, CsTomlDouble.DoubleKind kind = CsTomlD
         }
         return true;
     }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj == null) return false;
+        if (obj.GetType() != typeof(CsTomlDouble)) return false;
+
+        return Equals((CsTomlDouble)obj);
+    }
+
+    public bool Equals(CsTomlDouble? other)
+    {
+        if (other == null) return false;
+
+        return Value.Equals(other.Value);
+    }
+
+    public override int GetHashCode()
+        => Value.GetHashCode();
 }
 

@@ -2,15 +2,17 @@
 using CsToml.Formatter;
 using CsToml.Utility;
 using System.Diagnostics;
+using System.IO.Hashing;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 
 namespace CsToml.Values;
 
 [DebuggerDisplay("CsTomlString: {Value}")]
-internal class CsTomlString(ReadOnlySpan<byte> value, CsTomlString.CsTomlStringType type = CsTomlString.CsTomlStringType.Basic) : CsTomlValue(CsTomlType.String)
+internal class CsTomlString(ReadOnlySpan<byte> value, CsTomlString.CsTomlStringType type = CsTomlString.CsTomlStringType.Basic) 
+    : CsTomlValue(CsTomlType.String), IEquatable<CsTomlString?>
 {
-    public static readonly char doubleQuoted = '"';
-    public static readonly char singleQuoted = '\'';
-
     public enum CsTomlStringType : byte
     {
         Unquoted,
@@ -23,6 +25,25 @@ internal class CsTomlString(ReadOnlySpan<byte> value, CsTomlString.CsTomlStringT
     public CsTomlStringType StringType { get; } = type;
 
     public Utf8FixString Value { get; } = new Utf8FixString(value);
+
+    public override bool Equals(object? obj)
+    {
+        if (obj == null) return false;
+        if (obj.GetType() != typeof(CsTomlString)) return false;
+
+        return Equals((CsTomlString)obj);
+    }
+
+    public bool Equals(CsTomlString? other)
+    {
+        if (other == null) return false;
+        if (StringType != other.StringType) return false;
+
+        return Value.Equals(other.Value);
+    }
+
+    public override int GetHashCode()
+        => HashCode.Combine(Value.GetHashCode(), (byte)StringType);
 
     internal override bool ToTomlString(ref Utf8Writer writer)
     {
@@ -170,4 +191,5 @@ internal class CsTomlString(ReadOnlySpan<byte> value, CsTomlString.CsTomlStringT
         writer.Write(CsTomlSyntax.Symbol.SINGLEQUOTED);
         return true;
     }
+
 }
