@@ -706,7 +706,7 @@ internal ref struct CsTomlReader
 
         try
         {
-            return new CsTomlString(byteReader.ReadBytes(length), CsTomlString.CsTomlStringType.Literal);
+            return new CsTomlString(byteReader.ReadBytes(length), CsTomlString.CsTomlStringType.MultiLineLiteral);
         }
         finally
         {

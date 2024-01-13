@@ -21,6 +21,8 @@ internal ref struct Utf8Writer(IBufferWriter<byte> writer)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Write(ReadOnlySpan<byte> bytes)
     {
+        if (bytes.Length == 0) return;
+
         var span = GetSpan(bytes.Length);
 
         for (int i = 0; i < bytes.Length; i++)
