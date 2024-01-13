@@ -10,7 +10,7 @@ internal class CsTomlOffsetDateTime(DateTimeOffset value, bool byNumber)
     : CsTomlValue(byNumber ? CsTomlType.OffsetDateTimeByNumber : CsTomlType.OffsetDateTime)
     , IEquatable<CsTomlOffsetDateTime?>
 {
-    public DateTimeOffset Value { get; set; } = value;
+    public DateTimeOffset Value { get; private set; } = value;
 
     internal override bool ToTomlString(ref Utf8Writer writer)
     {

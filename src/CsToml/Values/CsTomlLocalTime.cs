@@ -9,7 +9,7 @@ namespace CsToml.Values;
 internal class CsTomlLocalTime(TimeOnly value)
     : CsTomlValue(CsTomlType.LocalTime), IEquatable<CsTomlLocalTime?>
 {
-    public TimeOnly Value { get; set; } = value;
+    public TimeOnly Value { get; private set; } = value;
 
     internal override bool ToTomlString(ref Utf8Writer writer)
     {
