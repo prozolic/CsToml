@@ -1,14 +1,18 @@
 ﻿using CsToml.Error;
 using CsToml.Extension;
+using CsToml.Utility;
+using System.Buffers;
 
 namespace CsToml.Values;
 
 public partial class CsTomlValue
 {
-    public long GetString()
+    public string GetString()
     {
+        var bufferWriter = new ArrayPoolBufferWriter<byte>();
+        var utf8Writer = new Utf8Writer(bufferWriter);
 
-        return ExceptionHelper.NotReturnThrow<long>(ExceptionHelper.ThrowInvalidCasting);
+        return ExceptionHelper.NotReturnThrow<string>(ExceptionHelper.ThrowInvalidCasting);
     }
 
     public long GetInt64()
@@ -69,6 +73,31 @@ public partial class CsTomlValue
         return ExceptionHelper.NotReturnThrow<DateTimeOffset>(ExceptionHelper.ThrowInvalidCasting);
     }
 
+    public DateOnly GetDateOnly()
+    {
+        if (Type == CsTomlType.LocalDate)
+            return (this as CsTomlLocalDate)!.Value;
+        else if (Type == CsTomlType.LocalDateTime)
+            return DateOnly.FromDateTime((this as CsTomlLocalDateTime)!.Value);
+        else if (Type == CsTomlType.OffsetDateTime || Type == CsTomlType.OffsetDateTimeByNumber)
+            return DateOnly.FromDateTime((this as CsTomlOffsetDateTime)!.Value.DateTime);
+
+        return ExceptionHelper.NotReturnThrow<DateOnly>(ExceptionHelper.ThrowInvalidCasting);
+    }
+
+    public TimeOnly GetTimeOnly()
+    {
+        if (Type == CsTomlType.LocalTime)
+            return (this as CsTomlLocalTime)!.Value;
+        else if (Type == CsTomlType.LocalDate)
+            return TimeOnly.MinValue;
+        else if (Type == CsTomlType.LocalDateTime)
+            return TimeOnly.FromDateTime((this as CsTomlLocalDateTime)!.Value);
+        else if (Type == CsTomlType.OffsetDateTime || Type == CsTomlType.OffsetDateTimeByNumber)
+            return TimeOnly.FromDateTime((this as CsTomlOffsetDateTime)!.Value.DateTime);
+
+        return ExceptionHelper.NotReturnThrow<TimeOnly>(ExceptionHelper.ThrowInvalidCasting);
+    }
 
 }
 

@@ -116,6 +116,9 @@ internal static class CsTomlSyntax
         public const byte COLON = 0x3a;
         public const byte PERIOD = 0x2e;
         public const byte COMMA = 0x2c;
+
+        public static readonly byte[] UnixNewLine = [LINEFEED];
+        public static readonly byte[] WindowsNewLine = [CARRIAGE, LINEFEED]; 
     }
 
     public readonly struct DateTime
