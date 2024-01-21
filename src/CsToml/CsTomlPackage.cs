@@ -6,7 +6,6 @@ using System.Collections.ObjectModel;
 
 namespace CsToml;
 
-
 public sealed class CsTomlPackageFactory : ICsTomlPackageFactory
 {
     public static CsTomlPackage GetPackage() => new();
@@ -14,21 +13,23 @@ public sealed class CsTomlPackageFactory : ICsTomlPackageFactory
 
 public class CsTomlPackage
 {
-    private CsTomlTable table = new ();
-    private List<CsTomlException>? exceptions;
+    private readonly CsTomlTable table;
+    private readonly List<CsTomlException> exceptions;
 
     internal CsTomlTableNode Node => table.RootNode;
 
     public long LineNumber { get; internal set; }
 
-    public ReadOnlyCollection<CsTomlException>? Exceptions => exceptions?.AsReadOnly() ?? ReadOnlyCollection<CsTomlException>.Empty;
+    public ReadOnlyCollection<CsTomlException>? Exceptions => exceptions.AsReadOnly();
 
-    public bool IsThrowCsTomlException { get; set; } = true;
+    public bool IsThrowCsTomlException { get; set; }
 
     public CsTomlPackage()
     {
         table = new();
+        exceptions = new();
         LineNumber = 0;
+        IsThrowCsTomlException = true;
     }
 
     public bool TryGetValue(ReadOnlySpan<byte> key, out CsTomlValue? value)
@@ -42,6 +43,9 @@ public class CsTomlPackage
         return table.TryGetValue(writer.WrittenSpan, out value);
     }
 
+    internal bool TrySerialize(ref Utf8Writer writer)
+        => table.ToTomlString(ref writer);
+
     internal bool TryAddKeyValue(CsTomlKey key, CsTomlValue value, CsTomlTableNode? node, IEnumerable<CsTomlString>? comments)
         => table.TryAddValue(key, value, node, comments);
 
@@ -52,10 +56,7 @@ public class CsTomlPackage
         => table.TryAddTableArrayHeader(key, out newNode, comments);
 
     internal void AddException(CsTomlException exception)
-    {
-        exceptions ??= [];
-        exceptions!.Add(exception);
-    }
+        => exceptions.Add(exception);
 
 }
 

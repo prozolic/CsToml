@@ -21,9 +21,4 @@ internal sealed class CsTomlKey : CsTomlValue
             dotKeyStrings.AddRange(keys!);
         }
     }
-
-    public void Add(string key)
-    {
-        //dotKeyStrings.Add();
-    }
 }

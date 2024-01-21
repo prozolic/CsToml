@@ -2,6 +2,7 @@
 using CsToml.Utility;
 
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace CsToml.Values;
 
@@ -11,7 +12,7 @@ internal class CsTomlInlineTable : CsTomlValue
     private readonly CsTomlTable inlineTable;
 
     [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-    public CsTomlTableNode RootNode => inlineTable.RootNode;
+    internal CsTomlTableNode RootNode => inlineTable.RootNode;
 
     public CsTomlInlineTable() : base(CsTomlType.InlineTable) 
     {
@@ -23,14 +24,54 @@ internal class CsTomlInlineTable : CsTomlValue
         return inlineTable.TryAddValue(csTomlKey, value, searchRootNode);
     }
 
-    public bool TryAddTableHeader(CsTomlKey csTomlKey, out CsTomlTableNode? newNode)
+    internal override bool ToTomlString(ref Utf8Writer writer)
     {
-        return inlineTable.TryAddTableHeader(csTomlKey, out newNode, null);
+        writer.Write(CsTomlSyntax.Symbol.LEFTBRACES);
+        var csTomlWriter = new CsTomlWriter(ref writer);
+        csTomlWriter.WriteSpace();
+
+        var keys = new List<CsTomlString>();
+        ToTomlStringCore(ref csTomlWriter, RootNode, keys);
+
+        csTomlWriter.WriteSpace();
+        writer.Write(CsTomlSyntax.Symbol.RIGHTBRACES);
+        return false;
     }
 
-    public bool TryGetValue(ReadOnlySpan<byte> key, out CsTomlValue? value, CsTomlTableNode? searchRootNode = null)
+    private void ToTomlStringCore(ref CsTomlWriter writer, CsTomlTableNode parentNode, List<CsTomlString> keys)
     {
-        return inlineTable.TryGetValue(key, out value, searchRootNode);
+        var count = 0;
+        foreach (var (key, childNode) in parentNode.Nodes)
+        {
+            if (childNode.IsGroupingProperty)
+            {
+                keys.Add(key);
+                ToTomlStringCore(ref writer, childNode, keys);
+                continue;
+            }
+            else
+            {
+                var keysSpan = CollectionsMarshal.AsSpan(keys);
+                if (keysSpan.Length > 0)
+                {
+                    for (var i = 0; i < keysSpan.Length; i++)
+                    {
+                        writer.WriterKey(in keysSpan[i], true);
+                    }
+                }
+                writer.WriteKeyValue(in key, childNode.Value!);
+                count++;
+
+                if (count != parentNode.Nodes.Count)
+                {
+                    writer.WriteComma();
+                    writer.WriteSpace();
+                }
+            }
+        }
+
+        keys.Clear(); // clear subkey
     }
+
 }
 

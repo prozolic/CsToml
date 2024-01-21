@@ -1,11 +1,8 @@
 ﻿using CsToml.Error;
 using CsToml.Extension;
-using System;
-using System.Collections.Generic;
+using CsToml.Utility;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 
 namespace CsToml.Values;
 
@@ -167,6 +164,58 @@ internal class CsTomlTable : CsTomlValue
 
         value = null;
         return false;
+    }
+
+    internal override bool ToTomlString(ref Utf8Writer writer)
+    {
+        var csTomlWriter = new CsTomlWriter(ref writer);
+        var keys = new List<CsTomlString>();
+        ToTomlStringCore(ref csTomlWriter, RootNode, keys);
+
+        return true;
+    }
+
+    private void ToTomlStringCore(ref CsTomlWriter writer, CsTomlTableNode parentNode, List<CsTomlString> keys)
+    {
+        foreach (var (key, childNode) in parentNode.Nodes)
+        {
+            if (childNode.IsGroupingProperty)
+            {
+                if (!childNode.IsTableHeader && parentNode.IsTableHeader && keys.Count > 0)
+                {
+                    var keysSpan = CollectionsMarshal.AsSpan(keys);
+                    writer.WriteTableHeader(keysSpan);
+                    keys.Clear();
+                }
+                keys.Add(key);
+                ToTomlStringCore(ref writer, childNode, keys);
+                continue;
+            }
+            else
+            {
+                if (parentNode.IsTableHeader && keys.Count > 0)
+                {
+                    var keysSpan = CollectionsMarshal.AsSpan(keys);
+                    writer.WriteTableHeader(keysSpan);
+                    keys.Clear();
+                    writer.WriteKeyValueAndNewLine(in key, childNode.Value!);
+                }
+                else
+                {
+                    var keysSpan = CollectionsMarshal.AsSpan(keys);
+                    if (keysSpan.Length > 0)
+                    {
+                        for (var i = 0; i < keysSpan.Length; i++)
+                        {
+                            writer.WriterKey(in keysSpan[i], true);
+                        }
+                    }
+                    writer.WriteKeyValueAndNewLine(in key, childNode.Value!);
+                }
+            }
+        }
+
+        keys.Clear(); // clear subkey
     }
 
 }

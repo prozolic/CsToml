@@ -2,6 +2,7 @@
 using CsToml.Utility;
 using CsToml.Values;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace CsToml;
 
@@ -17,16 +18,31 @@ internal ref struct CsTomlWriter
         newLineCh = OperatingSystem.IsWindows() ? CsTomlSyntax.Symbol.WindowsNewLine : CsTomlSyntax.Symbol.UnixNewLine;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteNewLine()
-    {
-        writer.Write(newLineCh);
-    }
+        => writer.Write(newLineCh);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteComma()
+        => writer.Write(CsTomlSyntax.Symbol.COMMA);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteSpace()
+        => writer.Write(CsTomlSyntax.Symbol.SPACE);
 
     public void WriteKeyValue(in CsTomlString key, CsTomlValue value)
     {
         WriterKey(in key, false);
         WriteEquals();
-        WriterValue(value);
+        value.ToTomlString(ref writer);
+    }
+
+    public void WriteKeyValueAndNewLine(in CsTomlString key, CsTomlValue value)
+    {
+        WriterKey(in key, false);
+        WriteEquals();
+        value.ToTomlString(ref writer);
+        WriteNewLine();
     }
 
     public void WriterKey(in CsTomlString key, bool isGroupingProperty)
@@ -48,12 +64,6 @@ internal ref struct CsTomlWriter
         span[2] = CsTomlSyntax.Symbol.SPACE;
         span[1] = CsTomlSyntax.Symbol.EQUAL;
         span[0] = CsTomlSyntax.Symbol.SPACE;
-    }
-
-    public void WriterValue(CsTomlValue value)
-    {
-        value.ToTomlString(ref writer);
-        writer.Write(newLineCh);
     }
 
     public void WriteTableHeader(Span<CsTomlString> keysSpan)
