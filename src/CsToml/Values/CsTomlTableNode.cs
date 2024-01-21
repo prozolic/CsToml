@@ -40,7 +40,7 @@ internal static class TableNodeTypeExtensions
 [DebuggerDisplay("{Value}")]
 internal class CsTomlTableNode
 {
-    internal Dictionary<Utf8FixString, CsTomlTableNode> Nodes { get; } = [];
+    internal Dictionary<CsTomlString, CsTomlTableNode> Nodes { get; } = [];
 
     internal CsTomlValue? Value { get; set; }
 
@@ -96,7 +96,7 @@ internal class CsTomlTableNode
         }
     }
 
-    public CsTomlTableNode this[ReadOnlySpan<byte> key] => Nodes[new Utf8FixString(key)];
+    //public CsTomlTableNode this[ReadOnlySpan<byte> key] => Nodes[new Utf8FixString(key)];
 
     public static CsTomlTableNode CreateGroupingPropertyNode()
     {
@@ -117,40 +117,40 @@ internal class CsTomlTableNode
 
     public bool TryAddValue(CsTomlString key, CsTomlValue value, IEnumerable<CsTomlString> comments)
     {
-        if (!IsGroupingProperty || Nodes.ContainsKey(key.Value))
+        if (!IsGroupingProperty || Nodes.ContainsKey(key))
         {
-            ExceptionHelper.ThrowKeyIsRedefined(key.Value);
+            ExceptionHelper.ThrowKeyIsRedefined(key);
             return false;
         }
 
         var newNode = new CsTomlTableNode() { Value = value };
         newNode.AddComment(comments);
-        Nodes.Add(key.Value, newNode);
+        Nodes.Add(key, newNode);
         return true;
     }
 
     public bool TryGetOrAddGroupingPropertyNode(CsTomlString key, out CsTomlTableNode childNode)
     {
-        if (Nodes.TryGetValue(key.Value, out var addedChildNode))
+        if (Nodes.TryGetValue(key, out var addedChildNode))
         {
             childNode = addedChildNode;
             return false;
         }
 
         childNode = CreateGroupingPropertyNode();
-        Nodes.Add(key.Value, childNode);
+        Nodes.Add(key, childNode);
         return true;
     }
 
     public bool TryGetChildNode(ReadOnlySpan<byte> key, out CsTomlTableNode? value)
     {
-        var utf8Key = new Utf8FixString(key);
+        var keystring = new CsTomlString(key, CsTomlString.CsTomlStringType.Unquoted);
         if (Value is CsTomlInlineTable table)
         {
-            return table.RootNode.Nodes.TryGetValue(utf8Key, out value);
+            return table.RootNode.Nodes.TryGetValue(keystring, out value);
         }
 
-        return Nodes.TryGetValue(utf8Key, out value);
+        return Nodes.TryGetValue(keystring, out value);
     }
 
     private bool TryGetChildNode(ReadOnlySpan<char> keySpan, out CsTomlTableNode? value)

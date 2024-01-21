@@ -59,7 +59,7 @@ internal class CsTomlTable : CsTomlValue
             }
             if ((childNode!.IsTableHeader || childNode!.IsTableArrayHeader) && i == dotKeyStrings.Count - 1)
             {
-                ExceptionHelper.ThrowTableHeaderIsRedefined(string.Join(".",dotKeyStrings.Select(s => s.Value)));
+                ExceptionHelper.ThrowTableHeaderIsRedefined(string.Join(".",dotKeyStrings.Select(s => s.Utf16String)));
             }
             if (childNode!.IsGroupingProperty)
             {
@@ -100,7 +100,8 @@ internal class CsTomlTable : CsTomlValue
                 {
                     if (subNode.IsTableHeader || subNode.IsTableArrayHeader)
                     {
-                        ExceptionHelper.ThrowOrderOfSubtableDefinitions(string.Join(".", dotKeyStrings.Select(s => s.Value)));
+                        ExceptionHelper.ThrowOrderOfSubtableDefinitions("test");
+                        //ExceptionHelper.ThrowOrderOfSubtableDefinitions(string.Join(".", dotKeyStrings.Select(s => s.Value)));
                     }
                 }
                 currentNode = childNode;

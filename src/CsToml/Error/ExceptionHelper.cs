@@ -1,4 +1,5 @@
 ﻿using CsToml.Utility;
+using CsToml.Values;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
@@ -106,7 +107,7 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void ThrowKeyIsRedefined(Utf8FixString keyName)
+    internal static void ThrowKeyIsRedefined(CsTomlString keyName)
     {
         throw new CsTomlException($@"Key '{keyName.Utf16String}' is already defined.");
     }

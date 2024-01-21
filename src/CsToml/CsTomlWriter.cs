@@ -1,9 +1,7 @@
-﻿using CsToml.Formatter;
+﻿
 using CsToml.Utility;
 using CsToml.Values;
-using System.Buffers;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 
 namespace CsToml;
 
@@ -11,8 +9,6 @@ internal ref struct CsTomlWriter
 {
     private Utf8Writer writer;
     private readonly ReadOnlySpan<byte> newLineCh;
-
-    private ReadOnlySpan<byte> currentKeySpan = [];
 
     [DebuggerStepThrough]
     public CsTomlWriter(ref Utf8Writer bufferWriter)
@@ -26,38 +22,41 @@ internal ref struct CsTomlWriter
         writer.Write(newLineCh);
     }
 
-    public void WriteKeyValue(in Utf8FixString key, CsTomlValue value)
+    public void WriteKeyValue(in CsTomlString key, CsTomlValue value)
     {
         WriterKey(in key, false);
         WriteEquals();
-        WriterValue(in key, value);
+        WriterValue(value);
     }
 
-    public void WriterKey(in Utf8FixString key, bool isGroupingProperty)
+    public void WriterKey(in CsTomlString key, bool isGroupingProperty)
     {
         if (isGroupingProperty)
         {
-            writer.Write(key.BytesSpan);
+            writer.Write(key.Value);
             writer.Write(CsTomlSyntax.Symbol.PERIOD);
         }
         else
         {
-            writer.Write(key.BytesSpan);
+            writer.Write(key.Value);
         }
     }
 
     public void WriteEquals()
     {
-        writer.Write(" = "u8);
+        var span = writer.GetWriteSpan(3);
+        span[2] = CsTomlSyntax.Symbol.SPACE;
+        span[1] = CsTomlSyntax.Symbol.EQUAL;
+        span[0] = CsTomlSyntax.Symbol.SPACE;
     }
 
-    public void WriterValue(in Utf8FixString key, CsTomlValue value)
+    public void WriterValue(CsTomlValue value)
     {
         value.ToTomlString(ref writer);
         writer.Write(newLineCh);
     }
 
-    public void WriteTableHeader(Span<Utf8FixString> keysSpan)
+    public void WriteTableHeader(Span<CsTomlString> keysSpan)
     {
         writer.Write(CsTomlSyntax.Symbol.LEFTSQUAREBRACKET);
         if (keysSpan.Length > 0)

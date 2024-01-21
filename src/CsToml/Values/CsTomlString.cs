@@ -1,4 +1,5 @@
 ﻿
+using CsToml.Debugger;
 using CsToml.Formatter;
 using CsToml.Utility;
 using System.Diagnostics;
@@ -9,7 +10,7 @@ using System.Security.Cryptography;
 
 namespace CsToml.Values;
 
-[DebuggerDisplay("CsTomlString: {Value}")]
+[DebuggerDisplay("CsTomlString: {Utf16String}")]
 internal class CsTomlString(ReadOnlySpan<byte> value, CsTomlString.CsTomlStringType type = CsTomlString.CsTomlStringType.Basic) 
     : CsTomlValue(CsTomlType.String), IEquatable<CsTomlString?>
 {
@@ -22,9 +23,27 @@ internal class CsTomlString(ReadOnlySpan<byte> value, CsTomlString.CsTomlStringT
         MultiLineLiteral
     }
 
-    public CsTomlStringType StringType { get; } = type;
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private readonly byte[] bytes = value.ToArray();
 
-    public Utf8FixString Value { get; } = new Utf8FixString(value);
+    [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
+    internal string Utf16String
+    {
+        get
+        {
+            var tempReader = new Utf8Reader(Value);
+            return StringFormatter.Deserialize(ref tempReader, tempReader.Length);
+        }
+    }
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
+    internal ReadOnlySpan<byte> Value => bytes.AsSpan();
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    public int Length => Value.Length;
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
+    public CsTomlStringType StringType { get; } = type;
 
     public override bool Equals(object? obj)
     {
@@ -37,23 +56,30 @@ internal class CsTomlString(ReadOnlySpan<byte> value, CsTomlString.CsTomlStringT
     public bool Equals(CsTomlString? other)
     {
         if (other == null) return false;
-        if (StringType != other.StringType) return false;
 
-        return Value.Equals(other.Value);
+        return Equals(other.Value);
+    }
+
+    public bool Equals(ReadOnlySpan<byte> other)
+    {
+        if (Length != other.Length) return false;
+        if (Length == 0) return true;
+
+        return Value.SequenceEqual(other);
     }
 
     public override int GetHashCode()
-        => HashCode.Combine(Value.GetHashCode(), (byte)StringType);
+        => HashCode.Combine(Hash.ToUInt32(Value), (byte)StringType);
 
     internal override bool ToTomlString(ref Utf8Writer writer)
     {
         if (StringType == CsTomlStringType.Unquoted)
         {
-            if (Value.Length == 0)
+            if (Length == 0)
             {
                 return false;
             }
-            writer.Write(Value.BytesSpan);
+            writer.Write(Value);
             return true;
         }
         switch (StringType)
@@ -75,7 +101,7 @@ internal class CsTomlString(ReadOnlySpan<byte> value, CsTomlString.CsTomlStringT
     {
         writer.Write(CsTomlSyntax.Symbol.DOUBLEQUOTED);
 
-        var byteSpan = Value.BytesSpan;
+        var byteSpan = Value;
         for (int i = 0; i < byteSpan.Length; i++)
         {
             var ch = byteSpan[i];
@@ -126,7 +152,7 @@ internal class CsTomlString(ReadOnlySpan<byte> value, CsTomlString.CsTomlStringT
         writer.Write(CsTomlSyntax.Symbol.DOUBLEQUOTED);
         writer.Write(CsTomlSyntax.Symbol.DOUBLEQUOTED);
 
-        var byteSpan = Value.BytesSpan;
+        var byteSpan = Value;
         for (int i = 0; i < byteSpan.Length;i++)
         {
             var ch = byteSpan[i];
@@ -175,7 +201,7 @@ internal class CsTomlString(ReadOnlySpan<byte> value, CsTomlString.CsTomlStringT
     private bool ToTomlLiteralString(ref Utf8Writer writer)
     {
         writer.Write(CsTomlSyntax.Symbol.SINGLEQUOTED);
-        writer.Write(Value.BytesSpan);
+        writer.Write(Value);
         writer.Write(CsTomlSyntax.Symbol.SINGLEQUOTED);
         return true;
     }
@@ -185,11 +211,27 @@ internal class CsTomlString(ReadOnlySpan<byte> value, CsTomlString.CsTomlStringT
         writer.Write(CsTomlSyntax.Symbol.SINGLEQUOTED);
         writer.Write(CsTomlSyntax.Symbol.SINGLEQUOTED);
         writer.Write(CsTomlSyntax.Symbol.SINGLEQUOTED);
-        writer.Write(Value.BytesSpan);
+        writer.Write(Value);
         writer.Write(CsTomlSyntax.Symbol.SINGLEQUOTED);
         writer.Write(CsTomlSyntax.Symbol.SINGLEQUOTED);
         writer.Write(CsTomlSyntax.Symbol.SINGLEQUOTED);
         return true;
+    }
+
+    private readonly struct Hash
+    {
+        private static readonly int Seed;
+
+        static Hash()
+        {
+            Span<byte> seedBuffer = stackalloc byte[4];
+            RandomNumberGenerator.Fill(seedBuffer);
+            Seed = Unsafe.ReadUnaligned<int>(ref MemoryMarshal.GetReference<byte>(seedBuffer));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int ToUInt32(ReadOnlySpan<byte> span)
+            => (int)XxHash32.HashToUInt32(span, Seed);
     }
 
 }

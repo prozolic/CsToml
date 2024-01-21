@@ -23,17 +23,17 @@ public partial class CsTomlSerializer
 
     private static void SerializeValue(ref CsTomlWriter writer, CsTomlTableNode node)
     {
-        var keys = new List<Utf8FixString>();
+        var keys = new List<CsTomlString>();
         SerializeValueCore(ref writer, node, keys);
     }
 
-    private static void SerializeValueCore(ref CsTomlWriter writer, CsTomlTableNode node, List<Utf8FixString> keys)
+    private static void SerializeValueCore(ref CsTomlWriter writer, CsTomlTableNode parentNode, List<CsTomlString> keys)
     {
-        foreach (var (key, childNode) in node.Nodes)
+        foreach (var (key, childNode) in parentNode.Nodes)
         {
             if (childNode.IsGroupingProperty)
             {
-                if (node.IsTableHeader && !childNode.IsTableHeader && keys.Count > 0)
+                if (!childNode.IsTableHeader && parentNode.IsTableHeader && keys.Count > 0)
                 {
                     var keysSpan = CollectionsMarshal.AsSpan(keys);
                     writer.WriteTableHeader(keysSpan);
@@ -45,7 +45,7 @@ public partial class CsTomlSerializer
             }
             else
             {
-                if (node.IsTableHeader && keys.Count > 0)
+                if (parentNode.IsTableHeader && keys.Count > 0)
                 {
                     var keysSpan = CollectionsMarshal.AsSpan(keys);
                     writer.WriteTableHeader(keysSpan);
