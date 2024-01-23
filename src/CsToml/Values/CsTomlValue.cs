@@ -10,6 +10,8 @@ public abstract partial class CsTomlValue
 
     public CsTomlType Type { get;}
 
+    public virtual CsTomlValue this[int index] => Empty;
+
     protected CsTomlValue(CsTomlType type)
     {
         this.Type = type;

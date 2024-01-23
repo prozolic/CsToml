@@ -16,7 +16,7 @@ internal class CsTomlArray : CsTomlValue, IEnumerable<CsTomlValue>
 
     public IEnumerable<CsTomlValue> Value => values;
 
-    public CsTomlValue this[int index] => values[index];
+    public override CsTomlValue this[int index] => values[index];
 
     public CsTomlArray() : base(CsTomlType.Array)
     {}
