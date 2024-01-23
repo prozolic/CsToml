@@ -2,15 +2,13 @@
 using CsToml.Formatter;
 using CsToml.Utility;
 using System;
+using System.Buffers;
 using System.Buffers.Text;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Text.Unicode;
 
 namespace CsToml.Values;
 
-internal partial class CsTomlString
+internal partial class CsTomlString : ISpanFormattable
 {
     public override string GetString() => Utf16String;
 
@@ -76,5 +74,13 @@ internal partial class CsTomlString
         }
         return base.GetTimeOnly();
     }
+
+    public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider)
+    {
+        var status = Utf8.ToUtf16(Value, destination, out var bytesRead, out charsWritten, replaceInvalidSequences: false);
+        return status != OperationStatus.Done;
+    }
+
+    public string ToString(string? format, IFormatProvider? formatProvider) => GetString();
 }
 
