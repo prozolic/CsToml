@@ -1,5 +1,4 @@
 ﻿using CsToml.Debugger;
-using CsToml.Formatter;
 using CsToml.Utility;
 using System.Collections;
 using System.Diagnostics;
@@ -8,7 +7,7 @@ namespace CsToml.Values;
 
 [DebuggerTypeProxy(typeof(CsTomlArrayDebugView))]
 [DebuggerDisplay("CsTomlArray: Count={Count}")]
-internal class CsTomlArray : CsTomlValue, IEnumerable<CsTomlValue>
+internal partial class CsTomlArray : CsTomlValue, IEnumerable<CsTomlValue>
 {
     private List<CsTomlValue> values = [];
 
