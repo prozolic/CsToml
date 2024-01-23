@@ -6,7 +6,7 @@ using System.Diagnostics;
 namespace CsToml.Values;
 
 [DebuggerDisplay("CsTomlLocalTime: {Value}")]
-internal class CsTomlLocalTime(TimeOnly value)
+internal partial class CsTomlLocalTime(TimeOnly value)
     : CsTomlValue(CsTomlType.LocalTime), IEquatable<CsTomlLocalTime?>
 {
     public TimeOnly Value { get; private set; } = value;

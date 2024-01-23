@@ -6,7 +6,7 @@ using System.Diagnostics;
 namespace CsToml.Values;
 
 [DebuggerDisplay("CsTomlOffsetDateTime: {Value}")]
-internal class CsTomlOffsetDateTime(DateTimeOffset value, bool byNumber) 
+internal partial class CsTomlOffsetDateTime(DateTimeOffset value, bool byNumber) 
     : CsTomlValue(byNumber ? CsTomlType.OffsetDateTimeByNumber : CsTomlType.OffsetDateTime)
     , IEquatable<CsTomlOffsetDateTime?>
 {

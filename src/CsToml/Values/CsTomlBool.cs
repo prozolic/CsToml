@@ -6,7 +6,7 @@ using System.Diagnostics;
 namespace CsToml.Values;
 
 [DebuggerDisplay("CsTomlBool: {Value}")]
-internal class CsTomlBool(bool value) 
+internal partial class CsTomlBool(bool value) 
     : CsTomlValue(CsTomlType.Boolean), IEquatable<CsTomlBool?>
 {
     public bool Value { get; private set; } = value;

@@ -11,7 +11,7 @@ using System.Security.Cryptography;
 namespace CsToml.Values;
 
 [DebuggerDisplay("CsTomlString: {Utf16String}")]
-internal class CsTomlString(ReadOnlySpan<byte> value, CsTomlString.CsTomlStringType type = CsTomlString.CsTomlStringType.Basic) 
+internal partial class CsTomlString(ReadOnlySpan<byte> value, CsTomlString.CsTomlStringType type = CsTomlString.CsTomlStringType.Basic) 
     : CsTomlValue(CsTomlType.String), IEquatable<CsTomlString?>
 {
     public enum CsTomlStringType : byte

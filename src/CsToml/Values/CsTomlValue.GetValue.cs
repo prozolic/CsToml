@@ -1,102 +1,145 @@
 ﻿using CsToml.Error;
 using CsToml.Extension;
 using CsToml.Utility;
-using System.Buffers;
 
 namespace CsToml.Values;
 
 public partial class CsTomlValue
 {
-    public string GetString()
+    public virtual string GetString()
+        => ExceptionHelper.NotReturnThrow<string>(ExceptionHelper.ThrowInvalidCasting);
+
+    public virtual long GetInt64()
+        => ExceptionHelper.NotReturnThrow<long>(ExceptionHelper.ThrowInvalidCasting);
+
+    public virtual double GetDouble()
+        => ExceptionHelper.NotReturnThrow<double>(ExceptionHelper.ThrowInvalidCasting);
+
+    public virtual bool GetBool()
+        => ExceptionHelper.NotReturnThrow<bool>(ExceptionHelper.ThrowInvalidCasting);
+
+    public virtual DateTime GetDateTime()
+        => ExceptionHelper.NotReturnThrow<DateTime>(ExceptionHelper.ThrowInvalidCasting);
+
+    public virtual DateTimeOffset GetDateTimeOffset()
+        => ExceptionHelper.NotReturnThrow<DateTimeOffset>(ExceptionHelper.ThrowInvalidCasting);
+
+    public virtual DateOnly GetDateOnly()
+        => ExceptionHelper.NotReturnThrow<DateOnly>(ExceptionHelper.ThrowInvalidCasting);
+
+    public virtual TimeOnly GetTimeOnly()
+        => ExceptionHelper.NotReturnThrow<TimeOnly>(ExceptionHelper.ThrowInvalidCasting);
+
+    public bool TryGetString(out string value)
     {
-        var bufferWriter = new ArrayPoolBufferWriter<byte>();
-        var utf8Writer = new Utf8Writer(bufferWriter);
-
-        return ExceptionHelper.NotReturnThrow<string>(ExceptionHelper.ThrowInvalidCasting);
-    }
-
-    public long GetInt64()
-    {
-        if (Type == CsTomlType.Integar) return (this as CsTomlInt64)!.Value;
-        else if (Type == CsTomlType.Float) return (long)(this as CsTomlDouble)!.Value;
-        else if (Type == CsTomlType.Boolean) return (this as CsTomlBool)!.Value ? 1 : 0;
-
-        return ExceptionHelper.NotReturnThrow<long>(ExceptionHelper.ThrowInvalidCasting);
-    }
-
-    public double GetDouble()
-    {
-        if (Type == CsTomlType.Float) return (this as CsTomlDouble)!.Value;
-        else if (Type == CsTomlType.Integar) return (this as CsTomlInt64)!.Value;
-        else if (Type == CsTomlType.Boolean) return (this as CsTomlBool)!.Value ? 1d : 0d;
-
-        return ExceptionHelper.NotReturnThrow<double>(ExceptionHelper.ThrowInvalidCasting);
-    }
-
-    public bool GetBool()
-    {
-        if (Type == CsTomlType.Boolean) return (this as CsTomlBool)!.Value;
-        else if (Type == CsTomlType.Integar) return (this as CsTomlInt64)!.Value != 0;
-        else if (Type == CsTomlType.Float) return (this as CsTomlDouble)!.Value != 0d;
-
-        return ExceptionHelper.NotReturnThrow<bool>(ExceptionHelper.ThrowInvalidCasting);
-    }
-
-    public DateTime GetDateTime()
-    {
-        if (Type == CsTomlType.LocalDateTime) 
-            return (this as CsTomlLocalDateTime)!.Value;
-        else if (Type == CsTomlType.LocalDate) 
-            return (this as CsTomlLocalDate)!.Value.ToLocalDateTime();
-        else if (Type == CsTomlType.LocalTime) 
-            return (this as CsTomlLocalTime)!.Value.ToLocalDateTime();
-        else if (Type == CsTomlType.OffsetDateTime || Type == CsTomlType.OffsetDateTimeByNumber) 
-            return (this as CsTomlOffsetDateTime)!.Value.DateTime;
-
-        return ExceptionHelper.NotReturnThrow<DateTime>(ExceptionHelper.ThrowInvalidCasting);
-    }
-
-    public DateTimeOffset GetDateTimeOffset()
-    {
-        if (Type == CsTomlType.OffsetDateTime || Type == CsTomlType.OffsetDateTimeByNumber) 
-            return (this as CsTomlOffsetDateTime)!.Value.DateTime;
-        else if (Type == CsTomlType.OffsetDateTimeByNumber) 
-            return (this as CsTomlOffsetDateTime)!.Value.DateTime;
-        else if (Type == CsTomlType.LocalDateTime)
+        try
         {
-            CsTomlLocalDateTime localDateTimeValue = (this as CsTomlLocalDateTime)!;
-            return DateTime.SpecifyKind(localDateTimeValue.Value, localDateTimeValue.Value.Kind);
+            value = GetString();
+            return true;
         }
-        else if (Type == CsTomlType.LocalDate)
-            return (this as CsTomlLocalDate)!.Value.ToLocalDateTime();
-
-        return ExceptionHelper.NotReturnThrow<DateTimeOffset>(ExceptionHelper.ThrowInvalidCasting);
+        catch (CsTomlException)
+        {
+            value = default!;
+            return false;
+        }
     }
 
-    public DateOnly GetDateOnly()
+    public bool TryGetInt64(out long value)
     {
-        if (Type == CsTomlType.LocalDate)
-            return (this as CsTomlLocalDate)!.Value;
-        else if (Type == CsTomlType.LocalDateTime)
-            return DateOnly.FromDateTime((this as CsTomlLocalDateTime)!.Value);
-        else if (Type == CsTomlType.OffsetDateTime || Type == CsTomlType.OffsetDateTimeByNumber)
-            return DateOnly.FromDateTime((this as CsTomlOffsetDateTime)!.Value.DateTime);
-
-        return ExceptionHelper.NotReturnThrow<DateOnly>(ExceptionHelper.ThrowInvalidCasting);
+        try
+        {
+            value = GetInt64();
+            return true;
+        }
+        catch (CsTomlException)
+        {
+            value = default;
+            return false;
+        }
     }
 
-    public TimeOnly GetTimeOnly()
+    public bool TryGetDouble(out double value)
     {
-        if (Type == CsTomlType.LocalTime)
-            return (this as CsTomlLocalTime)!.Value;
-        else if (Type == CsTomlType.LocalDate)
-            return TimeOnly.MinValue;
-        else if (Type == CsTomlType.LocalDateTime)
-            return TimeOnly.FromDateTime((this as CsTomlLocalDateTime)!.Value);
-        else if (Type == CsTomlType.OffsetDateTime || Type == CsTomlType.OffsetDateTimeByNumber)
-            return TimeOnly.FromDateTime((this as CsTomlOffsetDateTime)!.Value.DateTime);
+        try
+        {
+            value = GetDouble();
+            return true;
+        }
+        catch (CsTomlException)
+        {
+            value = default;
+            return false;
+        }
+    }
 
-        return ExceptionHelper.NotReturnThrow<TimeOnly>(ExceptionHelper.ThrowInvalidCasting);
+    public bool TryGetBool(out bool value)
+    {
+        try
+        {
+            value = GetBool();
+            return true;
+        }
+        catch (CsTomlException)
+        {
+            value = default;
+            return false;
+        }
+    }
+
+    public bool TryGetDateTime(out DateTime value)
+    {
+        try
+        {
+            value = GetDateTime();
+            return true;
+        }
+        catch (CsTomlException)
+        {
+            value = default;
+            return false;
+        }
+    }
+
+    public bool TryGGetDateTimeOffset(out DateTimeOffset value)
+    {
+        try
+        {
+            value = GetDateTimeOffset();
+            return true;
+        }
+        catch (CsTomlException)
+        {
+            value = default;
+            return false;
+        }
+    }
+
+    public bool TryGetDateOnly(out DateOnly value)
+    {
+        try
+        {
+            value = GetDateOnly();
+            return true;
+        }
+        catch (CsTomlException)
+        {
+            value = default;
+            return false;
+        }
+    }
+
+    public bool TryGetTimeOnly(out TimeOnly value)
+    {
+        try
+        {
+            value = GetTimeOnly();
+            return true;
+        }
+        catch (CsTomlException)
+        {
+            value = default;
+            return false;
+        }
     }
 
 }

@@ -6,7 +6,7 @@ using System.Diagnostics;
 namespace CsToml.Values;
 
 [DebuggerDisplay("CsTomlLocalDateTime: {Value}")]
-internal class CsTomlLocalDateTime(DateTime value)
+internal partial class CsTomlLocalDateTime(DateTime value)
     : CsTomlValue(CsTomlType.LocalDateTime), IEquatable<CsTomlLocalDateTime?>
 {
     public DateTime Value { get; private set; } = value;
