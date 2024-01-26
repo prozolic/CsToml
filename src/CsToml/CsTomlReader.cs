@@ -291,7 +291,7 @@ internal ref struct CsTomlReader
     {
         Skip(1); // "
 
-        using var writer = new ArrayPoolBufferWriter<byte>(256);
+        var writer = RecycleByteArrayPoolBufferWriter.Rent();
         var utf8Writer = new Utf8Writer(writer);
 
         while (TryPeek(out var ch))
@@ -311,7 +311,14 @@ internal ref struct CsTomlReader
 
         Skip(1); // "
 
-        return new CsTomlString(writer.WrittenSpan, CsTomlString.CsTomlStringType.Basic);
+        try
+        {
+            return new CsTomlString(writer.WrittenSpan, CsTomlString.CsTomlStringType.Basic);
+        }
+        finally
+        {
+            RecycleByteArrayPoolBufferWriter.Return(writer);
+        }
     }
 
     private CsTomlString ReadDoubleQuoteMultiLineString()
@@ -336,7 +343,7 @@ internal ref struct CsTomlReader
             }
         }
 
-        using var writer = new ArrayPoolBufferWriter<byte>(256);
+        var writer = RecycleByteArrayPoolBufferWriter.Rent();
         var utf8Writer = new Utf8Writer(writer);
         while (TryPeek(out var ch))
         {
@@ -409,7 +416,14 @@ internal ref struct CsTomlReader
             Skip(1);
         }
     BREAK:
-        return new CsTomlString(writer.WrittenSpan, CsTomlString.CsTomlStringType.MultiLineBasic);
+        try
+        {
+            return new CsTomlString(writer.WrittenSpan, CsTomlString.CsTomlStringType.MultiLineBasic);
+        }
+        finally
+        {
+            RecycleByteArrayPoolBufferWriter.Return(writer);
+        }
 
     }
 

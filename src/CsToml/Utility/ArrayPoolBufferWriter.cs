@@ -50,7 +50,10 @@ internal sealed class ArrayPoolBufferWriter<T> : IBufferWriter<T>, IDisposable
         return buffer.AsSpan(index);
     }
 
-    private void Reserve(int sizeHint)
+    public void Clear()
+        => index = 0;
+
+    public void Reserve(int sizeHint)
     {
         if (sizeHint <= buffer.Length - index) return;
 

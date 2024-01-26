@@ -123,6 +123,7 @@ public partial class CsTomlSerializer
 
     BREAK:
         package.LineNumber = reader.LineNumber;
+        RecycleByteArrayPoolBufferWriter.Release();
     }
 
     private static bool DeserializeComment(ref CsTomlPackage package, ref CsTomlReader reader, out CsTomlString? comment)
