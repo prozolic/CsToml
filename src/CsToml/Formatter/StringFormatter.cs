@@ -1,5 +1,6 @@
 ﻿
 using System.Buffers;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Unicode;
 using CsToml.Utility;
 
@@ -33,15 +34,34 @@ internal class StringFormatter : ICsTomlFormatter<string>
         // buffer size to 3 times worst-case (UTF8 -> UTF16)
         var maxBufferSize = (utf8Bytes.Length * 3) / 2 + 1;
 
-        using var writer = new ArrayPoolBufferWriter<char>(maxBufferSize);
-        var status = Utf8.ToUtf16(utf8Bytes, writer.GetSpan(maxBufferSize), out var bytesRead, out var charsWritten, replaceInvalidSequences: false);
-
-        if (status != OperationStatus.Done)
+        if (maxBufferSize <= 128)
         {
-            throw new Exception();
+            Span<char> bufferBytesSpan = stackalloc char[maxBufferSize];
+            var status = Utf8.ToUtf16(utf8Bytes, bufferBytesSpan, out var bytesRead, out var charsWritten, replaceInvalidSequences: false);
+            if (status != OperationStatus.Done)
+            {
+                throw new Exception();
+            }
+            return new string(bufferBytesSpan[..charsWritten]);
         }
-        writer.Advance(charsWritten);
-        return new string(writer.WrittenSpan);
+        else
+        {
+            var bufferBytes = ArrayPool<char>.Shared.Rent(maxBufferSize);
+            try
+            {
+                var bufferBytesSpan = bufferBytes.AsSpan();
+                var status = Utf8.ToUtf16(utf8Bytes, bufferBytesSpan, out var bytesRead, out var charsWritten, replaceInvalidSequences: false);
+                if (status != OperationStatus.Done)
+                {
+                    throw new Exception();
+                }
+                return new string(bufferBytesSpan[..charsWritten]);
+            }
+            finally
+            {
+                ArrayPool<char>.Shared.Return(bufferBytes);
+            }
+        }
     }
 
 }
