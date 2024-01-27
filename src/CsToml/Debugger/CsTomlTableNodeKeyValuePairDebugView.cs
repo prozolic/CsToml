@@ -1,6 +1,7 @@
 ﻿using CsToml.Utility;
 using CsToml.Values;
 using System.Diagnostics;
+using System.Xml.Linq;
 
 namespace CsToml.Debugger;
 
@@ -10,9 +11,15 @@ internal sealed class CsTomlTableNodeKeyValuePairDebugView(KeyValuePair<CsTomlSt
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private readonly KeyValuePair<CsTomlString, CsTomlTableNode> rawPair = pair;
 
-    [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+    [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
     public CsTomlString Key => rawPair.Key;
 
-    [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+    [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
     public CsTomlTableNode Value => rawPair.Value;
+
+    public bool IsGroupingProperty => Value.IsGroupingProperty!;
+
+    public bool IsTableHeader => Value.IsTableHeader!;
+
+    public bool IsTableArrayHeader => Value.IsTableArrayHeader!;
 }

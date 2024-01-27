@@ -10,14 +10,10 @@ internal sealed class CsTomlTableNodeDebugView(CsTomlTableNode csTomlTableNode)
     [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
     public CsTomlTableNodeKeyValuePairDebugView[] ChildrenNode => node.Nodes.Select(k => new CsTomlTableNodeKeyValuePairDebugView(k)).ToArray();
 
-    [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+    [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
     public CsTomlValue Value => node.Value!;
 
+    [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
     public CsTomlString[] Comments => node.Comments.ToArray();
 
-    //public bool IsGroupingProperty => node.IsGroupingProperty!;
-
-    //public bool IsTableHeader => node.IsTableHeader!;
-
-    //public bool IsTableArrayHeader => node.IsTableArrayHeader!;
 }
