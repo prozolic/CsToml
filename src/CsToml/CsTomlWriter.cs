@@ -49,14 +49,10 @@ internal ref struct CsTomlWriter
 
     public void WriterKey(in CsTomlString key, bool isGroupingProperty)
     {
+        key.ToTomlString(ref writer);
         if (isGroupingProperty)
         {
-            writer.Write(key.Value);
             writer.Write(CsTomlSyntax.Symbol.PERIOD);
-        }
-        else
-        {
-            writer.Write(key.Value);
         }
     }
 
