@@ -11,6 +11,8 @@ internal ref struct CsTomlWriter
     private Utf8Writer writer;
     private readonly ReadOnlySpan<byte> newLineCh;
 
+    public readonly int WrittingCount => writer.WrittingCount;
+
     [DebuggerStepThrough]
     public CsTomlWriter(ref Utf8Writer bufferWriter)
     {
@@ -76,6 +78,22 @@ internal ref struct CsTomlWriter
                 WriterKey(in keysSpan[i], i < keysSpan.Length - 1);
             }
         }
+        writer.Write(CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET);
+        WriteNewLine();
+    }
+
+    public void WriteTableArrayHeader(Span<CsTomlString> keysSpan)
+    {
+        writer.Write(CsTomlSyntax.Symbol.LEFTSQUAREBRACKET);
+        writer.Write(CsTomlSyntax.Symbol.LEFTSQUAREBRACKET);
+        if (keysSpan.Length > 0)
+        {
+            for (var i = 0; i < keysSpan.Length; i++)
+            {
+                WriterKey(in keysSpan[i], i < keysSpan.Length - 1);
+            }
+        }
+        writer.Write(CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET);
         writer.Write(CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET);
         WriteNewLine();
     }

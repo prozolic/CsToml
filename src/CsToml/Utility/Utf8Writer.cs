@@ -8,6 +8,9 @@ namespace CsToml.Utility;
 internal ref struct Utf8Writer(IBufferWriter<byte> writer)
 {
     private IBufferWriter<byte> bufferWriter = writer;
+    private int writtingCount = 0;
+
+    public readonly int WrittingCount => writtingCount;
 
     [DebuggerStepThrough]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -54,6 +57,7 @@ internal ref struct Utf8Writer(IBufferWriter<byte> writer)
     public void Advance(int count)
     {
         bufferWriter.Advance(count);
+        writtingCount += count;
     }
 }
 

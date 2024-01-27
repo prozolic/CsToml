@@ -183,6 +183,10 @@ internal class CsTomlTable : CsTomlValue
             {
                 if (!childNode.IsTableHeader && parentNode.IsTableHeader && keys.Count > 0)
                 {
+                    if (writer.WrittingCount > 0)
+                    {
+                        writer.WriteNewLine();
+                    }
                     var keysSpan = CollectionsMarshal.AsSpan(keys);
                     writer.WriteTableHeader(keysSpan);
                     keys.Clear();
@@ -195,6 +199,10 @@ internal class CsTomlTable : CsTomlValue
             {
                 if (parentNode.IsTableHeader && keys.Count > 0)
                 {
+                    if (writer.WrittingCount > 0)
+                    {
+                        writer.WriteNewLine();
+                    }
                     var keysSpan = CollectionsMarshal.AsSpan(keys);
                     writer.WriteTableHeader(keysSpan);
                     keys.Clear();
@@ -213,6 +221,27 @@ internal class CsTomlTable : CsTomlValue
                     writer.WriteKeyValueAndNewLine(in key, childNode.Value!);
                 }
             }
+        }
+
+        if (parentNode.IsTableArrayHeader)
+        {
+            if (parentNode.Value is CsTomlArray arrayValue)
+            {
+                var keysSpan = CollectionsMarshal.AsSpan(keys);
+                foreach (var v in arrayValue)
+                {
+                    if (writer.WrittingCount > 0)
+                    {
+                        writer.WriteNewLine();
+                    }
+                    writer.WriteTableArrayHeader(keysSpan);
+                    if (v is CsTomlTable table)
+                    {
+                        table.ToTomlStringCore(ref writer, table.RootNode, []);
+                    }
+                }
+            }
+
         }
 
         keys.Clear(); // clear subkey
