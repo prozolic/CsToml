@@ -1,6 +1,4 @@
-﻿using CsToml.Error;
-using CsToml.Utility;
-
+﻿using CsToml.Utility;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
@@ -9,20 +7,16 @@ namespace CsToml.Values;
 [DebuggerDisplay("CsTomlInlineTable : {RootNode}")]
 internal class CsTomlInlineTable : CsTomlValue
 {
-    private readonly CsTomlTable inlineTable;
+    private readonly CsTomlTable inlineTable = new CsTomlTable();
 
     [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
     internal CsTomlTableNode RootNode => inlineTable.RootNode;
 
     public CsTomlInlineTable() : base(CsTomlType.InlineTable) 
-    {
-        inlineTable = new CsTomlTable();
-    }
+    {}
 
-    public bool TryAddValue(CsTomlKey csTomlKey, CsTomlValue value, CsTomlTableNode? searchRootNode = null)
-    {
-        return inlineTable.TryAddValue(csTomlKey, value, searchRootNode);
-    }
+    public void AddKeyValue(CsTomlKey csTomlKey, CsTomlValue value, CsTomlTableNode? searchRootNode)
+        => inlineTable.AddKeyValue(csTomlKey, value, searchRootNode, []);
 
     internal override bool ToTomlString(ref Utf8Writer writer)
     {

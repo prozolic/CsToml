@@ -1,7 +1,6 @@
 ﻿using CsToml.Values;
 using CsToml.Error;
 using CsToml.Utility;
-using CsToml.Formatter;
 using System.Collections.ObjectModel;
 
 namespace CsToml;
@@ -11,7 +10,7 @@ public sealed class CsTomlPackageFactory : ICsTomlPackageFactory
     public static CsTomlPackage GetPackage() => new();
 }
 
-public class CsTomlPackage
+public partial class CsTomlPackage
 {
     private readonly CsTomlTable table;
     private readonly List<CsTomlException> exceptions;
@@ -32,31 +31,227 @@ public class CsTomlPackage
         IsThrowCsTomlException = true;
     }
 
-    public bool TryGetValue(ReadOnlySpan<byte> key, out CsTomlValue? value)
-        => table.TryGetValue(key, out value);
-
-    public bool TryGetValue(string key, out CsTomlValue? value)
-    {
-        using var writer = new ArrayPoolBufferWriter<byte>(128);
-        var utf8Writer = new Utf8Writer(writer);
-        StringFormatter.Serialize(ref utf8Writer, key);
-        return table.TryGetValue(writer.WrittenSpan, out value);
-    }
-
-    internal bool TrySerialize(ref Utf8Writer writer)
+    internal void Serialize(ref Utf8Writer writer)
         => table.ToTomlString(ref writer);
 
-    internal bool TryAddKeyValue(CsTomlKey key, CsTomlValue value, CsTomlTableNode? node, IEnumerable<CsTomlString>? comments)
-        => table.TryAddValue(key, value, node, comments);
+    internal void Deserialize(ref Utf8Reader utf8Reader)
+    {
+        var reader = new CsTomlReader(ref utf8Reader);
+        CsTomlTableNode? currentNode = Node;
 
-    internal bool TryAddTableHeader(CsTomlKey key, out CsTomlTableNode? newNode, IEnumerable<CsTomlString>? comments)
-        => table.TryAddTableHeader(key, out newNode, comments);
+        var comments = new List<CsTomlString>();
+        while (reader.Peek())
+        {
+            // comment
+            DeserializeComment(ref reader, out var comment);
+            if (comment != null) comments.Add(comment);
+            if (!reader.Peek()) goto BREAK;
 
-    internal bool TryAddTableArrayHeader(CsTomlKey key, out CsTomlTableNode? newNode, IEnumerable<CsTomlString>? comments)
-        => table.TryAddTableArrayHeader(key, out newNode, comments);
+            if (DeserializeNewLine(ref reader))
+            {
+                if (!reader.Peek()) goto BREAK;
+                continue;
+            }
+            if (!reader.Peek()) goto BREAK;
 
-    internal void AddException(CsTomlException exception)
-        => exceptions.Add(exception);
+            // table or table array
+            reader.SkipWhiteSpace();
+            if (reader.TryPeek(out var leftSquareBracketsCh) && CsTomlSyntax.IsLeftSquareBrackets(leftSquareBracketsCh))
+            {
+                reader.Skip(1);
+                if (!reader.TryPeek(out var tableArrayCh))
+                {
+                    if (IsThrowCsTomlException)
+                        throw new CsTomlLineNumberException("The TOML file has been read up to EOF, so analysis of the TOML file has been completed.", reader.LineNumber);
+
+                    exceptions.Add(new CsTomlLineNumberException("The TOML file has been read up to EOF, so analysis of the TOML file has been completed.", reader.LineNumber));
+                    goto BREAK;
+                }
+
+                reader.Skip(-1);
+                if (CsTomlSyntax.IsLeftSquareBrackets(tableArrayCh))
+                {
+                    if (DeserializeTableArray(ref reader, out currentNode, comments))
+                    {
+                        comments.Clear();
+                        DeserializeComment(ref reader, out var arrayComment);
+                        if (!reader.Peek()) goto BREAK;
+
+                        DeserializeNewLine(ref reader);
+                        continue;
+                    }
+
+                    reader.SkipOneLine();
+                    continue;
+                }
+
+                if (DeserializeTableSection(ref reader, out currentNode, comments))
+                {
+                    comments.Clear();
+                    DeserializeComment(ref reader, out var arrayTableComment);
+                    if (!reader.Peek()) goto BREAK;
+
+                    DeserializeNewLine(ref reader);
+                    continue;
+                }
+                else
+                {
+                    reader.SkipOneLine();
+                    continue;
+                }
+            }
+
+            // key and value
+            if (DeserializeKeyValue(ref reader, currentNode!, comments))
+            {
+                comments.Clear();
+            }
+            else
+            {
+                reader.SkipOneLine();
+                continue;
+            }
+
+            DeserializeComment(ref reader, out var endComment);
+            if (!reader.Peek()) goto BREAK;
+
+            DeserializeNewLine(ref reader);
+        }
+
+    BREAK:
+        LineNumber = reader.LineNumber;
+        RecycleByteArrayPoolBufferWriter.Release();
+    }
+
+    private bool DeserializeComment(ref CsTomlReader reader, out CsTomlString? comment)
+    {
+        comment = null;
+        reader.SkipWhiteSpace();
+        if (!reader.TryPeek(out var commentCh)) return false;
+
+        if (CsTomlSyntax.IsNumberSign(commentCh))
+        {
+            try
+            {
+                comment = reader.ReadComment();
+                return true;
+            }
+            catch (CsTomlException e)
+            {
+                if (IsThrowCsTomlException)
+                    throw new CsTomlLineNumberException(e, reader.LineNumber);
+
+                exceptions.Add(new CsTomlLineNumberException(e, reader.LineNumber));
+                return false;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        return false;
+    }
+
+    private bool DeserializeNewLine(ref CsTomlReader reader)
+    {
+        reader.SkipWhiteSpace();
+        if (!reader.TryPeek(out var newline)) return false;
+
+        try
+        {
+            return reader.TrySkipToNewLine(newline, true);
+        }
+        catch (CsTomlException e)
+        {
+            if (IsThrowCsTomlException)
+                throw new CsTomlLineNumberException(e, reader.LineNumber);
+
+            exceptions.Add(new CsTomlLineNumberException(e, reader.LineNumber));
+            return false;
+        }
+    }
+
+    private bool DeserializeKeyValue(ref CsTomlReader reader, CsTomlTableNode? currentNode, IReadOnlyCollection<CsTomlString> comments)
+    {
+        try
+        {
+            var key = reader.ReadKey();
+
+            reader.SkipWhiteSpace();
+            if (!reader.TryPeek(out var equalCh)) return false; // = or value is nothing
+            if (!CsTomlSyntax.IsEqual(equalCh)) return false; // = is nothing
+
+            reader.Skip(1); // skip "="
+            reader.SkipWhiteSpace();
+
+            if (!reader.Peek()) return false; // value is nothing
+            var value = reader.ReadValue();
+
+            table.AddKeyValue(key, value, currentNode, comments);
+            return true;
+        }
+        catch (CsTomlException e)
+        {
+            if (IsThrowCsTomlException)
+                throw new CsTomlLineNumberException(e, reader.LineNumber);
+
+            exceptions.Add(new CsTomlLineNumberException(e, reader.LineNumber));
+            return false;
+        }
+        catch (Exception)
+        {
+            throw;
+        }
+    }
+
+    private bool DeserializeTableSection(ref CsTomlReader reader, out CsTomlTableNode? currentNode, IReadOnlyCollection<CsTomlString> comments)
+    {
+        try
+        {
+            var tableKey = reader.ReadKey();
+            table.AddTableHeader(tableKey, out currentNode, comments);
+            return true;
+        }
+        catch (CsTomlException e)
+        {
+            if (IsThrowCsTomlException)
+                throw new CsTomlLineNumberException(e, reader.LineNumber);
+
+            currentNode = null;
+            exceptions.Add(new CsTomlLineNumberException(e, reader.LineNumber));
+            return false;
+        }
+        catch (Exception)
+        {
+            currentNode = null;
+            throw;
+        }
+    }
+
+    private bool DeserializeTableArray(ref CsTomlReader reader, out CsTomlTableNode? currentNode, IReadOnlyCollection<CsTomlString> comments)
+    {
+        try
+        {
+            var tableKey = reader.ReadKey();
+            table.AddTableArrayHeader(tableKey, out currentNode, comments);
+            return true;
+        }
+        catch (CsTomlException e)
+        {
+            if (IsThrowCsTomlException)
+                throw new CsTomlLineNumberException(e, reader.LineNumber);
+
+            currentNode = null;
+            exceptions.Add(new CsTomlLineNumberException(e, reader.LineNumber));
+            return false;
+        }
+        catch (Exception)
+        {
+            currentNode = null;
+            throw;
+        }
+    }
 
 }
 

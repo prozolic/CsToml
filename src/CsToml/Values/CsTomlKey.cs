@@ -1,24 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
 
 namespace CsToml.Values;
 
 [DebuggerDisplay("CsTomlKey: {DotKeyStrings}")]
 internal sealed class CsTomlKey : CsTomlValue
 {
-    private List<CsTomlString> dotKeyStrings = [];
+    private List<CsTomlString> dotKeys = [];
 
-    public IReadOnlyList<CsTomlString> DotKeyStrings => dotKeyStrings;
+    public IReadOnlyList<CsTomlString> DotKeys => dotKeys;
+
+    internal CsTomlKey() : base(CsTomlType.String){}
 
     internal CsTomlKey(IReadOnlyList<CsTomlString> keys) : base(CsTomlType.String)
     {
         if (keys?.Count != 0)
         {
-            dotKeyStrings.AddRange(keys!);
+            dotKeys.AddRange(keys!);
         }
     }
+
+    public void Add(CsTomlString key)
+        => dotKeys.Add(key);
 }

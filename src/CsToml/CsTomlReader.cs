@@ -2,10 +2,7 @@
 using CsToml.Formatter;
 using CsToml.Utility;
 using CsToml.Values;
-using System.Buffers;
 using System.Diagnostics;
-using System.Formats.Tar;
-using System.Reflection.PortableExecutable;
 using System.Runtime.CompilerServices;
 
 namespace CsToml;
@@ -17,9 +14,9 @@ internal ref struct CsTomlReader
     public long LineNumber { get; private set; }
 
     [DebuggerStepThrough]
-    public CsTomlReader(ReadOnlySpan<byte> buffer)
+    public CsTomlReader(ref Utf8Reader reader)
     {
-        byteReader = new Utf8Reader(buffer);
+        byteReader = reader;
         LineNumber = 1;
     }
 
@@ -63,9 +60,7 @@ internal ref struct CsTomlReader
     public CsTomlKey ReadKey()
     {
         SkipWhiteSpace();
-
-        if (!Peek()) 
-            ExceptionHelper.ThrowIncorrectTomlFormat();
+        if (!Peek()) ExceptionHelper.ThrowIncorrectTomlFormat();
 
         var isTableHeader = false;
         var isTableArrayHeader = false;
@@ -80,12 +75,12 @@ internal ref struct CsTomlReader
             }
         }
 
-        var keys = new List<CsTomlString>();
-        while(TryPeek(out var c))
+        var key = new CsTomlKey();
+        while (TryPeek(out var c))
         {
             if (CsTomlSyntax.IsAlphabet(c) || CsTomlSyntax.IsNumber(c))
             {
-                keys.Add(ReadKeyString(isTableHeader));
+                key.Add(ReadKeyString(isTableHeader));
                 continue;
             }
             switch(c)
@@ -97,10 +92,10 @@ internal ref struct CsTomlReader
                     Skip(1);
                     continue;
                 case CsTomlSyntax.Symbol.DOUBLEQUOTED:
-                    keys.Add(ReadDoubleQuoteString());
+                    key.Add(ReadDoubleQuoteString());
                     continue;
                 case CsTomlSyntax.Symbol.SINGLEQUOTED:
-                    keys.Add(ReadSingleQuoteString());
+                    key.Add(ReadSingleQuoteString());
                     continue;
                 case CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET:
                     if (isTableHeader)
@@ -122,7 +117,7 @@ internal ref struct CsTomlReader
                     return ExceptionHelper.NotReturnThrow<CsTomlKey>(ExceptionHelper.ThrowIncorrectTomlFormat);
                 case var _ when CsTomlSyntax.IsUnderScore(c):
                 case var _ when CsTomlSyntax.IsMinusSign(c):
-                    keys.Add(ReadKeyString(isTableHeader));
+                    key.Add(ReadKeyString(isTableHeader));
                     continue;
                 default:
                     return ExceptionHelper.NotReturnThrow<CsTomlKey>(ExceptionHelper.ThrowIncorrectTomlFormat);
@@ -132,7 +127,7 @@ internal ref struct CsTomlReader
             break;
         }
 
-        return new CsTomlKey(keys);  
+        return key;
     }
 
     public CsTomlValue ReadValue()
@@ -173,9 +168,7 @@ internal ref struct CsTomlReader
         while (TryPeek(out var ch))
         {
             if (TrySkipToNewLine(ch, false))
-            {
                 break;
-            }
             Skip(1);
         }
     }
@@ -755,7 +748,7 @@ internal ref struct CsTomlReader
             SkipWhiteSpace();
 
             if (!Peek()) ExceptionHelper.ThrowIncorrectTomlFormat();
-            inlineTable.TryAddValue(key, ReadValue(), currentNode);
+            inlineTable.AddKeyValue(key, ReadValue(), currentNode);
 
             SkipWhiteSpace();
             if (TryPeek(out var ch))
