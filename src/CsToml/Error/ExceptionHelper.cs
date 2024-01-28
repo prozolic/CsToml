@@ -37,6 +37,20 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowInvalidByteIncluded()
+    {
+        ThrowException($@"Invalid byte was included.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowBufferTooSmallFailed()
+    {
+        ThrowException($@"Destination buffer is Too Small to fail.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ThrowIncorrectSyntax()
     {
         ThrowException($@"The Utf8 string was not syntactically valid.");

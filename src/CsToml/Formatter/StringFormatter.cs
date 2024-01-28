@@ -2,6 +2,7 @@
 using System.Buffers;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Unicode;
+using CsToml.Error;
 using CsToml.Utility;
 
 namespace CsToml.Formatter;
@@ -17,7 +18,9 @@ internal class StringFormatter : ICsTomlFormatter<string>
 
         if (status != OperationStatus.Done)
         {
-            throw new Exception();
+            if (status == OperationStatus.InvalidData)
+                ExceptionHelper.ThrowInvalidByteIncluded();
+            ExceptionHelper.ThrowBufferTooSmallFailed();
         }
         writer.Advance(bytesWritten);
     }
@@ -40,7 +43,9 @@ internal class StringFormatter : ICsTomlFormatter<string>
             var status = Utf8.ToUtf16(utf8Bytes, bufferBytesSpan, out var bytesRead, out var charsWritten, replaceInvalidSequences: false);
             if (status != OperationStatus.Done)
             {
-                throw new Exception();
+                if (status == OperationStatus.InvalidData)
+                    ExceptionHelper.ThrowInvalidByteIncluded();
+                ExceptionHelper.ThrowBufferTooSmallFailed();
             }
             return new string(bufferBytesSpan[..charsWritten]);
         }
@@ -53,7 +58,9 @@ internal class StringFormatter : ICsTomlFormatter<string>
                 var status = Utf8.ToUtf16(utf8Bytes, bufferBytesSpan, out var bytesRead, out var charsWritten, replaceInvalidSequences: false);
                 if (status != OperationStatus.Done)
                 {
-                    throw new Exception();
+                    if (status == OperationStatus.InvalidData)
+                        ExceptionHelper.ThrowInvalidByteIncluded();
+                    ExceptionHelper.ThrowBufferTooSmallFailed();
                 }
                 return new string(bufferBytesSpan[..charsWritten]);
             }
