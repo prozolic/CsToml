@@ -462,10 +462,12 @@ internal ref struct CsTomlReader
                         utf8Writer.Write(CsTomlSyntax.Symbol.CARRIAGE);
                         goto BREAK;
                     case CsTomlSyntax.AlphaBet.u:
-                        FormatEscapeSequenceUnicode16(ref utf8Writer);
+                        Skip(1);
+                        WriteAfterParsingFrom16bitCodePointToUtf8(ref utf8Writer);
                         return;
                     case CsTomlSyntax.AlphaBet.U:
-                        FormatEscapeSequenceUnicode32(ref utf8Writer);
+                        Skip(1);
+                        WriteAfterParsingFrom32bitCodePointToUtf8(ref utf8Writer);
                         return;
                 }
             }
@@ -487,96 +489,33 @@ internal ref struct CsTomlReader
         Skip(1);
     }
 
-    private void FormatEscapeSequenceUnicode16(ref Utf8Writer utf8Writer)
+    private void WriteAfterParsingFrom16bitCodePointToUtf8(ref Utf8Writer utf8Writer)
     {
-        Skip(1);
         if (byteReader.Length < byteReader.Position + 4)
             ExceptionHelper.ThrowIncorrectTomlFormat();
 
-        var codePoint = 0;
-        try
-        {
-            if (!CsTomlSyntax.IsHex(byteReader[byteReader.Position]))
-                ExceptionHelper.ThrowIncorrectCompactEscapeCharacters(byteReader[byteReader.Position]);
-            codePoint += (CsTomlSyntax.Number.ParseHex(byteReader[byteReader.Position]) << 12);
-            Skip(1);
-            if (!CsTomlSyntax.IsHex(byteReader[byteReader.Position]))
-                ExceptionHelper.ThrowIncorrectCompactEscapeCharacters(byteReader[byteReader.Position]);
-            codePoint += (CsTomlSyntax.Number.ParseHex(byteReader[byteReader.Position]) << 8);
-            Skip(1);
-            if (!CsTomlSyntax.IsHex(byteReader[byteReader.Position]))
-                ExceptionHelper.ThrowIncorrectCompactEscapeCharacters(byteReader[byteReader.Position]);
-            codePoint += (CsTomlSyntax.Number.ParseHex(byteReader[byteReader.Position]) << 4);
-            Skip(1);
-            if (!CsTomlSyntax.IsHex(byteReader[byteReader.Position]))
-                ExceptionHelper.ThrowIncorrectCompactEscapeCharacters(byteReader[byteReader.Position]);
-            codePoint += CsTomlSyntax.Number.ParseHex(byteReader[byteReader.Position]);
+        Span<byte> destination = stackalloc byte[4];
+        var source = byteReader.ReadBytes(4);
 
-            Span<byte> destSpan = stackalloc byte[4];
-            var byteCount = Utf8Helper.ParseUtf8(codePoint, destSpan);
-            for (int i = 0; i < byteCount; i++)
-            {
-                utf8Writer.Write(destSpan[i]);
-            }
-        }
-        finally
+        Utf8Helper.ParseFrom16bitCodePointToUtf8(destination, source, out int writtenCount);
+        for (int i = 0; i < writtenCount; i++)
         {
-            Skip(1);
+            utf8Writer.Write(destination[i]);
         }
-
     }
 
-    private void FormatEscapeSequenceUnicode32(ref Utf8Writer utf8Writer)
+    private void WriteAfterParsingFrom32bitCodePointToUtf8(ref Utf8Writer utf8Writer)
     {
-        Skip(1);
         if (byteReader.Length < byteReader.Position + 8)
             ExceptionHelper.ThrowIncorrectTomlFormat();
 
-        var codePoint = 0;
-        try
-        {
-            if (!CsTomlSyntax.IsHex(byteReader[byteReader.Position]))
-                ExceptionHelper.ThrowIncorrectCompactEscapeCharacters(byteReader[byteReader.Position]);
-            codePoint += (CsTomlSyntax.Number.ParseHex(byteReader[byteReader.Position]) << 28);
-            Skip(1);
-            if (!CsTomlSyntax.IsHex(byteReader[byteReader.Position]))
-                ExceptionHelper.ThrowIncorrectCompactEscapeCharacters(byteReader[byteReader.Position]);
-            codePoint += (CsTomlSyntax.Number.ParseHex(byteReader[byteReader.Position]) << 24);
-            Skip(1);
-            if (!CsTomlSyntax.IsHex(byteReader[byteReader.Position]))
-                ExceptionHelper.ThrowIncorrectCompactEscapeCharacters(byteReader[byteReader.Position]);
-            codePoint += (CsTomlSyntax.Number.ParseHex(byteReader[byteReader.Position]) << 20);
-            Skip(1);
-            if (!CsTomlSyntax.IsHex(byteReader[byteReader.Position]))
-                ExceptionHelper.ThrowIncorrectCompactEscapeCharacters(byteReader[byteReader.Position]);
-            codePoint += (CsTomlSyntax.Number.ParseHex(byteReader[byteReader.Position]) << 16);
-            Skip(1);
-            if (!CsTomlSyntax.IsHex(byteReader[byteReader.Position]))
-                ExceptionHelper.ThrowIncorrectCompactEscapeCharacters(byteReader[byteReader.Position]);
-            codePoint += (CsTomlSyntax.Number.ParseHex(byteReader[byteReader.Position]) << 12);
-            Skip(1);
-            if (!CsTomlSyntax.IsHex(byteReader[byteReader.Position]))
-                ExceptionHelper.ThrowIncorrectCompactEscapeCharacters(byteReader[byteReader.Position]);
-            codePoint += (CsTomlSyntax.Number.ParseHex(byteReader[byteReader.Position]) << 8);
-            Skip(1);
-            if (!CsTomlSyntax.IsHex(byteReader[byteReader.Position]))
-                ExceptionHelper.ThrowIncorrectCompactEscapeCharacters(byteReader[byteReader.Position]);
-            codePoint += (CsTomlSyntax.Number.ParseHex(byteReader[byteReader.Position]) << 4);
-            Skip(1);
-            if (!CsTomlSyntax.IsHex(byteReader[byteReader.Position]))
-                ExceptionHelper.ThrowIncorrectCompactEscapeCharacters(byteReader[byteReader.Position]);
-            codePoint += CsTomlSyntax.Number.ParseHex(byteReader[byteReader.Position]);
+        Span<byte> destination = stackalloc byte[4];
+        var source = byteReader.ReadBytes(8);
 
-            Span<byte> destSpan = stackalloc byte[4];
-            var byteCount = Utf8Helper.ParseUtf8(codePoint, destSpan);
-            for (int i = 0; i < byteCount; i++)
-            {
-                utf8Writer.Write(destSpan[i]);
-            }
-        }
-        finally
+        Utf8Helper.ParseFrom32bitCodePointToUtf8(destination, source, out int writtenCount);
+        for (int i = 0; i < writtenCount; i++)
         {
-            Skip(1);
+            utf8Writer.Write(destination[i]);
         }
     }
 

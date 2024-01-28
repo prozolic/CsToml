@@ -5,39 +5,6 @@ namespace CsToml.Utility;
 
 internal static class Utf8Helper
 {
-    public static int ParseUtf8(int utf32CodePoint, Span<byte> utf8Bytes)
-    {
-        // unicode -> utf8
-        if (utf32CodePoint < 0x80)
-        {
-            utf8Bytes[0] = (byte)utf32CodePoint;
-            return 1;
-        }
-        else if (utf32CodePoint < 0x800)
-        {
-            utf8Bytes[0] = (byte)(0xc0 | utf32CodePoint >> 6);
-            utf8Bytes[1] = (byte)(0x80 | utf32CodePoint & 0x3f);
-            return 2;
-        }
-        else if (utf32CodePoint < 0x10000)
-        {
-            utf8Bytes[0] = (byte)(0xe0 | utf32CodePoint >> 12);
-            utf8Bytes[1] = (byte)(0x80 | (utf32CodePoint & 0xfc0) >> 6);
-            utf8Bytes[2] = (byte)(0x80 | utf32CodePoint & 0x3f);
-            return 3;
-        }
-        else if (utf32CodePoint < 0x110000)
-        {
-            utf8Bytes[0] = (byte)(0xF0 | utf32CodePoint >> 18);
-            utf8Bytes[1] = (byte)(0x80 | (utf32CodePoint & 0x3F000) >> 12);
-            utf8Bytes[2] = (byte)(0x80 | (utf32CodePoint & 0xFC0) >> 6);
-            utf8Bytes[3] = (byte)(0x80 | utf32CodePoint & 0x3F);
-            return 4;
-        }
-
-        return ExceptionHelper.NotReturnThrow<int>(ExceptionHelper.ThrowInvalidUnicodeScalarValue);
-    }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool ContainBOM(ReadOnlySpan<byte> bytes)
     {
@@ -45,4 +12,109 @@ internal static class Utf8Helper
 
         return bytes[0] == 0xef && bytes[1] == 0xbb && bytes[2] == 0xbf;
     }
+
+    public static void ParseFromCodePointToUtf8(int utf32CodePoint, Span<byte> utf8Bytes, out int writtenCount)
+    {
+        // unicode -> utf8
+        if (utf32CodePoint < 0x80)
+        {
+            utf8Bytes[0] = (byte)utf32CodePoint;
+            writtenCount = 1;
+            return;
+        }
+        else if (utf32CodePoint < 0x800)
+        {
+            utf8Bytes[0] = (byte)(0xc0 | utf32CodePoint >> 6);
+            utf8Bytes[1] = (byte)(0x80 | utf32CodePoint & 0x3f);
+            writtenCount = 2;
+            return;
+        }
+        else if (utf32CodePoint < 0x10000)
+        {
+            utf8Bytes[0] = (byte)(0xe0 | utf32CodePoint >> 12);
+            utf8Bytes[1] = (byte)(0x80 | (utf32CodePoint & 0xfc0) >> 6);
+            utf8Bytes[2] = (byte)(0x80 | utf32CodePoint & 0x3f);
+            writtenCount = 3;
+            return;
+        }
+        else if (utf32CodePoint < 0x110000)
+        {
+            utf8Bytes[0] = (byte)(0xF0 | utf32CodePoint >> 18);
+            utf8Bytes[1] = (byte)(0x80 | (utf32CodePoint & 0x3F000) >> 12);
+            utf8Bytes[2] = (byte)(0x80 | (utf32CodePoint & 0xFC0) >> 6);
+            utf8Bytes[3] = (byte)(0x80 | utf32CodePoint & 0x3F);
+            writtenCount = 4;
+            return;
+        }
+
+        writtenCount = 0;
+        ExceptionHelper.NotReturnThrow<int>(ExceptionHelper.ThrowInvalidUnicodeScalarValue);
+    }
+
+    public static void ParseFrom16bitCodePointToUtf8(Span<byte> destination, ReadOnlySpan<byte> source, out int writtenCount)
+    {
+        if (destination.Length < 4)
+        {
+            writtenCount = 0;
+            ExceptionHelper.ThrowException("Number of elements in the destination Span<byte> is not 4.");
+        }
+        if (source.Length != 4)
+        {
+            writtenCount = 0;
+            ExceptionHelper.ThrowException("Number of elements in the source ReadOnlySpan<byte> is not 4.");
+        }
+
+        for (var i = 0; i < source.Length - 1; i++)
+        {
+            if (!CsTomlSyntax.IsHex(source[i]))
+            {
+                writtenCount = 0;
+                ExceptionHelper.ThrowIncorrectCompactEscapeCharacters(source[i]);
+            }
+        }
+
+        var codePoint = 0;
+        codePoint += (CsTomlSyntax.Number.ParseHex(source[0]) << 12);
+        codePoint += (CsTomlSyntax.Number.ParseHex(source[1]) << 8);
+        codePoint += (CsTomlSyntax.Number.ParseHex(source[2]) << 4);
+        codePoint +=  CsTomlSyntax.Number.ParseHex(source[3]);
+
+        Utf8Helper.ParseFromCodePointToUtf8(codePoint, destination, out writtenCount);
+    }
+
+    public static void ParseFrom32bitCodePointToUtf8(Span<byte> destination, ReadOnlySpan<byte> source, out int writtenCount)
+    {
+        if (destination.Length < 4)
+        {
+            writtenCount = 0;
+            ExceptionHelper.ThrowException("Number of elements in the destination Span<byte> is not 4.");
+        }
+        if (source.Length != 8)
+        {
+            writtenCount = 0;
+            ExceptionHelper.ThrowException("Number of elements in the source ReadOnlySpan<byte> is not 8.");
+        }
+
+        for (var i = 0; i < source.Length - 1; i++)
+        {
+            if (!CsTomlSyntax.IsHex(source[i]))
+            {
+                writtenCount = 0;
+                ExceptionHelper.ThrowIncorrectCompactEscapeCharacters(source[i]);
+            }
+        }
+
+        var codePoint = 0;
+        codePoint += (CsTomlSyntax.Number.ParseHex(source[0]) << 28);
+        codePoint += (CsTomlSyntax.Number.ParseHex(source[1]) << 24);
+        codePoint += (CsTomlSyntax.Number.ParseHex(source[2]) << 20);
+        codePoint += (CsTomlSyntax.Number.ParseHex(source[3]) << 16);
+        codePoint += (CsTomlSyntax.Number.ParseHex(source[4]) << 12);
+        codePoint += (CsTomlSyntax.Number.ParseHex(source[5]) << 8);
+        codePoint += (CsTomlSyntax.Number.ParseHex(source[6]) << 4);
+        codePoint += CsTomlSyntax.Number.ParseHex(source[7]);
+
+        Utf8Helper.ParseFromCodePointToUtf8(codePoint, destination, out writtenCount);
+    }
+
 }
