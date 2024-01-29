@@ -65,9 +65,9 @@ internal class TimeOnlyFormatter : ICsTomlFormatter<TimeOnly>
 
     internal static TimeOnly DeserializeTimeOnly(ReadOnlySpan<byte> bytes)
     {
-        var hour = CsTomlSyntax.Number.ParseDecimal(bytes[0]) * 10 + CsTomlSyntax.Number.ParseDecimal(bytes[1]);
-        var minute = CsTomlSyntax.Number.ParseDecimal(bytes[3]) * 10 + CsTomlSyntax.Number.ParseDecimal(bytes[4]);
-        var second = CsTomlSyntax.Number.ParseDecimal(bytes[6]) * 10 + CsTomlSyntax.Number.ParseDecimal(bytes[7]);
+        var hour = DeserializeDecimal(bytes[0]) * 10 + DeserializeDecimal(bytes[1]);
+        var minute = DeserializeDecimal(bytes[3]) * 10 + DeserializeDecimal(bytes[4]);
+        var second = DeserializeDecimal(bytes[6]) * 10 + DeserializeDecimal(bytes[7]);
 
         // millisecond and microsecond is 0 ~ 999
         // https://learn.microsoft.com/en-us/dotnet/api/system.datetime.-ctor?view=net-8.0#system-datetime-ctor(system-int32-system-int32-system-int32-system-int32-system-int32-system-int32-system-int32-system-int32)
@@ -77,45 +77,54 @@ internal class TimeOnlyFormatter : ICsTomlFormatter<TimeOnly>
         {
             if (bytes.Length == 10)
             {
-                millisecond = CsTomlSyntax.Number.ParseDecimal(bytes[9]) * 100;
+                millisecond = DeserializeDecimal(bytes[9]) * 100;
             }
             else if (bytes.Length == 11)
             {
-                millisecond += CsTomlSyntax.Number.ParseDecimal(bytes[9]) * 100;
-                millisecond += CsTomlSyntax.Number.ParseDecimal(bytes[10]) * 10;
+                millisecond += DeserializeDecimal(bytes[9]) * 100;
+                millisecond += DeserializeDecimal(bytes[10]) * 10;
             }
             else if (bytes.Length == 12)
             {
-                millisecond += CsTomlSyntax.Number.ParseDecimal(bytes[9]) * 100;
-                millisecond += CsTomlSyntax.Number.ParseDecimal(bytes[10]) * 10;
-                millisecond += CsTomlSyntax.Number.ParseDecimal(bytes[11]);
+                millisecond += DeserializeDecimal(bytes[9]) * 100;
+                millisecond += DeserializeDecimal(bytes[10]) * 10;
+                millisecond += DeserializeDecimal(bytes[11]);
             }
             else if (bytes.Length == 13)
             {
-                millisecond += CsTomlSyntax.Number.ParseDecimal(bytes[9]) * 100;
-                millisecond += CsTomlSyntax.Number.ParseDecimal(bytes[10]) * 10;
-                millisecond += CsTomlSyntax.Number.ParseDecimal(bytes[11]);
-                microsecond += CsTomlSyntax.Number.ParseDecimal(bytes[12]) * 100;
+                millisecond += DeserializeDecimal(bytes[9]) * 100;
+                millisecond += DeserializeDecimal(bytes[10]) * 10;
+                millisecond += DeserializeDecimal(bytes[11]);
+                microsecond += DeserializeDecimal(bytes[12]) * 100;
             }
             else if (bytes.Length == 14)
             {
-                millisecond += CsTomlSyntax.Number.ParseDecimal(bytes[9]) * 100;
-                millisecond += CsTomlSyntax.Number.ParseDecimal(bytes[10]) * 10;
-                millisecond += CsTomlSyntax.Number.ParseDecimal(bytes[11]);
-                microsecond += CsTomlSyntax.Number.ParseDecimal(bytes[12]) * 100;
-                microsecond += CsTomlSyntax.Number.ParseDecimal(bytes[13]) * 10;
+                millisecond += DeserializeDecimal(bytes[9]) * 100;
+                millisecond += DeserializeDecimal(bytes[10]) * 10;
+                millisecond += DeserializeDecimal(bytes[11]);
+                microsecond += DeserializeDecimal(bytes[12]) * 100;
+                microsecond += DeserializeDecimal(bytes[13]) * 10;
             }
             else if (bytes.Length >= 15)
             {
-                millisecond += CsTomlSyntax.Number.ParseDecimal(bytes[9]) * 100;
-                millisecond += CsTomlSyntax.Number.ParseDecimal(bytes[10]) * 10;
-                millisecond += CsTomlSyntax.Number.ParseDecimal(bytes[11]);
-                microsecond += CsTomlSyntax.Number.ParseDecimal(bytes[12]) * 100;
-                microsecond += CsTomlSyntax.Number.ParseDecimal(bytes[13]) * 10;
-                microsecond += CsTomlSyntax.Number.ParseDecimal(bytes[14]);
+                millisecond += DeserializeDecimal(bytes[9]) * 100;
+                millisecond += DeserializeDecimal(bytes[10]) * 10;
+                millisecond += DeserializeDecimal(bytes[11]);
+                microsecond += DeserializeDecimal(bytes[12]) * 100;
+                microsecond += DeserializeDecimal(bytes[13]) * 10;
+                microsecond += DeserializeDecimal(bytes[14]);
             }
         }
         return new TimeOnly(hour, minute, second, millisecond, microsecond);
+    }
+
+    internal static int DeserializeDecimal(byte utf8Byte)
+    {
+        if (!CsTomlSyntax.IsNumber(utf8Byte))
+        {
+            ExceptionHelper.ThrowNumericConversionFailed(utf8Byte);
+        }
+        return CsTomlSyntax.Number.ParseDecimal(utf8Byte);
     }
 
 }

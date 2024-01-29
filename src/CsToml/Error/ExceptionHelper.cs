@@ -121,6 +121,14 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowIncorrectFormattingOfFloatingNumbers()
+    {
+        ThrowException($@"Failed due to incorrect formatting of floating numbers.");
+    }
+
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ThrowConsecutiveQuotationMarksOf3()
     {
         ThrowException($@"Three or more quotation marks are written consecutively.");

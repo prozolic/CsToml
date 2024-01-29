@@ -35,18 +35,27 @@ internal class DateOnlyFormatter : ICsTomlFormatter<DateOnly>
 
     internal static DateOnly DeserializeDateOnly(ReadOnlySpan<byte> bytes)
     {
-        var year = CsTomlSyntax.Number.ParseDecimal(bytes[0]) * 1000;
-        year += CsTomlSyntax.Number.ParseDecimal(bytes[1]) * 100;
-        year += CsTomlSyntax.Number.ParseDecimal(bytes[2]) * 10;
-        year += CsTomlSyntax.Number.ParseDecimal(bytes[3]);
+        var year = DeserializeDecimal(bytes[0]) * 1000;
+        year += DeserializeDecimal(bytes[1]) * 100;
+        year += DeserializeDecimal(bytes[2]) * 10;
+        year += DeserializeDecimal(bytes[3]);
 
-        var month = CsTomlSyntax.Number.ParseDecimal(bytes[5]) * 10;
-        month += CsTomlSyntax.Number.ParseDecimal(bytes[6]);
+        var month = DeserializeDecimal(bytes[5]) * 10;
+        month += DeserializeDecimal(bytes[6]);
 
-        var day = CsTomlSyntax.Number.ParseDecimal(bytes[8]) * 10;
-        day += CsTomlSyntax.Number.ParseDecimal(bytes[9]);
+        var day = DeserializeDecimal(bytes[8]) * 10;
+        day += DeserializeDecimal(bytes[9]);
 
         return new DateOnly(year, month, day);
+    }
+
+    internal static int DeserializeDecimal(byte utf8Byte)
+    {
+        if (!CsTomlSyntax.IsNumber(utf8Byte))
+        {
+            ExceptionHelper.ThrowNumericConversionFailed(utf8Byte);
+        }
+        return CsTomlSyntax.Number.ParseDecimal(utf8Byte);
     }
 
 }

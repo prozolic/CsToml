@@ -1,4 +1,5 @@
 ﻿
+using CsToml.Error;
 using CsToml.Utility;
 
 namespace CsToml.Formatter;
@@ -75,10 +76,23 @@ internal class DoubleFormatter : ICsTomlFormatter<double>
         var index = 0;
 
         // integer part
-        while (CsTomlSyntax.IsNumber(utf8Bytes[index]))
+        while (true)
         {
-            integerValue *= 10d;
-            integerValue += CsTomlSyntax.Number.ParseDecimal(utf8Bytes[index++]);
+            if (CsTomlSyntax.IsNumber(utf8Bytes[index]))
+            {
+                integerValue *= 10d;
+                integerValue += CsTomlSyntax.Number.ParseDecimal(utf8Bytes[index++]);
+                continue;
+            }
+            else if (CsTomlSyntax.IsPeriod(utf8Bytes[index]))
+            {
+                break;
+            }
+            else if (CsTomlSyntax.IsExpSymbol(utf8Bytes[index]))
+            {
+                break;
+            }
+            ExceptionHelper.ThrowIncorrectFormattingOfFloatingNumbers();
         }
 
         // decimal part

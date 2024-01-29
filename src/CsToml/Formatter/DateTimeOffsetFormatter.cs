@@ -1,4 +1,5 @@
 ﻿
+using CsToml.Error;
 using CsToml.Utility;
 
 namespace CsToml.Formatter;
@@ -90,7 +91,6 @@ internal class DateTimeOffsetFormatter : ICsTomlFormatter<DateTimeOffset>
         writer.Advance(bytesWritten);
     }
 
-
     public static DateTimeOffset Deserialize(ref Utf8Reader reader, int length)
     {
         var bytes = reader.ReadBytes(length);
@@ -109,20 +109,20 @@ internal class DateTimeOffsetFormatter : ICsTomlFormatter<DateTimeOffset>
 
     private static DateTimeOffset DeserializeDateTimeOffset(ReadOnlySpan<byte> bytes, ReadOnlySpan<byte> offsetBytes)
     {
-        var year = CsTomlSyntax.Number.ParseDecimal(bytes[0]) * 1000;
-        year += CsTomlSyntax.Number.ParseDecimal(bytes[1]) * 100;
-        year += CsTomlSyntax.Number.ParseDecimal(bytes[2]) * 10;
-        year += CsTomlSyntax.Number.ParseDecimal(bytes[3]);
+        var year = DeserializeDecimal(bytes[0]) * 1000;
+        year += DeserializeDecimal(bytes[1]) * 100;
+        year += DeserializeDecimal(bytes[2]) * 10;
+        year += DeserializeDecimal(bytes[3]);
 
-        var month = CsTomlSyntax.Number.ParseDecimal(bytes[5]) * 10;
-        month += CsTomlSyntax.Number.ParseDecimal(bytes[6]);
+        var month = DeserializeDecimal(bytes[5]) * 10;
+        month += DeserializeDecimal(bytes[6]);
 
-        var day = CsTomlSyntax.Number.ParseDecimal(bytes[8]) * 10;
-        day += CsTomlSyntax.Number.ParseDecimal(bytes[9]);
+        var day = DeserializeDecimal(bytes[8]) * 10;
+        day += DeserializeDecimal(bytes[9]);
 
-        var hour = CsTomlSyntax.Number.ParseDecimal(bytes[11]) * 10 + CsTomlSyntax.Number.ParseDecimal(bytes[12]);
-        var minute = CsTomlSyntax.Number.ParseDecimal(bytes[14]) * 10 + CsTomlSyntax.Number.ParseDecimal(bytes[15]);
-        var second = CsTomlSyntax.Number.ParseDecimal(bytes[17]) * 10 + CsTomlSyntax.Number.ParseDecimal(bytes[18]);
+        var hour = DeserializeDecimal(bytes[11]) * 10 + DeserializeDecimal(bytes[12]);
+        var minute = DeserializeDecimal(bytes[14]) * 10 + DeserializeDecimal(bytes[15]);
+        var second = DeserializeDecimal(bytes[17]) * 10 + DeserializeDecimal(bytes[18]);
 
         // millisecond and microsecond is 0 ~ 999
         // https://learn.microsoft.com/en-us/dotnet/api/system.datetime.-ctor?view=net-8.0#system-datetime-ctor(system-int32-system-int32-system-int32-system-int32-system-int32-system-int32-system-int32-system-int32)
@@ -131,42 +131,42 @@ internal class DateTimeOffsetFormatter : ICsTomlFormatter<DateTimeOffset>
 
         if (bytes.Length == 21)
         {
-            millisecond = CsTomlSyntax.Number.ParseDecimal(bytes[20]) * 100;
+            millisecond = DeserializeDecimal(bytes[20]) * 100;
         }
         else if (bytes.Length == 22)
         {
-            millisecond += CsTomlSyntax.Number.ParseDecimal(bytes[20]) * 100;
-            millisecond += CsTomlSyntax.Number.ParseDecimal(bytes[21]) * 10;
+            millisecond += DeserializeDecimal(bytes[20]) * 100;
+            millisecond += DeserializeDecimal(bytes[21]) * 10;
         }
         else if (bytes.Length == 23)
         {
-            millisecond += CsTomlSyntax.Number.ParseDecimal(bytes[20]) * 100;
-            millisecond += CsTomlSyntax.Number.ParseDecimal(bytes[21]) * 10;
-            millisecond += CsTomlSyntax.Number.ParseDecimal(bytes[22]);
+            millisecond += DeserializeDecimal(bytes[20]) * 100;
+            millisecond += DeserializeDecimal(bytes[21]) * 10;
+            millisecond += DeserializeDecimal(bytes[22]);
         }
         else if (bytes.Length == 24)
         {
-            millisecond += CsTomlSyntax.Number.ParseDecimal(bytes[20]) * 100;
-            millisecond += CsTomlSyntax.Number.ParseDecimal(bytes[21]) * 10;
-            millisecond += CsTomlSyntax.Number.ParseDecimal(bytes[22]);
-            microsecond += CsTomlSyntax.Number.ParseDecimal(bytes[23]) * 100;
+            millisecond += DeserializeDecimal(bytes[20]) * 100;
+            millisecond += DeserializeDecimal(bytes[21]) * 10;
+            millisecond += DeserializeDecimal(bytes[22]);
+            microsecond += DeserializeDecimal(bytes[23]) * 100;
         }
         else if (bytes.Length == 25)
         {
-            millisecond += CsTomlSyntax.Number.ParseDecimal(bytes[20]) * 100;
-            millisecond += CsTomlSyntax.Number.ParseDecimal(bytes[21]) * 10;
-            millisecond += CsTomlSyntax.Number.ParseDecimal(bytes[22]);
-            microsecond += CsTomlSyntax.Number.ParseDecimal(bytes[23]) * 100;
-            microsecond += CsTomlSyntax.Number.ParseDecimal(bytes[24]) * 10;
+            millisecond += DeserializeDecimal(bytes[20]) * 100;
+            millisecond += DeserializeDecimal(bytes[21]) * 10;
+            millisecond += DeserializeDecimal(bytes[22]);
+            microsecond += DeserializeDecimal(bytes[23]) * 100;
+            microsecond += DeserializeDecimal(bytes[24]) * 10;
         }
         else if (bytes.Length >= 26)
         {
-            millisecond += CsTomlSyntax.Number.ParseDecimal(bytes[20]) * 100;
-            millisecond += CsTomlSyntax.Number.ParseDecimal(bytes[21]) * 10;
-            millisecond += CsTomlSyntax.Number.ParseDecimal(bytes[22]);
-            microsecond += CsTomlSyntax.Number.ParseDecimal(bytes[23]) * 100;
-            microsecond += CsTomlSyntax.Number.ParseDecimal(bytes[24]) * 10;
-            microsecond += CsTomlSyntax.Number.ParseDecimal(bytes[25]);
+            millisecond += DeserializeDecimal(bytes[20]) * 100;
+            millisecond += DeserializeDecimal(bytes[21]) * 10;
+            millisecond += DeserializeDecimal(bytes[22]);
+            microsecond += DeserializeDecimal(bytes[23]) * 100;
+            microsecond += DeserializeDecimal(bytes[24]) * 10;
+            microsecond += DeserializeDecimal(bytes[25]);
         }
 
         if (offsetBytes.Length == 1 && offsetBytes[0] == CsTomlSyntax.AlphaBet.Z)
@@ -177,15 +177,22 @@ internal class DateTimeOffsetFormatter : ICsTomlFormatter<DateTimeOffset>
         if (offsetBytes.Length == 6)
         {
             var plusOrMinus = CsTomlSyntax.IsPlusSign(offsetBytes[0]) ? 1 : -1;
-            var offsetHour = CsTomlSyntax.Number.ParseDecimal(offsetBytes[1]) * 10 + CsTomlSyntax.Number.ParseDecimal(offsetBytes[2]);
-            var offsetMinute = CsTomlSyntax.Number.ParseDecimal(offsetBytes[4]) * 10 + CsTomlSyntax.Number.ParseDecimal(offsetBytes[5]);
+            var offsetHour = DeserializeDecimal(offsetBytes[1]) * 10 + DeserializeDecimal(offsetBytes[2]);
+            var offsetMinute = DeserializeDecimal(offsetBytes[4]) * 10 + DeserializeDecimal(offsetBytes[5]);
             return new DateTimeOffset(year, month, day, hour, minute, second, millisecond, microsecond, new TimeSpan(offsetHour * plusOrMinus, offsetMinute * plusOrMinus ,0));
         }
 
         return new DateTimeOffset(year, month, day, hour, minute, second, millisecond, microsecond, TimeSpan.Zero);
     }
 
-
+    internal static int DeserializeDecimal(byte utf8Byte)
+    {
+        if (!CsTomlSyntax.IsNumber(utf8Byte))
+        {
+            ExceptionHelper.ThrowNumericConversionFailed(utf8Byte);
+        }
+        return CsTomlSyntax.Number.ParseDecimal(utf8Byte);
+    }
 }
 
 
