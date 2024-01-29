@@ -2,7 +2,7 @@
 
 namespace CsToml.Values;
 
-[DebuggerDisplay("CsTomlKey: {DotKeyStrings}")]
+[DebuggerDisplay("CsTomlKey: {DotKeys}")]
 internal sealed class CsTomlKey : CsTomlValue
 {
     private List<CsTomlString> dotKeys = [];
