@@ -83,6 +83,7 @@ internal static class CsTomlSyntax
         public const byte t = 0x74;
         public const byte u = 0x75;
         public const byte x = 0x78;
+        public const byte z = 0x7a;
 
         public const byte A = 0x41;
         public const byte E = 0x45;
@@ -236,15 +237,15 @@ internal static class CsTomlSyntax
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsHex(byte rawByte)
-        => IsNumber(rawByte) || (AlphaBet.A <= rawByte && rawByte <= AlphaBet.F) || (AlphaBet.a <= rawByte && rawByte <= AlphaBet.f);
+        => IsNumber(rawByte) || IsUpperHexAlphabet(rawByte) || IsLowerHexAlphabet(rawByte);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsUpperHexAlphabet(byte rawByte)
-        => 0x41 <= rawByte && rawByte <= 0x46;
+        => AlphaBet.A <= rawByte && rawByte <= AlphaBet.F;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsLowerHexAlphabet(byte rawByte)
-        => 0x61 <= rawByte && rawByte <= 0x66;
+        => AlphaBet.a <= rawByte && rawByte <= AlphaBet.f;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsAlphabet(byte rawByte)
@@ -252,11 +253,11 @@ internal static class CsTomlSyntax
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsUpperAlphabet(byte ch)
-        => 0x41 <= ch && ch <= 0x5a;
+        => AlphaBet.A <= ch && ch <= AlphaBet.Z;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsLowerAlphabet(byte rawByte)
-        => 0x61 <= rawByte && rawByte <= 0x7a;
+        => AlphaBet.a <= rawByte && rawByte <= AlphaBet.z;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsPlusSign(byte rawByte)
