@@ -82,21 +82,12 @@ internal class CsTomlTable : CsTomlValue
             if (currentNode!.TryGetOrAddGroupingPropertyNode(sectionKey, out var childNode))
             {
                 isNewNode = true;
-                currentNode.IsTableArrayHeader = true;
                 currentNode = childNode;
+                currentNode.IsTableArrayHeader = true;
                 continue;
             }
             if (childNode!.IsTableArrayHeader && i == dotKeys.Count - 1)
             {
-                // sub-tables are registered or not
-                foreach (var subNode in childNode.Nodes.Values)
-                {
-                    if (subNode.IsTableHeader || subNode.IsTableArrayHeader)
-                    {
-                        ExceptionHelper.ThrowOrderOfSubtableDefinitions("test");
-                        //ExceptionHelper.ThrowOrderOfSubtableDefinitions(string.Join(".", dotKeyStrings.Select(s => s.Value)));
-                    }
-                }
                 currentNode = childNode;
                 break;
             }
@@ -163,15 +154,37 @@ internal class CsTomlTable : CsTomlValue
     {
         var csTomlWriter = new CsTomlWriter(ref writer);
         var keys = new List<CsTomlString>();
-        ToTomlStringCore(ref csTomlWriter, RootNode, keys);
+        var tableNodes = new List<CsTomlString>();
+        ToTomlStringCore(ref csTomlWriter, RootNode, keys, tableNodes);
 
         return true;
     }
 
-    private void ToTomlStringCore(ref CsTomlWriter writer, CsTomlTableNode parentNode, List<CsTomlString> keys)
+    private void ToTomlStringCore(ref CsTomlWriter writer, CsTomlTableNode parentNode, List<CsTomlString> keys, List<CsTomlString> tableHeaderKeys)
     {
+        if (parentNode.IsTableArrayHeader)
+        {
+            if (parentNode.Value is CsTomlArray arrayValue)
+            {
+                var keysSpan = CollectionsMarshal.AsSpan(tableHeaderKeys);
+                foreach (var v in arrayValue)
+                {
+                    if (writer.WrittingCount > 0)
+                    {
+                        writer.WriteNewLine();
+                    }
+                    writer.WriteTableArrayHeader(keysSpan);
+                    if (v is CsTomlTable table)
+                    {
+                        table.ToTomlStringCore(ref writer, table.RootNode, [], tableHeaderKeys);
+                    }
+                }
+            }
+        }
+
         foreach (var (key, childNode) in parentNode.Nodes)
         {
+            tableHeaderKeys.Add(key);
             if (childNode.IsGroupingProperty)
             {
                 if (!childNode.IsTableHeader && parentNode.IsTableHeader && keys.Count > 0)
@@ -185,18 +198,18 @@ internal class CsTomlTable : CsTomlValue
                     keys.Clear();
                 }
                 keys.Add(key);
-                ToTomlStringCore(ref writer, childNode, keys);
-                continue;
+                ToTomlStringCore(ref writer, childNode, keys, tableHeaderKeys);
             }
             else
             {
+                tableHeaderKeys.RemoveAt(tableHeaderKeys.Count - 1);
                 if (parentNode.IsTableHeader && keys.Count > 0)
                 {
                     if (writer.WrittingCount > 0)
                     {
                         writer.WriteNewLine();
                     }
-                    var keysSpan = CollectionsMarshal.AsSpan(keys);
+                    var keysSpan = CollectionsMarshal.AsSpan(tableHeaderKeys);
                     writer.WriteTableHeader(keysSpan);
                     keys.Clear();
                     writer.WriteKeyValueAndNewLine(in key, childNode.Value!);
@@ -214,27 +227,7 @@ internal class CsTomlTable : CsTomlValue
                     writer.WriteKeyValueAndNewLine(in key, childNode.Value!);
                 }
             }
-        }
-
-        if (parentNode.IsTableArrayHeader)
-        {
-            if (parentNode.Value is CsTomlArray arrayValue)
-            {
-                var keysSpan = CollectionsMarshal.AsSpan(keys);
-                foreach (var v in arrayValue)
-                {
-                    if (writer.WrittingCount > 0)
-                    {
-                        writer.WriteNewLine();
-                    }
-                    writer.WriteTableArrayHeader(keysSpan);
-                    if (v is CsTomlTable table)
-                    {
-                        table.ToTomlStringCore(ref writer, table.RootNode, []);
-                    }
-                }
-            }
-
+            tableHeaderKeys.Remove(key);
         }
 
         keys.Clear(); // clear subkey
