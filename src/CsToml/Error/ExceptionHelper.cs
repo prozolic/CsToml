@@ -30,6 +30,13 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowEndOfFileReached()
+    {
+        ThrowException($@"Reached end of file during processing.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ThrowInvalidAdvance()
     {
         ThrowException($@"Cannot advance past the end of the buffer.");
@@ -160,6 +167,20 @@ internal static class ExceptionHelper
     internal static void ThrowUnderscoreUsedConsecutively()
     {
         ThrowException($@"Underscores are used consecutively.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowPeriodUsedMoreThanOnce()
+    {
+        ThrowException($@"Periods are used more than once.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowTheExponentPartUsedMoreThanOnce()
+    {
+        ThrowException($@"The exponent part e is used more than once.");
     }
 
     [DoesNotReturn]

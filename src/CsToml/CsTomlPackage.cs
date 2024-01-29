@@ -15,8 +15,6 @@ public partial class CsTomlPackage
     private readonly CsTomlTable table;
     private readonly List<CsTomlException> exceptions;
 
-    internal CsTomlTableNode Node => table.RootNode;
-
     public long LineNumber { get; internal set; }
 
     public ReadOnlyCollection<CsTomlException>? Exceptions => exceptions.AsReadOnly();
@@ -37,7 +35,7 @@ public partial class CsTomlPackage
     internal void Deserialize(ref Utf8Reader utf8Reader)
     {
         var reader = new CsTomlReader(ref utf8Reader);
-        CsTomlTableNode? currentNode = Node;
+        CsTomlTableNode? currentNode = table.RootNode;
 
         var comments = new List<CsTomlString>();
         while (reader.Peek())

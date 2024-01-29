@@ -60,7 +60,7 @@ internal ref struct CsTomlReader
     public CsTomlKey ReadKey()
     {
         SkipWhiteSpace();
-        if (!Peek()) ExceptionHelper.ThrowIncorrectTomlFormat();
+        if (!Peek()) ExceptionHelper.ThrowEndOfFileReached();
 
         var isTableHeader = false;
         var isTableArrayHeader = false;
@@ -109,7 +109,7 @@ internal ref struct CsTomlReader
                             }
                             else
                             {
-                                ExceptionHelper.ThrowIncorrectTomlFormat();
+                                ExceptionHelper.ThrowEndOfFileReached();
                             }
                         }
                         goto BREAK;
@@ -134,7 +134,7 @@ internal ref struct CsTomlReader
     {
         SkipWhiteSpace();
 
-        if (!TryPeek(out var c)) ExceptionHelper.ThrowIncorrectTomlFormat();
+        if (!TryPeek(out var c)) ExceptionHelper.ThrowEndOfFileReached();
 
         return c switch
         {
@@ -476,7 +476,7 @@ internal ref struct CsTomlReader
         }
         else
         {
-            ExceptionHelper.ThrowIncorrectTomlFormat();
+            ExceptionHelper.ThrowEndOfFileReached();
         }
     BREAK:
         Skip(1);
@@ -741,7 +741,7 @@ internal ref struct CsTomlReader
             var key = ReadKey();
             SkipWhiteSpace();
 
-            if (!TryPeek(out var equalCh)) ExceptionHelper.ThrowIncorrectTomlFormat();
+            if (!TryPeek(out var equalCh)) ExceptionHelper.ThrowEndOfFileReached();
             if (!CsTomlSyntax.IsEqual(equalCh)) ExceptionHelper.ThrowIncorrectTomlFormat();
 
             Skip(1); // skip "="
@@ -1125,6 +1125,7 @@ internal ref struct CsTomlReader
 
         var number = false;
         var underline = false;
+        var period = false;
         var exp = false;
         while (TryPeek(out var ch))
         {
@@ -1149,6 +1150,8 @@ internal ref struct CsTomlReader
                     continue;
                 case CsTomlSyntax.Symbol.PERIOD:
                     if (!number) ExceptionHelper.ThrowPeriodUsedWhereNotSurroundedByNumbers();
+                    if (period) ExceptionHelper.ThrowPeriodUsedMoreThanOnce();
+                    period = true;
                     number = false;
                     writer.Write(ch);
                     Skip(1);
@@ -1156,6 +1159,7 @@ internal ref struct CsTomlReader
                 case CsTomlSyntax.AlphaBet.e:
                 case CsTomlSyntax.AlphaBet.E:
                     if (!number) ExceptionHelper.ThrowExponentPartUsedWhereNotSurroundedByNumbers();
+                    if (exp) ExceptionHelper.ThrowTheExponentPartUsedMoreThanOnce();
                     number = false;
                     exp = true;
                     writer.Write(ch);
