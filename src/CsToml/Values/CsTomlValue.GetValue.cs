@@ -100,7 +100,7 @@ public partial class CsTomlValue
         }
     }
 
-    public bool TryGGetDateTimeOffset(out DateTimeOffset value)
+    public bool TryGetDateTimeOffset(out DateTimeOffset value)
     {
         try
         {
