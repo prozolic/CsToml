@@ -1,5 +1,4 @@
 ﻿using CsToml.Error;
-using CsToml.Extension;
 using CsToml.Utility;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -7,7 +6,7 @@ using System.Runtime.InteropServices;
 namespace CsToml.Values;
 
 [DebuggerDisplay("CsTomlTable : {RootNode}")]
-internal class CsTomlTable : CsTomlValue
+internal partial class CsTomlTable : CsTomlValue
 {
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private readonly CsTomlTableNode node = CsTomlTableNode.CreateGroupingPropertyNode();
@@ -114,40 +113,6 @@ internal class CsTomlTable : CsTomlValue
         (currentNode.Value as CsTomlArray)?.Add(table);
         currentNode.AddComment(comments);
         newNode = table.RootNode;
-    }
-
-    public bool TryGetValue(ReadOnlySpan<byte> key, out CsTomlValue? value, CsTomlTableNode? searchRootNode = null)
-    {
-        var hit = false;
-        var separated = false;
-        var currentNode = searchRootNode ?? RootNode;
-        foreach (var separateKeyRange in key.SplitSpan("."u8))
-        {
-            separated = true;
-            var separateKey = separateKeyRange.Value;
-            if (currentNode!.TryGetChildNode(separateKey, out var childNode))
-            {
-                hit = true;
-                currentNode = childNode;
-            }
-        }
-
-        if (!separated)
-        {
-            if (currentNode!.TryGetChildNode(key, out var node))
-            {
-                value = node!.Value;
-                return true;
-            }
-        }
-        if (hit && (!currentNode!.IsGroupingProperty || currentNode!.IsTableArrayHeader))
-        {
-            value = currentNode.Value!;
-            return true;
-        }
-
-        value = null;
-        return false;
     }
 
     internal override bool ToTomlString(ref Utf8Writer writer)

@@ -1,13 +1,14 @@
-﻿
-using CsToml.Formatter;
+﻿using CsToml.Formatter;
 using CsToml.Utility;
 using System.Diagnostics;
 
 namespace CsToml.Values;
 
 [DebuggerDisplay("CsTomlDouble: {Value}")]
-internal partial class CsTomlDouble(double value, CsTomlDouble.DoubleKind kind = CsTomlDouble.DoubleKind.Normal) 
-    : CsTomlValue(CsTomlType.Float), IEquatable<CsTomlDouble?>
+internal partial class CsTomlDouble(double value, CsTomlDouble.DoubleKind kind = CsTomlDouble.DoubleKind.Normal) : 
+    CsTomlValue(CsTomlType.Float),
+    IEquatable<CsTomlDouble?>,
+    ISpanFormattable
 {
     public readonly static CsTomlDouble Inf = new(CsTomlSyntax.Double.Inf, DoubleKind.Inf);
     public readonly static CsTomlDouble NInf = new (CsTomlSyntax.Double.NInf, DoubleKind.NInf);
@@ -72,5 +73,12 @@ internal partial class CsTomlDouble(double value, CsTomlDouble.DoubleKind kind =
 
     public override int GetHashCode()
         => Value.GetHashCode();
+
+    public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider)
+    => Value.TryFormat(destination, out charsWritten, format, provider);
+
+    public string ToString(string? format, IFormatProvider? formatProvider)
+        => Value.ToString(format, formatProvider);
+
 }
 

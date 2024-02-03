@@ -1,5 +1,6 @@
 ﻿using CsToml.Debugger;
 using CsToml.Error;
+using CsToml.Utility;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -115,13 +116,72 @@ internal class CsTomlTableNode
 
     public bool TryGetChildNode(ReadOnlySpan<byte> key, out CsTomlTableNode? value)
     {
-        var keystring = new CsTomlString(key, CsTomlString.CsTomlStringType.Unquoted);
-        if (Value is CsTomlInlineTable table)
+        var isBareKey = true;
+        var firstEscapeSequenceIndex = 0;
+        for (var i = 0; i < key.Length; i++)
         {
-            return table.RootNode.nodes.TryGetValue(keystring, out value);
+            isBareKey = CsTomlSyntax.IsBareKey(key[i]);
+            if (!isBareKey && CsTomlSyntax.IsBackSlash(key[i]))
+            {
+                firstEscapeSequenceIndex = i;
+                break;
+            }
         }
 
-        return nodes.TryGetValue(keystring, out value);
+        var searchKey = key;
+        if (isBareKey)
+        {
+            var bareKeystring = new CsTomlString(searchKey, CsTomlString.CsTomlStringType.Unquoted);
+            if (Value is CsTomlInlineTable t)
+            {
+                return t.RootNode.nodes.TryGetValue(bareKeystring, out value);
+            }
+
+            return nodes.TryGetValue(bareKeystring, out value);
+        }
+        else
+        {
+            var bufferSize = key.Length;
+            var reader = new Utf8Reader(key);
+            using var bufferWriter = new ArrayPoolBufferWriter<byte>(bufferSize);
+            var writer = new Utf8Writer(bufferWriter);
+
+            writer.Write(key[..firstEscapeSequenceIndex]);
+            reader.Skip(firstEscapeSequenceIndex + 1);
+
+            if (reader.TryPeek(out var FirstCh))
+            {
+                var result = CsTomlString.TryFormatEscapeSequence(ref reader, ref writer, false, false);
+                if (result == CsTomlString.EscapeSequenceResult.Failure)
+                {
+                    reader.Skip(1);
+                }
+            }
+
+            while (reader.TryPeek(out var ch))
+            {
+                if (CsTomlSyntax.IsBackSlash(ch))
+                {
+                    var result = CsTomlString.TryFormatEscapeSequence(ref reader, ref writer, false, false);
+                    if (result == CsTomlString.EscapeSequenceResult.Failure)
+                    {
+                        reader.Skip(1);
+                    }
+                    continue;
+                }
+
+                writer.Write(ch);
+                reader.Skip(1);
+            }
+
+            var keystring = new CsTomlString(bufferWriter.WrittenSpan, CsTomlString.CsTomlStringType.Basic);
+            if (Value is CsTomlInlineTable t2)
+            {
+                return t2.RootNode.nodes.TryGetValue(keystring, out value);
+            }
+
+            return nodes.TryGetValue(keystring, out value);
+        }
     }
 
     private bool TryGetChildNode(ReadOnlySpan<char> keySpan, out CsTomlTableNode? value)

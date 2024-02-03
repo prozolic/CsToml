@@ -1,18 +1,20 @@
-﻿
-using CsToml.Debugger;
-using CsToml.Formatter;
+﻿using CsToml.Formatter;
 using CsToml.Utility;
+using System.Buffers;
 using System.Diagnostics;
 using System.IO.Hashing;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using System.Text.Unicode;
 
 namespace CsToml.Values;
 
 [DebuggerDisplay("CsTomlString: {Utf16String}")]
-internal partial class CsTomlString(ReadOnlySpan<byte> value, CsTomlString.CsTomlStringType type = CsTomlString.CsTomlStringType.Basic) 
-    : CsTomlValue(CsTomlType.String), IEquatable<CsTomlString?>
+internal partial class CsTomlString(ReadOnlySpan<byte> value, CsTomlString.CsTomlStringType type = CsTomlString.CsTomlStringType.Basic) : 
+    CsTomlValue(CsTomlType.String),
+    IEquatable<CsTomlString?>,
+    ISpanFormattable
 {
     public enum CsTomlStringType : byte
     {
@@ -45,6 +47,32 @@ internal partial class CsTomlString(ReadOnlySpan<byte> value, CsTomlString.CsTom
     [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
     public CsTomlStringType TomlStringType { get; } = type;
 
+    internal override bool ToTomlString(ref Utf8Writer writer)
+    {
+        if (TomlStringType == CsTomlStringType.Unquoted)
+        {
+            if (Length == 0)
+            {
+                return false;
+            }
+            writer.Write(Value);
+            return true;
+        }
+        switch (TomlStringType)
+        {
+            case CsTomlStringType.Basic:
+                return ToTomlBasicString(ref writer);
+            case CsTomlStringType.MultiLineBasic:
+                return ToTomlMultiLineBasicString(ref writer);
+            case CsTomlStringType.Literal:
+                return ToTomlLiteralString(ref writer);
+            case CsTomlStringType.MultiLineLiteral:
+                return ToTomlMultiLineLiteralString(ref writer);
+        }
+
+        return false;
+    }
+
     public override bool Equals(object? obj)
     {
         if (obj == null) return false;
@@ -71,31 +99,13 @@ internal partial class CsTomlString(ReadOnlySpan<byte> value, CsTomlString.CsTom
     public override int GetHashCode()
         => Hash.ToInt32(Value);
 
-    internal override bool ToTomlString(ref Utf8Writer writer)
+    public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider)
     {
-        if (TomlStringType == CsTomlStringType.Unquoted)
-        {
-            if (Length == 0)
-            {
-                return false;
-            }
-            writer.Write(Value);
-            return true;
-        }
-        switch (TomlStringType)
-        {
-            case CsTomlStringType.Basic:
-                return ToTomlBasicString(ref writer);
-            case CsTomlStringType.MultiLineBasic:
-                return ToTomlMultiLineBasicString(ref writer);
-            case CsTomlStringType.Literal:
-                return ToTomlLiteralString(ref writer);
-            case CsTomlStringType.MultiLineLiteral:
-                return ToTomlMultiLineLiteralString(ref writer);
-        }
-
-        return false;
+        var status = Utf8.ToUtf16(Value, destination, out var bytesRead, out charsWritten, replaceInvalidSequences: false);
+        return status != OperationStatus.Done;
     }
+
+    public string ToString(string? format, IFormatProvider? formatProvider) => GetString();
 
     private bool ToTomlBasicString(ref Utf8Writer writer)
     {

@@ -1,13 +1,14 @@
-﻿
-using CsToml.Formatter;
+﻿using CsToml.Formatter;
 using CsToml.Utility;
 using System.Diagnostics;
 
 namespace CsToml.Values;
 
 [DebuggerDisplay("CsTomlLocalTime: {Value}")]
-internal partial class CsTomlLocalTime(TimeOnly value)
-    : CsTomlValue(CsTomlType.LocalTime), IEquatable<CsTomlLocalTime?>
+internal partial class CsTomlLocalTime(TimeOnly value) : 
+    CsTomlValue(CsTomlType.LocalTime),
+    IEquatable<CsTomlLocalTime?>,
+    ISpanFormattable
 {
     public TimeOnly Value { get; private set; } = value;
 
@@ -34,4 +35,10 @@ internal partial class CsTomlLocalTime(TimeOnly value)
 
     public override int GetHashCode()
         => Value.GetHashCode();
+
+    public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider)
+        => Value.TryFormat(destination, out charsWritten, format, provider);
+
+    public string ToString(string? format, IFormatProvider? formatProvider)
+        => Value.ToString(format, formatProvider);
 }

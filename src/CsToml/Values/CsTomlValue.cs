@@ -1,5 +1,4 @@
-﻿
-using CsToml.Utility;
+﻿using CsToml.Utility;
 using System.Diagnostics;
 
 namespace CsToml.Values;
@@ -17,11 +16,11 @@ public abstract partial class CsTomlValue
         this.Type = type;
     }
 
+    public bool HasValue()
+        => this.Type != CsTomlType.None;
+
     internal virtual bool ToTomlString(ref Utf8Writer writer)
-    {
-        
-        return false;
-    }
+        => false;
 
     [DebuggerDisplay(nameof(CsTomlEmpty))]
     private sealed class CsTomlEmpty : CsTomlValue

@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
+﻿
 namespace CsToml.Values;
 
-internal partial class CsTomlOffsetDateTime : ISpanFormattable
+internal partial class CsTomlOffsetDateTime
 {
     public override string GetString()
     {
@@ -23,10 +18,5 @@ internal partial class CsTomlOffsetDateTime : ISpanFormattable
 
     public override TimeOnly GetTimeOnly() => TimeOnly.FromDateTime(Value.DateTime);
 
-    public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider)
-    => Value.TryFormat(destination, out charsWritten, format, provider);
-
-    public string ToString(string? format, IFormatProvider? formatProvider)
-        => Value.ToString(format, formatProvider);
 }
 

@@ -30,6 +30,13 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowException(string argumentExceptionMessage, Exception innerException)
+    {
+        throw new CsTomlException(argumentExceptionMessage, innerException);
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ThrowEndOfFileReached()
     {
         ThrowException($@"Reached end of file during processing.");
@@ -252,6 +259,13 @@ internal static class ExceptionHelper
     internal static void ThrowIncorrectTomlOffsetDateTimeFormat()
     {
         ThrowException($@"Failed due to incorrect offset DateTime formatting.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowOverflowWhenCasting(Type t, Exception innerException)
+    {
+        ThrowException($"OverflowException occurred when casting from type long to type {t}.", innerException);
     }
 
 }

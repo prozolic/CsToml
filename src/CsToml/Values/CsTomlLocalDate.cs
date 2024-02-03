@@ -1,13 +1,14 @@
-﻿
-using CsToml.Formatter;
+﻿using CsToml.Formatter;
 using CsToml.Utility;
 using System.Diagnostics;
 
 namespace CsToml.Values;
 
 [DebuggerDisplay("CsTomlLocalDate: {Value}")]
-internal partial class CsTomlLocalDate(DateOnly value)
-    : CsTomlValue(CsTomlType.LocalDate), IEquatable<CsTomlLocalDate?>
+internal partial class CsTomlLocalDate(DateOnly value) :
+    CsTomlValue(CsTomlType.LocalDate), 
+    IEquatable<CsTomlLocalDate?>,
+    ISpanFormattable
 {
     public DateOnly Value { get; private set; } = value;
 
@@ -34,4 +35,11 @@ internal partial class CsTomlLocalDate(DateOnly value)
 
     public override int GetHashCode()
         => Value.GetHashCode();
+
+    public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider)
+        => Value.TryFormat(destination, out charsWritten, format, provider);
+
+    public string ToString(string? format, IFormatProvider? formatProvider)
+        => Value.ToString(format, formatProvider);
+
 }

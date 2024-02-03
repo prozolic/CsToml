@@ -424,91 +424,20 @@ internal ref struct CsTomlReader
     {
         Skip(1); // /
 
-        if (TryPeek(out var ch))
+        var result = CsTomlString.TryFormatEscapeSequence(ref byteReader, ref utf8Writer, multiLine, true);
+        switch(result)
         {
-            if (CsTomlSyntax.IsEscapeSequence(ch))
-            {
-                switch (ch)
-                {
-                    case CsTomlSyntax.Symbol.DOUBLEQUOTED:
-                        utf8Writer.Write(CsTomlSyntax.Symbol.DOUBLEQUOTED);
-                        goto BREAK;
-                    case CsTomlSyntax.Symbol.SINGLEQUOTED:
-                        utf8Writer.Write(CsTomlSyntax.Symbol.SINGLEQUOTED);
-                        goto BREAK;
-                    case CsTomlSyntax.Symbol.BACKSLASH:
-                        utf8Writer.Write(CsTomlSyntax.Symbol.BACKSLASH);
-                        goto BREAK;
-                    case CsTomlSyntax.AlphaBet.b:
-                        utf8Writer.Write(CsTomlSyntax.Symbol.BACKSPACE);
-                        goto BREAK;
-                    case CsTomlSyntax.AlphaBet.t:
-                        utf8Writer.Write(CsTomlSyntax.Symbol.TAB);
-                        goto BREAK;
-                    case CsTomlSyntax.AlphaBet.n:
-                        utf8Writer.Write(CsTomlSyntax.Symbol.LINEFEED);
-                        goto BREAK;
-                    case CsTomlSyntax.AlphaBet.f:
-                        utf8Writer.Write(CsTomlSyntax.Symbol.FORMFEED);
-                        goto BREAK;
-                    case CsTomlSyntax.AlphaBet.r:
-                        utf8Writer.Write(CsTomlSyntax.Symbol.CARRIAGE);
-                        goto BREAK;
-                    case CsTomlSyntax.AlphaBet.u:
-                        Skip(1);
-                        WriteAfterParsingFrom16bitCodePointToUtf8(ref utf8Writer);
-                        return;
-                    case CsTomlSyntax.AlphaBet.U:
-                        Skip(1);
-                        WriteAfterParsingFrom32bitCodePointToUtf8(ref utf8Writer);
-                        return;
-                }
-            }
-            else
-            {
-                if (multiLine)
-                {
-                    SkipWhiteSpaceAndNewLine();
-                    return;
-                }
+            case CsTomlString.EscapeSequenceResult.Success:
+                return;
+            case CsTomlString.EscapeSequenceResult.Failure:
                 ExceptionHelper.ThrowIncorrectTomlFormat();
-            }
-        }
-        else
-        {
-            ExceptionHelper.ThrowEndOfFileReached();
-        }
-    BREAK:
-        Skip(1);
-    }
-
-    private void WriteAfterParsingFrom16bitCodePointToUtf8(ref Utf8Writer utf8Writer)
-    {
-        if (byteReader.Length < byteReader.Position + 4)
-            ExceptionHelper.ThrowIncorrectTomlFormat();
-
-        Span<byte> destination = stackalloc byte[4];
-        var source = byteReader.ReadBytes(4);
-
-        Utf8Helper.ParseFrom16bitCodePointToUtf8(destination, source, out int writtenCount);
-        for (int i = 0; i < writtenCount; i++)
-        {
-            utf8Writer.Write(destination[i]);
-        }
-    }
-
-    private void WriteAfterParsingFrom32bitCodePointToUtf8(ref Utf8Writer utf8Writer)
-    {
-        if (byteReader.Length < byteReader.Position + 8)
-            ExceptionHelper.ThrowIncorrectTomlFormat();
-
-        Span<byte> destination = stackalloc byte[4];
-        var source = byteReader.ReadBytes(8);
-
-        Utf8Helper.ParseFrom32bitCodePointToUtf8(destination, source, out int writtenCount);
-        for (int i = 0; i < writtenCount; i++)
-        {
-            utf8Writer.Write(destination[i]);
+                return;
+            case CsTomlString.EscapeSequenceResult.Unescaped:
+                SkipWhiteSpaceAndNewLine();
+                return;
+            default:
+                ExceptionHelper.ThrowIncorrectTomlFormat();
+                return;
         }
     }
 

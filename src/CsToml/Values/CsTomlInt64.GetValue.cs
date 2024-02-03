@@ -1,7 +1,7 @@
 ﻿
 namespace CsToml.Values;
 
-internal partial class CsTomlInt64 : ISpanFormattable
+internal partial class CsTomlInt64
 {
     public override string GetString()
     {
@@ -15,11 +15,5 @@ internal partial class CsTomlInt64 : ISpanFormattable
     public override double GetDouble() => Value;
 
     public override bool GetBool() => Value != 0;
-
-    public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider)
-        => Value.TryFormat(destination, out charsWritten, format, provider);
-
-    public string ToString(string? format, IFormatProvider? formatProvider)
-        => Value.ToString(format, formatProvider);
 }
 

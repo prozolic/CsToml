@@ -1,14 +1,14 @@
-﻿
-using CsToml.Formatter;
+﻿using CsToml.Formatter;
 using CsToml.Utility;
 using System.Diagnostics;
 
 namespace CsToml.Values;
 
 [DebuggerDisplay("CsTomlOffsetDateTime: {Value}")]
-internal partial class CsTomlOffsetDateTime(DateTimeOffset value, bool byNumber) 
-    : CsTomlValue(byNumber ? CsTomlType.OffsetDateTimeByNumber : CsTomlType.OffsetDateTime)
-    , IEquatable<CsTomlOffsetDateTime?>
+internal partial class CsTomlOffsetDateTime(DateTimeOffset value, bool byNumber) : 
+    CsTomlValue(byNumber ? CsTomlType.OffsetDateTimeByNumber : CsTomlType.OffsetDateTime), 
+    IEquatable<CsTomlOffsetDateTime?>,
+    ISpanFormattable
 {
     public DateTimeOffset Value { get; private set; } = value;
 
@@ -35,4 +35,11 @@ internal partial class CsTomlOffsetDateTime(DateTimeOffset value, bool byNumber)
 
     public override int GetHashCode()
         => Value.GetHashCode();
+
+    public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider)
+        => Value.TryFormat(destination, out charsWritten, format, provider);
+
+    public string ToString(string? format, IFormatProvider? formatProvider)
+        => Value.ToString(format, formatProvider);
+
 }

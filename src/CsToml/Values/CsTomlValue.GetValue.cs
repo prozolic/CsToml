@@ -1,6 +1,5 @@
 ﻿using CsToml.Error;
-using CsToml.Extension;
-using CsToml.Utility;
+using System.Numerics;
 
 namespace CsToml.Values;
 
@@ -29,6 +28,20 @@ public partial class CsTomlValue
 
     public virtual TimeOnly GetTimeOnly()
         => ExceptionHelper.NotReturnThrow<TimeOnly>(ExceptionHelper.ThrowInvalidCasting);
+
+    public T GetNumber<T>() where T : INumber<T>
+    {
+        var value = GetInt64();
+        try
+        {
+            return T.CreateChecked(value);
+        }
+        catch(OverflowException e)
+        {
+            ExceptionHelper.ThrowOverflowWhenCasting(typeof(T), e);
+            return default;
+        }
+    }
 
     public bool TryGetString(out string value)
     {
@@ -138,6 +151,20 @@ public partial class CsTomlValue
         catch (CsTomlException)
         {
             value = default;
+            return false;
+        }
+    }
+
+    public bool TryGetNumber<T>(out T value) where T : INumber<T>
+    {
+        try
+        {
+            value = GetNumber<T>();
+            return true;
+        }
+        catch (CsTomlException)
+        {
+            value = default!;
             return false;
         }
     }
