@@ -1,5 +1,4 @@
-﻿
-using CsToml.Utility;
+﻿using CsToml.Utility;
 using CsToml.Values;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -64,7 +63,7 @@ internal ref struct CsTomlWriter
         span[0] = CsTomlSyntax.Symbol.SPACE;
     }
 
-    public void WriteTableHeader(Span<CsTomlString> keysSpan)
+    public void WriteTableHeader(ReadOnlySpan<CsTomlString> keysSpan)
     {
         writer.Write(CsTomlSyntax.Symbol.LEFTSQUAREBRACKET);
         if (keysSpan.Length > 0)
@@ -78,7 +77,7 @@ internal ref struct CsTomlWriter
         WriteNewLine();
     }
 
-    public void WriteTableArrayHeader(Span<CsTomlString> keysSpan)
+    public void WriteTableArrayHeader(ReadOnlySpan<CsTomlString> keysSpan)
     {
         writer.Write(CsTomlSyntax.Symbol.LEFTSQUAREBRACKET);
         writer.Write(CsTomlSyntax.Symbol.LEFTSQUAREBRACKET);
@@ -92,5 +91,17 @@ internal ref struct CsTomlWriter
         writer.Write(CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET);
         writer.Write(CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET);
         WriteNewLine();
+    }
+
+    public void WriteComments(ReadOnlySpan<CsTomlString> comments)
+    {
+        if (comments.Length == 0) return;
+
+        for (var i = 0; i < comments.Length; i++)
+        {
+            writer.Write(CsTomlSyntax.Symbol.NUMBERSIGN);
+            comments[i].ToTomlString(ref writer);
+            WriteNewLine();
+        }
     }
 }

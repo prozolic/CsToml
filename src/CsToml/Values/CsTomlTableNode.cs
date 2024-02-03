@@ -18,6 +18,8 @@ internal class CsTomlTableNode
 
     internal IReadOnlyList<CsTomlString> Comments => tomlComments;
 
+    internal ReadOnlySpan<CsTomlString> CommentsSpan => CollectionsMarshal.AsSpan(tomlComments);
+
     internal IReadOnlyDictionary<CsTomlString, CsTomlTableNode> Nodes => nodes;
 
     internal CsTomlValue? Value { get; set; }
