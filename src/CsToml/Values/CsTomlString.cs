@@ -43,7 +43,7 @@ internal partial class CsTomlString(ReadOnlySpan<byte> value, CsTomlString.CsTom
     public int Length => Value.Length;
 
     [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
-    public CsTomlStringType StringType { get; } = type;
+    public CsTomlStringType TomlStringType { get; } = type;
 
     public override bool Equals(object? obj)
     {
@@ -69,11 +69,11 @@ internal partial class CsTomlString(ReadOnlySpan<byte> value, CsTomlString.CsTom
     }
 
     public override int GetHashCode()
-        => HashCode.Combine(Hash.ToUInt32(Value), (byte)StringType);
+        => Hash.ToInt32(Value);
 
     internal override bool ToTomlString(ref Utf8Writer writer)
     {
-        if (StringType == CsTomlStringType.Unquoted)
+        if (TomlStringType == CsTomlStringType.Unquoted)
         {
             if (Length == 0)
             {
@@ -82,7 +82,7 @@ internal partial class CsTomlString(ReadOnlySpan<byte> value, CsTomlString.CsTom
             writer.Write(Value);
             return true;
         }
-        switch (StringType)
+        switch (TomlStringType)
         {
             case CsTomlStringType.Basic:
                 return ToTomlBasicString(ref writer);
@@ -230,7 +230,7 @@ internal partial class CsTomlString(ReadOnlySpan<byte> value, CsTomlString.CsTom
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int ToUInt32(ReadOnlySpan<byte> span)
+        public static int ToInt32(ReadOnlySpan<byte> span)
             => (int)XxHash32.HashToUInt32(span, Seed);
     }
 
