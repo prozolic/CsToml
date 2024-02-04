@@ -32,11 +32,9 @@ public partial class CsTomlPackage
     public bool TryGetValueCore(ReadOnlySpan<byte> key, out CsTomlValue? value)
     {
         var hit = false;
-        var separated = false;
         var currentNode = table.RootNode;
         foreach (var separateKeyRange in key.SplitSpan("."u8))
         {
-            separated = true;
             var separateKey = separateKeyRange.Value;
             if (currentNode!.TryGetChildNode(separateKey, out var childNode))
             {
@@ -45,14 +43,6 @@ public partial class CsTomlPackage
             }
         }
 
-        if (!separated)
-        {
-            if (currentNode!.TryGetChildNode(key, out var node))
-            {
-                value = node!.Value;
-                return true;
-            }
-        }
         if (hit && (!currentNode!.IsGroupingProperty || currentNode!.IsTableArrayHeader))
         {
             value = currentNode.Value!;
