@@ -1,4 +1,7 @@
-﻿using System.Diagnostics;
+﻿using CsToml.Formatter;
+using CsToml.Utility;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace CsToml.Values;
 
@@ -17,6 +20,22 @@ internal sealed class CsTomlKey : CsTomlValue
         {
             dotKeys.AddRange(keys!);
         }
+    }
+
+    internal string GetJoinName()
+    {
+        using var bufferWriter = new ArrayPoolBufferWriter<byte>();
+        var writer = new Utf8Writer(bufferWriter);
+        var dotKeysSpan = CollectionsMarshal.AsSpan(dotKeys);
+        for (int i = 0; i < dotKeysSpan.Length; i++)
+        {
+            dotKeysSpan[i].ToTomlString(ref writer);
+            if (i < dotKeysSpan.Length - 1)
+                writer.Write(CsTomlSyntax.Symbol.PERIOD);
+        }
+
+        var tempReader = new Utf8Reader(bufferWriter.WrittenSpan);
+        return StringFormatter.Deserialize(ref tempReader, tempReader.Length);
     }
 
     public void Add(CsTomlString key)

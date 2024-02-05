@@ -1,5 +1,4 @@
-﻿using CsToml.Utility;
-using CsToml.Values;
+﻿using CsToml.Values;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
@@ -65,9 +64,9 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void ThrowIncorrectSyntax()
+    internal static void ThrowFailedToParseToNumeric()
     {
-        ThrowException($@"The Utf8 string was not syntactically valid.");
+        ThrowException($@"Failed to parse to numeric type because it is not syntactically valid.");
     }
 
     [DoesNotReturn]
@@ -100,6 +99,20 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowOverflowDuringParsingOfNumericTypes()
+    {
+        ThrowOverflowCountCore("numeric");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowOverflowCountCore(string type)
+    {
+        ThrowException($@"The set value has overflowed during parsing of {type} types.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ThrowOverflowCount()
     {
         ThrowException($@"The set value has overflowed.");
@@ -128,11 +141,66 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowNotTurnIntoTable(string tableName)
+    {
+        ThrowException($@"Cannot be a table because the value is already defined in '{tableName}'");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowTableArrayIsDefinedAsTable(string tableName)
+    {
+        ThrowException($@"The '{tableName}' table array is already defined as a table.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowIncorrect16bitCodePoint()
+    {
+        ThrowException($@"An incomplete '\uXXXX' escape sequence is specified.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowIncorrect32bitCodePoint()
+    {
+        ThrowException($@"An incomplete '\UXXXXXXXX' escape sequence is specified.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowIncorrectPositivAndNegativeSigns()
+    {
+        ThrowException($@" '+' or '-' are included in incorrect positions.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowThreeOrMoreQuotationMarks()
+    {
+        ThrowException($@"Three or more quotation marks are used in a string.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowInvalidEscapeSequence()
+    {
+        ThrowException($@"An invalid escape sequence was included.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowNoEqualAfterTheKey()
+    {
+        ThrowException($@"There was no ""="" after key.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ThrowIncorrectFormattingOfFloatingNumbers()
     {
         ThrowException($@"Failed due to incorrect formatting of floating numbers.");
     }
-
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -150,14 +218,14 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void ThrowKeyIsRedefined(CsTomlString keyName)
+    internal static void ThrowKeyIsDefined(CsTomlString keyName)
     {
         ThrowException($@"Key '{keyName.Utf16String}' is already defined.");
     }
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void ThrowTableHeaderIsRedefined(string keyName)
+    internal static void ThrowTableHeaderIsDefined(string keyName)
     {
         ThrowException($@"Table Header '{keyName}' is already defined.");
     }
@@ -231,6 +299,13 @@ internal static class ExceptionHelper
     internal static void ThrowPeriodUsedFirst()
     {
         ThrowException($@"Period are used first.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowIncorrectTomlFloatFormat()
+    {
+        ThrowException($@"Failed due to incorrect Float formatting.");
     }
 
     [DoesNotReturn]

@@ -22,12 +22,12 @@ internal class DateOnlyFormatter : ICsTomlFormatter<DateOnly>
         var bytes = reader.ReadBytes(length);
 
         if (bytes.Length != CsTomlSyntax.DateTime.LocalDateFormat.Length)
-            ExceptionHelper.ThrowIncorrectTomlFormat();
+            ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
 
         // local date
         if (!(CsTomlSyntax.IsHyphen(bytes[4]) && CsTomlSyntax.IsHyphen(bytes[7])))
         {
-            ExceptionHelper.ThrowIncorrectTomlFormat();
+            ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
         }
 
         return DeserializeDateOnly(bytes);

@@ -85,7 +85,7 @@ internal partial class CsTomlString
     private static void WriteAfterParsingFrom16bitCodePointToUtf8(ref Utf8Reader reader, ref Utf8Writer utf8Writer)
     {
         if (reader.Length < reader.Position + 4)
-            ExceptionHelper.ThrowIncorrectTomlFormat();
+            ExceptionHelper.ThrowIncorrect16bitCodePoint();
 
         Span<byte> destination = stackalloc byte[4];
         var source = reader.ReadBytes(4);
@@ -100,7 +100,7 @@ internal partial class CsTomlString
     private static void WriteAfterParsingFrom32bitCodePointToUtf8(ref Utf8Reader reader, ref Utf8Writer utf8Writer)
     {
         if (reader.Length < reader.Position + 8)
-            ExceptionHelper.ThrowIncorrectTomlFormat();
+            ExceptionHelper.ThrowIncorrect32bitCodePoint();
 
         Span<byte> destination = stackalloc byte[4];
         var source = reader.ReadBytes(8);

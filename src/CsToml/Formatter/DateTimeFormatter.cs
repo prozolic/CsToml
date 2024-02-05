@@ -60,7 +60,7 @@ internal class DateTimeFormatter : ICsTomlFormatter<DateTime>
     {
         var bytes = reader.ReadBytes(length);
         if (bytes.Length < CsTomlSyntax.DateTime.LocalDateTimeFormat.Length)
-            ExceptionHelper.ThrowIncorrectTomlFormat();
+            ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
 
         if (CsTomlSyntax.IsHyphen(bytes[4]) && CsTomlSyntax.IsHyphen(bytes[7]) &&
             (CsTomlSyntax.IsTabOrWhiteSpace(bytes[10]) || bytes[10] == CsTomlSyntax.AlphaBet.T))
@@ -68,7 +68,7 @@ internal class DateTimeFormatter : ICsTomlFormatter<DateTime>
             return DeserializeLocalDateTime(bytes);
         }
 
-        return ExceptionHelper.NotReturnThrow<DateTime>(ExceptionHelper.ThrowIncorrectTomlFormat);
+        return ExceptionHelper.NotReturnThrow<DateTime>(ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat);
     }
 
     private static DateTime DeserializeLocalDateTime(ReadOnlySpan<byte> bytes)

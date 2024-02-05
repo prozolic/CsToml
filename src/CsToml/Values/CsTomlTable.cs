@@ -30,7 +30,7 @@ internal partial class CsTomlTable : CsTomlValue
                 continue;
             }
 
-            ExceptionHelper.ThrowIncorrectTomlFormat();
+            ExceptionHelper.ThrowNotTurnIntoTable(csTomlKey.GetJoinName());
         }
 
         var key = dotKeys[dotKeys.Count - 1];
@@ -53,7 +53,7 @@ internal partial class CsTomlTable : CsTomlValue
             }
             if ((childNode!.IsTableHeader || childNode!.IsTableArrayHeader) && i == dotKeys.Count - 1)
             {
-                ExceptionHelper.ThrowTableHeaderIsRedefined(string.Join(".",dotKeys.Select(s => s.Utf16String)));
+                ExceptionHelper.ThrowTableHeaderIsDefined(csTomlKey.GetJoinName());
             }
             if (childNode!.IsGroupingProperty)
             {
@@ -92,7 +92,7 @@ internal partial class CsTomlTable : CsTomlValue
             }
             if (childNode!.IsTableHeader && i == dotKeys.Count - 1)
             {
-                ExceptionHelper.ThrowIncorrectTomlFormat();
+                ExceptionHelper.ThrowTableArrayIsDefinedAsTable(csTomlKey.GetJoinName());
             }
             if (childNode!.IsGroupingProperty)
             {

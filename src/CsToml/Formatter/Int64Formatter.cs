@@ -37,39 +37,7 @@ internal class Int64Formatter : ICsTomlFormatter<long>
         {
             return value;
         }
-        return ExceptionHelper.NotReturnThrow<int>(ExceptionHelper.ThrowIncorrectSyntax);
-    }
-
-    private static long DeserializeDecimal(ReadOnlySpan<byte> utf8Bytes)
-    {
-        var digits = utf8Bytes.Length;
-        if (digits > 19) ExceptionHelper.ThrowOverflowCount();
-
-        long value = 0;
-        int digitsCount = 1;
-        long baseValue = 1;
-        while (true)
-        {
-            value += DeserializeDecimal(utf8Bytes[utf8Bytes.Length - digitsCount]) * baseValue;
-            if (value < 0) ExceptionHelper.ThrowOverflowCount();
-            if (digits == digitsCount++) return value;
-            baseValue *= 10;
-
-            value += DeserializeDecimal(utf8Bytes[utf8Bytes.Length - digitsCount]) * baseValue;
-            if (value < 0) ExceptionHelper.ThrowOverflowCount();
-            if (digits == digitsCount++) return value;
-            baseValue *= 10;
-
-            value += DeserializeDecimal(utf8Bytes[utf8Bytes.Length - digitsCount]) * baseValue;
-            if (value < 0) ExceptionHelper.ThrowOverflowCount();
-            if (digits == digitsCount++) return value;
-            baseValue *= 10;
-
-            value += DeserializeDecimal(utf8Bytes[utf8Bytes.Length - digitsCount]) * baseValue;
-            if (value < 0) ExceptionHelper.ThrowOverflowCount();
-            if (digits == digitsCount++) return value;
-            baseValue *= 10;
-        }
+        return ExceptionHelper.NotReturnThrow<int>(ExceptionHelper.ThrowFailedToParseToNumeric);
     }
 
     public static long DeserializeBinary(ReadOnlySpan<byte> utf8Bytes)

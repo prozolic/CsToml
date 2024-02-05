@@ -177,13 +177,13 @@ public partial class CsTomlPackage
             var key = reader.ReadKey();
 
             reader.SkipWhiteSpace();
-            if (!reader.TryPeek(out var equalCh)) return false; // = or value is nothing
-            if (!CsTomlSyntax.IsEqual(equalCh)) return false; // = is nothing
+            if (!reader.TryPeek(out var equalCh)) ExceptionHelper.ThrowEndOfFileReached(); // = or value is nothing
+            if (!CsTomlSyntax.IsEqual(equalCh)) ExceptionHelper.ThrowNoEqualAfterTheKey(); // = is nothing
 
             reader.Skip(1); // skip "="
             reader.SkipWhiteSpace();
 
-            if (!reader.Peek()) return false; // value is nothing
+            if (!reader.Peek()) ExceptionHelper.ThrowEndOfFileReached(); // value is nothing
             var value = reader.ReadValue();
 
             table.AddKeyValue(key, value, currentNode, comments);

@@ -54,11 +54,11 @@ internal class TimeOnlyFormatter : ICsTomlFormatter<TimeOnly>
     {
         var bytes = reader.ReadBytes(length);
         if (bytes.Length < CsTomlSyntax.DateTime.LocalTimeFormat.Length)
-            ExceptionHelper.ThrowIncorrectTomlFormat();
+            ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
 
         // local time
         if (!(CsTomlSyntax.IsColon(bytes[2]) && CsTomlSyntax.IsColon(bytes[5])))
-            ExceptionHelper.ThrowIncorrectTomlFormat();
+            ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
 
         return DeserializeTimeOnly(bytes);
     }

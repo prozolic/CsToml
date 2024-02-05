@@ -95,7 +95,7 @@ internal class CsTomlTableNode
     {
         if (!IsGroupingProperty || nodes.ContainsKey(key))
         {
-            ExceptionHelper.ThrowKeyIsRedefined(key);
+            ExceptionHelper.ThrowKeyIsDefined(key);
         }
 
         var newNode = new CsTomlTableNode() { Value = value };
