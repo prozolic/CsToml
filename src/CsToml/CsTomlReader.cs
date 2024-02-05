@@ -103,6 +103,7 @@ internal ref struct CsTomlReader
                     goto BREAK;
                 case CsTomlSyntax.Symbol.PERIOD:
                     Skip(1);
+                    SkipWhiteSpace();
                     continue;
                 case CsTomlSyntax.Symbol.DOUBLEQUOTED:
                     key.Add(ReadDoubleQuoteString());
