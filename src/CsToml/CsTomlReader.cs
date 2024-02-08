@@ -792,7 +792,7 @@ internal ref struct CsTomlReader
             if (TryPeek(out var hyphen) && CsTomlSyntax.IsHyphen(hyphen))
             {
                 byteReader.Position = firstPosition;
-                return ReadLocalDateTimeOrOffset(ReadUntilWhiteSpaceOrNewLineOrCommaOrEndOfArray());
+                return ReadLocalDateTimeOrOffset(ReadUntilWhiteSpaceOrNewLineOrCommaOrEndOfArrayForDateTime());
             }
             byteReader.Position = firstPosition;
         }
@@ -1222,7 +1222,7 @@ internal ref struct CsTomlReader
         // offset datetime
         if (bytes.Length >= CsTomlSyntax.DateTime.OffsetDateTimeZFormat.Length)
         {
-            if (bytes[19] == CsTomlSyntax.AlphaBet.Z)
+            if (bytes[19] == CsTomlSyntax.AlphaBet.Z || bytes[19] == CsTomlSyntax.AlphaBet.z)
             {
                 return ReadOffsetDateTime(bytes);
             }
@@ -1259,7 +1259,9 @@ internal ref struct CsTomlReader
 
     private CsTomlLocalDateTime ReadLocalDateTime(ReadOnlySpan<byte> bytes)
     {
-        if (bytes.Length < CsTomlSyntax.DateTime.LocalDateTimeFormat.Length) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
+        if (bytes.Length < CsTomlSyntax.DateTime.LocalDateTimeFormat.Length) 
+            ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
+
         if (!CsTomlSyntax.IsNumber(bytes[0])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
         if (!CsTomlSyntax.IsNumber(bytes[1])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
         if (!CsTomlSyntax.IsNumber(bytes[2])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
@@ -1270,7 +1272,8 @@ internal ref struct CsTomlReader
         if (!CsTomlSyntax.IsHyphen(bytes[7])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
         if (!CsTomlSyntax.IsNumber(bytes[8])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
         if (!CsTomlSyntax.IsNumber(bytes[9])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
-        if (!(CsTomlSyntax.IsWhiteSpace(bytes[10]) || bytes[10] == CsTomlSyntax.AlphaBet.T)) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
+        if (!(CsTomlSyntax.IsWhiteSpace(bytes[10]) || bytes[10] == CsTomlSyntax.AlphaBet.T || bytes[10] == CsTomlSyntax.AlphaBet.t)) 
+            ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
         if (!CsTomlSyntax.IsNumber(bytes[11])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
         if (!CsTomlSyntax.IsNumber(bytes[12])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
         if (!CsTomlSyntax.IsColon(bytes[13])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
@@ -1342,9 +1345,12 @@ internal ref struct CsTomlReader
 
     private CsTomlOffsetDateTime ReadOffsetDateTime(ReadOnlySpan<byte> bytes)
     {
-        if (bytes.Length < CsTomlSyntax.DateTime.OffsetDateTimeZFormat.Length) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (bytes.Length < CsTomlSyntax.DateTime.OffsetDateTimeZFormat.Length) 
+            ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
 
-        if (!(bytes[^1] == CsTomlSyntax.AlphaBet.Z)) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!(bytes[^1] == CsTomlSyntax.AlphaBet.Z || bytes[^1] == CsTomlSyntax.AlphaBet.z)) 
+            ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+
         if (!CsTomlSyntax.IsNumber(bytes[0])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
         if (!CsTomlSyntax.IsNumber(bytes[1])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
         if (!CsTomlSyntax.IsNumber(bytes[2])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
@@ -1355,7 +1361,8 @@ internal ref struct CsTomlReader
         if (!CsTomlSyntax.IsHyphen(bytes[7])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
         if (!CsTomlSyntax.IsNumber(bytes[8])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
         if (!CsTomlSyntax.IsNumber(bytes[9])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!(CsTomlSyntax.IsWhiteSpace(bytes[10]) || bytes[10] == CsTomlSyntax.AlphaBet.T)) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!(CsTomlSyntax.IsWhiteSpace(bytes[10]) || bytes[10] == CsTomlSyntax.AlphaBet.T || bytes[10] == CsTomlSyntax.AlphaBet.t)) 
+            ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
         if (!CsTomlSyntax.IsNumber(bytes[11])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
         if (!CsTomlSyntax.IsNumber(bytes[12])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
         if (!CsTomlSyntax.IsColon(bytes[13])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
@@ -1372,7 +1379,8 @@ internal ref struct CsTomlReader
 
     private CsTomlOffsetDateTime ReadOffsetDateTimeByNumber(ReadOnlySpan<byte> bytes)
     {
-        if (bytes.Length < CsTomlSyntax.DateTime.OffsetDateTimeZFormat.Length) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (bytes.Length < CsTomlSyntax.DateTime.OffsetDateTimeZFormat.Length) 
+            ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
 
         if (!CsTomlSyntax.IsNumber(bytes[0])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
         if (!CsTomlSyntax.IsNumber(bytes[1])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
@@ -1384,7 +1392,8 @@ internal ref struct CsTomlReader
         if (!CsTomlSyntax.IsHyphen(bytes[7])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
         if (!CsTomlSyntax.IsNumber(bytes[8])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
         if (!CsTomlSyntax.IsNumber(bytes[9])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!(CsTomlSyntax.IsWhiteSpace(bytes[10]) || bytes[10] == CsTomlSyntax.AlphaBet.T)) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!(CsTomlSyntax.IsWhiteSpace(bytes[10]) || bytes[10] == CsTomlSyntax.AlphaBet.T || bytes[10] == CsTomlSyntax.AlphaBet.t)) 
+            ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
         if (!CsTomlSyntax.IsNumber(bytes[11])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
         if (!CsTomlSyntax.IsNumber(bytes[12])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
         if (!CsTomlSyntax.IsColon(bytes[13])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
@@ -1437,6 +1446,7 @@ internal ref struct CsTomlReader
                 case CsTomlSyntax.Symbol.LINEFEED:
                 case CsTomlSyntax.Symbol.COMMA:
                 case CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET:
+                case CsTomlSyntax.Symbol.NUMBERSIGN:
                     goto BREAK;
                 case CsTomlSyntax.Symbol.SPACE:
                     if (byteReader.Position - firstPosition == 10) // space or T
@@ -1446,6 +1456,61 @@ internal ref struct CsTomlReader
                     }
                     goto BREAK;
                 case CsTomlSyntax.Symbol.CARRIAGE:
+                    Skip(1);
+                    if (TryPeek(out var linebreakCh) && CsTomlSyntax.IsLf(linebreakCh))
+                    {
+                        Skip(-1);
+                        goto BREAK;
+                    }
+                    ExceptionHelper.ThrowEscapeCharactersIncluded(ch);
+                    return default;
+                default:
+                    Skip(1);
+                    continue;
+            }
+        BREAK:
+            break;
+        }
+
+        var endPosition = byteReader.Position;
+        var length = endPosition - firstPosition;
+        byteReader.Position = firstPosition;
+
+        return byteReader.ReadBytes(length);
+    }
+
+    private ReadOnlySpan<byte> ReadUntilWhiteSpaceOrNewLineOrCommaOrEndOfArrayForDateTime()
+    {
+        var firstPosition = byteReader.Position;
+        var delimiterSpace = false;
+        while (TryPeek(out var ch))
+        {
+            switch (ch)
+            {
+                case CsTomlSyntax.Symbol.LINEFEED:
+                case CsTomlSyntax.Symbol.COMMA:
+                    goto BREAK;
+                case CsTomlSyntax.Symbol.TAB:
+                case CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET:
+                case CsTomlSyntax.Symbol.NUMBERSIGN:
+                    if (delimiterSpace)
+                    {
+                        byteReader.Position--;
+                    }
+                    goto BREAK;
+                case CsTomlSyntax.Symbol.SPACE:
+                    if (byteReader.Position - firstPosition == 10) // space or T
+                    {
+                        delimiterSpace = true;
+                        Skip(1);
+                        continue;
+                    }
+                    goto BREAK;
+                case CsTomlSyntax.Symbol.CARRIAGE:
+                    if (delimiterSpace)
+                    {
+                        goto BREAK;
+                    }
                     Skip(1);
                     if (TryPeek(out var linebreakCh) && CsTomlSyntax.IsLf(linebreakCh))
                     {
