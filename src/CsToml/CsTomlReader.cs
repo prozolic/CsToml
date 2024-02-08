@@ -725,6 +725,8 @@ internal ref struct CsTomlReader
                 case CsTomlSyntax.Symbol.CARRIAGE:
                 case CsTomlSyntax.Symbol.LINEFEED:
                 case CsTomlSyntax.Symbol.COMMA:
+                case CsTomlSyntax.Symbol.RIGHTBRACES:
+                case CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET:
                     goto BREAK;
             }
             Skip(1);
