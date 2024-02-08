@@ -101,6 +101,8 @@ internal ref struct CsTomlReader
                         continue;
                     }
                     goto BREAK;
+                case CsTomlSyntax.Symbol.EQUAL:
+                    goto BREAK;
                 case CsTomlSyntax.Symbol.PERIOD:
                     Skip(1);
                     SkipWhiteSpace();
@@ -612,6 +614,8 @@ internal ref struct CsTomlReader
                 break;
             else if (CsTomlSyntax.IsPeriod(ch))
                 break;
+            else if (CsTomlSyntax.IsEqual(ch))
+                break;
             else if (isTableHeader && CsTomlSyntax.IsRightSquareBrackets(ch))
                 break;
             if (!CsTomlSyntax.IsBareKey(ch)) 
@@ -727,6 +731,7 @@ internal ref struct CsTomlReader
                 case CsTomlSyntax.Symbol.COMMA:
                 case CsTomlSyntax.Symbol.RIGHTBRACES:
                 case CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET:
+                case CsTomlSyntax.Symbol.NUMBERSIGN:
                     goto BREAK;
             }
             Skip(1);
