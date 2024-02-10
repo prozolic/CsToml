@@ -881,6 +881,7 @@ internal ref struct CsTomlReader
                 case CsTomlSyntax.Symbol.COMMA:
                 case CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET:
                 case CsTomlSyntax.Symbol.RIGHTBRACES:
+                case CsTomlSyntax.Symbol.NUMBERSIGN:
                     goto BREAK;
                 case CsTomlSyntax.Symbol.UNDERSCORE:
                     // Each underscore is not surrounded by at least one digit on each side.
@@ -1160,6 +1161,8 @@ internal ref struct CsTomlReader
                 case CsTomlSyntax.Symbol.LINEFEED:
                 case CsTomlSyntax.Symbol.COMMA:
                 case CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET:
+                case CsTomlSyntax.Symbol.RIGHTBRACES:
+                case CsTomlSyntax.Symbol.NUMBERSIGN:
                     goto BREAK;
                 default:
                     return ExceptionHelper.NotReturnThrow<CsTomlDouble, byte>(ExceptionHelper.ThrowEscapeCharactersIncluded, ch);
