@@ -75,10 +75,6 @@ internal partial class CsTomlTable : CsTomlValue
                 ExceptionHelper.ThrowTableHeaderIsDefinedAsTableArray(csTomlKey.GetJoinName());
             }
         }
-        if ((currentNode!.IsTableArrayHeader))
-        {
-            ExceptionHelper.ThrowTableHeaderIsDefined(csTomlKey.GetJoinName());
-        }
 
         newNode = currentNode;
         newNode.AddComment(comments);
