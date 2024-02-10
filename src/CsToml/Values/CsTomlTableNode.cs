@@ -42,37 +42,67 @@ internal class CsTomlTableNode
 
     public bool IsTableHeader 
     {
-        get => nodeType.Has(CsTomlTableNodeType.TableHeader);
+        get => nodeType.Has(CsTomlTableNodeType.TableHeaderProperty);
         set
         {
             if (value)
             {
-                CsTomlTableNodeTypeExtensions.Add(ref nodeType, CsTomlTableNodeType.TableHeader);
+                CsTomlTableNodeTypeExtensions.Add(ref nodeType, CsTomlTableNodeType.TableHeaderProperty);
             }
             else
             {
-                CsTomlTableNodeTypeExtensions.Remove(ref nodeType, CsTomlTableNodeType.TableHeader);
+                CsTomlTableNodeTypeExtensions.Remove(ref nodeType, CsTomlTableNodeType.TableHeaderProperty);
+            }
+        }
+    }
+
+    public bool IsTableHeaderDefinitionPosition
+    {
+        get => nodeType.Has(CsTomlTableNodeType.TableHeaderDefinitionPosition);
+        set
+        {
+            if (value)
+            {
+                CsTomlTableNodeTypeExtensions.Add(ref nodeType, CsTomlTableNodeType.TableHeaderDefinitionPosition);
+            }
+            else
+            {
+                CsTomlTableNodeTypeExtensions.Remove(ref nodeType, CsTomlTableNodeType.TableHeaderDefinitionPosition);
             }
         }
     }
 
     public bool IsTableArrayHeader 
     {
-        get => nodeType.Has(CsTomlTableNodeType.TableArrayHeader);
+        get => nodeType.Has(CsTomlTableNodeType.TableArrayHeaderProperty);
         set
         {
             if (value)
             {
-                CsTomlTableNodeTypeExtensions.Add(ref nodeType, CsTomlTableNodeType.TableArrayHeader);
+                CsTomlTableNodeTypeExtensions.Add(ref nodeType, CsTomlTableNodeType.TableArrayHeaderProperty);
             }
             else
             {
-                CsTomlTableNodeTypeExtensions.Remove(ref nodeType, CsTomlTableNodeType.TableArrayHeader);
+                CsTomlTableNodeTypeExtensions.Remove(ref nodeType, CsTomlTableNodeType.TableArrayHeaderProperty);
             }
         }
     }
 
-    //public CsTomlTableNode this[ReadOnlySpan<byte> key] => Nodes[new Utf8FixString(key)];
+    public bool IsTableArrayHeaderDefinitionPosition
+    {
+        get => nodeType.Has(CsTomlTableNodeType.TableArrayHeaderDefinitionPosition);
+        set
+        {
+            if (value)
+            {
+                CsTomlTableNodeTypeExtensions.Add(ref nodeType, CsTomlTableNodeType.TableArrayHeaderDefinitionPosition);
+            }
+            else
+            {
+                CsTomlTableNodeTypeExtensions.Remove(ref nodeType, CsTomlTableNodeType.TableArrayHeaderDefinitionPosition);
+            }
+        }
+    }
 
     public static CsTomlTableNode CreateGroupingPropertyNode()
     {
@@ -103,7 +133,7 @@ internal class CsTomlTableNode
         nodes.Add(key, newNode);
     }
 
-    public bool TryGetOrAddGroupingPropertyNode(CsTomlString key, out CsTomlTableNode childNode)
+    public bool TryAddGroupingPropertyNode(CsTomlString key, out CsTomlTableNode childNode)
     {
         if (nodes.TryGetValue(key, out var addedChildNode))
         {

@@ -230,6 +230,13 @@ internal static class ExceptionHelper
         ThrowException($@"Table Header '{keyName}' is already defined.");
     }
 
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowTableHeaderIsDefinedAsTableArray(string keyName)
+    {
+        ThrowException($@"Table Header '{keyName}' is already defined as Array of Tables.");
+    }
+
     // Sub-table defined before parent of table or array of tables
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

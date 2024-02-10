@@ -5,9 +5,11 @@ namespace CsToml.Values;
 internal enum CsTomlTableNodeType : byte
 {
     None = 0,
-    GroupingProperty = 1,
-    TableHeader = 2,
-    TableArrayHeader = 4,
+    GroupingProperty = 1 << 0,
+    TableHeaderProperty = 1 << 1,
+    TableHeaderDefinitionPosition = 1 << 2,
+    TableArrayHeaderProperty = 1 << 3,
+    TableArrayHeaderDefinitionPosition = 1 << 4,
 }
 
 internal static class CsTomlTableNodeTypeExtensions

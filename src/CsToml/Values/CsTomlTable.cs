@@ -24,7 +24,7 @@ internal partial class CsTomlTable : CsTomlValue
         for (var i = 0; i < dotKeys.Count - 1; i++)
         {
             var sectionKey = dotKeys[i];
-            if (currentNode!.TryGetOrAddGroupingPropertyNode(sectionKey, out var childNode) || childNode.IsGroupingProperty)
+            if (currentNode!.TryAddGroupingPropertyNode(sectionKey, out var childNode) || childNode.IsGroupingProperty)
             {
                 currentNode = childNode;
                 continue;
@@ -42,31 +42,47 @@ internal partial class CsTomlTable : CsTomlValue
         var currentNode = RootNode;
         var dotKeys = csTomlKey.DotKeys;
 
+        var addedNewNode = false;
         for (var i = 0; i < dotKeys.Count; i++)
         {
             var sectionKey = dotKeys[i];
-            if (currentNode!.TryGetOrAddGroupingPropertyNode(sectionKey, out var childNode))
+            if (currentNode!.TryAddGroupingPropertyNode(sectionKey, out var childNode))
             {
+                addedNewNode = true;
                 currentNode = childNode;
                 currentNode.IsTableHeader = true;
                 continue;
             }
-            if ((childNode!.IsTableHeader || childNode!.IsTableArrayHeader) && i == dotKeys.Count - 1)
-            {
-                ExceptionHelper.ThrowTableHeaderIsDefined(csTomlKey.GetJoinName());
-            }
+
             if (childNode!.IsGroupingProperty)
             {
                 currentNode = childNode;
                 continue;
             }
+
             newNode = null;
             ExceptionHelper.ThrowIncorrectTomlFormat();
         }
 
+        if (!addedNewNode)
+        {
+            if (currentNode.IsTableHeaderDefinitionPosition)
+            {
+                ExceptionHelper.ThrowTableHeaderIsDefined(csTomlKey.GetJoinName());
+            }
+            if (currentNode.IsTableArrayHeaderDefinitionPosition)
+            {
+                ExceptionHelper.ThrowTableHeaderIsDefinedAsTableArray(csTomlKey.GetJoinName());
+            }
+        }
+        if ((currentNode!.IsTableArrayHeader))
+        {
+            ExceptionHelper.ThrowTableHeaderIsDefined(csTomlKey.GetJoinName());
+        }
+
         newNode = currentNode;
         newNode.AddComment(comments);
-        newNode.IsTableHeader = true;
+        newNode.IsTableHeaderDefinitionPosition = true;
     }
 
     public void AddTableArrayHeader(CsTomlKey csTomlKey, out CsTomlTableNode? newNode, IReadOnlyCollection<CsTomlString> comments)
@@ -74,25 +90,16 @@ internal partial class CsTomlTable : CsTomlValue
         var currentNode = RootNode;
         var dotKeys = csTomlKey.DotKeys;
 
-        var isNewNode = false;
+        var addedNewNode = false;
         for (var i = 0; i < dotKeys.Count; i++)
         {
             var sectionKey = dotKeys[i];
-            if (currentNode!.TryGetOrAddGroupingPropertyNode(sectionKey, out var childNode))
+            if (currentNode!.TryAddGroupingPropertyNode(sectionKey, out var childNode))
             {
-                isNewNode = true;
+                addedNewNode = true;
                 currentNode = childNode;
                 currentNode.IsTableArrayHeader = true;
                 continue;
-            }
-            if (childNode!.IsTableArrayHeader && i == dotKeys.Count - 1)
-            {
-                currentNode = childNode;
-                break;
-            }
-            if (childNode!.IsTableHeader && i == dotKeys.Count - 1)
-            {
-                ExceptionHelper.ThrowTableArrayIsDefinedAsTable(csTomlKey.GetJoinName());
             }
             if (childNode!.IsGroupingProperty)
             {
@@ -104,10 +111,16 @@ internal partial class CsTomlTable : CsTomlValue
             ExceptionHelper.ThrowIncorrectTomlFormat();
         }
 
-        if (isNewNode)
+        if (currentNode!.IsTableHeader)
+        {
+            ExceptionHelper.ThrowTableArrayIsDefinedAsTable(csTomlKey.GetJoinName());
+        }
+
+        if (addedNewNode)
         {
             currentNode.Value = new CsTomlArray();
             currentNode.IsTableArrayHeader = true;
+            currentNode.IsTableArrayHeaderDefinitionPosition = true;
         }
         var table = new CsTomlTable();
         (currentNode.Value as CsTomlArray)?.Add(table);

@@ -21,5 +21,9 @@ internal sealed class CsTomlTableNodeKeyValuePairDebugView(KeyValuePair<CsTomlSt
 
     public bool IsTableHeader => Value.IsTableHeader!;
 
+    public bool IsTableHeaderDefinitionPosition => Value.IsTableHeaderDefinitionPosition!;
+
     public bool IsTableArrayHeader => Value.IsTableArrayHeader!;
+
+    public bool IsTableArrayHeaderDefinitionPosition => Value.IsTableArrayHeaderDefinitionPosition!;
 }
