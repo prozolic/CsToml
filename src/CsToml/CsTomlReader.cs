@@ -680,9 +680,16 @@ internal ref struct CsTomlReader
     private CsTomlInlineTable ReadInlineTable()
     {
         Skip(1); // {
+        SkipWhiteSpace();
 
         var inlineTable = new CsTomlInlineTable();
         CsTomlTableNode? currentNode = inlineTable.RootNode;
+        if (TryPeek(out var c) && CsTomlSyntax.IsRightBraces(c)) // empty inlinetable
+        {
+            Skip(1); // }
+            return inlineTable;
+        }
+
         while (Peek())
         {
             var key = ReadKey();
@@ -777,22 +784,22 @@ internal ref struct CsTomlReader
             }
         }
 
-        // check date
-        if (byteReader.Length >= byteReader.Position + 8)
+        // check localtime or localdatetime
+        if (byteReader.Length >= byteReader.Position + CsTomlSyntax.DateTime.LocalTimeFormat.Length)
         {
-            Skip(2);
-            if (TryPeek(out var dash) && CsTomlSyntax.IsColon(dash))
+            if (CsTomlSyntax.IsColon(byteReader[byteReader.Position + 2])) // :
             {
-                byteReader.Position = firstPosition;
-
-                return ReadLocalTime(ReadUntilWhiteSpaceOrNewLineOrCommaOrEndOfArray());
+                if (ExistNoNewLineAndComment(8, out var newLineIndex))
+                {
+                    return ReadLocalTime(ReadUntilWhiteSpaceOrNewLineOrCommaOrEndOfArray());
+                }
             }
-
-            Skip(2);
-            if (TryPeek(out var hyphen) && CsTomlSyntax.IsHyphen(hyphen))
+            else if (CsTomlSyntax.IsHyphen(byteReader[byteReader.Position + 4])) // -
             {
-                byteReader.Position = firstPosition;
-                return ReadLocalDateTimeOrOffset(ReadUntilWhiteSpaceOrNewLineOrCommaOrEndOfArrayForDateTime());
+                if (ExistNoNewLineAndComment(8, out var newLineIndex))
+                {
+                    return ReadLocalDateTimeOrOffset(ReadUntilWhiteSpaceOrNewLineOrCommaOrEndOfArrayForDateTime());
+                }
             }
             byteReader.Position = firstPosition;
         }
@@ -817,6 +824,27 @@ internal ref struct CsTomlReader
         // decimal
         byteReader.Position = firstPosition;
         return ReadDecimalNumeric();
+    }
+
+    private bool ExistNoNewLineAndComment(int length, out int newLineIndex)
+    {
+        newLineIndex = -1;
+        if (byteReader.Length <= byteReader.Position + length)
+            return false;
+
+        for (int i = 0; i < length; i++)
+        {
+            switch (byteReader[byteReader.Position + i])
+            {
+                case CsTomlSyntax.Symbol.LINEFEED:
+                case CsTomlSyntax.Symbol.CARRIAGE:
+                case CsTomlSyntax.Symbol.NUMBERSIGN:
+                    newLineIndex = i;
+                    return false;
+            }
+        }
+
+        return true;
     }
 
     private CsTomlInt64 ReadDecimalNumeric()
@@ -852,6 +880,7 @@ internal ref struct CsTomlReader
                 case CsTomlSyntax.Symbol.LINEFEED:
                 case CsTomlSyntax.Symbol.COMMA:
                 case CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET:
+                case CsTomlSyntax.Symbol.RIGHTBRACES:
                     goto BREAK;
                 case CsTomlSyntax.Symbol.UNDERSCORE:
                     // Each underscore is not surrounded by at least one digit on each side.
