@@ -776,6 +776,11 @@ internal ref struct CsTomlReader
                         case CsTomlSyntax.AlphaBet.b:
                             Skip(1);
                             return ReadBinaryNumeric();
+                        case CsTomlSyntax.AlphaBet.e: // 0e...
+                        case CsTomlSyntax.AlphaBet.E: // 0E...
+                            byteReader.Position = firstPosition;
+                            return ReadDouble();
+
                         default:
                             return ExceptionHelper.NotReturnThrow<CsTomlValue, byte>(ExceptionHelper.ThrowIncorrectCompactEscapeCharacters, second);
                     };
