@@ -1259,7 +1259,7 @@ internal ref struct CsTomlReader
         // offset datetime
         if (bytes.Length >= CsTomlSyntax.DateTime.OffsetDateTimeZFormat.Length)
         {
-            if (bytes[19] == CsTomlSyntax.AlphaBet.Z || bytes[19] == CsTomlSyntax.AlphaBet.z)
+            if (bytes[^1] == CsTomlSyntax.AlphaBet.Z || bytes[^1] == CsTomlSyntax.AlphaBet.z)
             {
                 return ReadOffsetDateTime(bytes);
             }
@@ -1275,7 +1275,7 @@ internal ref struct CsTomlReader
                     var c = bytes[index++];
                     if (!CsTomlSyntax.IsNumber(c))
                     {
-                        if (CsTomlSyntax.IsHyphen(c)) break;
+                        if (CsTomlSyntax.IsPlusOrMinusSign(c)) break;
                     }
                 }
                 if (index < bytes.Length)
@@ -1456,7 +1456,7 @@ internal ref struct CsTomlReader
                 var c = bytes[index++];
                 if (!CsTomlSyntax.IsNumber(c))
                 {
-                    if (CsTomlSyntax.IsHyphen(c)) break;
+                    if (CsTomlSyntax.IsPlusOrMinusSign(c)) break;
                     ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
                 }
             }
