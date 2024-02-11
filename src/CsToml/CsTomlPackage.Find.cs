@@ -29,7 +29,7 @@ public partial class CsTomlPackage
         return TryGetValueCore(writer.WrittenSpan, out value);
     }
 
-    public bool TryGetValueCore(ReadOnlySpan<byte> key, out CsTomlValue? value)
+    private bool TryGetValueCore(ReadOnlySpan<byte> key, out CsTomlValue? value)
     {
         var hit = false;
         var currentNode = table.RootNode;

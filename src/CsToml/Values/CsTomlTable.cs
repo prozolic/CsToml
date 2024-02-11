@@ -39,24 +39,31 @@ internal partial class CsTomlTable : CsTomlValue
 
     public void AddTableHeader(CsTomlKey csTomlKey, out CsTomlTableNode? newNode, IReadOnlyCollection<CsTomlString> comments)
     {
-        var currentNode = RootNode;
+        var node = RootNode;
         var dotKeys = csTomlKey.DotKeys;
 
         var addedNewNode = false;
         for (var i = 0; i < dotKeys.Count; i++)
         {
             var sectionKey = dotKeys[i];
-            if (currentNode!.TryAddGroupingPropertyNode(sectionKey, out var childNode))
+            if (node!.TryAddGroupingPropertyNode(sectionKey, out var childNode))
             {
                 addedNewNode = true;
-                currentNode = childNode;
-                currentNode.IsTableHeader = true;
+                node = childNode;
+                node.IsTableHeader = true;
+                continue;
+            }
+            
+            if (childNode!.IsTableArrayHeaderDefinitionPosition)
+            {
+                var tableHeaderArrayValue = (childNode!.Value as CsTomlArray)?.LastValue;
+                node = (tableHeaderArrayValue as CsTomlTable)?.RootNode;
                 continue;
             }
 
             if (childNode!.IsGroupingProperty)
             {
-                currentNode = childNode;
+                node = childNode;
                 continue;
             }
 
@@ -66,18 +73,18 @@ internal partial class CsTomlTable : CsTomlValue
 
         if (!addedNewNode)
         {
-            if (currentNode.IsTableHeaderDefinitionPosition)
+            if (node!.IsTableHeaderDefinitionPosition)
             {
                 ExceptionHelper.ThrowTableHeaderIsDefined(csTomlKey.GetJoinName());
             }
-            if (currentNode.IsTableArrayHeaderDefinitionPosition)
+            if (node!.IsTableArrayHeaderDefinitionPosition)
             {
                 ExceptionHelper.ThrowTableHeaderIsDefinedAsTableArray(csTomlKey.GetJoinName());
             }
         }
 
-        newNode = currentNode;
-        newNode.AddComment(comments);
+        newNode = node;
+        newNode!.AddComment(comments);
         newNode.IsTableHeaderDefinitionPosition = true;
     }
 
@@ -96,6 +103,21 @@ internal partial class CsTomlTable : CsTomlValue
                 currentNode = childNode;
                 currentNode.IsTableArrayHeader = true;
                 continue;
+            }
+
+            if (childNode!.IsTableArrayHeaderDefinitionPosition)
+            {
+                if (i == dotKeys.Count - 1)
+                {
+                    currentNode = childNode;
+                    continue;
+                }
+                else
+                {
+                    var tableHeaderArrayValue = (childNode!.Value as CsTomlArray)?.LastValue;
+                    currentNode = (tableHeaderArrayValue as CsTomlTable)?.RootNode;
+                    continue;
+                }
             }
             if (childNode!.IsGroupingProperty)
             {

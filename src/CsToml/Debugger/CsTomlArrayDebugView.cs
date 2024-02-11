@@ -9,7 +9,7 @@ internal sealed class CsTomlArrayDebugView(CsTomlArray csTomlArray)
     private readonly CsTomlArray array = csTomlArray;
 
     [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-    public CsTomlValue[] Items => array.Value.ToArray();
+    public CsTomlValue[] Items => array.Values.ToArray();
 }
 
 

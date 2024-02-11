@@ -203,12 +203,12 @@ public partial class CsTomlPackage
         }
     }
 
-    private bool DeserializeTableSection(ref CsTomlReader reader, out CsTomlTableNode? currentNode, IReadOnlyCollection<CsTomlString> comments)
+    private bool DeserializeTableSection(ref CsTomlReader reader, out CsTomlTableNode? newNode, IReadOnlyCollection<CsTomlString> comments)
     {
         try
         {
             var tableKey = reader.ReadKey();
-            table.AddTableHeader(tableKey, out currentNode, comments);
+            table.AddTableHeader(tableKey, out newNode, comments);
             return true;
         }
         catch (CsTomlException e)
@@ -216,13 +216,13 @@ public partial class CsTomlPackage
             if (IsThrowCsTomlException)
                 throw new CsTomlLineNumberException(e, reader.LineNumber);
 
-            currentNode = null;
+            newNode = null;
             exceptions.Add(new CsTomlLineNumberException(e, reader.LineNumber));
             return false;
         }
         catch (Exception)
         {
-            currentNode = null;
+            newNode = null;
             throw;
         }
     }
