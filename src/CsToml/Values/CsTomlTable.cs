@@ -24,7 +24,20 @@ internal partial class CsTomlTable : CsTomlValue
         for (var i = 0; i < dotKeys.Count - 1; i++)
         {
             var sectionKey = dotKeys[i];
-            if (currentNode!.TryAddGroupingPropertyNode(sectionKey, out var childNode) || childNode.IsGroupingProperty)
+            if (currentNode!.TryAddGroupingPropertyNode(sectionKey, out var childNode))
+            {
+                currentNode = childNode;
+                continue;
+            }
+            if (childNode.IsTableHeaderDefinitionPosition)
+            {
+                ExceptionHelper.ThrowTheKeyIsDefinedAsTable();
+            }
+            if (childNode.IsTableArrayHeaderDefinitionPosition)
+            {
+                ExceptionHelper.ThrowTheKeyIsDefinedAsArrayOfTables();
+            }
+            if (childNode.IsGroupingProperty)
             {
                 currentNode = childNode;
                 continue;

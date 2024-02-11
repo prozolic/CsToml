@@ -634,16 +634,23 @@ internal ref struct CsTomlReader
         Skip(1); // [
 
         var array = new CsTomlArray();
+        var comma = true;
+        var closingBracket = false;
         while (TryPeek(out var ch))
         {
             switch (ch)
             {
                 case CsTomlSyntax.Symbol.LEFTSQUAREBRACKET:
+                    comma = false;
                     array.Add(ReadArray());
                     break;
                 case CsTomlSyntax.Symbol.TAB:
                 case CsTomlSyntax.Symbol.SPACE:
+                    SkipWhiteSpace();
+                    break;
                 case CsTomlSyntax.Symbol.COMMA:
+                    if (comma) ExceptionHelper.ThrowIncorrectTomlFormat();
+                    comma = true;
                     Skip(1);
                     break;
                 case CsTomlSyntax.Symbol.CARRIAGE:
@@ -660,12 +667,15 @@ internal ref struct CsTomlReader
                     IncreaseLineNumber();
                     continue;
                 case CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET:
+                    closingBracket = true;
                     Skip(1);
                     goto BREAK;
                 case CsTomlSyntax.Symbol.NUMBERSIGN:
                     ReadComment();
                     break;
                 default:
+                    if (!comma) ExceptionHelper.ThrowNotSeparatedByCommas();
+                    comma = false;
                     array.Add(ReadValue());
                     break;
             }
@@ -673,6 +683,9 @@ internal ref struct CsTomlReader
         BREAK:
             break;
         }
+
+        if (!closingBracket)
+            ExceptionHelper.ThrowTheArrayIsNotClosedWithClosingBrackets();
 
         return array;
     }

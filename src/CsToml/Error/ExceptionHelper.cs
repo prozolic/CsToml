@@ -141,9 +141,37 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowNotSeparatedByCommas()
+    {
+        ThrowException($@"Values are not separated by commas.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowTheArrayIsNotClosedWithClosingBrackets()
+    {
+        ThrowException($@"The array is not closed with closing brackets.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ThrowNotTurnIntoTable(string tableName)
     {
         ThrowException($@"Cannot be a table because the value is already defined in '{tableName}'");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowTheKeyIsDefinedAsTable()
+    {
+        ThrowException($@"The key is already defined as a table.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowTheKeyIsDefinedAsArrayOfTables()
+    {
+        ThrowException($@"Keys are already defined as an array of tables.");
     }
 
     [DoesNotReturn]
