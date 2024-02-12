@@ -406,5 +406,11 @@ internal static class ExceptionHelper
         ThrowException($@"Multi-line Literal strings is not closed with closing three single quotes.");
     }
 
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowInvalidCodePoints()
+    {
+        ThrowException($@"This byte array contains invalid Unicode code points.");
+    }
 }
 

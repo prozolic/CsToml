@@ -54,7 +54,11 @@ internal ref struct CsTomlReader
         var length = byteReader.Position - position;
         byteReader.Position = position;
 
-        return new CsTomlString(byteReader.ReadBytes(length), CsTomlString.CsTomlStringType.Unquoted);
+        var bytes = byteReader.ReadBytes(length);
+        if (Utf8Helper.ContainInvalidSequences(bytes))
+            ExceptionHelper.ThrowInvalidCodePoints();
+
+        return new CsTomlString(bytes, CsTomlString.CsTomlStringType.Unquoted);
     }
 
     public CsTomlKey ReadKey()
@@ -328,6 +332,9 @@ internal ref struct CsTomlReader
 
         try
         {
+            if (Utf8Helper.ContainInvalidSequences(writer.WrittenSpan))
+                ExceptionHelper.ThrowInvalidCodePoints();
+
             return new CsTomlString(writer.WrittenSpan, CsTomlString.CsTomlStringType.Basic);
         }
         finally
@@ -440,6 +447,9 @@ internal ref struct CsTomlReader
 
         try
         {
+            if (Utf8Helper.ContainInvalidSequences(writer.WrittenSpan))
+                ExceptionHelper.ThrowInvalidCodePoints();
+
             return new CsTomlString(writer.WrittenSpan, CsTomlString.CsTomlStringType.MultiLineBasic);
         }
         finally
@@ -529,9 +539,18 @@ internal ref struct CsTomlReader
         var length = endPosition - firstPosition - 1;
         byteReader.Position = firstPosition + 1;
 
-        var value = byteReader.ReadBytes(length);
-        Skip(1);
-        return new CsTomlString(value, CsTomlString.CsTomlStringType.Literal);
+        try
+        {
+            var bytes = byteReader.ReadBytes(length);
+            if (Utf8Helper.ContainInvalidSequences(bytes))
+                ExceptionHelper.ThrowInvalidCodePoints();
+
+            return new CsTomlString(bytes, CsTomlString.CsTomlStringType.Literal);
+        }
+        finally
+        {
+            Skip(1);
+        }
     }
 
     private CsTomlString ReadSingleQuoteMultiLineString()
@@ -632,7 +651,11 @@ internal ref struct CsTomlReader
 
         try
         {
-            return new CsTomlString(byteReader.ReadBytes(length), CsTomlString.CsTomlStringType.MultiLineLiteral);
+            var bytes = byteReader.ReadBytes(length);
+            if (Utf8Helper.ContainInvalidSequences(bytes))
+                ExceptionHelper.ThrowInvalidCodePoints();
+
+            return new CsTomlString(bytes, CsTomlString.CsTomlStringType.MultiLineLiteral);
         }
         finally
         {

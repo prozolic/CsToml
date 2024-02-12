@@ -13,6 +13,27 @@ internal static class Utf8Helper
         return bytes[0] == 0xef && bytes[1] == 0xbb && bytes[2] == 0xbf;
     }
 
+    public static bool ContainInvalidSequences(ReadOnlySpan<byte> bytes)
+    {
+        for (int i = 0; i < bytes.Length; i++)
+        {
+            var range = -1;
+            if ((bytes[i] & 0x80) == 0x00) range = 0;
+            else if (((bytes[i] & 0xe0) == 0xc0)) range = 1;
+            else if (((bytes[i] & 0xf0) == 0xe0)) range = 2;
+            else if (((bytes[i] & 0xf8) == 0xf0)) range = 3;
+            else if (range < 0) return true;
+
+            while (range-- > 0)
+            {
+                if (++i >= bytes.Length) return true;
+                if ((bytes[i] & 0xc0) != 0x80) return true;
+            }
+        }
+
+        return false;
+    }
+
     public static void ParseFromCodePointToUtf8(int utf32CodePoint, Span<byte> utf8Bytes, out int writtenCount)
     {
         // unicode -> utf8
