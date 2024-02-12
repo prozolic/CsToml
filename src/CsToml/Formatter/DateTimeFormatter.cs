@@ -75,6 +75,15 @@ internal class DateTimeFormatter : ICsTomlFormatter<DateTime>
     {
         var localDate = DateOnlyFormatter.DeserializeDateOnly(bytes[..10]);
         var localtime = TimeOnlyFormatter.DeserializeTimeOnly(bytes[11..]);
-        return new DateTime(localDate, localtime, DateTimeKind.Local);
+
+        try
+        {
+            return new DateTime(localDate, localtime, DateTimeKind.Local);
+        }
+        catch (ArgumentOutOfRangeException e)
+        {
+            return ExceptionHelper.NotReturnThrow<DateTime, ArgumentOutOfRangeException>(
+                ExceptionHelper.ThrowArgumentOutOfRangeExceptionWhenCreating<DateTime>, e);
+        }
     }
 }

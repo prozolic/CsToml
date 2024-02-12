@@ -171,7 +171,15 @@ internal class DateTimeOffsetFormatter : ICsTomlFormatter<DateTimeOffset>
 
         if (offsetBytes.Length == 1 && offsetBytes[0] == CsTomlSyntax.AlphaBet.Z || offsetBytes[0] == CsTomlSyntax.AlphaBet.z)
         {
-            return new DateTimeOffset(year, month, day, hour, minute, second, millisecond, microsecond, TimeSpan.Zero);
+            try
+            {
+                return new DateTimeOffset(year, month, day, hour, minute, second, millisecond, microsecond, TimeSpan.Zero);
+            }
+            catch (ArgumentOutOfRangeException e)
+            {
+                return ExceptionHelper.NotReturnThrow<DateTimeOffset, ArgumentOutOfRangeException>(
+                    ExceptionHelper.ThrowArgumentOutOfRangeExceptionWhenCreating<DateTimeOffset>, e);
+            }
         }
 
         if (offsetBytes.Length == 6)
@@ -179,10 +187,25 @@ internal class DateTimeOffsetFormatter : ICsTomlFormatter<DateTimeOffset>
             var plusOrMinus = CsTomlSyntax.IsPlusSign(offsetBytes[0]) ? 1 : -1;
             var offsetHour = DeserializeDecimal(offsetBytes[1]) * 10 + DeserializeDecimal(offsetBytes[2]);
             var offsetMinute = DeserializeDecimal(offsetBytes[4]) * 10 + DeserializeDecimal(offsetBytes[5]);
-            return new DateTimeOffset(year, month, day, hour, minute, second, millisecond, microsecond, new TimeSpan(offsetHour * plusOrMinus, offsetMinute * plusOrMinus ,0));
+            try
+            {
+                return new DateTimeOffset(year, month, day, hour, minute, second, millisecond, microsecond, new TimeSpan(offsetHour * plusOrMinus, offsetMinute * plusOrMinus, 0));
+            }
+            catch (ArgumentOutOfRangeException e)
+            {
+                return ExceptionHelper.NotReturnThrow<DateTimeOffset, ArgumentOutOfRangeException>(
+                    ExceptionHelper.ThrowArgumentOutOfRangeExceptionWhenCreating<DateTimeOffset>, e);
+            }
         }
-
-        return new DateTimeOffset(year, month, day, hour, minute, second, millisecond, microsecond, TimeSpan.Zero);
+        try
+        {
+            return new DateTimeOffset(year, month, day, hour, minute, second, millisecond, microsecond, TimeSpan.Zero);
+        }
+        catch (ArgumentOutOfRangeException e)
+        {
+            return ExceptionHelper.NotReturnThrow<DateTimeOffset, ArgumentOutOfRangeException>(
+                ExceptionHelper.ThrowArgumentOutOfRangeExceptionWhenCreating<DateTimeOffset>, e);
+        }
     }
 
     internal static int DeserializeDecimal(byte utf8Byte)

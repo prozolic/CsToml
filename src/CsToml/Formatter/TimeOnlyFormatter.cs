@@ -115,7 +115,16 @@ internal class TimeOnlyFormatter : ICsTomlFormatter<TimeOnly>
                 microsecond += DeserializeDecimal(bytes[14]);
             }
         }
-        return new TimeOnly(hour, minute, second, millisecond, microsecond);
+
+        try
+        {
+            return new TimeOnly(hour, minute, second, millisecond, microsecond);
+        }
+        catch (ArgumentOutOfRangeException e)
+        {
+            return ExceptionHelper.NotReturnThrow<TimeOnly, ArgumentOutOfRangeException>(
+                ExceptionHelper.ThrowArgumentOutOfRangeExceptionWhenCreating<TimeOnly>, e);
+        }
     }
 
     internal static int DeserializeDecimal(byte utf8Byte)

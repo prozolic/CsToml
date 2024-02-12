@@ -46,7 +46,15 @@ internal class DateOnlyFormatter : ICsTomlFormatter<DateOnly>
         var day = DeserializeDecimal(bytes[8]) * 10;
         day += DeserializeDecimal(bytes[9]);
 
-        return new DateOnly(year, month, day);
+        try
+        {
+            return new DateOnly(year, month, day);
+        }
+        catch (ArgumentOutOfRangeException e)
+        {
+            return ExceptionHelper.NotReturnThrow<DateOnly, ArgumentOutOfRangeException>(
+                ExceptionHelper.ThrowArgumentOutOfRangeExceptionWhenCreating<DateOnly>, e);
+        }
     }
 
     internal static int DeserializeDecimal(byte utf8Byte)

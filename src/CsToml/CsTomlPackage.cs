@@ -17,14 +17,14 @@ public partial class CsTomlPackage
 
     public long LineNumber { get; internal set; }
 
-    public ReadOnlyCollection<CsTomlException>? Exceptions => exceptions.AsReadOnly();
+    public ReadOnlyCollection<CsTomlException> Exceptions => exceptions.AsReadOnly();
 
     public bool IsThrowCsTomlException { get; set; }
 
     public CsTomlPackage()
     {
         table = new();
-        exceptions = new();
+        exceptions = [];
         LineNumber = 0;
         IsThrowCsTomlException = true;
     }

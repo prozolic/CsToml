@@ -380,6 +380,13 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowArgumentOutOfRangeExceptionWhenCreating<T>(ArgumentOutOfRangeException innerException)
+    {
+        ThrowException($"ArgumentOutOfRangeException occurred when creating {typeof(T)}.", innerException);
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ThrowBasicStringsIsNotClosedWithClosingQuotationMarks()
     {
         ThrowException($@"Basic strings is not closed with closing quotation marks.");
