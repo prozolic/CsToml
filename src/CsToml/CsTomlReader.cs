@@ -303,12 +303,16 @@ internal ref struct CsTomlReader
         var writer = RecycleByteArrayPoolBufferWriter.Rent();
         var utf8Writer = new Utf8Writer(writer);
 
+        var closingQuotationMarks = false;
         while (TryPeek(out var ch))
         {
             if (CsTomlSyntax.IsEscape(ch))
                 ExceptionHelper.ThrowNumericConversionFailed(ch);
             else if (CsTomlSyntax.IsDoubleQuoted(ch))
+            {
+                closingQuotationMarks = true;
                 break;
+            }
             else if (CsTomlSyntax.IsBackSlash(ch))
             {
                 FormatEscapeSequence(ref utf8Writer, multiLine: false);
@@ -317,6 +321,8 @@ internal ref struct CsTomlReader
             utf8Writer.Write(ch);
             Skip(1);
         }
+        if (!closingQuotationMarks)
+            ExceptionHelper.ThrowBasicStringsIsNotClosedWithClosingQuotationMarks();
 
         Skip(1); // "
 
@@ -352,6 +358,7 @@ internal ref struct CsTomlReader
             }
         }
 
+        var closingThreeQuotationMarks = false;
         var writer = RecycleByteArrayPoolBufferWriter.Rent();
         var utf8Writer = new Utf8Writer(writer);
         while (TryPeek(out var ch))
@@ -404,8 +411,10 @@ internal ref struct CsTomlReader
                                 utf8Writer.Write(CsTomlSyntax.Symbol.DOUBLEQUOTED);
                                 continue;
                             }
+                            closingThreeQuotationMarks = true;
                             goto BREAK;
                         }
+                        closingThreeQuotationMarks = true;
                         goto BREAK;
                     }
                 }
@@ -425,6 +434,10 @@ internal ref struct CsTomlReader
             Skip(1);
         }
     BREAK:
+
+        if (!closingThreeQuotationMarks)
+            ExceptionHelper.ThrowMultilineBasicStringsIsNotClosedWithClosingThreeQuotationMarks();
+
         try
         {
             return new CsTomlString(writer.WrittenSpan, CsTomlString.CsTomlStringType.MultiLineBasic);
@@ -490,12 +503,28 @@ internal ref struct CsTomlReader
         var firstPosition = byteReader.Position;
 
         Skip(1); // '
+        var closingSingleQuote = false;
         while (TryPeek(out var ch))
         {
-            if (CsTomlSyntax.IsSingleQuoted(ch))
+            if (CsTomlSyntax.IsEscape(ch))
+            {
+                if (CsTomlSyntax.IsTab(ch))
+                {
+                    Skip(1);
+                    continue;
+                }
+                ExceptionHelper.ThrowEscapeCharactersIncluded(ch);
+            }
+            else if (CsTomlSyntax.IsSingleQuoted(ch))
+            {
+                closingSingleQuote = true;
                 break;
+            }
             Skip(1);
         }
+        if (!closingSingleQuote)
+            ExceptionHelper.ThrowLiteralStringsIsNotClosedWithClosingQuoted();
+
         var endPosition = byteReader.Position;
         var length = endPosition - firstPosition - 1;
         byteReader.Position = firstPosition + 1;
@@ -509,6 +538,7 @@ internal ref struct CsTomlReader
     {
         Skip(3); // '''
 
+        var closingThreeSingleQuotes = false;
         var firstPosition = byteReader.Position;
         if (TryPeek(out var newlineCh) && CsTomlSyntax.IsNewLine(newlineCh))
         {
@@ -554,7 +584,7 @@ internal ref struct CsTomlReader
                     IncreaseLineNumber();
                     continue;
                 }
-                else if (!(CsTomlSyntax.IsTab(ch)))
+                else if (CsTomlSyntax.IsTab(ch))
                 {
                     Skip(1);
                     continue;
@@ -581,8 +611,10 @@ internal ref struct CsTomlReader
                                 singleQuotedCount++;
                                 continue;
                             }
+                            closingThreeSingleQuotes = true;
                             goto BREAK;
                         }
+                        closingThreeSingleQuotes = true;
                         goto BREAK;
                     }
                 }
@@ -591,6 +623,9 @@ internal ref struct CsTomlReader
             Skip(1);
         }
     BREAK:
+        if (!closingThreeSingleQuotes)
+            ExceptionHelper.ThrowMultilineLiteralStringsIsNotClosedWithThreeClosingQuoted();
+
         var endPosition = byteReader.Position;
         var length = endPosition - firstPosition -3;
         byteReader.Position = firstPosition;

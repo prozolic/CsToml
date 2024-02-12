@@ -378,5 +378,33 @@ internal static class ExceptionHelper
         ThrowException($"OverflowException occurred when casting from type long to type {t}.", innerException);
     }
 
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowBasicStringsIsNotClosedWithClosingQuotationMarks()
+    {
+        ThrowException($@"Basic strings is not closed with closing quotation marks.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowMultilineBasicStringsIsNotClosedWithClosingThreeQuotationMarks()
+    {
+        ThrowException($@"Multi-line Basic strings is not closed with closing three quotation marks.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowLiteralStringsIsNotClosedWithClosingQuoted()
+    {
+        ThrowException($@"Literal strings is not closed with closing single quotes.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowMultilineLiteralStringsIsNotClosedWithThreeClosingQuoted()
+    {
+        ThrowException($@"Multi-line Literal strings is not closed with closing three single quotes.");
+    }
+
 }
 
