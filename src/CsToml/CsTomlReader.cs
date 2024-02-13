@@ -834,27 +834,39 @@ internal ref struct CsTomlReader
             if (first == CsTomlSyntax.Number.Value10[0])
             {
                 Skip(1);
-                if (TryPeek(out var second) && CsTomlSyntax.IsLowerAlphabet(second))
+                if (TryPeek(out var formatsCh))
                 {
-                    switch (second)
+                    if (CsTomlSyntax.IsLowerAlphabet(formatsCh))
                     {
-                        case CsTomlSyntax.AlphaBet.x:
-                            Skip(1);
-                            return ReadHexNumeric();
-                        case CsTomlSyntax.AlphaBet.o:
-                            Skip(1);
-                            return ReadOctalNumeric();
-                        case CsTomlSyntax.AlphaBet.b:
-                            Skip(1);
-                            return ReadBinaryNumeric();
-                        case CsTomlSyntax.AlphaBet.e: // 0e...
-                        case CsTomlSyntax.AlphaBet.E: // 0E...
-                            byteReader.Position = firstPosition;
-                            return ReadDouble();
-
-                        default:
-                            return ExceptionHelper.NotReturnThrow<CsTomlValue, byte>(ExceptionHelper.ThrowIncorrectCompactEscapeCharacters, second);
-                    };
+                        switch (formatsCh)
+                        {
+                            case CsTomlSyntax.AlphaBet.x:
+                                Skip(1);
+                                return ReadHexNumeric();
+                            case CsTomlSyntax.AlphaBet.o:
+                                Skip(1);
+                                return ReadOctalNumeric();
+                            case CsTomlSyntax.AlphaBet.b:
+                                Skip(1);
+                                return ReadBinaryNumeric();
+                            case CsTomlSyntax.AlphaBet.e: // 0e...
+                            case CsTomlSyntax.AlphaBet.E: // 0E...
+                                byteReader.Position = firstPosition;
+                                return ReadDouble();
+                            default:
+                                return ExceptionHelper.NotReturnThrow<CsTomlValue, byte>(ExceptionHelper.ThrowIncorrectCompactEscapeCharacters, formatsCh);
+                        };
+                    }
+                    else if (CsTomlSyntax.IsTabOrWhiteSpace(formatsCh))
+                    {
+                        byteReader.Position = firstPosition;
+                        return ReadDecimalNumeric();
+                    }
+                    else if (CsTomlSyntax.IsNewLine(formatsCh))
+                    {
+                        byteReader.Position = firstPosition;
+                        return ReadDecimalNumeric();
+                    }
                 }
                 byteReader.Position = firstPosition;
             }
@@ -927,14 +939,20 @@ internal ref struct CsTomlReader
     {
         var writer = new SpanWriter(stackalloc byte[32]);
 
+        var plusOrMinusSign = false;
         if (TryPeek(out var plusOrMinusCh) && CsTomlSyntax.IsPlusOrMinusSign(plusOrMinusCh))
         {
+            plusOrMinusSign = true;
             writer.Write(plusOrMinusCh);
             Skip(1);
         }
-        if (TryPeek(out var underScoreCh) && CsTomlSyntax.IsUnderScore(underScoreCh))
+
+        if (TryPeek(out var firstCh))
         {
-            ExceptionHelper.ThrowUnderscoreUsedConsecutively();
+            if (CsTomlSyntax.IsUnderScore(firstCh))
+            {
+                ExceptionHelper.ThrowUnderscoreUsedConsecutively();
+            }
         }
 
         var underscore = false;
@@ -974,10 +992,28 @@ internal ref struct CsTomlReader
 
         }
 
-        var writingSpan = writer.WrittenSpan;
-        if (CsTomlSyntax.IsUnderScore(writingSpan[^1]))
-        {
+        if (underscore)
             ExceptionHelper.ThrowUnderscoreUsedAtTheEnd();
+
+        var writingSpan = writer.WrittenSpan;
+        if (plusOrMinusSign)
+        { 
+            if (writingSpan.Length > 2)
+            {
+                // +00 or -01
+                if (writingSpan[1] == CsTomlSyntax.Number.Value10[0])
+                    ExceptionHelper.ThrowIncorrectTomlIntegerFormat();
+            }
+        }
+        else
+        {
+            if (writingSpan.Length > 1)
+            {
+                // 00 or 01
+                if (writingSpan[0] == CsTomlSyntax.Number.Value10[0])
+                    ExceptionHelper.ThrowIncorrectTomlIntegerFormat();
+
+            }
         }
 
         var tempReader = new Utf8Reader(writingSpan);
@@ -987,9 +1023,18 @@ internal ref struct CsTomlReader
 
     private CsTomlInt64 ReadHexNumeric()
     {
-        if (TryPeek(out var underScoreCh) && CsTomlSyntax.IsUnderScore(underScoreCh))
+        if (TryPeek(out var firstCh))
         {
-            ExceptionHelper.ThrowUnderscoreUsedConsecutively();
+            if (!CsTomlSyntax.IsHex(firstCh))
+            {
+                if (CsTomlSyntax.IsUnderScore(firstCh))
+                    ExceptionHelper.ThrowUnderscoreUsedConsecutively();
+                ExceptionHelper.ThrowIncorrectTomlIntegerHexadecimalFormat();
+            }
+        }
+        else
+        {
+            ExceptionHelper.ThrowIncorrectTomlIntegerHexadecimalFormat();
         }
 
         var writer = new SpanWriter(stackalloc byte[32]);
@@ -1030,22 +1075,28 @@ internal ref struct CsTomlReader
             break;
         }
 
-        var writingSpan = writer.WrittenSpan;
-        if (CsTomlSyntax.IsUnderScore(writingSpan[^1]))
-        {
+        if (underscore)
             ExceptionHelper.ThrowUnderscoreUsedAtTheEnd();
-        }
 
-        var tempReader = new Utf8Reader(writingSpan);
+        var tempReader = new Utf8Reader(writer.WrittenSpan);
         var value = Int64Formatter.Deserialize(ref tempReader, tempReader.Length);
         return new CsTomlInt64(value);
     }
 
     private CsTomlInt64 ReadOctalNumeric()
     {
-        if (TryPeek(out var underScoreCh) && CsTomlSyntax.IsUnderScore(underScoreCh))
+        if (TryPeek(out var firstCh))
         {
-            ExceptionHelper.ThrowUnderscoreUsedConsecutively();
+            if (!CsTomlSyntax.IsOctal(firstCh))
+            {
+                if (CsTomlSyntax.IsUnderScore(firstCh))
+                    ExceptionHelper.ThrowUnderscoreUsedConsecutively();
+                ExceptionHelper.ThrowIncorrectTomlIntegerOctalFormat();
+            }
+        }
+        else
+        {
+            ExceptionHelper.ThrowIncorrectTomlIntegerOctalFormat();
         }
 
         var writer = new SpanWriter(stackalloc byte[32]);
@@ -1086,22 +1137,28 @@ internal ref struct CsTomlReader
             break;
         }
 
-        var writingSpan = writer.WrittenSpan;
-        if (CsTomlSyntax.IsUnderScore(writingSpan[writingSpan.Length - 1]))
-        {
+        if (underscore)
             ExceptionHelper.ThrowUnderscoreUsedAtTheEnd();
-        }
 
-        var tempReader = new Utf8Reader(writingSpan);
+        var tempReader = new Utf8Reader(writer.WrittenSpan);
         var value = Int64Formatter.Deserialize(ref tempReader, tempReader.Length);
         return new CsTomlInt64(value);
     }
 
     private CsTomlInt64 ReadBinaryNumeric()
     {
-        if (TryPeek(out var underScoreCh) && CsTomlSyntax.IsUnderScore(underScoreCh))
+        if (TryPeek(out var firstCh))
         {
-            ExceptionHelper.ThrowUnderscoreUsedConsecutively();
+            if (!CsTomlSyntax.IsBinary(firstCh))
+            {
+                if (CsTomlSyntax.IsUnderScore(firstCh))
+                    ExceptionHelper.ThrowUnderscoreUsedConsecutively();
+                ExceptionHelper.ThrowIncorrectTomlIntegerBinaryFormat();
+            }
+        }
+        else
+        {
+            ExceptionHelper.ThrowIncorrectTomlIntegerBinaryFormat();
         }
 
         var writer = new SpanWriter(stackalloc byte[32]);
@@ -1142,13 +1199,10 @@ internal ref struct CsTomlReader
             break;
         }
 
-        var writingSpan = writer.WrittenSpan;
-        if (CsTomlSyntax.IsUnderScore(writingSpan[writingSpan.Length - 1]))
-        {
+        if (underscore)
             ExceptionHelper.ThrowUnderscoreUsedAtTheEnd();
-        }
 
-        var tempReader = new Utf8Reader(writingSpan);
+        var tempReader = new Utf8Reader(writer.WrittenSpan);
         var value = Int64Formatter.Deserialize(ref tempReader, tempReader.Length);
         return new CsTomlInt64(value);
     }

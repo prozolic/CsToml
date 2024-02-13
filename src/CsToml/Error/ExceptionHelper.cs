@@ -338,6 +338,34 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowIncorrectTomlIntegerFormat()
+    {
+        ThrowException($@"Failed due to incorrect Integer formatting.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowIncorrectTomlIntegerBinaryFormat()
+    {
+        ThrowException($@"Failed due to incorrect formatting of binary integers.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowIncorrectTomlIntegerOctalFormat()
+    {
+        ThrowException($@"Failed due to incorrect formatting of octal integers.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowIncorrectTomlIntegerHexadecimalFormat()
+    {
+        ThrowException($@"Failed due to incorrect formatting of hexadecimal integers.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ThrowIncorrectTomlFloatFormat()
     {
         ThrowException($@"Failed due to incorrect Float formatting.");
