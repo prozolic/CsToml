@@ -80,10 +80,12 @@ internal ref struct CsTomlReader
         }
 
         var key = new CsTomlKey();
+        var period = false;
         while (TryPeek(out var c))
         {
             if (CsTomlSyntax.IsAlphabet(c) || CsTomlSyntax.IsNumber(c))
             {
+                period = false;
                 key.Add(ReadKeyString(isTableHeader));
                 continue;
             }
@@ -100,21 +102,31 @@ internal ref struct CsTomlReader
                         }
                         else if (CsTomlSyntax.IsPeriod(c2))
                         {
+                            if (period)
+                                ExceptionHelper.ThrowPeriodUsedMoreThanOnce();
                             Skip(1);
                         }
                         continue;
                     }
                     goto BREAK;
                 case CsTomlSyntax.Symbol.EQUAL:
+                    if (key.DotKeys.Count == 0)
+                    {
+                        ExceptionHelper.ThrowBareKeyIsEmpty();
+                    }
                     goto BREAK;
                 case CsTomlSyntax.Symbol.PERIOD:
+                    if (period) ExceptionHelper.ThrowPeriodUsedMoreThanOnce();
+                    period = true;
                     Skip(1);
                     SkipWhiteSpace();
                     continue;
                 case CsTomlSyntax.Symbol.DOUBLEQUOTED:
+                    period = false;
                     key.Add(ReadDoubleQuoteString());
                     continue;
                 case CsTomlSyntax.Symbol.SINGLEQUOTED:
+                    period = false;
                     key.Add(ReadSingleQuoteString());
                     continue;
                 case CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET:
@@ -993,7 +1005,7 @@ internal ref struct CsTomlReader
         }
 
         if (underscore)
-            ExceptionHelper.ThrowUnderscoreUsedAtTheEnd();
+            ExceptionHelper.ThrowUnderscoreIsUsedAtTheEnd();
 
         var writingSpan = writer.WrittenSpan;
         if (plusOrMinusSign)
@@ -1076,7 +1088,7 @@ internal ref struct CsTomlReader
         }
 
         if (underscore)
-            ExceptionHelper.ThrowUnderscoreUsedAtTheEnd();
+            ExceptionHelper.ThrowUnderscoreIsUsedAtTheEnd();
 
         var tempReader = new Utf8Reader(writer.WrittenSpan);
         var value = Int64Formatter.Deserialize(ref tempReader, tempReader.Length);
@@ -1138,7 +1150,7 @@ internal ref struct CsTomlReader
         }
 
         if (underscore)
-            ExceptionHelper.ThrowUnderscoreUsedAtTheEnd();
+            ExceptionHelper.ThrowUnderscoreIsUsedAtTheEnd();
 
         var tempReader = new Utf8Reader(writer.WrittenSpan);
         var value = Int64Formatter.Deserialize(ref tempReader, tempReader.Length);
@@ -1200,7 +1212,7 @@ internal ref struct CsTomlReader
         }
 
         if (underscore)
-            ExceptionHelper.ThrowUnderscoreUsedAtTheEnd();
+            ExceptionHelper.ThrowUnderscoreIsUsedAtTheEnd();
 
         var tempReader = new Utf8Reader(writer.WrittenSpan);
         var value = Int64Formatter.Deserialize(ref tempReader, tempReader.Length);
@@ -1217,6 +1229,7 @@ internal ref struct CsTomlReader
             Skip(1);
         }
 
+        var firstPosition = byteReader.Position;
         if (TryPeek(out var firstNumberCh))
         {
             switch (firstNumberCh)
@@ -1225,11 +1238,27 @@ internal ref struct CsTomlReader
                     return ExceptionHelper.NotReturnThrow<CsTomlDouble>(ExceptionHelper.ThrowUnderscoreUsedFirst);
                 case CsTomlSyntax.Symbol.PERIOD:
                     return ExceptionHelper.NotReturnThrow<CsTomlDouble>(ExceptionHelper.ThrowPeriodUsedFirst);
-
                 case CsTomlSyntax.AlphaBet.i:
                 case CsTomlSyntax.AlphaBet.n:
                     if (CsTomlSyntax.IsPlusOrMinusSign(plusOrMinusCh)) Skip(-1);
                     return ReadDoubleInfOrNan();
+                case var zero when zero == CsTomlSyntax.Number.Value10[0]:
+                    Skip(1);
+                    if (TryPeek(out var secondNumberCh))
+                    {
+                        switch(secondNumberCh)
+                        {
+                            case CsTomlSyntax.Symbol.PERIOD: // 0.1 ..
+                            case CsTomlSyntax.AlphaBet.e: // 0e...
+                            case CsTomlSyntax.AlphaBet.E: // 0E...
+                                break;
+                            default:
+                                ExceptionHelper.ThrowIncorrectTomlFloatFormat();
+                                break;
+                        }
+                    }
+                    byteReader.Position = firstPosition;
+                    break;
             }
         }
 
@@ -1262,8 +1291,9 @@ internal ref struct CsTomlReader
                 case CsTomlSyntax.Symbol.PERIOD:
                     if (!number) ExceptionHelper.ThrowPeriodUsedWhereNotSurroundedByNumbers();
                     if (period) ExceptionHelper.ThrowPeriodUsedMoreThanOnce();
-                    period = true;
+                    if (exp) ExceptionHelper.ThrowDecimalPointIsPresentAfterTheExponentialPartE();
                     number = false;
+                    period = true;
                     writer.Write(ch);
                     Skip(1);
                     continue;
@@ -1303,10 +1333,26 @@ internal ref struct CsTomlReader
 
         }
 
+        if (underline)
+            ExceptionHelper.ThrowUnderscoreIsUsedAtTheEnd();
+
         var writingSpan = writer.WrittenSpan;
-        if (CsTomlSyntax.IsUnderScore(writingSpan[^1]))
+        switch(writingSpan[^1])
         {
-            ExceptionHelper.ThrowUnderscoreUsedAtTheEnd();
+            case CsTomlSyntax.Symbol.UNDERSCORE:
+                ExceptionHelper.ThrowUnderscoreIsUsedAtTheEnd();
+                break;
+            case CsTomlSyntax.Symbol.PERIOD:
+                ExceptionHelper.ThrowPeriodIsUsedAtTheEnd();
+                break;
+            case CsTomlSyntax.AlphaBet.e:
+            case CsTomlSyntax.AlphaBet.E:
+                ExceptionHelper.ThrowExponentPartIsUsedAtTheEnd();
+                break;
+            case CsTomlSyntax.Symbol.PLUS:
+            case CsTomlSyntax.Symbol.MINUS:
+                ExceptionHelper.ThrowIncorrectPositivAndNegativeSigns();
+                break;
         }
 
         var tempReader = new Utf8Reader(writingSpan);

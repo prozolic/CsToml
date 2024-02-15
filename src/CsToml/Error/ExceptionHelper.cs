@@ -303,9 +303,37 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void ThrowUnderscoreUsedAtTheEnd()
+    internal static void ThrowDecimalPointIsPresentAfterTheExponentialPartE()
+    {
+        ThrowException($@"A decimal point is present after the exponential part e");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowUnderscoreIsUsedAtTheEnd()
     {
         ThrowException($@"Underscores are used at the end.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowPeriodIsUsedAtTheEnd()
+    {
+        ThrowException($@"A period is used at the end.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowExponentPartIsUsedAtTheEnd()
+    {
+        ThrowException($@"Exponent part is used at the end.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowSignIsUsedAtTheEnd()
+    {
+        ThrowException($@"Sign is used at the end.");
     }
 
     [DoesNotReturn]
@@ -446,6 +474,13 @@ internal static class ExceptionHelper
     internal static void ThrowInvalidCodePoints()
     {
         ThrowException($@"This byte array contains invalid Unicode code points.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowBareKeyIsEmpty()
+    {
+        ThrowException($@"A bare key is empty.");
     }
 }
 
