@@ -429,6 +429,13 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowIncorrectTomlInlineTableFormat()
+    {
+        ThrowException($@"Failed due to incorrect inline Table formatting.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ThrowOverflowWhenCasting(Type t, Exception innerException)
     {
         ThrowException($"OverflowException occurred when casting from type long to type {t}.", innerException);

@@ -123,11 +123,11 @@ internal ref struct CsTomlReader
                     continue;
                 case CsTomlSyntax.Symbol.DOUBLEQUOTED:
                     period = false;
-                    key.Add(ReadDoubleQuoteString());
+                    key.Add(ReadDoubleQuoteSingleLineString());
                     continue;
                 case CsTomlSyntax.Symbol.SINGLEQUOTED:
                     period = false;
-                    key.Add(ReadSingleQuoteString());
+                    key.Add(ReadSingleQuoteSingleLineString());
                     continue;
                 case CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET:
                     if (isTableHeader)
@@ -801,6 +801,7 @@ internal ref struct CsTomlReader
                     Skip(1);
                     break;
                 }
+                ExceptionHelper.ThrowIncorrectTomlInlineTableFormat();
             }
         }
 
