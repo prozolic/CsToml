@@ -1,4 +1,6 @@
 ﻿using CsToml.Error;
+using Microsoft.Win32.SafeHandles;
+using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 
 namespace CsToml.Utility;
@@ -17,18 +19,44 @@ internal static class Utf8Helper
     {
         for (int i = 0; i < bytes.Length; i++)
         {
-            var range = -1;
-            if ((bytes[i] & 0x80) == 0x00) range = 0;
-            else if (((bytes[i] & 0xe0) == 0xc0)) range = 1;
-            else if (((bytes[i] & 0xf0) == 0xe0)) range = 2;
-            else if (((bytes[i] & 0xf8) == 0xf0)) range = 3;
-            else if (range < 0) return true;
+            if ((bytes[i] & 0x80) == 0x00) continue;
+            else if (((bytes[i] & 0xe0) == 0xc0)) goto Two;
+            else if (((bytes[i] & 0xf0) == 0xe0)) goto Three;
+            else if (((bytes[i] & 0xf8) == 0xf0)) goto Four;
+            else return true;
 
-            while (range-- > 0)
+        Two:
+            if (bytes.Length <= ++i) return true;
+            if ((bytes[i] & 0xc0) != 0x80) return true;
+            continue;
+
+        Three:
+            if (bytes.Length <= i + 2) return true;
+
+            if (bytes[i] == 0xe0)
             {
-                if (++i >= bytes.Length) return true;
-                if ((bytes[i] & 0xc0) != 0x80) return true;
+                if (0x7f < bytes[i + 1] && bytes[i + 1] < 0xa0) return true;
             }
+            else if (bytes[i] == 0xed) // surrogate pair
+            {
+                if (0x9f < bytes[i + 1]) return true;
+            }
+            if ((bytes[++i] & 0xc0) != 0x80) return true;
+            if ((bytes[++i] & 0xc0) != 0x80) return true;
+            continue;
+
+        Four:
+            if (bytes.Length <= i + 3) return true;
+
+            if (bytes[i] == 0xf0)
+            {
+                if (0x7f < bytes[i + 1] && bytes[i + 1] < 0x90) return true;
+            }
+            if ((bytes[++i] & 0xc0) != 0x80) return true;
+            if ((bytes[++i] & 0xc0) != 0x80) return true;
+            if ((bytes[++i] & 0xc0) != 0x80) return true;
+            continue;
+
         }
 
         return false;
