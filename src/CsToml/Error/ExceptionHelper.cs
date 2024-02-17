@@ -296,6 +296,13 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowTheDotIsDefinedFirst()
+    {
+        ThrowException($@"The dot is defined first.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ThrowTheExponentPartUsedMoreThanOnce()
     {
         ThrowException($@"The exponent part e is used more than once.");

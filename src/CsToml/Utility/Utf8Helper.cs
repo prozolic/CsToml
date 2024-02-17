@@ -113,7 +113,7 @@ internal static class Utf8Helper
             ExceptionHelper.ThrowException("Number of elements in the source ReadOnlySpan<byte> is not 4.");
         }
 
-        for (var i = 0; i < source.Length - 1; i++)
+        for (var i = 0; i < source.Length; i++)
         {
             if (!CsTomlSyntax.IsHex(source[i]))
             {

@@ -80,11 +80,12 @@ internal ref struct CsTomlReader
         }
 
         var key = new CsTomlKey();
-        var period = false;
+        var period = true;
         while (TryPeek(out var c))
         {
-            if (CsTomlSyntax.IsAlphabet(c) || CsTomlSyntax.IsNumber(c))
+            if (CsTomlSyntax.IsBareKey(c))
             {
+                if (!period) ExceptionHelper.ThrowIncorrectTomlFormat();
                 period = false;
                 key.Add(ReadKeyString(isTableHeader));
                 continue;
@@ -102,7 +103,12 @@ internal ref struct CsTomlReader
                                 goto BREAK;
                             case CsTomlSyntax.Symbol.PERIOD:
                                 if (period)
-                                    ExceptionHelper.ThrowPeriodUsedMoreThanOnce();
+                                {
+                                    if (key.DotKeys.Count > 0)
+                                        ExceptionHelper.ThrowPeriodUsedMoreThanOnce();
+                                    else
+                                        ExceptionHelper.ThrowTheDotIsDefinedFirst();
+                                }
                                 period = true;
                                 Skip(1);
                                 SkipWhiteSpace();
@@ -127,16 +133,24 @@ internal ref struct CsTomlReader
                     }
                     goto BREAK;
                 case CsTomlSyntax.Symbol.PERIOD:
-                    if (period) ExceptionHelper.ThrowPeriodUsedMoreThanOnce();
+                    if (period)
+                    {
+                        if (key.DotKeys.Count > 0)
+                            ExceptionHelper.ThrowPeriodUsedMoreThanOnce();
+                        else
+                            ExceptionHelper.ThrowTheDotIsDefinedFirst();
+                    }
                     period = true;
                     Skip(1);
                     SkipWhiteSpace();
                     continue;
                 case CsTomlSyntax.Symbol.DOUBLEQUOTED:
+                    if (!period) ExceptionHelper.ThrowIncorrectTomlFormat();
                     period = false;
                     key.Add(ReadDoubleQuoteSingleLineString());
                     continue;
                 case CsTomlSyntax.Symbol.SINGLEQUOTED:
+                    if (!period) ExceptionHelper.ThrowIncorrectTomlFormat();
                     period = false;
                     key.Add(ReadSingleQuoteSingleLineString());
                     continue;
@@ -158,10 +172,6 @@ internal ref struct CsTomlReader
                         goto BREAK;
                     }
                     return ExceptionHelper.NotReturnThrow<CsTomlKey>(ExceptionHelper.ThrowIncorrectTomlFormat);
-                case var _ when CsTomlSyntax.IsUnderScore(c):
-                case var _ when CsTomlSyntax.IsMinusSign(c):
-                    key.Add(ReadKeyString(isTableHeader));
-                    continue;
                 default:
                     return ExceptionHelper.NotReturnThrow<CsTomlKey>(ExceptionHelper.ThrowIncorrectTomlFormat);
             }
@@ -434,10 +444,9 @@ internal ref struct CsTomlReader
                         {
                             if (CsTomlSyntax.IsDoubleQuoted(ch3))
                             {
-                                if (doubleQuotedCount >= 6)
+                                if (++doubleQuotedCount >= 6)
                                     ExceptionHelper.ThrowConsecutiveQuotationMarksOf3();
                                 Skip(1);
-                                doubleQuotedCount++;
                                 utf8Writer.Write(CsTomlSyntax.Symbol.DOUBLEQUOTED);
                                 continue;
                             }
@@ -495,6 +504,11 @@ internal ref struct CsTomlReader
                 ExceptionHelper.ThrowInvalidEscapeSequence();
                 return;
             case CsTomlString.EscapeSequenceResult.Unescaped:
+                SkipWhiteSpace();
+                if (TryPeek(out var ch) && !CsTomlSyntax.IsNewLine(ch))
+                {
+                    ExceptionHelper.ThrowInvalidEscapeSequence();
+                }
                 SkipWhiteSpaceAndNewLine();
                 return;
             default:
@@ -647,10 +661,9 @@ internal ref struct CsTomlReader
                         {
                             if (CsTomlSyntax.IsSingleQuoted(ch3))
                             {
-                                if (singleQuotedCount >= 6)
+                                if (++singleQuotedCount >= 6)
                                     ExceptionHelper.ThrowConsecutiveSingleQuotationMarksOf3();
                                 Skip(1);
-                                singleQuotedCount++;
                                 continue;
                             }
                             closingThreeSingleQuotes = true;
