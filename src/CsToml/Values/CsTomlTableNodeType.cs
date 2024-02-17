@@ -8,8 +8,8 @@ internal enum CsTomlTableNodeType : byte
     GroupingProperty = 1 << 0,
     TableHeaderProperty = 1 << 1,
     TableHeaderDefinitionPosition = 1 << 2,
-    TableArrayHeaderProperty = 1 << 3,
-    TableArrayHeaderDefinitionPosition = 1 << 4,
+    ArrayOfTablesHeaderProperty = 1 << 3,
+    ArrayOfTablesHeaderDefinitionPosition = 1 << 4,
 }
 
 internal static class CsTomlTableNodeTypeExtensions

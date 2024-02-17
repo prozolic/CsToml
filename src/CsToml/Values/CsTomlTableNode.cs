@@ -72,34 +72,34 @@ internal class CsTomlTableNode
         }
     }
 
-    public bool IsTableArrayHeader 
+    public bool IsArrayOfTablesHeader 
     {
-        get => nodeType.Has(CsTomlTableNodeType.TableArrayHeaderProperty);
+        get => nodeType.Has(CsTomlTableNodeType.ArrayOfTablesHeaderProperty);
         set
         {
             if (value)
             {
-                CsTomlTableNodeTypeExtensions.Add(ref nodeType, CsTomlTableNodeType.TableArrayHeaderProperty);
+                CsTomlTableNodeTypeExtensions.Add(ref nodeType, CsTomlTableNodeType.ArrayOfTablesHeaderProperty);
             }
             else
             {
-                CsTomlTableNodeTypeExtensions.Remove(ref nodeType, CsTomlTableNodeType.TableArrayHeaderProperty);
+                CsTomlTableNodeTypeExtensions.Remove(ref nodeType, CsTomlTableNodeType.ArrayOfTablesHeaderProperty);
             }
         }
     }
 
-    public bool IsTableArrayHeaderDefinitionPosition
+    public bool IsArrayOfTablesHeaderDefinitionPosition
     {
-        get => nodeType.Has(CsTomlTableNodeType.TableArrayHeaderDefinitionPosition);
+        get => nodeType.Has(CsTomlTableNodeType.ArrayOfTablesHeaderDefinitionPosition);
         set
         {
             if (value)
             {
-                CsTomlTableNodeTypeExtensions.Add(ref nodeType, CsTomlTableNodeType.TableArrayHeaderDefinitionPosition);
+                CsTomlTableNodeTypeExtensions.Add(ref nodeType, CsTomlTableNodeType.ArrayOfTablesHeaderDefinitionPosition);
             }
             else
             {
-                CsTomlTableNodeTypeExtensions.Remove(ref nodeType, CsTomlTableNodeType.TableArrayHeaderDefinitionPosition);
+                CsTomlTableNodeTypeExtensions.Remove(ref nodeType, CsTomlTableNodeType.ArrayOfTablesHeaderDefinitionPosition);
             }
         }
     }

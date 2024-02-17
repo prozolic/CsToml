@@ -33,7 +33,7 @@ internal partial class CsTomlTable : CsTomlValue
             {
                 ExceptionHelper.ThrowTheKeyIsDefinedAsTable();
             }
-            if (childNode.IsTableArrayHeaderDefinitionPosition)
+            if (childNode.IsArrayOfTablesHeaderDefinitionPosition)
             {
                 ExceptionHelper.ThrowTheKeyIsDefinedAsArrayOfTables();
             }
@@ -67,7 +67,7 @@ internal partial class CsTomlTable : CsTomlValue
                 continue;
             }
             
-            if (childNode!.IsTableArrayHeaderDefinitionPosition)
+            if (childNode!.IsArrayOfTablesHeaderDefinitionPosition)
             {
                 var tableHeaderArrayValue = (childNode!.Value as CsTomlArray)?.LastValue;
                 node = (tableHeaderArrayValue as CsTomlTable)?.RootNode;
@@ -90,9 +90,13 @@ internal partial class CsTomlTable : CsTomlValue
             {
                 ExceptionHelper.ThrowTableHeaderIsDefined(csTomlKey.GetJoinName());
             }
-            if (node!.IsTableArrayHeaderDefinitionPosition)
+            if (node!.IsArrayOfTablesHeaderDefinitionPosition)
             {
-                ExceptionHelper.ThrowTableHeaderIsDefinedAsTableArray(csTomlKey.GetJoinName());
+                ExceptionHelper.ThrowTableHeaderIsDefinedAsArrayOfTables(csTomlKey.GetJoinName());
+            }
+            if (!node!.IsTableHeader)
+            {
+                ExceptionHelper.ThrowTableHeaderIsDefined(csTomlKey.GetJoinName());
             }
         }
 
@@ -101,7 +105,7 @@ internal partial class CsTomlTable : CsTomlValue
         newNode.IsTableHeaderDefinitionPosition = true;
     }
 
-    public void AddTableArrayHeader(CsTomlKey csTomlKey, out CsTomlTableNode? newNode, IReadOnlyCollection<CsTomlString> comments)
+    public void AddArrayOfTablesHeader(CsTomlKey csTomlKey, out CsTomlTableNode? newNode, IReadOnlyCollection<CsTomlString> comments)
     {
         var currentNode = RootNode;
         var dotKeys = csTomlKey.DotKeys;
@@ -114,11 +118,12 @@ internal partial class CsTomlTable : CsTomlValue
             {
                 addedNewNode = true;
                 currentNode = childNode;
-                currentNode.IsTableArrayHeader = true;
+                currentNode.IsArrayOfTablesHeader = true;
+                currentNode.IsTableHeader = i < dotKeys.Count - 1;
                 continue;
             }
 
-            if (childNode!.IsTableArrayHeaderDefinitionPosition)
+            if (childNode!.IsArrayOfTablesHeaderDefinitionPosition)
             {
                 if (i == dotKeys.Count - 1)
                 {
@@ -144,14 +149,21 @@ internal partial class CsTomlTable : CsTomlValue
 
         if (currentNode!.IsTableHeader)
         {
-            ExceptionHelper.ThrowTableArrayIsDefinedAsTable(csTomlKey.GetJoinName());
+            ExceptionHelper.ThrowTheArrayOfTablesIsDefinedAsTable(csTomlKey.GetJoinName());
         }
 
         if (addedNewNode)
         {
             currentNode.Value = new CsTomlArray();
-            currentNode.IsTableArrayHeader = true;
-            currentNode.IsTableArrayHeaderDefinitionPosition = true;
+            currentNode.IsArrayOfTablesHeader = true;
+            currentNode.IsArrayOfTablesHeaderDefinitionPosition = true;
+        }
+        else
+        {
+            if (!currentNode!.IsArrayOfTablesHeaderDefinitionPosition)
+            {
+                ExceptionHelper.ThrowTheArrayOfTablesIsDefinedAsTable(csTomlKey.GetJoinName());
+            }
         }
         var table = new CsTomlTable();
         (currentNode.Value as CsTomlArray)?.Add(table);
@@ -171,7 +183,7 @@ internal partial class CsTomlTable : CsTomlValue
 
     private void ToTomlStringCore(ref CsTomlWriter writer, CsTomlTableNode parentNode, List<CsTomlString> keys, List<CsTomlString> tableHeaderKeys)
     {
-        if (parentNode.IsTableArrayHeader)
+        if (parentNode.IsArrayOfTablesHeader)
         {
             if (parentNode.Value is CsTomlArray arrayValue)
             {
@@ -192,7 +204,7 @@ internal partial class CsTomlTable : CsTomlValue
                     {
                         writer.WriteNewLine();
                     }
-                    writer.WriteTableArrayHeader(keysSpan);
+                    writer.WriteArrayOfTablesHeader(keysSpan);
                     if (v is CsTomlTable table)
                     {
                         table.ToTomlStringCore(ref writer, table.RootNode, [], tableHeaderKeys);

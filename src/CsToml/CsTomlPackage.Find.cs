@@ -43,7 +43,7 @@ public partial class CsTomlPackage
             }
         }
 
-        if (hit && (!currentNode!.IsGroupingProperty || currentNode!.IsTableArrayHeader))
+        if (hit && (!currentNode!.IsGroupingProperty || currentNode!.IsArrayOfTablesHeader))
         {
             value = currentNode.Value!;
             return true;
@@ -58,17 +58,17 @@ public partial class CsTomlPackage
 
     public CsTomlValue Find(ByteArray[] tableHeaderKeys, int arrayIndex, ByteArray[] keys)
     {
-        // find TableArray
-        var tableArray = Find(tableHeaderKeys);
-        if (tableArray.Type != CsTomlType.Array) 
+        // find Array Of Tables
+        var value = Find(tableHeaderKeys);
+        if (value.Type != CsTomlType.Array) 
             return CsTomlValue.Empty;
 
-        var csTomlTableArray = tableArray as CsTomlArray;
-        if (csTomlTableArray!.Count == 0 || csTomlTableArray!.Count <= arrayIndex) 
+        var csTomlArrayOfTables = value as CsTomlArray;
+        if (csTomlArrayOfTables!.Count == 0 || csTomlArrayOfTables!.Count <= arrayIndex) 
             return CsTomlValue.Empty;
 
         // find Value
-        return FindCore((csTomlTableArray[arrayIndex]! as CsTomlTable)!, keys);
+        return FindCore((csTomlArrayOfTables[arrayIndex]! as CsTomlTable)!, keys);
     }
 
     private CsTomlValue FindCore(CsTomlTable innerTable, ByteArray[] keys)
@@ -85,7 +85,7 @@ public partial class CsTomlPackage
             }
         }
 
-        if (hit && (!currentNode!.IsGroupingProperty || currentNode!.IsTableArrayHeader))
+        if (hit && (!currentNode!.IsGroupingProperty || currentNode!.IsArrayOfTablesHeader))
         {
             return currentNode.Value!;
         }

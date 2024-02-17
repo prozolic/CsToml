@@ -77,7 +77,7 @@ internal ref struct CsTomlWriter
         WriteNewLine();
     }
 
-    public void WriteTableArrayHeader(ReadOnlySpan<CsTomlString> keysSpan)
+    public void WriteArrayOfTablesHeader(ReadOnlySpan<CsTomlString> keysSpan)
     {
         writer.Write(CsTomlSyntax.Symbol.LEFTSQUAREBRACKET);
         writer.Write(CsTomlSyntax.Symbol.LEFTSQUAREBRACKET);

@@ -176,9 +176,9 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void ThrowTableArrayIsDefinedAsTable(string tableName)
+    internal static void ThrowTheArrayOfTablesIsDefinedAsTable(string tableName)
     {
-        ThrowException($@"The '{tableName}' table array is already defined as a table.");
+        ThrowException($@"The array of tables '{tableName}' is already defined as a table.");
     }
 
     [DoesNotReturn]
@@ -260,7 +260,7 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void ThrowTableHeaderIsDefinedAsTableArray(string keyName)
+    internal static void ThrowTableHeaderIsDefinedAsArrayOfTables(string keyName)
     {
         ThrowException($@"Table Header '{keyName}' is already defined as Array of Tables.");
     }

@@ -67,14 +67,14 @@ internal ref struct CsTomlReader
         if (!Peek()) ExceptionHelper.ThrowEndOfFileReached();
 
         var isTableHeader = false;
-        var isTableArrayHeader = false;
+        var isArrayOfTablesHeader = false;
         if (TryPeek(out var tableHeaderCh) && CsTomlSyntax.IsLeftSquareBrackets(tableHeaderCh))
         {
             isTableHeader = true;
             Skip(1);
-            if (TryPeek(out var tableaArrayHeaderCh) && CsTomlSyntax.IsLeftSquareBrackets(tableaArrayHeaderCh))
+            if (TryPeek(out var ArrayOfTablesHeaderCh) && CsTomlSyntax.IsLeftSquareBrackets(ArrayOfTablesHeaderCh))
             {
-                isTableArrayHeader = true;
+                isArrayOfTablesHeader = true;
                 Skip(1);
             }
         }
@@ -96,17 +96,28 @@ internal ref struct CsTomlReader
                     SkipWhiteSpace();
                     if (TryPeek(out var c2))
                     {
-                        if (CsTomlSyntax.IsEqual(c2))
+                        switch(c2)
                         {
-                            goto BREAK;
+                            case CsTomlSyntax.Symbol.EQUAL:
+                                goto BREAK;
+                            case CsTomlSyntax.Symbol.PERIOD:
+                                if (period)
+                                    ExceptionHelper.ThrowPeriodUsedMoreThanOnce();
+                                period = true;
+                                Skip(1);
+                                SkipWhiteSpace();
+                                continue;
+                            case CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET:
+                                continue;
+                            case CsTomlSyntax.Symbol.DOUBLEQUOTED:
+                            case CsTomlSyntax.Symbol.SINGLEQUOTED:
+                            case var alphabet when CsTomlSyntax.IsAlphabet(alphabet):
+                            case var number when CsTomlSyntax.IsNumber(number):
+                                if (key.DotKeys.Count > 0 && !period)
+                                    ExceptionHelper.ThrowIncorrectTomlFormat();
+                                continue;
                         }
-                        else if (CsTomlSyntax.IsPeriod(c2))
-                        {
-                            if (period)
-                                ExceptionHelper.ThrowPeriodUsedMoreThanOnce();
-                            Skip(1);
-                        }
-                        continue;
+                        ExceptionHelper.ThrowIncorrectTomlFormat();
                     }
                     goto BREAK;
                 case CsTomlSyntax.Symbol.EQUAL:
@@ -133,7 +144,7 @@ internal ref struct CsTomlReader
                     if (isTableHeader)
                     {
                         Skip(1);
-                        if (isTableArrayHeader)
+                        if (isArrayOfTablesHeader)
                         {
                             if (TryPeek(out var tableHeaderArrayEndCh) && CsTomlSyntax.IsRightSquareBrackets(tableHeaderArrayEndCh))
                             {
