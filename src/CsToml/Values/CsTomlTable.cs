@@ -188,13 +188,13 @@ internal partial class CsTomlTable : CsTomlValue
             if (parentNode.Value is CsTomlArray arrayValue)
             {
                 var skipNewLine = false;
-                if (parentNode.Comments.Count > 0)
+                if (parentNode.CommentCount > 0)
                 {
                     if (writer.WrittingCount > 0)
                     {
                         writer.WriteNewLine();
                     }
-                    writer.WriteComments(parentNode.CommentsSpan);
+                    writer.WriteComments(parentNode.CommentSpan);
                     skipNewLine = true;
                 }
                 var keysSpan = CollectionsMarshal.AsSpan(tableHeaderKeys);
@@ -214,7 +214,7 @@ internal partial class CsTomlTable : CsTomlValue
             }
         }
 
-        foreach (var (key, childNode) in parentNode.Nodes)
+        foreach (var (key, childNode) in parentNode.KeyValuePairs)
         {
             tableHeaderKeys.Add(key);
             if (childNode.IsGroupingProperty)
@@ -222,9 +222,9 @@ internal partial class CsTomlTable : CsTomlValue
                 if (!childNode.IsTableHeader && parentNode.IsTableHeader && keys.Count > 0)
                 {
                     var skipNewLine = false;
-                    if (parentNode.Comments.Count > 0)
+                    if (parentNode.CommentCount > 0)
                     {
-                        writer.WriteComments(parentNode.CommentsSpan);
+                        writer.WriteComments(parentNode.CommentSpan);
                         skipNewLine = true;
                     }
                     if (writer.WrittingCount > 0 && !skipNewLine)
@@ -244,13 +244,13 @@ internal partial class CsTomlTable : CsTomlValue
                 if (parentNode.IsTableHeader && keys.Count > 0)
                 {
                     var skipNewLine = false;
-                    if (parentNode.Comments.Count > 0)
+                    if (parentNode.CommentCount > 0)
                     {
                         if (writer.WrittingCount > 0)
                         {
                             writer.WriteNewLine();
                         }
-                        writer.WriteComments(parentNode.CommentsSpan);
+                        writer.WriteComments(parentNode.CommentSpan);
                         skipNewLine = true;
                     }
                     if (writer.WrittingCount > 0 && !skipNewLine)
@@ -264,9 +264,9 @@ internal partial class CsTomlTable : CsTomlValue
                 }
                 else
                 {
-                    if (childNode.Comments.Count > 0)
+                    if (childNode.CommentCount > 0)
                     {
-                        writer.WriteComments(childNode.CommentsSpan);
+                        writer.WriteComments(childNode.CommentSpan);
                     }
                     var keysSpan = CollectionsMarshal.AsSpan(keys);
                     if (keysSpan.Length > 0)

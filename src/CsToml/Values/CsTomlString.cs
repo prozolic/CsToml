@@ -2,34 +2,24 @@
 using CsToml.Utility;
 using System.Buffers;
 using System.Diagnostics;
-using System.IO.Hashing;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography;
 using System.Text.Unicode;
 
 namespace CsToml.Values;
 
 [DebuggerDisplay("CsTomlString: {Utf16String}")]
-internal partial class CsTomlString(ReadOnlySpan<byte> value, CsTomlString.CsTomlStringType type = CsTomlString.CsTomlStringType.Basic) : 
-    CsTomlValue(CsTomlType.String),
+internal partial class CsTomlString : 
+    CsTomlValue,
     IEquatable<CsTomlString?>,
     ISpanFormattable
 {
-    public enum CsTomlStringType : byte
-    {
-        Unquoted,
-        Basic,
-        MultiLineBasic,
-        Literal,
-        MultiLineLiteral
-    }
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private readonly byte[] bytes;
 
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-    private readonly byte[] bytes = value.ToArray();
+    public int Length => Value.Length;
 
     [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
-    internal string Utf16String
+    public string Utf16String
     {
         get
         {
@@ -39,13 +29,22 @@ internal partial class CsTomlString(ReadOnlySpan<byte> value, CsTomlString.CsTom
     }
 
     [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
-    internal ReadOnlySpan<byte> Value => bytes.AsSpan();
-
-    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-    public int Length => Value.Length;
+    public ReadOnlySpan<byte> Value => bytes.AsSpan();
 
     [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
-    public CsTomlStringType TomlStringType { get; } = type;
+    public CsTomlStringType TomlStringType { get; }
+
+    public CsTomlString(ReadOnlySpan<byte> value, CsTomlStringType type = CsTomlStringType.Basic) : base(CsTomlType.String)
+    {
+        bytes = value.ToArray();
+        TomlStringType = type;
+    }
+
+    public CsTomlString(byte[] value, CsTomlStringType type = CsTomlStringType.Basic) : base(CsTomlType.String)
+    {
+        bytes = value;
+        TomlStringType = type;
+    }
 
     internal override bool ToTomlString(ref Utf8Writer writer)
     {
@@ -97,7 +96,7 @@ internal partial class CsTomlString(ReadOnlySpan<byte> value, CsTomlString.CsTom
     }
 
     public override int GetHashCode()
-        => Hash.ToInt32(Value);
+        => ByteArrayHash.ToInt32(Value);
 
     public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider)
     {
@@ -228,20 +227,13 @@ internal partial class CsTomlString(ReadOnlySpan<byte> value, CsTomlString.CsTom
         return true;
     }
 
-    private readonly struct Hash
+    public enum CsTomlStringType : byte
     {
-        private static readonly int Seed;
-
-        static Hash()
-        {
-            Span<byte> seedBuffer = stackalloc byte[4];
-            RandomNumberGenerator.Fill(seedBuffer);
-            Seed = Unsafe.ReadUnaligned<int>(ref MemoryMarshal.GetReference<byte>(seedBuffer));
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int ToInt32(ReadOnlySpan<byte> span)
-            => (int)XxHash32.HashToUInt32(span, Seed);
+        Unquoted,
+        Basic,
+        MultiLineBasic,
+        Literal,
+        MultiLineLiteral
     }
 
 }

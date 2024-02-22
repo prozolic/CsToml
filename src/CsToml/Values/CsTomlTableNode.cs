@@ -1,5 +1,6 @@
 ﻿using CsToml.Debugger;
 using CsToml.Error;
+using CsToml.Values.Internal;
 using CsToml.Utility;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -11,18 +12,21 @@ namespace CsToml.Values;
 [DebuggerDisplay("{Value}")]
 internal class CsTomlTableNode
 {
-    private readonly Dictionary<CsTomlString, CsTomlTableNode> nodes = [];
-    private readonly List<CsTomlString> tomlComments = [];
-
+    private readonly CsTomlTableNodeDictionary nodes = new();
+    private readonly List<CsTomlString> comments = [];
     private CsTomlTableNodeType nodeType = CsTomlTableNodeType.None;
 
-    internal IReadOnlyList<CsTomlString> Comments => tomlComments;
+    internal IReadOnlyList<CsTomlString> Comments => comments; // Debug
 
-    internal ReadOnlySpan<CsTomlString> CommentsSpan => CollectionsMarshal.AsSpan(tomlComments);
+    public int CommentCount => comments.Count;
 
-    internal IReadOnlyDictionary<CsTomlString, CsTomlTableNode> Nodes => nodes;
+    public ReadOnlySpan<CsTomlString> CommentSpan => CollectionsMarshal.AsSpan(comments);
 
-    internal CsTomlValue? Value { get; set; }
+    public CsTomlTableNodeDictionary.KeyValuePairEnumerator KeyValuePairs => new(nodes);
+
+    public int NodeCount => nodes.Count;
+
+    public CsTomlValue? Value { get; set; }
 
     public bool IsGroupingProperty 
     {
@@ -118,7 +122,7 @@ internal class CsTomlTableNode
     internal void AddComment(IReadOnlyCollection<CsTomlString> comments)
     {
         if (comments.Count == 0) return;
-        tomlComments.AddRange(comments);
+        this.comments.AddRange(comments);
     }
 
     public void AddKeyValue(CsTomlString key, CsTomlValue value, IReadOnlyCollection<CsTomlString> comments)
@@ -130,19 +134,19 @@ internal class CsTomlTableNode
 
         var newNode = new CsTomlTableNode() { Value = value };
         newNode.AddComment(comments);
-        nodes.Add(key, newNode);
+        nodes.TryAdd(key, newNode);
     }
 
     public bool TryAddGroupingPropertyNode(CsTomlString key, out CsTomlTableNode childNode)
     {
         if (nodes.TryGetValue(key, out var addedChildNode))
         {
-            childNode = addedChildNode;
+            childNode = addedChildNode!;
             return false;
         }
 
         childNode = CreateGroupingPropertyNode();
-        nodes.Add(key, childNode);
+        nodes.TryAdd(key, childNode);
         return true;
     }
 
@@ -160,16 +164,14 @@ internal class CsTomlTableNode
             }
         }
 
-        var searchKey = key;
         if (isBareKey)
         {
-            var bareKeystring = new CsTomlString(searchKey, CsTomlString.CsTomlStringType.Unquoted);
             if (Value is CsTomlInlineTable t)
             {
-                return t.RootNode.nodes.TryGetValue(bareKeystring, out value);
+                return t.RootNode.nodes.TryGetValue(key, out value);
             }
 
-            return nodes.TryGetValue(bareKeystring, out value);
+            return nodes.TryGetValue(key, out value);
         }
         else
         {
@@ -206,13 +208,12 @@ internal class CsTomlTableNode
                 reader.Skip(1);
             }
 
-            var keystring = new CsTomlString(bufferWriter.WrittenSpan, CsTomlString.CsTomlStringType.Basic);
             if (Value is CsTomlInlineTable t2)
             {
-                return t2.RootNode.nodes.TryGetValue(keystring, out value);
+                return t2.RootNode.nodes.TryGetValue(bufferWriter.WrittenSpan, out value);
             }
 
-            return nodes.TryGetValue(keystring, out value);
+            return nodes.TryGetValue(bufferWriter.WrittenSpan, out value);
         }
     }
 
@@ -237,7 +238,7 @@ internal class CsTomlTableNode
         };
     }
 
-    [DebuggerDisplay("NodeCount: {currentNode.Nodes.Count}")]
+    [DebuggerDisplay("NodeCount: {currentNode.NodeCount}")]
     private sealed class NodeCountDebuggerValue : CsTomlValue
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]

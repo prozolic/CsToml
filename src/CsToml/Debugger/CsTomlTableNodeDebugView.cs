@@ -8,7 +8,18 @@ internal sealed class CsTomlTableNodeDebugView(CsTomlTableNode csTomlTableNode)
     private readonly CsTomlTableNode node = csTomlTableNode;
 
     [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-    public CsTomlTableNodeKeyValuePairDebugView[] ChildrenNode => node.Nodes.Select(k => new CsTomlTableNodeKeyValuePairDebugView(k)).ToArray();
+    public CsTomlTableNodeKeyValuePairDebugView[] ChildrenNode
+    {
+        get
+        {
+            var keyValues = new List<CsTomlTableNodeKeyValuePairDebugView>();
+            foreach (var keyValue in node.KeyValuePairs)
+            {
+                keyValues.Add(new CsTomlTableNodeKeyValuePairDebugView(keyValue));
+            }
+            return keyValues.ToArray();
+        }
+    }
 
     [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
     public CsTomlValue Value => node.Value!;

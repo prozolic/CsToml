@@ -35,9 +35,9 @@ public partial class CsTomlSerializer
         return package;
     }
 
-    public static void Deserialize(ref CsTomlPackage package, ReadOnlySpan<byte> tomlUtf8Text)
+    public static void Deserialize(ref CsTomlPackage package, ReadOnlySpan<byte> tomlText)
     {
-        var reader = new Utf8Reader(tomlUtf8Text);
+        var reader = new Utf8Reader(tomlText);
         package.Deserialize(ref reader);
     }
 }

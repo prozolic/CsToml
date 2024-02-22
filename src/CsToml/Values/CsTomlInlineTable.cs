@@ -35,7 +35,8 @@ internal class CsTomlInlineTable : CsTomlValue
     private void ToTomlStringCore(ref CsTomlWriter writer, CsTomlTableNode parentNode, List<CsTomlString> keys)
     {
         var count = 0;
-        foreach (var (key, childNode) in parentNode.Nodes)
+
+        foreach (var (key, childNode) in parentNode.KeyValuePairs)
         {
             if (childNode.IsGroupingProperty)
             {
@@ -56,7 +57,7 @@ internal class CsTomlInlineTable : CsTomlValue
                 writer.WriteKeyValue(in key, childNode.Value!);
                 count++;
 
-                if (count != parentNode.Nodes.Count)
+                if (count != parentNode.NodeCount)
                 {
                     writer.WriteComma();
                     writer.WriteSpace();

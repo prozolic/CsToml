@@ -22,7 +22,7 @@ public abstract partial class CsTomlValue
     internal virtual bool ToTomlString(ref Utf8Writer writer)
         => false;
 
-    [DebuggerDisplay(nameof(CsTomlEmpty))]
+    [DebuggerDisplay("None")]
     private sealed class CsTomlEmpty : CsTomlValue
     {
         public CsTomlEmpty() : base(CsTomlType.None) { }
