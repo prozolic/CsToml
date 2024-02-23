@@ -9,8 +9,7 @@ namespace CsToml.Values;
 [DebuggerDisplay("CsTomlString: {Utf16String}")]
 internal partial class CsTomlString : 
     CsTomlValue,
-    IEquatable<CsTomlString?>,
-    ISpanFormattable
+    IEquatable<CsTomlString?>
 {
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private readonly byte[] bytes;
@@ -98,13 +97,30 @@ internal partial class CsTomlString :
     public override int GetHashCode()
         => ByteArrayHash.ToInt32(Value);
 
-    public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider)
+    public override string ToString()
+        => GetString();
+
+    public override bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
     {
         var status = Utf8.ToUtf16(Value, destination, out var bytesRead, out charsWritten, replaceInvalidSequences: false);
         return status != OperationStatus.Done;
     }
 
-    public string ToString(string? format, IFormatProvider? formatProvider) => GetString();
+    public override string ToString(string? format, IFormatProvider? formatProvider) 
+        => GetString();
+
+    public override bool TryFormat(Span<byte> utf8Destination, out int bytesWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
+    {
+        if (utf8Destination.Length < Value.Length)
+        {
+            bytesWritten = 0;
+            return false;
+        }
+
+        Value.TryCopyTo(utf8Destination);
+        bytesWritten = Value.Length;
+        return true;
+    }
 
     private bool ToTomlBasicString(ref Utf8Writer writer)
     {

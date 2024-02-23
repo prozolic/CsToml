@@ -7,8 +7,7 @@ namespace CsToml.Values;
 [DebuggerDisplay("CsTomlLocalDateTime: {Value}")]
 internal partial class CsTomlLocalDateTime(DateTime value) : 
     CsTomlValue(CsTomlType.LocalDateTime),
-    IEquatable<CsTomlLocalDateTime?>,
-    ISpanFormattable
+    IEquatable<CsTomlLocalDateTime?>
 {
     public DateTime Value { get; private set; } = value;
 
@@ -36,10 +35,16 @@ internal partial class CsTomlLocalDateTime(DateTime value) :
     public override int GetHashCode()
         => Value.GetHashCode();
 
-    public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider)
+    public override string ToString()
+        => GetString();
+
+    public override bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
         => Value.TryFormat(destination, out charsWritten, format, provider);
 
-    public string ToString(string? format, IFormatProvider? formatProvider)
+    public override string ToString(string? format, IFormatProvider? formatProvider)
         => Value.ToString(format, formatProvider);
+
+    public override bool TryFormat(Span<byte> utf8Destination, out int bytesWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
+        => Value.TryFormat(utf8Destination, out bytesWritten, format, provider);
 
 }

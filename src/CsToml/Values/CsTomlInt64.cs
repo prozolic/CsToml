@@ -7,8 +7,7 @@ namespace CsToml.Values;
 [DebuggerDisplay("CsTomlInt: {Value}")]
 internal partial class CsTomlInt64(long value) : 
     CsTomlValue(CsTomlType.Integar), 
-    IEquatable<CsTomlInt64?>,
-    ISpanFormattable
+    IEquatable<CsTomlInt64?>
 {
     public long Value { get; private set; } = value;
 
@@ -36,11 +35,18 @@ internal partial class CsTomlInt64(long value) :
     public override int GetHashCode()
         => Value.GetHashCode();
 
-    public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider)
-    => Value.TryFormat(destination, out charsWritten, format, provider);
+    public override string ToString()
+        => GetString();
 
-    public string ToString(string? format, IFormatProvider? formatProvider)
+    public override bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
+        => Value.TryFormat(destination, out charsWritten, format, provider);
+
+    public override string ToString(string? format, IFormatProvider? formatProvider)
         => Value.ToString(format, formatProvider);
+
+    public override bool TryFormat(Span<byte> utf8Destination, out int bytesWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
+        => Value.TryFormat(utf8Destination, out bytesWritten, format, provider);
+
 
 }
 

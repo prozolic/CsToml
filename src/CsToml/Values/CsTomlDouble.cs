@@ -7,8 +7,7 @@ namespace CsToml.Values;
 [DebuggerDisplay("CsTomlDouble: {Value}")]
 internal partial class CsTomlDouble(double value, CsTomlDouble.DoubleKind kind = CsTomlDouble.DoubleKind.Normal) : 
     CsTomlValue(CsTomlType.Float),
-    IEquatable<CsTomlDouble?>,
-    ISpanFormattable
+    IEquatable<CsTomlDouble?>
 {
     public readonly static CsTomlDouble Inf = new(CsTomlSyntax.Double.Inf, DoubleKind.Inf);
     public readonly static CsTomlDouble NInf = new (CsTomlSyntax.Double.NInf, DoubleKind.NInf);
@@ -74,11 +73,17 @@ internal partial class CsTomlDouble(double value, CsTomlDouble.DoubleKind kind =
     public override int GetHashCode()
         => Value.GetHashCode();
 
-    public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider)
-    => Value.TryFormat(destination, out charsWritten, format, provider);
+    public override string ToString()
+        => GetString();
 
-    public string ToString(string? format, IFormatProvider? formatProvider)
+    public override bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
+        => Value.TryFormat(destination, out charsWritten, format, provider);
+
+    public override string ToString(string? format, IFormatProvider? formatProvider)
         => Value.ToString(format, formatProvider);
+
+    public override bool TryFormat(Span<byte> utf8Destination, out int bytesWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
+        => Value.TryFormat(utf8Destination, out bytesWritten, format, provider);
 
 }
 

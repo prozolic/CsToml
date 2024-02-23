@@ -29,9 +29,16 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void ThrowException(string argumentExceptionMessage, Exception innerException)
+    internal static void ThrowException(string argumentExceptionMessage, Exception? innerException)
     {
         throw new CsTomlException(argumentExceptionMessage, innerException);
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowNotSupported(string function)
+    {
+        ThrowException($"{function} is not supported.");
     }
 
     [DoesNotReturn]
@@ -443,9 +450,9 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void ThrowOverflowWhenCasting(Type t, Exception innerException)
+    internal static void ThrowOverflow(Type t)
     {
-        ThrowException($"OverflowException occurred when casting from type long to type {t}.", innerException);
+        ThrowException($"value is not representable by {t}.");
     }
 
     [DoesNotReturn]

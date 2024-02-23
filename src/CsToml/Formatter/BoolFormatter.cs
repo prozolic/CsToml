@@ -9,8 +9,21 @@ internal class BoolFormatter : ICsTomlFormatter<bool>
 {
     public static void Serialize(ref Utf8Writer writer, bool value)
     {
-        var boolValueSpan = value ? "true"u8 : "false"u8;
-        writer.Write(boolValueSpan);
+        if (value)
+        {
+            writer.Write(CsTomlSyntax.AlphaBet.t);
+            writer.Write(CsTomlSyntax.AlphaBet.r);
+            writer.Write(CsTomlSyntax.AlphaBet.u);
+            writer.Write(CsTomlSyntax.AlphaBet.e);
+        }
+        else
+        {
+            writer.Write(CsTomlSyntax.AlphaBet.f);
+            writer.Write(CsTomlSyntax.AlphaBet.a);
+            writer.Write(CsTomlSyntax.AlphaBet.l);
+            writer.Write(CsTomlSyntax.AlphaBet.s);
+            writer.Write(CsTomlSyntax.AlphaBet.e);
+        }
     }
 
     public static bool Deserialize(ref Utf8Reader reader, int length)

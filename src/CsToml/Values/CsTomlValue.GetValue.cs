@@ -29,17 +29,20 @@ public partial class CsTomlValue
     public virtual TimeOnly GetTimeOnly()
         => ExceptionHelper.NotReturnThrow<TimeOnly>(ExceptionHelper.ThrowInvalidCasting);
 
-    public T GetNumber<T>() where T : INumber<T>
+    public T GetNumber<T>() where T : INumberBase<T>
     {
-        var value = GetInt64();
+        var value = GetDouble();
         try
         {
             return T.CreateChecked(value);
         }
-        catch(OverflowException e)
+        catch(OverflowException)
         {
-            ExceptionHelper.ThrowOverflowWhenCasting(typeof(T), e);
-            return default;
+            return ExceptionHelper.NotReturnThrow<T, Type>(ExceptionHelper.ThrowOverflow, typeof(T));
+        }
+        catch(NotSupportedException)
+        {
+            return ExceptionHelper.NotReturnThrow<T, string>(ExceptionHelper.ThrowNotSupported, nameof(T.CreateChecked));
         }
     }
 
@@ -155,7 +158,7 @@ public partial class CsTomlValue
         }
     }
 
-    public bool TryGetNumber<T>(out T value) where T : INumber<T>
+    public bool TryGetNumber<T>(out T value) where T : INumberBase<T>
     {
         try
         {
