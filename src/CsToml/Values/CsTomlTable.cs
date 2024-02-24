@@ -50,7 +50,7 @@ internal partial class CsTomlTable : CsTomlValue
         currentNode.AddKeyValue(key, value, comments);
     }
 
-    public void AddTableHeader(CsTomlKey csTomlKey, out CsTomlTableNode? newNode, IReadOnlyCollection<CsTomlString> comments)
+    public void AddTableHeader(CsTomlKey csTomlKey, IReadOnlyCollection<CsTomlString> comments, out CsTomlTableNode? newNode)
     {
         var node = RootNode;
         var dotKeys = csTomlKey.DotKeys;
@@ -100,12 +100,12 @@ internal partial class CsTomlTable : CsTomlValue
             }
         }
 
+        node!.AddComment(comments);
+        node.IsTableHeaderDefinitionPosition = true;
         newNode = node;
-        newNode!.AddComment(comments);
-        newNode.IsTableHeaderDefinitionPosition = true;
     }
 
-    public void AddArrayOfTablesHeader(CsTomlKey csTomlKey, out CsTomlTableNode? newNode, IReadOnlyCollection<CsTomlString> comments)
+    public void AddArrayOfTablesHeader(CsTomlKey csTomlKey, IReadOnlyCollection<CsTomlString> comments, out CsTomlTableNode? newNode)
     {
         var currentNode = RootNode;
         var dotKeys = csTomlKey.DotKeys;
