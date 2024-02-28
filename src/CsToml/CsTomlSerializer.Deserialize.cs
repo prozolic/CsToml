@@ -112,7 +112,6 @@ public partial class CsTomlSerializer
         where TPackage : CsTomlPackage, ICsTomlPackageCreator<TPackage>
     {
         var package = TPackage.CreatePackage();
-        var reader = new Utf8SequenceReader(tomlText);
         DeserializeCore(tomlText, package, options);
         return package;
     }
