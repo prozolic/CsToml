@@ -457,6 +457,13 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowArgumentOutOfRangeWhenOutsideTheBoundsOfTheArray()
+    {
+        ThrowException($"Index was outside the bounds of the array.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ThrowArgumentOutOfRangeExceptionWhenCreating<T>(ArgumentOutOfRangeException innerException)
     {
         ThrowException($"ArgumentOutOfRangeException occurred when creating {typeof(T)}.", innerException);

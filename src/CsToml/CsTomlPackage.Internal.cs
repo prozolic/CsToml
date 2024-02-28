@@ -9,7 +9,7 @@ public partial class CsTomlPackage
     internal void Serialize(ref Utf8Writer writer)
         => table.ToTomlString(ref writer);
 
-    internal void Deserialize(ref Utf8Reader reader, CsTomlSerializerOptions? options)
+    internal void Deserialize(ref Utf8SequenceReader reader, CsTomlSerializerOptions? options)
     {
         options ??= CsTomlSerializerOptions.Default;
         var tomlReader = new CsTomlReader(ref reader);
@@ -36,7 +36,7 @@ public partial class CsTomlPackage
             tomlReader.SkipWhiteSpace();
             if (tomlReader.TryPeek(out var leftSquareBracketsCh) && CsTomlSyntax.IsLeftSquareBrackets(leftSquareBracketsCh))
             {
-                tomlReader.Skip(1);
+                tomlReader.Advance(1);
                 if (!tomlReader.TryPeek(out var arrayOfTablesCh))
                 {
                     if (options.IsThrowCsTomlException)
@@ -46,7 +46,7 @@ public partial class CsTomlPackage
                     goto BREAK;
                 }
 
-                tomlReader.Skip(-1);
+                tomlReader.Rewind(1);
                 if (CsTomlSyntax.IsLeftSquareBrackets(arrayOfTablesCh))
                 {
                     if (DeserializeArrayOfTablesHeader(ref tomlReader, comments, options, out currentNode))
@@ -161,7 +161,7 @@ public partial class CsTomlPackage
             if (!reader.TryPeek(out var equalCh)) ExceptionHelper.ThrowEndOfFileReached(); // = or value is nothing
             if (!CsTomlSyntax.IsEqual(equalCh)) ExceptionHelper.ThrowNoEqualAfterTheKey(); // = is nothing
 
-            reader.Skip(1); // skip "="
+            reader.Advance(1); // skip "="
             reader.SkipWhiteSpace();
 
             if (!reader.Peek()) ExceptionHelper.ThrowEndOfFileReached(); // value is nothing
@@ -243,7 +243,7 @@ public partial class CsTomlPackage
 
         try
         {
-            return reader.TrySkipToNewLine(newline, true);
+            return reader.TrySkipIfNewLine(newline, true);
         }
         catch (CsTomlException e)
         {

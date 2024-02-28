@@ -10,7 +10,7 @@ internal ref struct Utf8Reader(ReadOnlySpan<byte> buffer)
 
     public readonly int Length => source.Length;
 
-    public int Position { get; set; } = 0;
+    public int Position { get; private set; } = 0;
 
     public byte this[int index] => source[index];
 
@@ -30,8 +30,13 @@ internal ref struct Utf8Reader(ReadOnlySpan<byte> buffer)
 
     [DebuggerStepThrough]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Skip(int length)
+    public void Advance(int length)
         => Position += length;
+
+    [DebuggerStepThrough]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Rewind(int length)
+        => Position -= length;
 
     [DebuggerStepThrough]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

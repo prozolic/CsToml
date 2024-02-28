@@ -181,14 +181,14 @@ internal class CsTomlTableNode
             var writer = new Utf8Writer(bufferWriter);
 
             writer.Write(key[..firstEscapeSequenceIndex]);
-            reader.Skip(firstEscapeSequenceIndex + 1);
+            reader.Advance(firstEscapeSequenceIndex + 1);
 
             if (reader.TryPeek(out var FirstCh))
             {
                 var result = CsTomlString.TryFormatEscapeSequence(ref reader, ref writer, false, false);
                 if (result == CsTomlString.EscapeSequenceResult.Failure)
                 {
-                    reader.Skip(1);
+                    reader.Advance(1);
                 }
             }
 
@@ -199,13 +199,13 @@ internal class CsTomlTableNode
                     var result = CsTomlString.TryFormatEscapeSequence(ref reader, ref writer, false, false);
                     if (result == CsTomlString.EscapeSequenceResult.Failure)
                     {
-                        reader.Skip(1);
+                        reader.Advance(1);
                     }
                     continue;
                 }
 
                 writer.Write(ch);
-                reader.Skip(1);
+                reader.Advance(1);
             }
 
             if (Value is CsTomlInlineTable t2)

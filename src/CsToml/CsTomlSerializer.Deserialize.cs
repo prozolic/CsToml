@@ -1,4 +1,5 @@
 ﻿using CsToml.Utility;
+using System.Buffers;
 using System.Runtime.CompilerServices;
 
 namespace CsToml;
@@ -12,45 +13,129 @@ public partial class CsTomlSerializer
 
         using var handle = File.OpenHandle(path!, FileMode.Open, FileAccess.Read, options: FileOptions.Asynchronous);
         var length = RandomAccess.GetLength(handle);
-        var bytes = new byte[length];
-        RandomAccess.Read(handle, bytes.AsSpan(), 0);
 
-        var startIndex = Utf8Helper.ContainBOM(bytes) ? 3 : 0;
-        var tomlText = bytes.AsSpan(startIndex);
+        if (length == 0)
+        {
+            return TPackage.CreatePackage();
+        }
+        else if (length <= Array.MaxLength)
+        {
+            var bytes = new byte[length];
+            RandomAccess.Read(handle, bytes.AsSpan(), 0);
+            var startIndex = Utf8Helper.ContainBOM(bytes) ? 3 : 0;
+            var tomlText = bytes.AsSpan(startIndex);
 
-        var package = TPackage.CreatePackage();
-        DeserializeCore(tomlText, package, options);
-        return package;
+            var package = TPackage.CreatePackage();
+            DeserializeCore(tomlText, package, options);
+            return package;
+        }
+        else
+        {
+            // check BOM
+            Span<byte> utf8Bom = stackalloc byte[3];
+            RandomAccess.Read(handle, utf8Bom, 0);
+            var startIndex = Utf8Helper.ContainBOM(utf8Bom) ? 3 : 0;
+
+            using var bytes = new NativeByteMemoryArray(length - startIndex);
+            var tomlMemories = bytes.AsMemoryList(0);
+            RandomAccess.Read(handle, tomlMemories, startIndex);
+
+            var startSegment = new ByteSequenceSegment(tomlMemories[0]);
+            startSegment.SetRunningIndex(0);
+            startSegment.SetNext(null);
+
+            var endSegment = startSegment;
+            for (int i = 1; i < tomlMemories.Count; i++)
+            {
+                endSegment = endSegment.AddNext(tomlMemories[i]);
+            }
+
+            var package = TPackage.CreatePackage();
+            var sequence = new ReadOnlySequence<byte>(startSegment, 0, endSegment, endSegment.Length);
+            DeserializeCore(sequence, package, options);
+            return package;
+        }
     }
 
     public static async ValueTask<TPackage?> ReadAndDeserializeAsync<TPackage>(string? path, CsTomlSerializerOptions? options = null, CancellationToken cancellationToken = default)
         where TPackage : CsTomlPackage, ICsTomlPackageCreator<TPackage>
     {
+        cancellationToken.ThrowIfCancellationRequested();
         ExistsTomlFile(path);
 
         using var handle = File.OpenHandle(path!, FileMode.Open, FileAccess.Read, options: FileOptions.Asynchronous);
         var length = RandomAccess.GetLength(handle);
-        var bytes = new byte[length];
-        await RandomAccess.ReadAsync(handle, bytes.AsMemory(), 0, cancellationToken).ConfigureAwait(false);
 
-        var startIndex = Utf8Helper.ContainBOM(bytes) ? 3 : 0;
-        var package = TPackage.CreatePackage();
-        DeserializeCore(bytes.AsSpan(startIndex), package, options);
-        return package;
+        if (length == 0)
+        {
+            return TPackage.CreatePackage();
+        }
+        else if (length <= Array.MaxLength)
+        {
+            var bytes = new byte[length];
+            await RandomAccess.ReadAsync(handle, bytes.AsMemory(), 0, cancellationToken).ConfigureAwait(false);
+
+            var startIndex = Utf8Helper.ContainBOM(bytes) ? 3 : 0;
+            var package = TPackage.CreatePackage();
+            DeserializeCore(bytes.AsSpan(startIndex), package, options);
+            return package;
+        }
+        else
+        {
+            // check BOM
+            var utf8Bom = new byte[3];
+            await RandomAccess.ReadAsync(handle, utf8Bom.AsMemory(), 0, cancellationToken).ConfigureAwait(false); ;
+            var startIndex = Utf8Helper.ContainBOM(utf8Bom) ? 3 : 0;
+
+            using var bytes = new NativeByteMemoryArray(length - startIndex);
+            var tomlMemories = bytes.AsMemoryList(0);
+            await RandomAccess.ReadAsync(handle, tomlMemories, startIndex, cancellationToken).ConfigureAwait(false);
+
+            var startSegment = new ByteSequenceSegment(tomlMemories[0]);
+            startSegment.SetRunningIndex(0);
+            startSegment.SetNext(null);
+
+            var endSegment = startSegment;
+            for (int i = 1; i < tomlMemories.Count; i++)
+            {
+                endSegment = endSegment.AddNext(tomlMemories[i]);
+            }
+
+            var package = TPackage.CreatePackage();
+            var sequence = new ReadOnlySequence<byte>(startSegment, 0, endSegment, endSegment.Length);
+            DeserializeCore(sequence, package, options);
+            return package;
+        }
     }
 
     public static TPackage? Deserialize<TPackage>(ReadOnlySpan<byte> tomlText, CsTomlSerializerOptions? options = null)
         where TPackage : CsTomlPackage, ICsTomlPackageCreator<TPackage>
     {
         var package = TPackage.CreatePackage();
+        var reader = new Utf8SequenceReader(tomlText);
         DeserializeCore(tomlText, package, options);
+        return package;
+    }
+
+    public static TPackage? Deserialize<TPackage>(in ReadOnlySequence<byte> tomlTextSequence, CsTomlSerializerOptions? options = null)
+        where TPackage : CsTomlPackage, ICsTomlPackageCreator<TPackage>
+    {
+        var package = TPackage.CreatePackage();
+        DeserializeCore(tomlTextSequence, package, options);
         return package;
     }
 
     private static void DeserializeCore<TPackage>(ReadOnlySpan<byte> tomlText, TPackage? package, CsTomlSerializerOptions? options)
         where TPackage : CsTomlPackage
     {
-        var reader = new Utf8Reader(tomlText);
+        var reader = new Utf8SequenceReader(tomlText);
+        package?.Deserialize(ref reader, options);
+    }
+
+    private static void DeserializeCore<TPackage>(in ReadOnlySequence<byte> tomlText, TPackage? package, CsTomlSerializerOptions? options)
+    where TPackage : CsTomlPackage
+    {
+        var reader = new Utf8SequenceReader(tomlText);
         package?.Deserialize(ref reader, options);
     }
 

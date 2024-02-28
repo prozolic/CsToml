@@ -9,32 +9,32 @@ namespace CsToml;
 
 internal ref struct CsTomlReader
 {
-    private Utf8Reader byteReader;
+    private Utf8SequenceReader sequenceReader;
 
     public long LineNumber { get; private set; }
 
     [DebuggerStepThrough]
-    public CsTomlReader(ref Utf8Reader reader)
+    public CsTomlReader(ref Utf8SequenceReader reader)
     {
-        byteReader = reader;
+        sequenceReader = reader;
         LineNumber = 1;
     }
 
     public CsTomlString ReadComment()
     {
-        Skip(1); // #
+        Advance(1); // #
 
-        var position = byteReader.Position;
+        var position = sequenceReader.Consumed;
 
         while (TryPeek(out var ch))
         {
 
             if (CsTomlSyntax.IsCr(ch))
             {
-                Skip(1);
+                Advance(1);
                 if (TryPeek(out var linebreakCh) && CsTomlSyntax.IsLf(linebreakCh))
                 {
-                    Skip(-1);
+                    Rewind(1);
                     break;
                 }
                 ExceptionHelper.ThrowEscapeCharactersIncluded(ch);
@@ -48,17 +48,35 @@ internal ref struct CsTomlReader
             {
                 ExceptionHelper.ThrowNumericConversionFailed(ch);
             }
-            Skip(1);
+            Advance(1);
         }
 
-        var length = byteReader.Position - position;
-        byteReader.Position = position;
+        var length = sequenceReader.Consumed - position;
+        Rewind(length);
 
-        var bytes = byteReader.ReadBytes(length);
-        if (Utf8Helper.ContainInvalidSequences(bytes))
-            ExceptionHelper.ThrowInvalidCodePoints();
+        if (sequenceReader.TryFullSpan(length, out var bytes))
+        {
+            if (Utf8Helper.ContainInvalidSequences(bytes))
+                ExceptionHelper.ThrowInvalidCodePoints();
 
-        return new CsTomlString(bytes, CsTomlString.CsTomlStringType.Unquoted);
+            return new CsTomlString(bytes, CsTomlString.CsTomlStringType.Unquoted);
+        }
+        else
+        {
+            var rent = RecycleByteArrayPoolBufferWriter.Rent();
+            try
+            {
+                sequenceReader.TryGetbytes(length, rent);
+                if (Utf8Helper.ContainInvalidSequences(rent.WrittenSpan))
+                    ExceptionHelper.ThrowInvalidCodePoints();
+
+                return new CsTomlString(rent.WrittenSpan, CsTomlString.CsTomlStringType.Unquoted);
+            }
+            finally
+            {
+                RecycleByteArrayPoolBufferWriter.Return(rent);
+            }
+        }
     }
 
     public CsTomlKey ReadKey()
@@ -71,11 +89,11 @@ internal ref struct CsTomlReader
         if (TryPeek(out var tableHeaderCh) && CsTomlSyntax.IsLeftSquareBrackets(tableHeaderCh))
         {
             isTableHeader = true;
-            Skip(1);
+            Advance(1);
             if (TryPeek(out var ArrayOfTablesHeaderCh) && CsTomlSyntax.IsLeftSquareBrackets(ArrayOfTablesHeaderCh))
             {
                 isArrayOfTablesHeader = true;
-                Skip(1);
+                Advance(1);
             }
         }
 
@@ -110,7 +128,7 @@ internal ref struct CsTomlReader
                                         ExceptionHelper.ThrowTheDotIsDefinedFirst();
                                 }
                                 period = true;
-                                Skip(1);
+                                Advance(1);
                                 SkipWhiteSpace();
                                 continue;
                             case CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET:
@@ -141,7 +159,7 @@ internal ref struct CsTomlReader
                             ExceptionHelper.ThrowTheDotIsDefinedFirst();
                     }
                     period = true;
-                    Skip(1);
+                    Advance(1);
                     SkipWhiteSpace();
                     continue;
                 case CsTomlSyntax.Symbol.DOUBLEQUOTED:
@@ -157,12 +175,12 @@ internal ref struct CsTomlReader
                 case CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET:
                     if (isTableHeader)
                     {
-                        Skip(1);
+                        Advance(1);
                         if (isArrayOfTablesHeader)
                         {
                             if (TryPeek(out var tableHeaderArrayEndCh) && CsTomlSyntax.IsRightSquareBrackets(tableHeaderArrayEndCh))
                             {
-                                Skip(1);
+                                Advance(1);
                             }
                             else
                             {
@@ -212,7 +230,7 @@ internal ref struct CsTomlReader
         {
             if (!CsTomlSyntax.IsTabOrWhiteSpace(ch))
                 break;
-            Skip(1);
+            Advance(1);
         }
     }
 
@@ -220,26 +238,53 @@ internal ref struct CsTomlReader
     {
         while (TryPeek(out var ch))
         {
-            if (TrySkipToNewLine(ch, false))
+            if (TrySkipIfNewLine(ch, false))
                 break;
-            Skip(1);
+            Advance(1);
         }
     }
 
-    public bool TrySkipToNewLine(byte ch, bool throwControlCharacter)
+    public void SkipWhiteSpaceAndNewLine()
+    {
+        while (TryPeek(out var ch))
+        {
+            if (CsTomlSyntax.IsNewLine(ch))
+            {
+                if (CsTomlSyntax.IsCr(ch))
+                {
+                    Advance(1);
+                    if (TryPeek(out var linebreakCh) && CsTomlSyntax.IsLf(linebreakCh))
+                    {
+                        Advance(1);
+                        IncreaseLineNumber();
+                        continue;
+                    }
+                    break;
+                }
+            }
+            else if (!CsTomlSyntax.IsTabOrWhiteSpace(ch))
+            {
+                break;
+            }
+
+            Advance(1);
+        }
+    }
+
+    public bool TrySkipIfNewLine(byte ch, bool throwControlCharacter)
     {
         if (CsTomlSyntax.IsLf(ch))
         {
-            Skip(1);
+            Advance(1);
             IncreaseLineNumber();
             return true;
         }
         else if (CsTomlSyntax.IsCr(ch))
         {
-            Skip(1);
+            Advance(1);
             if (TryPeek(out var linebreakCh) && CsTomlSyntax.IsLf(linebreakCh))
             {
-                Skip(1);
+                Advance(1);
                 IncreaseLineNumber();
                 return true;
             }
@@ -260,58 +305,36 @@ internal ref struct CsTomlReader
         return false;
     }
 
-    public void SkipWhiteSpaceAndNewLine()
-    {
-        while (TryPeek(out var ch))
-        {
-            if (CsTomlSyntax.IsNewLine(ch))
-            {
-                if (CsTomlSyntax.IsCr(ch))
-                {
-                    Skip(1);
-                    if (TryPeek(out var linebreakCh) && CsTomlSyntax.IsLf(linebreakCh))
-                    {
-                        Skip(1);
-                        IncreaseLineNumber();
-                        continue;
-                    }
-                    break;
-                }
-            }
-            else if (!CsTomlSyntax.IsTabOrWhiteSpace(ch))
-            {
-                break;
-            }
-
-            Skip(1);
-        }
-    }
+    [DebuggerStepThrough]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Advance(long length)
+        => sequenceReader.Advance(length);
 
     [DebuggerStepThrough]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Skip(int length)
-        => byteReader.Skip(length);
+    public void Rewind(long length)
+        => sequenceReader.Rewind(length);
 
     [DebuggerStepThrough]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryPeek(out byte ch)
-        => byteReader.TryPeek(out ch);
+        => sequenceReader.TryPeek(out ch);
 
     [DebuggerStepThrough]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Peek()
-        => byteReader.Peek();
+        => sequenceReader.Peek();
 
     private CsTomlString ReadDoubleQuoteString()
     {
-        Skip(1);
+        Advance(1);
         var doubleQuoteCount = 1;
         while (TryPeek(out var first) && (CsTomlSyntax.IsDoubleQuoted(first)))
         {
             if (doubleQuoteCount < 3)
             {
                 doubleQuoteCount++;
-                Skip(1);
+                Advance(1);
                 continue;
             }
             break;
@@ -321,12 +344,12 @@ internal ref struct CsTomlReader
         {
             case 1:
             case 2:
-                Skip(-doubleQuoteCount);
+                Rewind(doubleQuoteCount);
                 return ReadDoubleQuoteSingleLineString();
             case 3:
             case 4: 
             case 5:
-                Skip(-doubleQuoteCount);
+                Rewind(doubleQuoteCount);
                 return ReadDoubleQuoteMultiLineString();
         }
 
@@ -335,7 +358,7 @@ internal ref struct CsTomlReader
 
     private CsTomlString ReadDoubleQuoteSingleLineString()
     {
-        Skip(1); // "
+        Advance(1); // "
 
         var writer = RecycleByteArrayPoolBufferWriter.Rent();
         var utf8Writer = new Utf8Writer(writer);
@@ -356,12 +379,12 @@ internal ref struct CsTomlReader
                 continue;
             }
             utf8Writer.Write(ch);
-            Skip(1);
+            Advance(1);
         }
         if (!closingQuotationMarks)
             ExceptionHelper.ThrowBasicStringsIsNotClosedWithClosingQuotationMarks();
 
-        Skip(1); // "
+        Advance(1); // "
 
         try
         {
@@ -378,22 +401,22 @@ internal ref struct CsTomlReader
 
     private CsTomlString ReadDoubleQuoteMultiLineString()
     {
-        Skip(3); // """
+        Advance(3); // """
 
         if (TryPeek(out var newlineCh) && CsTomlSyntax.IsNewLine(newlineCh))
         {
             if (CsTomlSyntax.IsCr(newlineCh))
             {
-                Skip(1);
+                Advance(1);
                 if (TryPeek(out var linebreakCh) && CsTomlSyntax.IsLf(linebreakCh))
                 {
-                    Skip(1);
+                    Advance(1);
                     IncreaseLineNumber();
                 }
             }
             else if (CsTomlSyntax.IsLf(newlineCh))
             {
-                Skip(1);
+                Advance(1);
                 IncreaseLineNumber();
             }
         }
@@ -409,10 +432,10 @@ internal ref struct CsTomlReader
                 {
                     if (CsTomlSyntax.IsCr(ch))
                     {
-                        Skip(1);
+                        Advance(1);
                         if (TryPeek(out var linebreakCh) && CsTomlSyntax.IsLf(linebreakCh))
                         {
-                            Skip(1);
+                            Advance(1);
                             utf8Writer.Write(ch);
                             utf8Writer.Write(linebreakCh);
                             IncreaseLineNumber();
@@ -420,7 +443,7 @@ internal ref struct CsTomlReader
                         }
                         ExceptionHelper.ThrowEscapeCharactersIncluded(ch);
                     }
-                    Skip(1);
+                    Advance(1);
                     utf8Writer.Write(ch);
                     IncreaseLineNumber();
                     continue;
@@ -433,10 +456,10 @@ internal ref struct CsTomlReader
             else if (CsTomlSyntax.IsDoubleQuoted(ch))
             {
                 var doubleQuotedCount = 1;
-                Skip(1);
+                Advance(1);
                 while (TryPeek(out var ch2) && CsTomlSyntax.IsDoubleQuoted(ch2))
                 {
-                    Skip(1);
+                    Advance(1);
                     doubleQuotedCount++;
                     if (doubleQuotedCount == 3)
                     {
@@ -446,7 +469,7 @@ internal ref struct CsTomlReader
                             {
                                 if (++doubleQuotedCount >= 6)
                                     ExceptionHelper.ThrowConsecutiveQuotationMarksOf3();
-                                Skip(1);
+                                Advance(1);
                                 utf8Writer.Write(CsTomlSyntax.Symbol.DOUBLEQUOTED);
                                 continue;
                             }
@@ -470,7 +493,7 @@ internal ref struct CsTomlReader
             }
 
             utf8Writer.Write(ch);
-            Skip(1);
+            Advance(1);
         }
     BREAK:
 
@@ -493,9 +516,9 @@ internal ref struct CsTomlReader
 
     private void FormatEscapeSequence(ref Utf8Writer utf8Writer, bool multiLine)
     {
-        Skip(1); // /
+        Advance(1); // /
 
-        var result = CsTomlString.TryFormatEscapeSequence(ref byteReader, ref utf8Writer, multiLine, true);
+        var result = CsTomlString.TryFormatEscapeSequence(ref sequenceReader, ref utf8Writer, multiLine, true);
         switch(result)
         {
             case CsTomlString.EscapeSequenceResult.Success:
@@ -525,7 +548,7 @@ internal ref struct CsTomlReader
             if (CsTomlSyntax.IsSingleQuoted(first) && singleQuoteCount < 3)
             {
                 singleQuoteCount++;
-                Skip(1);
+                Advance(1);
                 continue;
             }
             break;
@@ -535,10 +558,10 @@ internal ref struct CsTomlReader
         {
             case 1:
             case 2:
-                Skip(-singleQuoteCount);
+                Rewind(singleQuoteCount);
                 return ReadSingleQuoteSingleLineString();
             case 3:
-                Skip(-singleQuoteCount);
+                Rewind(singleQuoteCount);
                 return ReadSingleQuoteMultiLineString();
         }
 
@@ -547,9 +570,9 @@ internal ref struct CsTomlReader
 
     private CsTomlString ReadSingleQuoteSingleLineString()
     {
-        var firstPosition = byteReader.Position;
+        var firstPosition = sequenceReader.Consumed;
 
-        Skip(1); // '
+        Advance(1); // '
         var closingSingleQuote = false;
         while (TryPeek(out var ch))
         {
@@ -557,7 +580,7 @@ internal ref struct CsTomlReader
             {
                 if (CsTomlSyntax.IsTab(ch))
                 {
-                    Skip(1);
+                    Advance(1);
                     continue;
                 }
                 ExceptionHelper.ThrowEscapeCharactersIncluded(ch);
@@ -567,58 +590,76 @@ internal ref struct CsTomlReader
                 closingSingleQuote = true;
                 break;
             }
-            Skip(1);
+            Advance(1);
         }
         if (!closingSingleQuote)
             ExceptionHelper.ThrowLiteralStringsIsNotClosedWithClosingQuoted();
 
-        var endPosition = byteReader.Position;
+        var endPosition = sequenceReader.Consumed;
         var length = endPosition - firstPosition - 1;
-        byteReader.Position = firstPosition + 1;
+        Rewind(length);
 
-        try
+        if (sequenceReader.TryFullSpan(length, out var bytes))
         {
-            var bytes = byteReader.ReadBytes(length);
             if (Utf8Helper.ContainInvalidSequences(bytes))
                 ExceptionHelper.ThrowInvalidCodePoints();
-
-            return new CsTomlString(bytes, CsTomlString.CsTomlStringType.Literal);
+            try
+            {
+                return new CsTomlString(bytes, CsTomlString.CsTomlStringType.Literal);
+            }
+            finally
+            {
+                Advance(1);
+            }
         }
-        finally
+        else
         {
-            Skip(1);
+            var rent = RecycleByteArrayPoolBufferWriter.Rent();
+            try
+            {
+                sequenceReader.TryGetbytes(length, rent);
+                if (Utf8Helper.ContainInvalidSequences(rent.WrittenSpan))
+                    ExceptionHelper.ThrowInvalidCodePoints();
+
+                return new CsTomlString(rent.WrittenSpan, CsTomlString.CsTomlStringType.Literal);
+            }
+            finally
+            {
+                Advance(1);
+                RecycleByteArrayPoolBufferWriter.Return(rent);
+            }
         }
     }
 
     private CsTomlString ReadSingleQuoteMultiLineString()
     {
-        Skip(3); // '''
+        Advance(3); // '''
 
         var closingThreeSingleQuotes = false;
-        var firstPosition = byteReader.Position;
+        var firstPosition = sequenceReader.Consumed;
         if (TryPeek(out var newlineCh) && CsTomlSyntax.IsNewLine(newlineCh))
         {
             if (CsTomlSyntax.IsCr(newlineCh))
             {
-                Skip(1);
+                Advance(1);
                 if (TryPeek(out var linebreakCh) && CsTomlSyntax.IsLf(linebreakCh))
                 {
                     IncreaseLineNumber();
-                    Skip(1);
+                    Advance(1);
                 }
                 else
                 {
-                    byteReader.Position = firstPosition;
+                    Rewind(sequenceReader.Consumed - firstPosition);
                 }
             }
             else if (CsTomlSyntax.IsLf(newlineCh))
             {
                 IncreaseLineNumber();
-                Skip(1);
+                Advance(1);
             }
         }
 
-        firstPosition = byteReader.Position;
+        firstPosition = sequenceReader.Consumed;
         while (TryPeek(out var ch))
         {
             if (CsTomlSyntax.IsEscape(ch))
@@ -627,22 +668,22 @@ internal ref struct CsTomlReader
                 {
                     if (CsTomlSyntax.IsCr(ch))
                     {
-                        Skip(1);
+                        Advance(1);
                         if (TryPeek(out var linebreakCh) && CsTomlSyntax.IsLf(linebreakCh))
                         {
-                            Skip(1);
+                            Advance(1);
                             IncreaseLineNumber();
                             continue;
                         }
                         ExceptionHelper.ThrowEscapeCharactersIncluded(ch);
                     }
-                    Skip(1);
+                    Advance(1);
                     IncreaseLineNumber();
                     continue;
                 }
                 else if (CsTomlSyntax.IsTab(ch))
                 {
-                    Skip(1);
+                    Advance(1);
                     continue;
                 }
                 ExceptionHelper.ThrowEscapeCharactersIncluded(ch);
@@ -650,10 +691,10 @@ internal ref struct CsTomlReader
             else if (CsTomlSyntax.IsSingleQuoted(ch))
             {
                 var singleQuotedCount = 1;
-                Skip(1);
+                Advance(1);
                 while (TryPeek(out var ch2) && CsTomlSyntax.IsSingleQuoted(ch2))
                 {
-                    Skip(1);
+                    Advance(1);
                     singleQuotedCount++;
                     if (singleQuotedCount == 3)
                     {
@@ -663,7 +704,7 @@ internal ref struct CsTomlReader
                             {
                                 if (++singleQuotedCount >= 6)
                                     ExceptionHelper.ThrowConsecutiveSingleQuotationMarksOf3();
-                                Skip(1);
+                                Advance(1);
                                 continue;
                             }
                             closingThreeSingleQuotes = true;
@@ -675,33 +716,51 @@ internal ref struct CsTomlReader
                 }
                 continue;
             }
-            Skip(1);
+            Advance(1);
         }
     BREAK:
         if (!closingThreeSingleQuotes)
             ExceptionHelper.ThrowMultilineLiteralStringsIsNotClosedWithThreeClosingQuoted();
 
-        var endPosition = byteReader.Position;
-        var length = endPosition - firstPosition -3;
-        byteReader.Position = firstPosition;
+        var endPosition = sequenceReader.Consumed;
+        var length = endPosition - firstPosition - 3;
+        Rewind(endPosition - firstPosition);
 
-        try
+        if (sequenceReader.TryFullSpan(length, out var bytes))
         {
-            var bytes = byteReader.ReadBytes(length);
             if (Utf8Helper.ContainInvalidSequences(bytes))
                 ExceptionHelper.ThrowInvalidCodePoints();
-
-            return new CsTomlString(bytes, CsTomlString.CsTomlStringType.MultiLineLiteral);
+            try
+            {
+                return new CsTomlString(bytes, CsTomlString.CsTomlStringType.MultiLineLiteral);
+            }
+            finally
+            {
+                Advance(3);
+            }
         }
-        finally
+        else
         {
-            Skip(3);
+            var rent = RecycleByteArrayPoolBufferWriter.Rent();
+            try
+            {
+                sequenceReader.TryGetbytes(length, rent);
+                if (Utf8Helper.ContainInvalidSequences(rent.WrittenSpan))
+                    ExceptionHelper.ThrowInvalidCodePoints();
+
+                return new CsTomlString(rent.WrittenSpan, CsTomlString.CsTomlStringType.MultiLineLiteral);
+            }
+            finally
+            {
+                Advance(3);
+                RecycleByteArrayPoolBufferWriter.Return(rent);
+            }
         }
     }
 
     private CsTomlString ReadKeyString(bool isTableHeader = false)
     {
-        var firstPosition = byteReader.Position;
+        var firstPosition = sequenceReader.Consumed;
         while (TryPeek(out var ch))
         {
             if (CsTomlSyntax.IsTabOrWhiteSpace(ch))
@@ -714,18 +773,31 @@ internal ref struct CsTomlReader
                 break;
             if (!CsTomlSyntax.IsBareKey(ch)) 
                 ExceptionHelper.ThrowNumericConversionFailed(ch);
-            Skip(1);
+            Advance(1);
         }
-        var endPosition = byteReader.Position;
+        var endPosition = sequenceReader.Consumed;
         var length = endPosition - firstPosition;
-        byteReader.Position = firstPosition;
+        Rewind(length);
 
-        return new CsTomlString(byteReader.ReadBytes(length), CsTomlString.CsTomlStringType.Unquoted);
+        if (sequenceReader.TryFullSpan(length, out var bytes))
+        {
+            return new CsTomlString(bytes, CsTomlString.CsTomlStringType.Unquoted);
+        }
+        var rent = RecycleByteArrayPoolBufferWriter.Rent();
+        try
+        {
+            sequenceReader.TryGetbytes(length, rent);
+            return new CsTomlString(rent.WrittenSpan, CsTomlString.CsTomlStringType.Unquoted);
+        }
+        finally
+        {
+            RecycleByteArrayPoolBufferWriter.Return(rent);
+        }
     }
 
     private CsTomlArray ReadArray()
     {
-        Skip(1); // [
+        Advance(1); // [
 
         var array = new CsTomlArray();
         var comma = true;
@@ -745,24 +817,24 @@ internal ref struct CsTomlReader
                 case CsTomlSyntax.Symbol.COMMA:
                     if (comma) ExceptionHelper.ThrowIncorrectTomlFormat();
                     comma = true;
-                    Skip(1);
+                    Advance(1);
                     break;
                 case CsTomlSyntax.Symbol.CARRIAGE:
-                    Skip(1);
+                    Advance(1);
                     if (TryPeek(out var linebreakCh) && CsTomlSyntax.IsLf(linebreakCh))
                     {
-                        Skip(1);
+                        Advance(1);
                         IncreaseLineNumber();
                         continue;
                     }
                     return ExceptionHelper.NotReturnThrow<CsTomlArray, byte>(ExceptionHelper.ThrowEscapeCharactersIncluded, ch);
                 case CsTomlSyntax.Symbol.LINEFEED:
-                    Skip(1);
+                    Advance(1);
                     IncreaseLineNumber();
                     continue;
                 case CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET:
                     closingBracket = true;
-                    Skip(1);
+                    Advance(1);
                     goto BREAK;
                 case CsTomlSyntax.Symbol.NUMBERSIGN:
                     ReadComment();
@@ -786,14 +858,14 @@ internal ref struct CsTomlReader
 
     private CsTomlInlineTable ReadInlineTable()
     {
-        Skip(1); // {
+        Advance(1); // {
         SkipWhiteSpace();
 
         var inlineTable = new CsTomlInlineTable();
         CsTomlTableNode? currentNode = inlineTable.RootNode;
         if (TryPeek(out var c) && CsTomlSyntax.IsRightBraces(c)) // empty inlinetable
         {
-            Skip(1); // }
+            Advance(1); // }
             return inlineTable;
         }
 
@@ -805,7 +877,7 @@ internal ref struct CsTomlReader
             if (!TryPeek(out var equalCh)) ExceptionHelper.ThrowEndOfFileReached(); // = or value is nothing
             if (!CsTomlSyntax.IsEqual(equalCh)) ExceptionHelper.ThrowNoEqualAfterTheKey(); // = is nothing
 
-            Skip(1); // skip "="
+            Advance(1); // skip "="
             SkipWhiteSpace();
 
             if (!Peek()) ExceptionHelper.ThrowEndOfFileReached(); // value is nothing
@@ -816,13 +888,13 @@ internal ref struct CsTomlReader
             {
                 if (CsTomlSyntax.IsComma(ch))
                 {
-                    Skip(1);
+                    Advance(1);
                     SkipWhiteSpace();
                     continue;
                 }
                 if (CsTomlSyntax.IsRightBraces(ch))
                 {
-                    Skip(1);
+                    Advance(1);
                     break;
                 }
                 ExceptionHelper.ThrowIncorrectTomlInlineTableFormat();
@@ -834,7 +906,7 @@ internal ref struct CsTomlReader
 
     private CsTomlBool ReadBool()
     {
-        var firstPosition = byteReader.Position;
+        var firstPosition = sequenceReader.Consumed;
         while (TryPeek(out var ch))
         {
             switch(ch)
@@ -849,20 +921,39 @@ internal ref struct CsTomlReader
                 case CsTomlSyntax.Symbol.NUMBERSIGN:
                     goto BREAK;
             }
-            Skip(1);
+            Advance(1);
         }
     BREAK:
-        var endPosition = byteReader.Position;
+        var endPosition = sequenceReader.Consumed;
         var length = endPosition - firstPosition;
-        byteReader.Position = firstPosition;
+        Rewind(length);
 
-        var value = BoolFormatter.Deserialize(ref byteReader, length);
-        return new CsTomlBool(value);
+        if (sequenceReader.TryFullSpan(length, out var bytes))
+        {
+            var tempReader = new Utf8Reader(bytes);
+            var value = BoolFormatter.Deserialize(ref tempReader, (int)length);
+            return new CsTomlBool(value);
+        }
+        else
+        {
+            var rent = RecycleByteArrayPoolBufferWriter.Rent();
+            try
+            {
+                sequenceReader.TryGetbytes(length, rent);
+                var tempReader = new Utf8Reader(rent.WrittenSpan);
+                var value = BoolFormatter.Deserialize(ref tempReader, (int)length);
+                return new CsTomlBool(value);
+            }
+            finally
+            {
+                RecycleByteArrayPoolBufferWriter.Return(rent);
+            }
+        }
     }
 
     private CsTomlValue ReadNumericOrDate()
     {
-        var firstPosition = byteReader.Position;
+        var firstPosition = sequenceReader.Consumed;
 
         // check prefix
         if (TryPeek(out var first))
@@ -870,7 +961,7 @@ internal ref struct CsTomlReader
             // check 0x or 0o or 0b
             if (first == CsTomlSyntax.Number.Value10[0])
             {
-                Skip(1);
+                Advance(1);
                 if (TryPeek(out var formatsCh))
                 {
                     if (CsTomlSyntax.IsLowerAlphabet(formatsCh))
@@ -878,17 +969,17 @@ internal ref struct CsTomlReader
                         switch (formatsCh)
                         {
                             case CsTomlSyntax.AlphaBet.x:
-                                Skip(1);
+                                Advance(1);
                                 return ReadHexNumeric();
                             case CsTomlSyntax.AlphaBet.o:
-                                Skip(1);
+                                Advance(1);
                                 return ReadOctalNumeric();
                             case CsTomlSyntax.AlphaBet.b:
-                                Skip(1);
+                                Advance(1);
                                 return ReadBinaryNumeric();
                             case CsTomlSyntax.AlphaBet.e: // 0e...
                             case CsTomlSyntax.AlphaBet.E: // 0E...
-                                byteReader.Position = firstPosition;
+                                Rewind(sequenceReader.Consumed - firstPosition);
                                 return ReadDouble();
                             default:
                                 return ExceptionHelper.NotReturnThrow<CsTomlValue, byte>(ExceptionHelper.ThrowIncorrectCompactEscapeCharacters, formatsCh);
@@ -896,37 +987,97 @@ internal ref struct CsTomlReader
                     }
                     else if (CsTomlSyntax.IsTabOrWhiteSpace(formatsCh))
                     {
-                        byteReader.Position = firstPosition;
+                        Rewind(sequenceReader.Consumed - firstPosition);
                         return ReadDecimalNumeric();
                     }
                     else if (CsTomlSyntax.IsNewLine(formatsCh))
                     {
-                        byteReader.Position = firstPosition;
+                        Rewind(sequenceReader.Consumed - firstPosition);
                         return ReadDecimalNumeric();
                     }
                 }
-                byteReader.Position = firstPosition;
+                Rewind(sequenceReader.Consumed - firstPosition);
             }
         }
 
         // check localtime or localdatetime
-        if (byteReader.Length >= byteReader.Position + CsTomlSyntax.DateTime.LocalTimeFormat.Length)
+        if (sequenceReader.Length >= sequenceReader.Consumed + CsTomlSyntax.DateTime.LocalTimeFormat.Length)
         {
-            if (CsTomlSyntax.IsColon(byteReader[byteReader.Position + 2])) // :
+            var length = 5;
+            Utf8Reader tempReader;
+            ArrayPoolBufferWriter<byte>? bufferWriter = null;
+            try
             {
-                if (ExistNoNewLineAndComment(8, out var newLineIndex))
+                if (sequenceReader.TryFullSpan(length, out var bytes))
                 {
-                    return ReadLocalTime(ReadUntilWhiteSpaceOrNewLineOrCommaOrEndOfArray());
+                    tempReader = new Utf8Reader(bytes);
                 }
+                else
+                {
+                    bufferWriter = RecycleByteArrayPoolBufferWriter.Rent();
+                    sequenceReader.TryGetbytes(length, bufferWriter);
+                    tempReader = new Utf8Reader(bufferWriter.WrittenSpan);
+                }
+
+                Rewind(5);
+                if (CsTomlSyntax.IsColon(tempReader[2])) // :
+                {
+                    if (ExistNoNewLineAndComment(8, out var newLineIndex))
+                    {
+                        if (sequenceReader.IsFullSpan)
+                        {
+                            return ReadLocalTime(ReadUntilWhiteSpaceOrNewLineOrCommaOrEndOfArrayForDateTime());
+                        }
+                        else
+                        {
+                            var bufferWriter2 = RecycleByteArrayPoolBufferWriter.Rent();
+                            try
+                            {
+                                var wrtier = new Utf8Writer(bufferWriter2);
+                                WriteUntilWhiteSpaceOrNewLineOrCommaOrEndOfArrayForDateTime(ref wrtier);
+                                return ReadLocalTime(bufferWriter2.WrittenSpan);
+                            }
+                            finally
+                            {
+                                RecycleByteArrayPoolBufferWriter.Return(bufferWriter2);
+                            }
+                        }
+                    }
+                }
+                else if (CsTomlSyntax.IsHyphen(tempReader[4])) // -
+                {
+                    if (ExistNoNewLineAndComment(8, out var newLineIndex))
+                    {
+                        if (sequenceReader.IsFullSpan)
+                        {
+                            return ReadLocalDateTimeOrOffset(ReadUntilWhiteSpaceOrNewLineOrCommaOrEndOfArrayForDateTime());
+                        }
+                        else
+                        {
+                            var bufferWriter2 = RecycleByteArrayPoolBufferWriter.Rent();
+                            try
+                            {
+                                var wrtier = new Utf8Writer(bufferWriter2);
+                                WriteUntilWhiteSpaceOrNewLineOrCommaOrEndOfArrayForDateTime(ref wrtier);
+                                return ReadLocalDateTimeOrOffset(bufferWriter2.WrittenSpan);
+                            }
+                            finally
+                            {
+                                RecycleByteArrayPoolBufferWriter.Return(bufferWriter2);
+                            }
+                        }
+                    }
+                }
+                Rewind(sequenceReader.Consumed - firstPosition);
+
             }
-            else if (CsTomlSyntax.IsHyphen(byteReader[byteReader.Position + 4])) // -
+            finally
             {
-                if (ExistNoNewLineAndComment(8, out var newLineIndex))
-                {
-                    return ReadLocalDateTimeOrOffset(ReadUntilWhiteSpaceOrNewLineOrCommaOrEndOfArrayForDateTime());
-                }
+                if (bufferWriter != null)
+                    RecycleByteArrayPoolBufferWriter.Return(bufferWriter);
+                bufferWriter = null;
+
             }
-            byteReader.Position = firstPosition;
         }
 
         while(TryPeek(out var ch))
@@ -935,40 +1086,45 @@ internal ref struct CsTomlReader
                 break;
             if (CsTomlSyntax.IsPeriod(ch) || CsTomlSyntax.IsExpSymbol(ch))
             {
-                byteReader.Position = firstPosition;
+                Rewind(sequenceReader.Consumed - firstPosition);
                 return ReadDouble();
             }
             if (ch == CsTomlSyntax.AlphaBet.i || ch == CsTomlSyntax.AlphaBet.n)
             {
-                byteReader.Position = firstPosition;
+                Rewind(sequenceReader.Consumed - firstPosition);
                 return ReadDoubleInfOrNan();
             }
-            Skip(1);
+            Advance(1);
         }
 
         // decimal
-        byteReader.Position = firstPosition;
+        Rewind(sequenceReader.Consumed - firstPosition);
         return ReadDecimalNumeric();
     }
 
     private bool ExistNoNewLineAndComment(int length, out int newLineIndex)
     {
         newLineIndex = -1;
-        if (byteReader.Length <= byteReader.Position + length)
+        if (sequenceReader.Length <= sequenceReader.Consumed + length)
             return false;
 
+        var firstPosition = sequenceReader.Consumed;
         for (int i = 0; i < length; i++)
         {
-            switch (byteReader[byteReader.Position + i])
+            TryPeek(out var ch);
+            switch (ch)
             {
                 case CsTomlSyntax.Symbol.LINEFEED:
                 case CsTomlSyntax.Symbol.CARRIAGE:
                 case CsTomlSyntax.Symbol.NUMBERSIGN:
                     newLineIndex = i;
+                    Rewind(sequenceReader.Consumed - firstPosition);
                     return false;
             }
+            Advance(1);
         }
 
+        Rewind(sequenceReader.Consumed - firstPosition);
         return true;
     }
 
@@ -981,7 +1137,7 @@ internal ref struct CsTomlReader
         {
             plusOrMinusSign = true;
             writer.Write(plusOrMinusCh);
-            Skip(1);
+            Advance(1);
         }
 
         if (TryPeek(out var firstCh))
@@ -999,7 +1155,7 @@ internal ref struct CsTomlReader
             {
                 underscore = false;
                 writer.Write(ch);
-                Skip(1);
+                Advance(1);
                 continue;
             }
 
@@ -1018,7 +1174,7 @@ internal ref struct CsTomlReader
                     // Each underscore is not surrounded by at least one digit on each side.
                     if (underscore) ExceptionHelper.ThrowUnderscoreUsedConsecutively();
                     underscore = true;
-                    Skip(1);
+                    Advance(1);
                     continue;
                 default:
                     return ExceptionHelper.NotReturnThrow<CsTomlInt64, byte>(ExceptionHelper.ThrowEscapeCharactersIncluded, ch);
@@ -1085,7 +1241,7 @@ internal ref struct CsTomlReader
             {
                 underscore = false;
                 writer.Write(ch);
-                Skip(1);
+                Advance(1);
                 continue;
             }
 
@@ -1102,7 +1258,7 @@ internal ref struct CsTomlReader
                     // Each underscore is not surrounded by at least one digit on each side.
                     if (underscore) ExceptionHelper.ThrowUnderscoreUsedConsecutively();
                     underscore = true;
-                    Skip(1);
+                    Advance(1);
                     continue;
                 default:
                     return ExceptionHelper.NotReturnThrow<CsTomlInt64, byte>(ExceptionHelper.ThrowEscapeCharactersIncluded, ch);
@@ -1147,7 +1303,7 @@ internal ref struct CsTomlReader
             {
                 underscore = false;
                 writer.Write(ch);
-                Skip(1);
+                Advance(1);
                 continue;
             }
 
@@ -1164,7 +1320,7 @@ internal ref struct CsTomlReader
                     // Each underscore is not surrounded by at least one digit on each side.
                     if (underscore) ExceptionHelper.ThrowUnderscoreUsedConsecutively();
                     underscore = true;
-                    Skip(1);
+                    Advance(1);
                     continue;
                 default:
                     return ExceptionHelper.NotReturnThrow<CsTomlInt64, byte>(ExceptionHelper.ThrowEscapeCharactersIncluded, ch);
@@ -1209,7 +1365,7 @@ internal ref struct CsTomlReader
             {
                 underscore = false;
                 writer.Write(ch);
-                Skip(1);
+                Advance(1);
                 continue;
             }
 
@@ -1226,7 +1382,7 @@ internal ref struct CsTomlReader
                     // Each underscore is not surrounded by at least one digit on each side.
                     if (underscore) ExceptionHelper.ThrowUnderscoreUsedConsecutively();
                     underscore = true;
-                    Skip(1);
+                    Advance(1);
                     continue;
                 default:
                     return ExceptionHelper.NotReturnThrow<CsTomlInt64, byte>(ExceptionHelper.ThrowEscapeCharactersIncluded, ch);
@@ -1251,10 +1407,10 @@ internal ref struct CsTomlReader
         if (TryPeek(out var plusOrMinusCh) && CsTomlSyntax.IsPlusOrMinusSign(plusOrMinusCh))
         {
             writer.Write(plusOrMinusCh);
-            Skip(1);
+            Advance(1);
         }
 
-        var firstPosition = byteReader.Position;
+        var firstPosition = sequenceReader.Consumed;
         if (TryPeek(out var firstNumberCh))
         {
             switch (firstNumberCh)
@@ -1265,10 +1421,10 @@ internal ref struct CsTomlReader
                     return ExceptionHelper.NotReturnThrow<CsTomlDouble>(ExceptionHelper.ThrowPeriodUsedFirst);
                 case CsTomlSyntax.AlphaBet.i:
                 case CsTomlSyntax.AlphaBet.n:
-                    if (CsTomlSyntax.IsPlusOrMinusSign(plusOrMinusCh)) Skip(-1);
+                    if (CsTomlSyntax.IsPlusOrMinusSign(plusOrMinusCh)) Rewind(1);
                     return ReadDoubleInfOrNan();
                 case var zero when zero == CsTomlSyntax.Number.Value10[0]:
-                    Skip(1);
+                    Advance(1);
                     if (TryPeek(out var secondNumberCh))
                     {
                         switch(secondNumberCh)
@@ -1282,7 +1438,7 @@ internal ref struct CsTomlReader
                                 break;
                         }
                     }
-                    byteReader.Position = firstPosition;
+                    Rewind(sequenceReader.Consumed - firstPosition);
                     break;
             }
         }
@@ -1299,7 +1455,7 @@ internal ref struct CsTomlReader
                 number = true;
                 underline = false;
                 writer.Write(ch);
-                Skip(1);
+                Advance(1);
                 continue;
             }
 
@@ -1311,7 +1467,7 @@ internal ref struct CsTomlReader
                     if (underline) ExceptionHelper.ThrowUnderscoreUsedConsecutively();
                     number = false;
                     underline = true;
-                    Skip(1);
+                    Advance(1);
                     continue;
                 case CsTomlSyntax.Symbol.PERIOD:
                     if (!number) ExceptionHelper.ThrowPeriodUsedWhereNotSurroundedByNumbers();
@@ -1320,7 +1476,7 @@ internal ref struct CsTomlReader
                     number = false;
                     period = true;
                     writer.Write(ch);
-                    Skip(1);
+                    Advance(1);
                     continue;
                 case CsTomlSyntax.AlphaBet.e:
                 case CsTomlSyntax.AlphaBet.E:
@@ -1330,7 +1486,7 @@ internal ref struct CsTomlReader
                     sign = false;
                     exp = true;
                     writer.Write(ch);
-                    Skip(1);
+                    Advance(1);
                     continue;
                 case CsTomlSyntax.Symbol.PLUS:
                 case CsTomlSyntax.Symbol.MINUS:
@@ -1338,7 +1494,7 @@ internal ref struct CsTomlReader
                     number = false;
                     sign = true;
                     writer.Write(ch);
-                    Skip(1);
+                    Advance(1);
                     continue;
                 case CsTomlSyntax.Symbol.TAB:
                 case CsTomlSyntax.Symbol.SPACE:
@@ -1387,61 +1543,100 @@ internal ref struct CsTomlReader
 
     private CsTomlDouble ReadDoubleInfOrNan()
     {
-        if (byteReader.Length < byteReader.Position + 3) ExceptionHelper.ThrowIncorrectTomlFloatFormat();
+        if (sequenceReader.Length < sequenceReader.Consumed + 3) ExceptionHelper.ThrowIncorrectTomlFloatFormat();
 
-        if (byteReader[byteReader.Position] == CsTomlSyntax.AlphaBet.i &&
-            byteReader[byteReader.Position + 1] == CsTomlSyntax.AlphaBet.n &&
-            byteReader[byteReader.Position + 2] == CsTomlSyntax.AlphaBet.f)
+        var length = 3;
+        Utf8Reader tempReader;
+        ArrayPoolBufferWriter<byte>? writer = null;
+        try
         {
-            byteReader.Skip(3);
-            return CsTomlDouble.Inf;
-        }
-        else if (byteReader[byteReader.Position] == CsTomlSyntax.AlphaBet.n &&
-            byteReader[byteReader.Position + 1] == CsTomlSyntax.AlphaBet.a &&
-            byteReader[byteReader.Position + 2] == CsTomlSyntax.AlphaBet.n)
-        {
-            byteReader.Skip(3);
-            return CsTomlDouble.Nan;
-        }
-
-        if (byteReader.Length < byteReader.Position + 4) ExceptionHelper.ThrowIncorrectTomlFloatFormat();
-
-        if (CsTomlSyntax.IsPlusSign(byteReader[byteReader.Position]))
-        {
-            if (byteReader[byteReader.Position + 1] == CsTomlSyntax.AlphaBet.i &&
-                byteReader[byteReader.Position + 2] == CsTomlSyntax.AlphaBet.n &&
-                byteReader[byteReader.Position + 3] == CsTomlSyntax.AlphaBet.f)
+            if (sequenceReader.TryFullSpan(length, out var bytes))
             {
-                byteReader.Skip(4);
+                tempReader = new Utf8Reader(bytes);
+            }
+            else
+            {
+                writer = RecycleByteArrayPoolBufferWriter.Rent();
+                sequenceReader.TryGetbytes(length, writer);
+                tempReader = new Utf8Reader(writer.WrittenSpan);
+            }
+
+            if (tempReader[0] == CsTomlSyntax.AlphaBet.i &&
+                tempReader[1] == CsTomlSyntax.AlphaBet.n &&
+                tempReader[2] == CsTomlSyntax.AlphaBet.f)
+            {
                 return CsTomlDouble.Inf;
             }
-            else if (byteReader[byteReader.Position + 1] == CsTomlSyntax.AlphaBet.n &&
-                byteReader[byteReader.Position + 2] == CsTomlSyntax.AlphaBet.a &&
-                byteReader[byteReader.Position + 3] == CsTomlSyntax.AlphaBet.n)
+            else if (tempReader[0] == CsTomlSyntax.AlphaBet.n &&
+                tempReader[1] == CsTomlSyntax.AlphaBet.a &&
+                tempReader[2] == CsTomlSyntax.AlphaBet.n)
             {
-                byteReader.Skip(4);
                 return CsTomlDouble.Nan;
             }
         }
-        else if (CsTomlSyntax.IsMinusSign(byteReader[byteReader.Position]))
+        finally
         {
-            if (byteReader[byteReader.Position + 1] == CsTomlSyntax.AlphaBet.i &&
-                byteReader[byteReader.Position + 2] == CsTomlSyntax.AlphaBet.n &&
-                byteReader[byteReader.Position + 3] == CsTomlSyntax.AlphaBet.f)
-            {
-                byteReader.Skip(4);
-                return CsTomlDouble.NInf;
-            }
-            else if (byteReader[byteReader.Position + 1] == CsTomlSyntax.AlphaBet.n &&
-                byteReader[byteReader.Position + 2] == CsTomlSyntax.AlphaBet.a &&
-                byteReader[byteReader.Position + 3] == CsTomlSyntax.AlphaBet.n)
-            {
-                byteReader.Skip(4);
-                return CsTomlDouble.PNan;
-            }
+            if (writer != null)
+                RecycleByteArrayPoolBufferWriter.Return(writer);
+            writer = null;
         }
 
-        return ExceptionHelper.NotReturnThrow<CsTomlDouble>(ExceptionHelper.ThrowIncorrectTomlFloatFormat);
+        Rewind(3);
+        if (sequenceReader.Length < sequenceReader.Consumed + 4) ExceptionHelper.ThrowIncorrectTomlFloatFormat();
+
+        length = 4;
+        try
+        {
+            if (sequenceReader.TryFullSpan(length, out var bytes))
+            {
+                tempReader = new Utf8Reader(bytes);
+            }
+            else
+            {
+                writer = RecycleByteArrayPoolBufferWriter.Rent();
+                sequenceReader.TryGetbytes(length, writer);
+                tempReader = new Utf8Reader(writer.WrittenSpan);
+            }
+
+            if (CsTomlSyntax.IsPlusSign(tempReader[0]))
+            {
+                if (tempReader[1] == CsTomlSyntax.AlphaBet.i &&
+                    tempReader[2] == CsTomlSyntax.AlphaBet.n &&
+                    tempReader[3] == CsTomlSyntax.AlphaBet.f)
+                {
+                    return CsTomlDouble.Inf;
+                }
+                else if (tempReader[1] == CsTomlSyntax.AlphaBet.n &&
+                    tempReader[2] == CsTomlSyntax.AlphaBet.a &&
+                    tempReader[3] == CsTomlSyntax.AlphaBet.n)
+                {
+                    return CsTomlDouble.Nan;
+                }
+            }
+            else if (CsTomlSyntax.IsMinusSign(tempReader[0]))
+            {
+                if (tempReader[1] == CsTomlSyntax.AlphaBet.i &&
+                    tempReader[2] == CsTomlSyntax.AlphaBet.n &&
+                    tempReader[3] == CsTomlSyntax.AlphaBet.f)
+                {
+                    return CsTomlDouble.NInf;
+                }
+                else if (tempReader[1] == CsTomlSyntax.AlphaBet.n &&
+                    tempReader[2] == CsTomlSyntax.AlphaBet.a &&
+                    tempReader[3] == CsTomlSyntax.AlphaBet.n)
+                {
+                    return CsTomlDouble.PNan;
+                }
+            }
+            Rewind(4);
+            return ExceptionHelper.NotReturnThrow<CsTomlDouble>(ExceptionHelper.ThrowIncorrectTomlFloatFormat);
+        }
+        finally
+        {
+            if (writer != null)
+                RecycleByteArrayPoolBufferWriter.Return(writer);
+            writer = null;
+        }
     }
 
     private CsTomlValue ReadLocalDateTimeOrOffset(ReadOnlySpan<byte> bytes)
@@ -1668,53 +1863,9 @@ internal ref struct CsTomlReader
         return new CsTomlOffsetDateTime(value, true);
     }
 
-    private ReadOnlySpan<byte> ReadUntilWhiteSpaceOrNewLineOrCommaOrEndOfArray()
-    {
-        var firstPosition = byteReader.Position;
-        while (TryPeek(out var ch))
-        {
-            switch (ch)
-            {
-                case CsTomlSyntax.Symbol.TAB:
-                case CsTomlSyntax.Symbol.LINEFEED:
-                case CsTomlSyntax.Symbol.COMMA:
-                case CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET:
-                case CsTomlSyntax.Symbol.NUMBERSIGN:
-                    goto BREAK;
-                case CsTomlSyntax.Symbol.SPACE:
-                    if (byteReader.Position - firstPosition == 10) // space or T
-                    {
-                        Skip(1);
-                        continue;
-                    }
-                    goto BREAK;
-                case CsTomlSyntax.Symbol.CARRIAGE:
-                    Skip(1);
-                    if (TryPeek(out var linebreakCh) && CsTomlSyntax.IsLf(linebreakCh))
-                    {
-                        Skip(-1);
-                        goto BREAK;
-                    }
-                    ExceptionHelper.ThrowEscapeCharactersIncluded(ch);
-                    return default;
-                default:
-                    Skip(1);
-                    continue;
-            }
-        BREAK:
-            break;
-        }
-
-        var endPosition = byteReader.Position;
-        var length = endPosition - firstPosition;
-        byteReader.Position = firstPosition;
-
-        return byteReader.ReadBytes(length);
-    }
-
     private ReadOnlySpan<byte> ReadUntilWhiteSpaceOrNewLineOrCommaOrEndOfArrayForDateTime()
     {
-        var firstPosition = byteReader.Position;
+        var firstPosition = sequenceReader.Consumed;
         var delimiterSpace = false;
         while (TryPeek(out var ch))
         {
@@ -1728,14 +1879,14 @@ internal ref struct CsTomlReader
                 case CsTomlSyntax.Symbol.NUMBERSIGN:
                     if (delimiterSpace)
                     {
-                        byteReader.Position--;
+                        Rewind(1);
                     }
                     goto BREAK;
                 case CsTomlSyntax.Symbol.SPACE:
-                    if (byteReader.Position - firstPosition == 10) // space or T
+                    if (sequenceReader.Consumed - firstPosition == 10) // space or T
                     {
                         delimiterSpace = true;
-                        Skip(1);
+                        Advance(1);
                         continue;
                     }
                     goto BREAK;
@@ -1744,27 +1895,88 @@ internal ref struct CsTomlReader
                     {
                         goto BREAK;
                     }
-                    Skip(1);
+                    Advance(1);
                     if (TryPeek(out var linebreakCh) && CsTomlSyntax.IsLf(linebreakCh))
                     {
-                        Skip(-1);
+                        Rewind(1);
                         goto BREAK;
                     }
                     ExceptionHelper.ThrowEscapeCharactersIncluded(ch);
                     return default;
                 default:
-                    Skip(1);
+                    Advance(1);
                     continue;
             }
         BREAK:
             break;
         }
 
-        var endPosition = byteReader.Position;
+        var endPosition = sequenceReader.Consumed;
         var length = endPosition - firstPosition;
-        byteReader.Position = firstPosition;
+        Rewind(length);
 
-        return byteReader.ReadBytes(length);
+        sequenceReader.TryFullSpan(length, out var bytes);
+
+        return bytes;
+    }
+
+    private void WriteUntilWhiteSpaceOrNewLineOrCommaOrEndOfArrayForDateTime(ref Utf8Writer writer)
+    {
+        var firstPosition = sequenceReader.Consumed;
+        var delimiterSpace = false;
+
+        var space = false;
+        while (TryPeek(out var ch))
+        {
+            switch (ch)
+            {
+                case CsTomlSyntax.Symbol.LINEFEED:
+                case CsTomlSyntax.Symbol.COMMA:
+                    goto BREAK;
+                case CsTomlSyntax.Symbol.TAB:
+                case CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET:
+                case CsTomlSyntax.Symbol.NUMBERSIGN:
+                    if (delimiterSpace)
+                    {
+                        Rewind(1);
+                    }
+                    goto BREAK;
+                case CsTomlSyntax.Symbol.SPACE:
+                    if (sequenceReader.Consumed - firstPosition == 10) // space or T
+                    {
+                        delimiterSpace = true;
+                        Advance(1);
+                        space = true;
+                        writer.GetSpan(1)[0] = ch;
+                        continue;
+                    }
+                    goto BREAK;
+                case CsTomlSyntax.Symbol.CARRIAGE:
+                    if (delimiterSpace)
+                    {
+                        goto BREAK;
+                    }
+                    Advance(1);
+                    if (TryPeek(out var linebreakCh) && CsTomlSyntax.IsLf(linebreakCh))
+                    {
+                        Rewind(1);
+                        goto BREAK;
+                    }
+                    ExceptionHelper.ThrowEscapeCharactersIncluded(ch);
+                    return;
+                default:
+                    if (space)
+                    {
+                        writer.Advance(1);
+                        space = false;
+                    }
+                    Advance(1);
+                    writer.Write(ch);
+                    continue;
+            }
+        BREAK:
+            break;
+        }
     }
 
     [DebuggerStepThrough]
