@@ -12,15 +12,13 @@ public abstract partial class CsTomlValue :
 
     public CsTomlType Type { get;}
 
-    public virtual CsTomlValue this[int index] => Empty;
+    public bool HasValue
+        => this.Type != CsTomlType.None;
 
     protected CsTomlValue(CsTomlType type)
     {
         this.Type = type;
     }
-
-    public bool HasValue()
-        => this.Type != CsTomlType.None;
 
     internal virtual bool ToTomlString(ref Utf8Writer writer) // Write TOML format.
         => false;

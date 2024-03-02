@@ -153,7 +153,7 @@ internal class CsTomlTableNode
     public bool TryGetChildNode(ReadOnlySpan<byte> key, out CsTomlTableNode? value)
     {
         var isBareKey = true;
-        var firstEscapeSequenceIndex = 0;
+        var firstEscapeSequenceIndex = -1;
         for (var i = 0; i < key.Length; i++)
         {
             isBareKey = CsTomlSyntax.IsBareKey(key[i]);
@@ -166,12 +166,7 @@ internal class CsTomlTableNode
 
         if (isBareKey)
         {
-            if (Value is CsTomlInlineTable t)
-            {
-                return t.RootNode.nodes.TryGetValue(key, out value);
-            }
-
-            return nodes.TryGetValue(key, out value);
+            return TryGetChildNodeCore(key, out value);
         }
         else
         {
@@ -180,26 +175,22 @@ internal class CsTomlTableNode
             using var bufferWriter = new ArrayPoolBufferWriter<byte>(bufferSize);
             var writer = new Utf8Writer(bufferWriter);
 
-            writer.Write(key[..firstEscapeSequenceIndex]);
-            reader.Advance(firstEscapeSequenceIndex + 1);
-
-            if (reader.TryPeek(out var FirstCh))
+            if (firstEscapeSequenceIndex >= 1)
             {
-                var result = CsTomlString.TryFormatEscapeSequence(ref reader, ref writer, false, false);
-                if (result == CsTomlString.EscapeSequenceResult.Failure)
-                {
-                    reader.Advance(1);
-                }
+                writer.Write(key[..firstEscapeSequenceIndex]);
+                reader.Advance(firstEscapeSequenceIndex);
             }
 
             while (reader.TryPeek(out var ch))
             {
                 if (CsTomlSyntax.IsBackSlash(ch))
                 {
+                    reader.Advance(1);
                     var result = CsTomlString.TryFormatEscapeSequence(ref reader, ref writer, false, false);
                     if (result == CsTomlString.EscapeSequenceResult.Failure)
                     {
-                        reader.Advance(1);
+                        value = default;
+                        return false;
                     }
                     continue;
                 }
@@ -208,13 +199,19 @@ internal class CsTomlTableNode
                 reader.Advance(1);
             }
 
-            if (Value is CsTomlInlineTable t2)
-            {
-                return t2.RootNode.nodes.TryGetValue(bufferWriter.WrittenSpan, out value);
-            }
-
-            return nodes.TryGetValue(bufferWriter.WrittenSpan, out value);
+            // search Quoted keys
+            return TryGetChildNodeCore(bufferWriter.WrittenSpan, out value);
         }
+    }
+
+    private bool TryGetChildNodeCore(ReadOnlySpan<byte> key, out CsTomlTableNode? value)
+    {
+        if (Value is CsTomlInlineTable t)
+        {
+            return t.RootNode.nodes.TryGetValue(key, out value);
+        }
+
+        return nodes.TryGetValue(key, out value);
     }
 
     private bool TryGetChildNode(ReadOnlySpan<char> keySpan, out CsTomlTableNode? value)

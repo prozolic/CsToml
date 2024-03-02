@@ -17,7 +17,7 @@ internal partial class CsTomlArray : CsTomlValue, IEnumerable<CsTomlValue>
 
     public CsTomlValue LastValue => Count > 0 ? values[Count - 1] : Empty;
 
-    public override CsTomlValue this[int index] => values[index];
+    public CsTomlValue this[int index] => values[index];
 
     public CsTomlArray() : base(CsTomlType.Array)
     {}
