@@ -389,7 +389,7 @@ public partial class CsTomlPackage
     private CsTomlValue FindAsKey(ReadOnlySpan<byte> keySpan)
     {
         var currentNode = table.RootNode;
-        if (currentNode!.TryGetChildNode(keySpan, out var childNode) && !currentNode!.IsGroupingProperty)
+        if (currentNode!.TryGetChildNode(keySpan, out var childNode) && !childNode!.IsGroupingProperty)
         {
             return childNode!.Value!;
         }
@@ -420,7 +420,8 @@ public partial class CsTomlPackage
     private CsTomlValue FindArrayOfTableOrValue(CsTomlTable innerTable, ReadOnlySpan<byte> keySpan)
     {
         var currentNode = innerTable.RootNode;
-        if (currentNode!.TryGetChildNode(keySpan, out var childNode) && (!currentNode!.IsGroupingProperty || currentNode!.IsArrayOfTablesHeader))
+        if (currentNode!.TryGetChildNode(keySpan, out var childNode) && 
+            (!childNode!.IsGroupingProperty || childNode!.IsArrayOfTablesHeader))
         {
             return childNode!.Value!;
         }
