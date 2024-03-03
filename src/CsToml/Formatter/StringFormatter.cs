@@ -1,4 +1,5 @@
 ﻿
+using System;
 using System.Buffers;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Unicode;
@@ -11,9 +12,14 @@ internal class StringFormatter : ICsTomlFormatter<string>
 {
     public static void Serialize(ref Utf8Writer writer, string value)
     {
+        Serialize(ref writer, value);
+    }
+
+    public static void Serialize(ref Utf8Writer writer, ReadOnlySpan<char> value)
+    {
         var maxBufferSize = value.Length * 2;
 
-        var status = Utf8.FromUtf16(value.AsSpan(), writer.GetSpan(maxBufferSize),
+        var status = Utf8.FromUtf16(value, writer.GetSpan(maxBufferSize),
             out int charsRead, out int bytesWritten, replaceInvalidSequences: false);
 
         if (status != OperationStatus.Done)
