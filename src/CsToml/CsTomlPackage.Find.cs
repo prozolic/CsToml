@@ -1,9 +1,7 @@
 ﻿using CsToml.Error;
-using CsToml.Extension;
 using CsToml.Formatter;
 using CsToml.Utility;
 using CsToml.Values;
-using static CsToml.Extension.StringExtensions;
 
 namespace CsToml;
 
@@ -179,7 +177,7 @@ public partial class CsTomlPackage
     {
         options ??= CsTomlPackageOptions.Default;
         
-        var value = options.IsDottedKeys ? FindAsDottedKey(keys) : FindAsKey(keys);
+        var value = options.IsDottedKeys ? table.FindAsDottedKey(keys) : table.FindAsKey(keys);
         return value.HasValue ? value : default;
     }
 
@@ -203,7 +201,7 @@ public partial class CsTomlPackage
     {
         options ??= CsTomlPackageOptions.Default;
 
-        var value = FindAsDottedKey(keys);
+        var value = table.FindAsDottedKey(keys);
         return value.HasValue ? value : default;
     }
 
@@ -213,18 +211,16 @@ public partial class CsTomlPackage
 
         if (options.IsDottedKeys)
         {
-            if (TryGetSubTable(tableHeader, out var node) && node!.TryGetChildNode(key, out var valueNode))
+            if (table.TryGetSubTable(tableHeader, key, out var value))
             {
-                var value = valueNode!.Value;
-                return value!.HasValue ? value : default;
+                return value!;
             }
         }
         else
         {
-            if (TryGetTable(table.RootNode, tableHeader, out var node) && node!.TryGetChildNode(key, out var valueNode))
+            if (table.TryGetTable(tableHeader, key, out var value))
             {
-                var value = valueNode!.Value;
-                return value!.HasValue ? value : default;
+                return value!;
             }
         }
 
@@ -256,10 +252,9 @@ public partial class CsTomlPackage
     {
         options ??= CsTomlPackageOptions.Default;
 
-        if (TryGetSubTable(tableHeader, out var node) && node!.TryGetChildNode(key, out var valueNode))
+        if (table.TryGetSubTable(tableHeader, key, out var value))
         {
-            var value = valueNode!.Value;
-            return value!.HasValue ? value : default;
+            return value!;
         }
 
         return default;
@@ -270,9 +265,9 @@ public partial class CsTomlPackage
         options ??= CsTomlPackageOptions.Default;
 
         // find Array Of Tables
-        var arrayOfTablesValue = options.IsDottedKeys ? 
-            FindArrayOfTableOrValueAsDotted(table, arrayOfTableHeader) : 
-            FindArrayOfTableOrValue(table, arrayOfTableHeader);
+        var arrayOfTablesValue = options.IsDottedKeys ?
+            table.FindArrayOfTableOrValueAsDotted(arrayOfTableHeader) :
+            table.FindArrayOfTableOrValue(arrayOfTableHeader);
         if (arrayOfTablesValue.Type != CsTomlType.Array)
             return default;
 
@@ -283,8 +278,8 @@ public partial class CsTomlPackage
         // find Value
         var t = (csTomlArrayOfTables[arrayIndex]! as CsTomlTable)!;
         var value = options.IsDottedKeys ?
-            FindArrayOfTableOrValueAsDotted(t, key) :
-            FindArrayOfTableOrValue(t, key);
+            t.FindArrayOfTableOrValueAsDotted(key) :
+            t.FindArrayOfTableOrValue(key);
         return value.HasValue ? value : default;
     }
 
@@ -294,8 +289,8 @@ public partial class CsTomlPackage
 
         // find Array Of Tables
         var arrayOfTablesValue = options.IsDottedKeys ?
-            FindArrayOfTableOrValueAsDotted(table, arrayOfTableHeader) :
-            FindArrayOfTableOrValue(table, arrayOfTableHeader);
+            table.FindArrayOfTableOrValueAsDotted(arrayOfTableHeader) :
+            table.FindArrayOfTableOrValue(arrayOfTableHeader);
         if (arrayOfTablesValue.Type != CsTomlType.Array)
             return default;
 
@@ -304,7 +299,7 @@ public partial class CsTomlPackage
             return default;
 
         // find Value
-        var value = FindArrayOfTablesOrValue((csTomlArrayOfTables[arrayIndex]! as CsTomlTable)!, key);
+        var value = (csTomlArrayOfTables[arrayIndex]! as CsTomlTable)!.FindArrayOfTablesOrValue(key);
         return value.HasValue ? value : default;
     }
 
@@ -313,7 +308,7 @@ public partial class CsTomlPackage
         options ??= CsTomlPackageOptions.Default;
 
         // find Array Of Tables
-        var arrayOfTablesValue = FindArrayOfTablesOrValue(table, arrayOfTableHeader);
+        var arrayOfTablesValue = table.FindArrayOfTablesOrValue(arrayOfTableHeader);
         if (arrayOfTablesValue.Type != CsTomlType.Array)
             return default;
 
@@ -324,8 +319,8 @@ public partial class CsTomlPackage
         // find Value
         var t = (csTomlArrayOfTables[arrayIndex]! as CsTomlTable)!;
         var value = options.IsDottedKeys ?
-            FindArrayOfTableOrValueAsDotted(t, key) :
-            FindArrayOfTableOrValue(t, key);
+            t.FindArrayOfTableOrValueAsDotted(key) :
+            t.FindArrayOfTableOrValue(key);
         return value.HasValue ? value : default;
     }
 
@@ -334,7 +329,7 @@ public partial class CsTomlPackage
         options ??= CsTomlPackageOptions.Default;
 
         // find Array Of Tables
-        var arrayOfTablesValue = FindArrayOfTablesOrValue(table, arrayOfTableHeader);
+        var arrayOfTablesValue = table.FindArrayOfTablesOrValue(arrayOfTableHeader);
         if (arrayOfTablesValue.Type != CsTomlType.Array)
             return default;
 
@@ -343,7 +338,7 @@ public partial class CsTomlPackage
             return default;
 
         // find Value
-        var value = FindArrayOfTablesOrValue((csTomlArrayOfTables[arrayIndex]! as CsTomlTable)!, key);
+        var value = (csTomlArrayOfTables[arrayIndex]! as CsTomlTable)!.FindArrayOfTablesOrValue(key);
         return value.HasValue ? value : default;
     }
 
@@ -368,198 +363,5 @@ public partial class CsTomlPackage
             options);
     }
 
-    private bool TryGetTable(CsTomlTableNode rootNode, ReadOnlySpan<byte> tableHeader, out CsTomlTableNode? node)
-    {
-        var currentNode = rootNode;
-        if (currentNode!.TryGetChildNode(tableHeader, out var childNode) && childNode!.IsGroupingProperty)
-        {
-            node = childNode;
-            return true;
-        }
-        node = default;
-        return false;
-    }
-
-    private bool TryGetSubTable(ReadOnlySpan<byte> tableHeader, out CsTomlTableNode? node)
-    {
-        var hit = false;
-        CsTomlTableNode? currentNode = table.RootNode;
-        foreach (var dottedKey in tableHeader.SplitSpan("."u8))
-        {
-            if (TryGetTable(currentNode!, dottedKey.Value, out currentNode))
-            {
-                hit = true;
-            }
-            else
-            {
-                node = default;
-                return false;
-            }
-        }
-
-        if (hit && currentNode!.IsGroupingProperty)
-        {
-            node = currentNode;
-            return true;
-        }
-
-        node = default;
-        return false;
-    }
-
-    private bool TryGetSubTable(ReadOnlySpan<ByteArray> tableHeaderSpan, out CsTomlTableNode? node)
-    {
-        var hit = false;
-        CsTomlTableNode? currentNode = table.RootNode;
-
-        for (int i = 0; i < tableHeaderSpan.Length; i++)
-        {
-            if (TryGetTable(currentNode!, tableHeaderSpan[i].value, out currentNode))
-            {
-                hit = true;
-            }
-            else
-            {
-                node = default;
-                return false;
-            }
-        }
-
-        if (hit && currentNode!.IsGroupingProperty)
-        {
-            node = currentNode;
-            return true;
-        }
-
-        node = default;
-        return false;
-    }
-
-    private CsTomlValue FindAsDottedKey(ReadOnlySpan<byte> dottedKeySpan)
-    {
-        var hit = false;
-        var currentNode = table.RootNode;
-        foreach (var dottedKey in dottedKeySpan.SplitSpan("."u8))
-        {
-            if (currentNode!.TryGetChildNode(dottedKey.Value, out var childNode))
-            {
-                hit = true;
-                currentNode = childNode;
-            }
-        }
-
-        if (hit && !currentNode!.IsGroupingProperty)
-        {
-            return currentNode.Value!;
-        }
-
-        return CsTomlValue.Empty;
-    }
-
-    private CsTomlValue FindAsDottedKey(ReadOnlySpan<ByteArray> dottedKeys)
-    {
-        var hit = false;
-        var currentNode = table.RootNode;
-
-        for (int i = 0; i < dottedKeys.Length; i++)
-        {
-            if (currentNode!.TryGetChildNode(dottedKeys[i].value, out var childNode))
-            {
-                hit = true;
-                currentNode = childNode;
-            }
-        }
-
-        if (hit && !currentNode!.IsGroupingProperty)
-        {
-            return currentNode.Value!;
-        }
-
-        return CsTomlValue.Empty;
-    }
-
-    private CsTomlValue FindAsKey(ReadOnlySpan<byte> keySpan)
-    {
-        var currentNode = table.RootNode;
-        if (currentNode!.TryGetChildNode(keySpan, out var childNode) && !childNode!.IsGroupingProperty)
-        {
-            return childNode!.Value!;
-        }
-        return CsTomlValue.Empty;
-    }
-
-    private CsTomlValue FindArrayOfTableOrValueAsDotted(CsTomlTable innerTable, ReadOnlySpan<byte> keys)
-    {
-        var hit = false;
-        var currentNode = innerTable.RootNode;
-        foreach (var key in keys.SplitSpan("."u8))
-        {
-            if (currentNode!.TryGetChildNode(key.Value, out var childNode))
-            {
-                hit = true;
-                currentNode = childNode;
-            }
-        }
-
-        if (hit && (!currentNode!.IsGroupingProperty || currentNode!.IsArrayOfTablesHeader))
-        {
-            return currentNode.Value!;
-        }
-
-        return CsTomlValue.Empty;
-    }
-
-    private CsTomlValue FindArrayOfTableOrValue(CsTomlTable innerTable, ReadOnlySpan<byte> keySpan)
-    {
-        var currentNode = innerTable.RootNode;
-        if (currentNode!.TryGetChildNode(keySpan, out var childNode) && 
-            (!childNode!.IsGroupingProperty || childNode!.IsArrayOfTablesHeader))
-        {
-            return childNode!.Value!;
-        }
-        return CsTomlValue.Empty;
-    }
-
-    private CsTomlValue FindArrayOfTablesOrValue(CsTomlTable innerTable, ReadOnlySpan<ByteArray> keys)
-    {
-        var hit = false;
-        var currentNode = innerTable.RootNode;
-        foreach (var key in keys)
-        {
-            if (currentNode!.TryGetChildNode(key.value, out var childNode))
-            {
-                hit = true;
-                currentNode = childNode;
-            }
-        }
-
-        if (hit && (!currentNode!.IsGroupingProperty || currentNode!.IsArrayOfTablesHeader))
-        {
-            return currentNode.Value!;
-        }
-
-        return CsTomlValue.Empty;
-    }
-}
-
-public readonly struct ByteArray
-{
-    public readonly byte[] value;
-
-    public ByteArray(ReadOnlySpan<byte> byteSpan)
-    {
-        value = byteSpan.ToArray();
-    }
-
-    public ByteArray(byte[] byteSpan)
-    {
-        value = byteSpan;
-    }
-
-    public static implicit operator ByteArray(ReadOnlySpan<byte> bytes)
-        => new(bytes);
-
-    public static implicit operator ByteArray(byte[] bytes)
-        => new(bytes);
 }
 

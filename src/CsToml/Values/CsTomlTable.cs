@@ -1,4 +1,5 @@
 ﻿using CsToml.Error;
+using CsToml.Extension;
 using CsToml.Utility;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -169,6 +170,184 @@ internal partial class CsTomlTable : CsTomlValue
         (currentNode.Value as CsTomlArray)?.Add(table);
         currentNode.AddComment(comments);
         newNode = table.RootNode;
+    }
+
+    public bool TryGetTable(ReadOnlySpan<byte> tableHeader, ReadOnlySpan<byte> key, out CsTomlValue? value)
+    {
+        var currentNode = RootNode;
+        if (currentNode!.TryGetChildNode(tableHeader, out var childNode) && childNode!.IsGroupingProperty)
+        {
+            if (childNode!.TryGetChildNode(key, out var valueNode))
+            {
+                value = valueNode!.Value;
+                return true;
+            }
+        }
+
+        value = default;
+        return false;
+    }
+
+    public bool TryGetSubTable(ReadOnlySpan<byte> tableHeader, ReadOnlySpan<byte> key, out CsTomlValue? value)
+    {
+        var hit = false;
+        CsTomlTableNode? currentNode = RootNode;
+        foreach (var dottedKey in tableHeader.SplitSpan("."u8))
+        {
+            if (currentNode!.TryGetChildNode(dottedKey.Value, out var childNode) && childNode!.IsGroupingProperty)
+            {
+                hit = true;
+                currentNode = childNode!;
+            }
+            else
+            {
+                value = default;
+                return false;
+            }
+        }
+
+        if (hit && currentNode!.IsGroupingProperty && currentNode!.TryGetChildNode(key, out var valueNode))
+        {
+            value = valueNode!.Value!;
+            return true;
+        }
+
+        value = default;
+        return false;
+    }
+
+    public bool TryGetSubTable(ReadOnlySpan<ByteArray> tableHeaderSpan, ReadOnlySpan<byte> key, out CsTomlValue? value)
+    {
+        var hit = false;
+        CsTomlTableNode? currentNode = RootNode;
+        for (int i = 0; i < tableHeaderSpan.Length; i++)
+        {
+            if (currentNode!.TryGetChildNode(tableHeaderSpan[i].value, out var childNode) && childNode!.IsGroupingProperty)
+            {
+                hit = true;
+                currentNode = childNode!;
+            }
+            else
+            {
+                value = default;
+                return false;
+            }
+        }
+
+        if (hit && currentNode!.IsGroupingProperty && currentNode!.TryGetChildNode(key, out var valueNode))
+        {
+            value = valueNode!.Value;
+            return true;
+        }
+
+        value = default;
+        return false;
+    }
+
+    public CsTomlValue FindAsDottedKey(ReadOnlySpan<byte> dottedKeySpan)
+    {
+        var hit = false;
+        var currentNode = RootNode;
+        foreach (var dottedKey in dottedKeySpan.SplitSpan("."u8))
+        {
+            if (currentNode!.TryGetChildNode(dottedKey.Value, out var childNode))
+            {
+                hit = true;
+                currentNode = childNode;
+            }
+        }
+
+        if (hit && !currentNode!.IsGroupingProperty)
+        {
+            return currentNode.Value!;
+        }
+
+        return Empty;
+    }
+
+    public CsTomlValue FindAsDottedKey(ReadOnlySpan<ByteArray> dottedKeys)
+    {
+        var hit = false;
+        var currentNode = RootNode;
+
+        for (int i = 0; i < dottedKeys.Length; i++)
+        {
+            if (currentNode!.TryGetChildNode(dottedKeys[i].value, out var childNode))
+            {
+                hit = true;
+                currentNode = childNode;
+            }
+        }
+
+        if (hit && !currentNode!.IsGroupingProperty)
+        {
+            return currentNode.Value!;
+        }
+
+        return Empty;
+    }
+
+    public CsTomlValue FindAsKey(ReadOnlySpan<byte> keySpan)
+    {
+        var currentNode = RootNode;
+        if (currentNode!.TryGetChildNode(keySpan, out var childNode) && !childNode!.IsGroupingProperty)
+        {
+            return childNode!.Value!;
+        }
+        return Empty;
+    }
+
+    public CsTomlValue FindArrayOfTableOrValueAsDotted(ReadOnlySpan<byte> keys)
+    {
+        var hit = false;
+        var currentNode = RootNode;
+        foreach (var key in keys.SplitSpan("."u8))
+        {
+            if (currentNode!.TryGetChildNode(key.Value, out var childNode))
+            {
+                hit = true;
+                currentNode = childNode;
+            }
+        }
+
+        if (hit && (!currentNode!.IsGroupingProperty || currentNode!.IsArrayOfTablesHeader))
+        {
+            return currentNode.Value!;
+        }
+
+        return Empty;
+    }
+
+    public CsTomlValue FindArrayOfTableOrValue(ReadOnlySpan<byte> keySpan)
+    {
+        var currentNode = RootNode;
+        if (currentNode!.TryGetChildNode(keySpan, out var childNode) &&
+            (!childNode!.IsGroupingProperty || childNode!.IsArrayOfTablesHeader))
+        {
+            return childNode!.Value!;
+        }
+        return Empty;
+    }
+
+    public CsTomlValue FindArrayOfTablesOrValue(ReadOnlySpan<ByteArray> keys)
+    {
+        var hit = false;
+        var currentNode = RootNode;
+        foreach (var key in keys)
+        {
+            if (currentNode!.TryGetChildNode(key.value, out var childNode))
+            {
+                hit = true;
+                currentNode = childNode;
+            }
+        }
+
+        if (hit && (!currentNode!.IsGroupingProperty || currentNode!.IsArrayOfTablesHeader))
+        {
+            return currentNode.Value!;
+        }
+
+        return Empty;
     }
 
     internal override bool ToTomlString(ref Utf8Writer writer)

@@ -17,7 +17,7 @@ public partial class CsTomlSerializer
         where TPackage : CsTomlPackage
     {
         var utf8Writer = new Utf8Writer(bufferWriter);
-        package.Serialize(ref utf8Writer);
+        package?.Serialize(ref utf8Writer);
     }
 
 }
