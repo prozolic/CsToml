@@ -16,13 +16,9 @@ public class TomlTest
     [Theory, MemberData(nameof(ValidTomlFile))]
     public void ValidTest(string tomlFile)
     {
-        var package = new CsTomlPackage
-        {
-            IsThrowCsTomlException = false
-        };
-        CsTomlSerializer.ReadAndDeserialize(ref package, tomlFile);
+        var package = CsTomlSerializer.ReadAndDeserialize<CsTomlPackage>(tomlFile, CsTomlSerializerOptions.NoThrow);
 
-        if (package.Exceptions.Count > 0)
+        if (package!.Exceptions.Count > 0)
         {
             Assert.Fail(package.Exceptions[0]!.InnerException!.ToString());
         }
@@ -31,13 +27,9 @@ public class TomlTest
     [Theory, MemberData(nameof(InvalidTomlFile))]
     public void InvalidTest(string tomlFile)
     {
-        var package = new CsTomlPackage
-        {
-            IsThrowCsTomlException = false
-        };
-        CsTomlSerializer.ReadAndDeserialize(ref package, tomlFile);
+        var package = CsTomlSerializer.ReadAndDeserialize<CsTomlPackage>(tomlFile, CsTomlSerializerOptions.NoThrow);
 
-        if (package.Exceptions.Count == 0)
+        if (package!.Exceptions.Count == 0)
         {
             Assert.Fail($@"{tomlFile}");
         }
