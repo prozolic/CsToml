@@ -1,10 +1,17 @@
 ﻿using CsToml.Error;
+using System.Collections.ObjectModel;
 using System.Numerics;
 
 namespace CsToml.Values;
 
 public partial class CsTomlValue
 {
+    public virtual ReadOnlyCollection<CsTomlValue> GetArray()
+        => ExceptionHelper.NotReturnThrow<ReadOnlyCollection<CsTomlValue>>(ExceptionHelper.ThrowInvalidCasting);
+
+    public virtual CsTomlValue GetArrayValue(int index)
+        => ExceptionHelper.NotReturnThrow<CsTomlValue>(ExceptionHelper.ThrowInvalidCasting);
+
     public virtual string GetString()
         => ExceptionHelper.NotReturnThrow<string>(ExceptionHelper.ThrowInvalidCasting);
 
@@ -43,6 +50,34 @@ public partial class CsTomlValue
         catch(NotSupportedException)
         {
             return ExceptionHelper.NotReturnThrow<T, string>(ExceptionHelper.ThrowNotSupported, nameof(T.CreateChecked));
+        }
+    }
+
+    public bool TryGetArray(out IReadOnlyList<CsTomlValue> value)
+    {
+        try
+        {
+            value = GetArray();
+            return true;
+        }
+        catch (CsTomlException)
+        {
+            value = default!;
+            return false;
+        }
+    }
+
+    public bool TryGetArrayValue(int index, out CsTomlValue value)
+    {
+        try
+        {
+            value = GetArrayValue(index);
+            return true;
+        }
+        catch (CsTomlException)
+        {
+            value = default!;
+            return false;
         }
     }
 
