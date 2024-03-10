@@ -12,7 +12,7 @@ internal class StringFormatter : ICsTomlFormatter<string>
 {
     public static void Serialize(ref Utf8Writer writer, string value)
     {
-        Serialize(ref writer, value);
+        Serialize(ref writer, value.AsSpan());
     }
 
     public static void Serialize(ref Utf8Writer writer, ReadOnlySpan<char> value)
