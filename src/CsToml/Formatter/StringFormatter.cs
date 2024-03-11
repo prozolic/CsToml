@@ -57,23 +57,19 @@ internal class StringFormatter : ICsTomlFormatter<string>
         }
         else
         {
-            var bufferBytes = ArrayPool<char>.Shared.Rent(maxBufferSize);
-            try
+            using var bufferWriter = new ArrayPoolBufferWriter<char>();
+            var bufferBytesSpan = bufferWriter.GetSpan(maxBufferSize);
+
+            var status = Utf8.ToUtf16(utf8Bytes, bufferBytesSpan, out var bytesRead, out var charsWritten, replaceInvalidSequences: false);
+            if (status != OperationStatus.Done)
             {
-                var bufferBytesSpan = bufferBytes.AsSpan();
-                var status = Utf8.ToUtf16(utf8Bytes, bufferBytesSpan, out var bytesRead, out var charsWritten, replaceInvalidSequences: false);
-                if (status != OperationStatus.Done)
-                {
-                    if (status == OperationStatus.InvalidData)
-                        ExceptionHelper.ThrowInvalidByteIncluded();
-                    ExceptionHelper.ThrowBufferTooSmallFailed();
-                }
-                return new string(bufferBytesSpan[..charsWritten]);
+                if (status == OperationStatus.InvalidData)
+                    ExceptionHelper.ThrowInvalidByteIncluded();
+                ExceptionHelper.ThrowBufferTooSmallFailed();
             }
-            finally
-            {
-                ArrayPool<char>.Shared.Return(bufferBytes);
-            }
+
+            bufferWriter.Advance(charsWritten);
+            return new string(bufferWriter.WrittenSpan);
         }
     }
 
