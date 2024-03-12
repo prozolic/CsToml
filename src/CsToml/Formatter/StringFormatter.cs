@@ -17,7 +17,7 @@ internal class StringFormatter : ICsTomlFormatter<string>
 
     public static void Serialize(ref Utf8Writer writer, ReadOnlySpan<char> value)
     {
-        var maxBufferSize = value.Length * 2;
+        var maxBufferSize = value.Length * 4;
 
         var status = Utf8.FromUtf16(value, writer.GetSpan(maxBufferSize),
             out int charsRead, out int bytesWritten, replaceInvalidSequences: false);
