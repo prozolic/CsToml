@@ -103,7 +103,7 @@ internal partial class CsTomlString :
     public override bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
     {
         var status = Utf8.ToUtf16(Value, destination, out var bytesRead, out charsWritten, replaceInvalidSequences: false);
-        return status != OperationStatus.Done;
+        return status == OperationStatus.Done;
     }
 
     public override string ToString(string? format, IFormatProvider? formatProvider) 

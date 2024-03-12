@@ -21,12 +21,12 @@ public abstract partial class CsTomlValue :
     }
 
     internal virtual bool ToTomlString(ref Utf8Writer writer) // Write TOML format.
-        => false;
+        => ExceptionHelper.NotReturnThrow<bool, string>(ExceptionHelper.ThrowNotSupported, nameof(ToTomlString));
 
     public virtual bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
     {
         charsWritten = 0;
-        return false;
+        return ExceptionHelper.NotReturnThrow<bool, string>(ExceptionHelper.ThrowNotSupported, nameof(TryFormat));
     }
 
     public virtual string ToString(string? format, IFormatProvider? formatProvider)
@@ -35,7 +35,7 @@ public abstract partial class CsTomlValue :
     public virtual bool TryFormat(Span<byte> utf8Destination, out int bytesWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
     {
         bytesWritten = 0;
-        return false;
+        return ExceptionHelper.NotReturnThrow<bool, string>(ExceptionHelper.ThrowNotSupported, nameof(TryFormat));
     }
 
     [DebuggerDisplay("None")]
