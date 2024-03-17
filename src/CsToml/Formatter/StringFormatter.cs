@@ -1,14 +1,12 @@
 ﻿
-using System;
 using System.Buffers;
-using System.ComponentModel.DataAnnotations;
 using System.Text.Unicode;
 using CsToml.Error;
 using CsToml.Utility;
 
 namespace CsToml.Formatter;
 
-internal class StringFormatter : ICsTomlFormatter<string>
+internal class StringFormatter : ICsTomlFormatter<string>, ICsTomlSpanFormatter<char>
 {
     public static void Serialize(ref Utf8Writer writer, string value)
     {

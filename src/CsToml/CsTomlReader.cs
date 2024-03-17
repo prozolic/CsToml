@@ -931,7 +931,7 @@ internal ref struct CsTomlReader
         if (sequenceReader.TryFullSpan(length, out var bytes))
         {
             var tempReader = new Utf8Reader(bytes);
-            var value = BoolFormatter.Deserialize(ref tempReader, (int)length);
+            ValueFormatter.Deserialize(ref tempReader, (int)length, out bool value);
             return new CsTomlBool(value);
         }
         else
@@ -941,7 +941,7 @@ internal ref struct CsTomlReader
             {
                 sequenceReader.TryGetbytes(length, rent);
                 var tempReader = new Utf8Reader(rent.WrittenSpan);
-                var value = BoolFormatter.Deserialize(ref tempReader, (int)length);
+                ValueFormatter.Deserialize(ref tempReader, (int)length, out bool value);
                 return new CsTomlBool(value);
             }
             finally
@@ -1210,7 +1210,7 @@ internal ref struct CsTomlReader
         }
 
         var tempReader = new Utf8Reader(writingSpan);
-        var value = Int64Formatter.Deserialize(ref tempReader, tempReader.Length);
+        ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out long value);
         return new CsTomlInt64(value);
     }
 
@@ -1272,7 +1272,7 @@ internal ref struct CsTomlReader
             ExceptionHelper.ThrowUnderscoreIsUsedAtTheEnd();
 
         var tempReader = new Utf8Reader(writer.WrittenSpan);
-        var value = Int64Formatter.Deserialize(ref tempReader, tempReader.Length);
+        ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out long value);
         return new CsTomlInt64(value);
     }
 
@@ -1334,7 +1334,7 @@ internal ref struct CsTomlReader
             ExceptionHelper.ThrowUnderscoreIsUsedAtTheEnd();
 
         var tempReader = new Utf8Reader(writer.WrittenSpan);
-        var value = Int64Formatter.Deserialize(ref tempReader, tempReader.Length);
+        ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out long value);
         return new CsTomlInt64(value);
     }
 
@@ -1396,7 +1396,7 @@ internal ref struct CsTomlReader
             ExceptionHelper.ThrowUnderscoreIsUsedAtTheEnd();
 
         var tempReader = new Utf8Reader(writer.WrittenSpan);
-        var value = Int64Formatter.Deserialize(ref tempReader, tempReader.Length);
+        ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out long value);
         return new CsTomlInt64(value);
     }
 
@@ -1537,7 +1537,7 @@ internal ref struct CsTomlReader
         }
 
         var tempReader = new Utf8Reader(writingSpan);
-        var value = DoubleFormatter.Deserialize(ref tempReader, tempReader.Length);
+        ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out double value);
         return new CsTomlDouble(value);
     }
 
@@ -1721,7 +1721,7 @@ internal ref struct CsTomlReader
             }
         }
         var tempReader = new Utf8Reader(bytes);
-        var value = DateTimeFormatter.Deserialize(ref tempReader, tempReader.Length);
+        ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out DateTime value);
         return new CsTomlLocalDateTime(value);
     }
 
@@ -1740,7 +1740,7 @@ internal ref struct CsTomlReader
         if (!CsTomlSyntax.IsNumber(bytes[9])) ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
 
         var tempReader = new Utf8Reader(bytes);
-        var value = DateOnlyFormatter.Deserialize(ref tempReader, tempReader.Length);
+        ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out DateOnly value);
         return new CsTomlLocalDate(value);
     }
 
@@ -1767,7 +1767,7 @@ internal ref struct CsTomlReader
         }
 
         var tempReader = new Utf8Reader(bytes);
-        var value = TimeOnlyFormatter.Deserialize(ref tempReader, tempReader.Length);
+        ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out TimeOnly value);
         return new CsTomlLocalTime(value);
     }
 
@@ -1801,7 +1801,7 @@ internal ref struct CsTomlReader
         if (!CsTomlSyntax.IsNumber(bytes[18])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
 
         var tempReader = new Utf8Reader(bytes);
-        var value = DateTimeOffsetFormatter.Deserialize(ref tempReader, tempReader.Length);
+        ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out DateTimeOffset value);
         return new CsTomlOffsetDateTime(value, false);
     }
 
@@ -1859,7 +1859,7 @@ internal ref struct CsTomlReader
         }
 
         var tempReader = new Utf8Reader(bytes);
-        var value = DateTimeOffsetFormatter.Deserialize(ref tempReader, tempReader.Length);
+        ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out DateTimeOffset value);
         return new CsTomlOffsetDateTime(value, true);
     }
 

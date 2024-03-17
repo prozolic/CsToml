@@ -35,7 +35,8 @@ internal sealed class CsTomlKey : CsTomlValue
         }
 
         var tempReader = new Utf8Reader(bufferWriter.WrittenSpan);
-        return StringFormatter.Deserialize(ref tempReader, tempReader.Length);
+        ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out string value);
+        return value;
     }
 
     public void Add(CsTomlString key)

@@ -23,7 +23,8 @@ internal partial class CsTomlString :
         get
         {
             var tempReader = new Utf8Reader(Value);
-            return StringFormatter.Deserialize(ref tempReader, tempReader.Length);
+            ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out string value);
+            return value;
         }
     }
 

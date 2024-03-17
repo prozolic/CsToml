@@ -13,7 +13,7 @@ internal partial class CsTomlLocalDate(DateOnly value) :
 
     internal override bool ToTomlString(ref Utf8Writer writer)
     {
-        DateOnlyFormatter.Serialize(ref writer, Value);
+        ValueFormatter.Serialize(ref writer, Value);
         return true;
     }
 

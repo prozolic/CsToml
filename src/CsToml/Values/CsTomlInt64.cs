@@ -13,7 +13,7 @@ internal partial class CsTomlInt64(long value) :
 
     internal override bool ToTomlString(ref Utf8Writer writer)
     {
-        Int64Formatter.Serialize(ref writer, Value);
+        ValueFormatter.Serialize(ref writer, Value);
         return true;
     }
 

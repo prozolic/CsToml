@@ -31,7 +31,7 @@ internal partial class CsTomlDouble(double value, CsTomlDouble.DoubleKind kind =
     {
         if (Kind == DoubleKind.Normal)
         {
-            DoubleFormatter.Serialize(ref writer, Value);
+            ValueFormatter.Serialize(ref writer, Value);
             return true;
         }
 

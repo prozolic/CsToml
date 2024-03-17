@@ -1,5 +1,7 @@
 ﻿using CsToml.Error;
+using CsToml.Formatter;
 using CsToml.Utility;
+using System.Buffers;
 
 namespace CsToml.Values;
 
@@ -10,6 +12,111 @@ internal partial class CsTomlString
         Success,
         Failure,
         Unescaped
+    }
+
+    public static CsTomlString ParseKey(ReadOnlySpan<byte> utf16String)
+    {
+        if (Utf8Helper.ContainInvalidSequences(utf16String))
+            ExceptionHelper.ThrowInvalidCodePoints();
+
+        var barekey = false;
+        var backslash = false;
+        var singleQuoted = false;
+        var doubleQuoted = false;
+        for (int i = 0; i < utf16String.Length; i++)
+        {
+            switch(utf16String[i])
+            {
+                case CsTomlSyntax.Symbol.BACKSLASH:
+                    backslash = true;
+                    break;
+                case CsTomlSyntax.Symbol.SINGLEQUOTED:
+                    singleQuoted = true;
+                    break;
+                case CsTomlSyntax.Symbol.DOUBLEQUOTED:
+                    doubleQuoted = true;
+                    break;
+                default:
+                    barekey = CsTomlSyntax.IsBareKey(utf16String[i]);
+                    break;
+            }
+        }
+        if (barekey)
+        {
+            return new CsTomlString(utf16String, CsTomlStringType.Unquoted);
+        }
+
+        if (backslash && !singleQuoted)
+        {
+            return new CsTomlString(utf16String, CsTomlStringType.Basic);
+        }
+
+        if (doubleQuoted && !singleQuoted)
+        {
+            return new CsTomlString(utf16String, CsTomlStringType.Literal);
+        }
+
+        if (Utf8Helper.ContainsEscapeChar(utf16String, true))
+        {
+            return new CsTomlString(utf16String, CsTomlStringType.Literal);
+        }
+        return new CsTomlString(utf16String, CsTomlStringType.Basic);
+    }
+
+    public static CsTomlString ParseKey(ReadOnlySpan<char> utf16String)
+    {
+        using var writer = new ArrayPoolBufferWriter<byte>(128);
+        var utf8Writer = new Utf8Writer(writer);
+        ValueFormatter.Serialize(ref utf8Writer, utf16String);
+
+        return ParseKey(writer.WrittenSpan);
+    }
+
+    public static CsTomlString Parse(ReadOnlySpan<byte> utf16String)
+    {
+        if (Utf8Helper.ContainInvalidSequences(utf16String))
+            ExceptionHelper.ThrowInvalidCodePoints();
+
+        // check newline
+        if (utf16String.Contains(CsTomlSyntax.Symbol.LINEFEED))
+        {
+            if (Utf8Helper.ContainsEscapeChar(utf16String, true))
+            {
+                return new CsTomlString(utf16String, CsTomlStringType.MultiLineLiteral);
+            }
+            return new CsTomlString(utf16String, CsTomlStringType.MultiLineBasic);
+        }
+
+        // check escape
+        if (Utf8Helper.ContainsEscapeChar(utf16String, true))
+        {
+            return new CsTomlString(utf16String, CsTomlStringType.Literal);
+        }
+
+        if (utf16String.Contains(CsTomlSyntax.Symbol.BACKSLASH) && !utf16String.Contains(CsTomlSyntax.Symbol.SINGLEQUOTED))
+        {
+            return new CsTomlString(utf16String, CsTomlStringType.Basic);
+        }
+
+        if (utf16String.Contains(CsTomlSyntax.Symbol.DOUBLEQUOTED))
+        {
+            if (!utf16String.Contains(CsTomlSyntax.Symbol.SINGLEQUOTED))
+            {
+                return new CsTomlString(utf16String, CsTomlStringType.Literal);
+            }
+            return new CsTomlString(utf16String, CsTomlStringType.MultiLineLiteral);
+        }
+
+        return new CsTomlString(utf16String, CsTomlStringType.Basic);
+    }
+
+    public static CsTomlString Parse(ReadOnlySpan<char> utf16String)
+    {
+        using var writer = new ArrayPoolBufferWriter<byte>(128);
+        var utf8Writer = new Utf8Writer(writer);
+        ValueFormatter.Serialize(ref utf8Writer, utf16String);
+
+        return Parse(writer.WrittenSpan);
     }
 
     public static EscapeSequenceResult TryFormatEscapeSequence(ref Utf8Reader reader, ref Utf8Writer utf8Writer, bool multiLine, bool throwError)

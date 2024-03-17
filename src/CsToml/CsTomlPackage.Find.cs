@@ -73,7 +73,7 @@ public partial class CsTomlPackage
         var utf8Writer = new Utf8Writer(writer);
         try
         {
-            StringFormatter.Serialize(ref utf8Writer, key);
+            ValueFormatter.Serialize(ref utf8Writer, key);
         }
         catch (CsTomlException)
         {
@@ -90,8 +90,8 @@ public partial class CsTomlPackage
         var keyrWriter = new Utf8Writer(writer);
         try
         {
-            StringFormatter.Serialize(ref tableHeaderWriter, tableHeader);
-            StringFormatter.Serialize(ref keyrWriter, key);
+            ValueFormatter.Serialize(ref tableHeaderWriter, tableHeader);
+            ValueFormatter.Serialize(ref keyrWriter, key);
         }
         catch (CsTomlException)
         {
@@ -187,7 +187,7 @@ public partial class CsTomlPackage
         var utf8Writer = new Utf8Writer(writer);
         try
         {
-            StringFormatter.Serialize(ref utf8Writer, keys);
+            ValueFormatter.Serialize(ref utf8Writer, keys);
         }
         catch (CsTomlException)
         {
@@ -234,8 +234,8 @@ public partial class CsTomlPackage
         var keyrWriter = new Utf8Writer(writer);
         try
         {
-            StringFormatter.Serialize(ref tableHeaderWriter, tableHeader);
-            StringFormatter.Serialize(ref keyrWriter, key);
+            ValueFormatter.Serialize(ref tableHeaderWriter, tableHeader);
+            ValueFormatter.Serialize(ref keyrWriter, key);
         }
         catch (CsTomlException)
         {
@@ -346,11 +346,11 @@ public partial class CsTomlPackage
     {
         using var writer = new ArrayPoolBufferWriter<byte>(128);
         var arrayOfTableHeaderWriter = new Utf8Writer(writer);
-        var keyrWriter = new Utf8Writer(writer);
+        var keyWriter = new Utf8Writer(writer);
         try
         {
-            StringFormatter.Serialize(ref arrayOfTableHeaderWriter, arrayOfTableHeader);
-            StringFormatter.Serialize(ref keyrWriter, key);
+            ValueFormatter.Serialize(ref arrayOfTableHeaderWriter, arrayOfTableHeader);
+            ValueFormatter.Serialize(ref keyWriter, key);
         }
         catch (CsTomlException)
         {
@@ -359,7 +359,7 @@ public partial class CsTomlPackage
         return Find(
             writer.WrittenSpan.Slice(0, arrayOfTableHeaderWriter.WrittingCount),
             arrayIndex,
-            writer.WrittenSpan.Slice(arrayOfTableHeaderWriter.WrittingCount, keyrWriter.WrittingCount),
+            writer.WrittenSpan.Slice(arrayOfTableHeaderWriter.WrittingCount, keyWriter.WrittingCount),
             options);
     }
 

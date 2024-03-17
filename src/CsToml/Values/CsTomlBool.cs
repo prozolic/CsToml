@@ -13,7 +13,7 @@ internal partial class CsTomlBool(bool value) :
 
     internal override bool ToTomlString(ref Utf8Writer writer)
     {
-        BoolFormatter.Serialize(ref writer, Value);
+        ValueFormatter.Serialize(ref writer, Value);
         return true;
     }
 

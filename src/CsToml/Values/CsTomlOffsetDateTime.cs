@@ -13,7 +13,7 @@ internal partial class CsTomlOffsetDateTime(DateTimeOffset value, bool byNumber)
 
     internal override bool ToTomlString(ref Utf8Writer writer)
     {
-        DateTimeOffsetFormatter.Serialize(ref writer, Value);
+        ValueFormatter.Serialize(ref writer, Value);
         return true;
     }
 

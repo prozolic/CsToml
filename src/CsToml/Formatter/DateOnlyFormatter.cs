@@ -1,11 +1,5 @@
 ﻿using CsToml.Error;
 using CsToml.Utility;
-using Microsoft.VisualBasic;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CsToml.Formatter;
 
@@ -13,8 +7,7 @@ internal class DateOnlyFormatter : ICsTomlFormatter<DateOnly>
 {
     public static void Serialize(ref Utf8Writer writer, DateOnly value)
     {
-        var format = "yyyy-MM-dd";
-        value.TryFormat(writer.GetWriteSpan(CsTomlSyntax.DateTime.LocalDateFormat.Length), out int bytesWritten, format);
+        value.TryFormat(writer.GetWriteSpan(CsTomlSyntax.DateTime.LocalDateFormat.Length), out int bytesWritten, "yyyy-MM-dd");
     }
 
     public static DateOnly Deserialize(ref Utf8Reader reader, int length)
