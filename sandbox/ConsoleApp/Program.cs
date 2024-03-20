@@ -54,6 +54,9 @@ if (testCsTomlpackage!.TryGetValue("key", out var value22))
 var serializedTomlText = CsTomlSerializer.Serialize(testCsTomlpackage);
 Console.WriteLine(Encoding.UTF8.GetString(serializedTomlText));
 
+var part = new TestPackagePart();
+var partBytes = CsTomlSerializer.Serialize(ref part);
+var partPackage = CsTomlSerializer.Deserialize<CsTomlPackage>(partBytes);
 
 Console.WriteLine("END");
 
