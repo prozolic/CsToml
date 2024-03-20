@@ -93,7 +93,57 @@ public partial class CsTomlSerializer : ICsTomlValueSerializer
     static void ICsTomlValueSerializer.SerializeDynamic<TWriter>(ref TWriter writer, dynamic value)
     {
         if (value == null) return;
-        SerializeDynamic<TWriter, CsTomlSerializer>(ref writer, value);
+
+        var utf8Writer = new Utf8Writer(writer);
+        switch (value.GetType())
+        {
+            case var t when t == typeof(bool):
+                ValueFormatter.Serialize(ref utf8Writer, (int)(value));
+                return;
+            case var t when t == typeof(byte):
+                ValueFormatter.Serialize(ref utf8Writer, (byte)(value));
+                return;
+            case var t2 when t2 == typeof(sbyte):
+                ValueFormatter.Serialize(ref utf8Writer, (sbyte)(value));
+                return;
+            case var t3 when t3 == typeof(int):
+                ValueFormatter.Serialize(ref utf8Writer, (int)(value));
+                return;
+            case var t4 when t4 == typeof(uint):
+                ValueFormatter.Serialize(ref utf8Writer, (uint)(value));
+                return;
+            case var t5 when t5 == typeof(long):
+                ValueFormatter.Serialize(ref utf8Writer, (long)(value));
+                return;
+            case var t6 when t6 == typeof(ulong):
+                ValueFormatter.Serialize(ref utf8Writer, (ulong)(value));
+                return;
+            case var t7 when t7 == typeof(short):
+                ValueFormatter.Serialize(ref utf8Writer, (short)(value));
+                return;
+            case var t8 when t8 == typeof(ushort):
+                ValueFormatter.Serialize(ref utf8Writer, (ushort)(value));
+                return;
+            case var t when t == typeof(double):
+                ValueFormatter.Serialize(ref utf8Writer, (double)(value));
+                return;
+            case var t when t == typeof(DateTime):
+                ValueFormatter.Serialize(ref utf8Writer, (DateTime)(value));
+                return;
+            case var t when t == typeof(DateTimeOffset):
+                ValueFormatter.Serialize(ref utf8Writer, (DateTimeOffset)(value));
+                return;
+            case var t when t == typeof(DateOnly):
+                ValueFormatter.Serialize(ref utf8Writer, (DateOnly)(value));
+                return;
+            case var t when t == typeof(TimeOnly):
+                ValueFormatter.Serialize(ref utf8Writer, (TimeOnly)(value));
+                return;
+            case var t when t == typeof(string):
+                var cstomlStr = CsTomlString.Parse((string)value);
+                cstomlStr.ToTomlString(ref utf8Writer);
+                return;
+        }
     }
 
     static void ICsTomlValueSerializer.SerializeKey<TWriter>(ref TWriter writer, ReadOnlySpan<char> value)
@@ -133,63 +183,6 @@ public partial class CsTomlSerializer : ICsTomlValueSerializer
             }
             var utf8Writer = new Utf8Writer(writer);
             arr.ToTomlString(ref utf8Writer);
-        }
-    }
-
-    private static void SerializeDynamic<TWriter, TSerializer>(ref TWriter writer, dynamic value)
-        where TWriter : IBufferWriter<byte>
-        where TSerializer : ICsTomlValueSerializer
-    {
-        switch (value.GetType())
-        {
-            case var t when t == typeof(bool):
-                TSerializer.Serialize(ref writer, (bool)value);
-                return;
-            case var t when t == typeof(byte):
-                TSerializer.Serialize(ref writer, (long)value);
-                return;
-            case var t when t == typeof(sbyte):
-                TSerializer.Serialize(ref writer, (long)value);
-                return;
-            case var t when t == typeof(int):
-                TSerializer.Serialize(ref writer, (long)value);
-                return;
-            case var t when t == typeof(uint):
-                TSerializer.Serialize(ref writer, (long)value);
-                return;
-            case var t when t == typeof(long):
-                TSerializer.Serialize(ref writer, (long)value);
-                return;
-            case var t when t == typeof(ulong):
-                TSerializer.Serialize(ref writer, (long)value);
-                return;
-            case var t when t == typeof(short):
-                TSerializer.Serialize(ref writer, (long)value);
-                return;
-            case var t when t == typeof(ushort):
-                TSerializer.Serialize(ref writer, (long)value);
-                return;
-            case var t when t == typeof(double):
-                TSerializer.Serialize(ref writer, (double)value);
-                return;
-            case var t when t == typeof(DateTime):
-                TSerializer.Serialize(ref writer, (DateTime)value);
-                return;
-            case var t when t == typeof(DateTimeOffset):
-                TSerializer.Serialize(ref writer, (DateTimeOffset)value);
-                return;
-            case var t when t == typeof(DateOnly):
-                TSerializer.Serialize(ref writer, (DateOnly)value);
-                return;
-            case var t when t == typeof(TimeOnly):
-                TSerializer.Serialize(ref writer, (TimeOnly)value);
-                return;
-            case var t when t == typeof(ReadOnlySpan<char>):
-                TSerializer.Serialize(ref writer, (ReadOnlySpan<char>)value);
-                return;
-            case var t when t == typeof(string):
-                TSerializer.Serialize(ref writer, ((string)value).AsSpan());
-                return;
         }
     }
 
