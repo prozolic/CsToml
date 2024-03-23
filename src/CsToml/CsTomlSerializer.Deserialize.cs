@@ -57,7 +57,7 @@ public partial class CsTomlSerializer
         }
     }
 
-    public static async ValueTask<TPackage?> ReadAndDeserializeAsync<TPackage>(string? path, CsTomlSerializerOptions? options = null, CancellationToken cancellationToken = default)
+    public static async ValueTask<TPackage?> ReadAndDeserializeAsync<TPackage>(string? path, CsTomlSerializerOptions? options = null, CancellationToken cancellationToken = default, bool configureAwait = true)
         where TPackage : CsTomlPackage, ICsTomlPackageCreator<TPackage>
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -73,7 +73,7 @@ public partial class CsTomlSerializer
         else if (length <= Array.MaxLength)
         {
             var bytes = new byte[length];
-            await RandomAccess.ReadAsync(handle, bytes.AsMemory(), 0, cancellationToken).ConfigureAwait(false);
+            await RandomAccess.ReadAsync(handle, bytes.AsMemory(), 0, cancellationToken).ConfigureAwait(configureAwait);
 
             var startIndex = Utf8Helper.ContainBOM(bytes) ? 3 : 0;
             var package = TPackage.CreatePackage();
@@ -84,12 +84,12 @@ public partial class CsTomlSerializer
         {
             // check BOM
             var utf8Bom = new byte[3];
-            await RandomAccess.ReadAsync(handle, utf8Bom.AsMemory(), 0, cancellationToken).ConfigureAwait(false); ;
+            await RandomAccess.ReadAsync(handle, utf8Bom.AsMemory(), 0, cancellationToken).ConfigureAwait(configureAwait); ;
             var startIndex = Utf8Helper.ContainBOM(utf8Bom) ? 3 : 0;
 
             using var bytes = new NativeByteMemoryArray(length - startIndex);
             var tomlMemories = bytes.AsMemoryList(0);
-            await RandomAccess.ReadAsync(handle, tomlMemories, startIndex, cancellationToken).ConfigureAwait(false);
+            await RandomAccess.ReadAsync(handle, tomlMemories, startIndex, cancellationToken).ConfigureAwait(configureAwait);
 
             var startSegment = new ByteSequenceSegment(tomlMemories[0]);
             startSegment.SetRunningIndex(0);
