@@ -8,14 +8,17 @@ namespace CsToml.Formatter;
 
 internal class StringFormatter : ICsTomlFormatter<string>, ICsTomlSpanFormatter<char>
 {
-    public static void Serialize(ref Utf8Writer writer, string value)
+    public static void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, string value)
+        where TBufferWriter : IBufferWriter<byte>
     {
         Serialize(ref writer, value.AsSpan());
     }
 
-    public static void Serialize(ref Utf8Writer writer, ReadOnlySpan<char> value)
+    public static void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, ReadOnlySpan<char> value)
+        where TBufferWriter : IBufferWriter<byte>
     {
-        var maxBufferSize = value.Length * 4;
+        // buffer size to 3 times worst-case (UTF8 -> UTF16)
+        var maxBufferSize = (value.Length + 1) * 3;
 
         var status = Utf8.FromUtf16(value, writer.GetSpan(maxBufferSize),
             out int charsRead, out int bytesWritten, replaceInvalidSequences: false);
@@ -38,8 +41,7 @@ internal class StringFormatter : ICsTomlFormatter<string>, ICsTomlSpanFormatter<
 
     private static string DeserializeCore(ReadOnlySpan<byte> utf8Bytes)
     {
-        // buffer size to 3 times worst-case (UTF8 -> UTF16)
-        var maxBufferSize = (utf8Bytes.Length * 3) / 2 + 1;
+        var maxBufferSize = utf8Bytes.Length * 2;
 
         if (maxBufferSize <= 128)
         {

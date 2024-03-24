@@ -1,5 +1,6 @@
 ﻿using CsToml.Formatter;
 using CsToml.Utility;
+using System.Buffers;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
@@ -24,8 +25,9 @@ internal sealed class CsTomlKey : CsTomlValue
 
     internal string GetJoinName()
     {
-        using var bufferWriter = new ArrayPoolBufferWriter<byte>();
-        var writer = new Utf8Writer(bufferWriter);
+        var bufferWriter = new ArrayPoolBufferWriter<byte>();
+        using var _ = bufferWriter;
+        var writer = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref bufferWriter);
         var dotKeysSpan = CollectionsMarshal.AsSpan(dotKeys);
         for (int i = 0; i < dotKeysSpan.Length; i++)
         {

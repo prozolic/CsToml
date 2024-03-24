@@ -1,12 +1,14 @@
 ﻿
 using CsToml.Error;
 using CsToml.Utility;
+using System.Buffers;
 
 namespace CsToml.Formatter;
 
 internal class DateTimeOffsetFormatter : ICsTomlFormatter<DateTimeOffset>
 {
-    public static void Serialize(ref Utf8Writer writer, DateTimeOffset value)
+    public static void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, DateTimeOffset value)
+        where TBufferWriter : IBufferWriter<byte>
     {
         var totalMicrosecond =  value.Millisecond * 1000 + value.Microsecond;
         var totalMinutes = value.Offset.TotalMinutes; // check timezone
@@ -79,7 +81,8 @@ internal class DateTimeOffsetFormatter : ICsTomlFormatter<DateTimeOffset>
         }
     }
 
-    private static void SerializeCore(ref Utf8Writer writer, DateTimeOffset value, ReadOnlySpan<char> format)
+    private static void SerializeCore<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, DateTimeOffset value, ReadOnlySpan<char> format)
+        where TBufferWriter : IBufferWriter<byte>
     {
         var length = 32;
         int bytesWritten;

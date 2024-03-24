@@ -65,8 +65,9 @@ internal partial class CsTomlString
 
     public static CsTomlString ParseKey(ReadOnlySpan<char> utf16String)
     {
-        using var writer = new ArrayPoolBufferWriter<byte>(128);
-        var utf8Writer = new Utf8Writer(writer);
+        var writer = new ArrayPoolBufferWriter<byte>(128);
+        using var _ = writer;
+        var utf8Writer = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
         ValueFormatter.Serialize(ref utf8Writer, utf16String);
 
         return ParseKey(writer.WrittenSpan);
@@ -112,17 +113,20 @@ internal partial class CsTomlString
 
     public static CsTomlString Parse(ReadOnlySpan<char> utf16String)
     {
-        using var writer = new ArrayPoolBufferWriter<byte>(128);
-        var utf8Writer = new Utf8Writer(writer);
+        var writer = new ArrayPoolBufferWriter<byte>(128);
+        using var _ = writer;
+        var utf8Writer = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
         ValueFormatter.Serialize(ref utf8Writer, utf16String);
 
         return Parse(writer.WrittenSpan);
     }
 
-    public static EscapeSequenceResult TryFormatEscapeSequence(ref Utf8Reader reader, ref Utf8Writer utf8Writer, bool multiLine, bool throwError)
+    public static EscapeSequenceResult TryFormatEscapeSequence<TBufferWriter>(ref Utf8Reader reader, ref TBufferWriter buffferWriter, bool multiLine, bool throwError)
+        where TBufferWriter : IBufferWriter<byte>
     {
         if (!reader.TryPeek(out var ch)) ExceptionHelper.ThrowEndOfFileReached();
 
+        var utf8Writer = new Utf8Writer<TBufferWriter>(ref buffferWriter);
         if (CsTomlSyntax.IsEscapeSequence(ch))
         {
             switch (ch)
@@ -155,7 +159,7 @@ internal partial class CsTomlString
                     reader.Advance(1);
                     try
                     {
-                        WriteAfterParsingFrom16bitCodePointToUtf8(ref reader, ref utf8Writer);
+                        WriteAfterParsingFrom16bitCodePointToUtf8(ref reader, ref buffferWriter);
                     }
                     catch (CsTomlException)
                     {
@@ -167,7 +171,7 @@ internal partial class CsTomlString
                     reader.Advance(1);
                     try
                     {
-                        WriteAfterParsingFrom32bitCodePointToUtf8(ref reader, ref utf8Writer);
+                        WriteAfterParsingFrom32bitCodePointToUtf8(ref reader, ref buffferWriter);
                     }
                     catch (CsTomlException)
                     {
@@ -189,10 +193,12 @@ internal partial class CsTomlString
         return EscapeSequenceResult.Success;
     }
 
-    public static EscapeSequenceResult TryFormatEscapeSequence(ref Utf8SequenceReader reader, ref Utf8Writer utf8Writer, bool multiLine, bool throwError)
+    public static EscapeSequenceResult TryFormatEscapeSequence<TBufferWriter>(ref Utf8SequenceReader reader, ref TBufferWriter buffferWriter, bool multiLine, bool throwError)
+        where TBufferWriter : IBufferWriter<byte>
     {
         if (!reader.TryPeek(out var ch)) ExceptionHelper.ThrowEndOfFileReached();
 
+        var utf8Writer = new Utf8Writer<TBufferWriter>(ref buffferWriter);
         if (CsTomlSyntax.IsEscapeSequence(ch))
         {
             switch (ch)
@@ -225,7 +231,7 @@ internal partial class CsTomlString
                     reader.Advance(1);
                     try
                     {
-                        WriteAfterParsingFrom16bitCodePointToUtf8(ref reader, ref utf8Writer);
+                        WriteAfterParsingFrom16bitCodePointToUtf8(ref reader, ref buffferWriter);
                     }
                     catch (CsTomlException)
                     {
@@ -237,7 +243,7 @@ internal partial class CsTomlString
                     reader.Advance(1);
                     try
                     {
-                        WriteAfterParsingFrom32bitCodePointToUtf8(ref reader, ref utf8Writer);
+                        WriteAfterParsingFrom32bitCodePointToUtf8(ref reader, ref buffferWriter);
                     }
                     catch (CsTomlException)
                     {
@@ -259,11 +265,13 @@ internal partial class CsTomlString
         return EscapeSequenceResult.Success;
     }
 
-    private static void WriteAfterParsingFrom16bitCodePointToUtf8(ref Utf8Reader reader, ref Utf8Writer utf8Writer)
+    private static void WriteAfterParsingFrom16bitCodePointToUtf8<TBufferWriter>(ref Utf8Reader reader, ref TBufferWriter bufferWriter)
+        where TBufferWriter : IBufferWriter<byte>
     {
         if (reader.Length < reader.Position + 4)
             ExceptionHelper.ThrowIncorrect16bitCodePoint();
 
+        var utf8Writer = new Utf8Writer<TBufferWriter>(ref bufferWriter);
         Span<byte> destination = stackalloc byte[4];
         var source = reader.ReadBytes(4);
 
@@ -274,11 +282,13 @@ internal partial class CsTomlString
         }
     }
 
-    private static void WriteAfterParsingFrom32bitCodePointToUtf8(ref Utf8Reader reader, ref Utf8Writer utf8Writer)
+    private static void WriteAfterParsingFrom32bitCodePointToUtf8<TBufferWriter>(ref Utf8Reader reader, ref TBufferWriter bufferWriter)
+        where TBufferWriter : IBufferWriter<byte>
     {
         if (reader.Length < reader.Position + 8)
             ExceptionHelper.ThrowIncorrect32bitCodePoint();
 
+        var utf8Writer = new Utf8Writer<TBufferWriter>(ref bufferWriter);
         Span<byte> destination = stackalloc byte[4];
         var source = reader.ReadBytes(8);
 
@@ -289,14 +299,15 @@ internal partial class CsTomlString
         }
     }
 
-    private static void WriteAfterParsingFrom16bitCodePointToUtf8(ref Utf8SequenceReader reader, ref Utf8Writer utf8Writer)
+    private static void WriteAfterParsingFrom16bitCodePointToUtf8<TBufferWriter>(ref Utf8SequenceReader reader, ref TBufferWriter bufferWriter)
+        where TBufferWriter : IBufferWriter<byte>
     {
         if (reader.Length < reader.Consumed + 4)
             ExceptionHelper.ThrowIncorrect16bitCodePoint();
 
+        var utf8Writer = new Utf8Writer<TBufferWriter>(ref bufferWriter);
         var length = 4;
         Span<byte> destination = stackalloc byte[length];
-        //var source = reader.ReadBytes(4);
 
         if (reader.TryFullSpan(length, out var bytes))
         {
@@ -325,11 +336,13 @@ internal partial class CsTomlString
         }
     }
 
-    private static void WriteAfterParsingFrom32bitCodePointToUtf8(ref Utf8SequenceReader reader, ref Utf8Writer utf8Writer)
+    private static void WriteAfterParsingFrom32bitCodePointToUtf8<TBufferWriter>(ref Utf8SequenceReader reader, ref TBufferWriter bufferWriter)
+        where TBufferWriter : IBufferWriter<byte>
     {
         if (reader.Length < reader.Consumed + 8)
             ExceptionHelper.ThrowIncorrect32bitCodePoint();
 
+        var utf8Writer = new Utf8Writer<TBufferWriter>(ref bufferWriter);
         Span<byte> destination = stackalloc byte[4];
 
         var length = 8;

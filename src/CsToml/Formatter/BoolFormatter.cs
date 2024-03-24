@@ -1,5 +1,6 @@
 ﻿using CsToml.Error;
 using CsToml.Utility;
+using System.Buffers;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -7,7 +8,8 @@ namespace CsToml.Formatter;
 
 internal class BoolFormatter : ICsTomlFormatter<bool>
 {
-    public static void Serialize(ref Utf8Writer writer, bool value)
+    public static void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, bool value)
+        where TBufferWriter : IBufferWriter<byte>
     {
         if (value)
         {

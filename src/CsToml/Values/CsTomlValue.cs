@@ -1,5 +1,6 @@
 ﻿using CsToml.Error;
 using CsToml.Utility;
+using System.Buffers;
 using System.Diagnostics;
 
 namespace CsToml.Values;
@@ -20,7 +21,8 @@ public abstract partial class CsTomlValue :
         this.Type = type;
     }
 
-    internal virtual bool ToTomlString(ref Utf8Writer writer) // Write TOML format.
+    internal virtual bool ToTomlString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer) // Write TOML format.
+        where TBufferWriter : IBufferWriter<byte>
         => ExceptionHelper.NotReturnThrow<bool, string>(ExceptionHelper.ThrowNotSupported, nameof(ToTomlString));
 
     public virtual bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)

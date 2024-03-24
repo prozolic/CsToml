@@ -5,9 +5,10 @@ using System.Runtime.CompilerServices;
 
 namespace CsToml.Utility;
 
-internal ref struct Utf8Writer(IBufferWriter<byte> writer)
+internal ref struct Utf8Writer<TBufferWriter>(ref TBufferWriter writer)
+    where TBufferWriter : IBufferWriter<byte>
 {
-    private IBufferWriter<byte> bufferWriter = writer;
+    private ref TBufferWriter bufferWriter = ref writer;
     private int writtingCount = 0;
 
     public readonly int WrittingCount => writtingCount;

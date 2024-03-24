@@ -1,5 +1,6 @@
 ﻿using CsToml.Formatter;
 using CsToml.Utility;
+using System.Buffers;
 using System.Diagnostics;
 
 namespace CsToml.Values;
@@ -11,7 +12,7 @@ internal partial class CsTomlBool(bool value) :
 {
     public bool Value { get; private set; } = value;
 
-    internal override bool ToTomlString(ref Utf8Writer writer)
+    internal override bool ToTomlString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
     {
         ValueFormatter.Serialize(ref writer, Value);
         return true;

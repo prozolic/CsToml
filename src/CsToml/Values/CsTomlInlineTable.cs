@@ -1,4 +1,5 @@
 ﻿using CsToml.Utility;
+using System.Buffers;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
@@ -18,10 +19,10 @@ internal class CsTomlInlineTable : CsTomlValue
     public void AddKeyValue(CsTomlKey csTomlKey, CsTomlValue value, CsTomlTableNode? searchRootNode)
         => inlineTable.AddKeyValue(csTomlKey, value, searchRootNode, []);
 
-    internal override bool ToTomlString(ref Utf8Writer writer)
+    internal override bool ToTomlString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
     {
         writer.Write(CsTomlSyntax.Symbol.LEFTBRACES);
-        var csTomlWriter = new CsTomlWriter(ref writer);
+        var csTomlWriter = new CsTomlWriter<TBufferWriter>(ref writer);
         csTomlWriter.WriteSpace();
 
         var keys = new List<CsTomlString>();
@@ -32,7 +33,8 @@ internal class CsTomlInlineTable : CsTomlValue
         return false;
     }
 
-    private void ToTomlStringCore(ref CsTomlWriter writer, CsTomlTableNode parentNode, List<CsTomlString> keys)
+    private void ToTomlStringCore<TBufferWriter>(ref CsTomlWriter<TBufferWriter> writer, CsTomlTableNode parentNode, List<CsTomlString> keys)
+        where TBufferWriter : IBufferWriter<byte>
     {
         var count = 0;
 

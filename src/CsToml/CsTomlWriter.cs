@@ -1,19 +1,21 @@
 ﻿using CsToml.Utility;
 using CsToml.Values;
+using System.Buffers;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace CsToml;
 
-internal ref struct CsTomlWriter
+internal ref struct CsTomlWriter<TBufferWriter>
+    where TBufferWriter : IBufferWriter<byte>
 {
-    private Utf8Writer writer;
+    private Utf8Writer<TBufferWriter> writer;
     private readonly ReadOnlySpan<byte> newLineCh;
 
     public readonly int WrittingCount => writer.WrittingCount;
 
     [DebuggerStepThrough]
-    public CsTomlWriter(ref Utf8Writer bufferWriter)
+    public CsTomlWriter(ref Utf8Writer<TBufferWriter> bufferWriter)
     {
         writer = bufferWriter;
         newLineCh = OperatingSystem.IsWindows() ? CsTomlSyntax.Symbol.WindowsNewLine : CsTomlSyntax.Symbol.UnixNewLine;

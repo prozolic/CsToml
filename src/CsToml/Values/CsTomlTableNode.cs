@@ -172,35 +172,42 @@ internal class CsTomlTableNode
         {
             var bufferSize = key.Length;
             var reader = new Utf8Reader(key);
-            using var bufferWriter = new ArrayPoolBufferWriter<byte>(bufferSize);
-            var writer = new Utf8Writer(bufferWriter);
+            var bufferWriter = new ArrayPoolBufferWriter<byte>(bufferSize);
+            var utf8Writer = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref bufferWriter);
 
-            if (firstEscapeSequenceIndex >= 1)
+            try
             {
-                writer.Write(key[..firstEscapeSequenceIndex]);
-                reader.Advance(firstEscapeSequenceIndex);
-            }
-
-            while (reader.TryPeek(out var ch))
-            {
-                if (CsTomlSyntax.IsBackSlash(ch))
+                if (firstEscapeSequenceIndex >= 1)
                 {
-                    reader.Advance(1);
-                    var result = CsTomlString.TryFormatEscapeSequence(ref reader, ref writer, false, false);
-                    if (result == CsTomlString.EscapeSequenceResult.Failure)
-                    {
-                        value = default;
-                        return false;
-                    }
-                    continue;
+                    utf8Writer.Write(key[..firstEscapeSequenceIndex]);
+                    reader.Advance(firstEscapeSequenceIndex);
                 }
 
-                writer.Write(ch);
-                reader.Advance(1);
-            }
+                while (reader.TryPeek(out var ch))
+                {
+                    if (CsTomlSyntax.IsBackSlash(ch))
+                    {
+                        reader.Advance(1);
+                        var result = CsTomlString.TryFormatEscapeSequence(ref reader, ref bufferWriter, false, false);
+                        if (result == CsTomlString.EscapeSequenceResult.Failure)
+                        {
+                            value = default;
+                            return false;
+                        }
+                        continue;
+                    }
 
-            // search Quoted keys
-            return TryGetChildNodeCore(bufferWriter.WrittenSpan, out value);
+                    utf8Writer.Write(ch);
+                    reader.Advance(1);
+                }
+
+                // search Quoted keys
+                return TryGetChildNodeCore(bufferWriter.WrittenSpan, out value);
+            }
+            finally
+            {
+                using (bufferWriter) { }
+            }
         }
     }
 

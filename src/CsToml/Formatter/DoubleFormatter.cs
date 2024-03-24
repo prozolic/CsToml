@@ -1,12 +1,14 @@
 ﻿
 using CsToml.Error;
 using CsToml.Utility;
+using System.Buffers;
 
 namespace CsToml.Formatter;
 
 internal class DoubleFormatter : ICsTomlFormatter<double>
 {
-    public static void Serialize(ref Utf8Writer writer, double value)
+    public static void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, double value)
+        where TBufferWriter : IBufferWriter<byte>
     {
         var length = 32;
         int bytesWritten;

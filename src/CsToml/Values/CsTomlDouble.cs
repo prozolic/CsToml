@@ -27,7 +27,7 @@ internal partial class CsTomlDouble(double value, CsTomlDouble.DoubleKind kind =
 
     internal DoubleKind Kind { get; } = kind;
 
-    internal override bool ToTomlString(ref Utf8Writer writer)
+    internal override bool ToTomlString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
     {
         if (Kind == DoubleKind.Normal)
         {

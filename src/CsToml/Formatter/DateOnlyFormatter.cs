@@ -1,11 +1,13 @@
 ﻿using CsToml.Error;
 using CsToml.Utility;
+using System.Buffers;
 
 namespace CsToml.Formatter;
 
 internal class DateOnlyFormatter : ICsTomlFormatter<DateOnly>
 {
-    public static void Serialize(ref Utf8Writer writer, DateOnly value)
+    public static void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, DateOnly value)
+        where TBufferWriter : IBufferWriter<byte>
     {
         value.TryFormat(writer.GetWriteSpan(CsTomlSyntax.DateTime.LocalDateFormat.Length), out int bytesWritten, "yyyy-MM-dd");
     }

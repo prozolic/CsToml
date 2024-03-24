@@ -1,11 +1,13 @@
 ﻿using CsToml.Error;
 using CsToml.Utility;
+using System.Buffers;
 
 namespace CsToml.Formatter;
 
 internal class DateTimeFormatter : ICsTomlFormatter<DateTime>
 {
-    public static void Serialize(ref Utf8Writer writer, DateTime value)
+    public static void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, DateTime value)
+        where TBufferWriter : IBufferWriter<byte>
     {
         var totalMicrosecond = value.Millisecond * 1000 + value.Microsecond;
         if (totalMicrosecond == 0)
@@ -44,7 +46,8 @@ internal class DateTimeFormatter : ICsTomlFormatter<DateTime>
         }
     }
 
-    private static void SerializeCore(ref Utf8Writer writer, DateTime value, ReadOnlySpan<char> format)
+    private static void SerializeCore<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, DateTime value, ReadOnlySpan<char> format)
+        where TBufferWriter : IBufferWriter<byte>
     {
         var length = 32;
         int bytesWritten;

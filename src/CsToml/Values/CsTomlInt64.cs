@@ -11,7 +11,7 @@ internal partial class CsTomlInt64(long value) :
 {
     public long Value { get; private set; } = value;
 
-    internal override bool ToTomlString(ref Utf8Writer writer)
+    internal override bool ToTomlString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
     {
         ValueFormatter.Serialize(ref writer, Value);
         return true;

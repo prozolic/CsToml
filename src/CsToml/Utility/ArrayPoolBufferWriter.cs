@@ -9,8 +9,6 @@ namespace CsToml.Utility;
 internal sealed class ArrayPoolBufferWriter<T> : IBufferWriter<T>, IDisposable
     where T : struct
 {
-    private const int ArrayMaxLength = 0x7FFFFFC7;
-
     private T[] buffer;
     private int index;
     private bool isRent = true;
@@ -55,14 +53,15 @@ internal sealed class ArrayPoolBufferWriter<T> : IBufferWriter<T>, IDisposable
 
     public void Reserve(int sizeHint)
     {
-        if (sizeHint <= buffer.Length - index) return;
+        if (sizeHint < buffer.Length - index) return;
 
         var newSize = buffer.Length * 2;
         if (sizeHint > newSize)
         {
             newSize = CalculateBufferSize(sizeHint);
         }
-        newSize = Math.Min(newSize, ArrayMaxLength);
+
+        newSize = Math.Min(newSize, Array.MaxLength);
 
         var newBuffer = ArrayPool<T>.Shared.Rent(newSize);
         try

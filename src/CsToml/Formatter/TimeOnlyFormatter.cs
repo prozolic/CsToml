@@ -1,11 +1,13 @@
 ﻿using CsToml.Error;
 using CsToml.Utility;
+using System.Buffers;
 
 namespace CsToml.Formatter;
 
 internal class TimeOnlyFormatter : ICsTomlFormatter<TimeOnly>
 {
-    public static void Serialize(ref Utf8Writer writer, TimeOnly value)
+    public static void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, TimeOnly value)
+        where TBufferWriter : IBufferWriter<byte>
     {
         var totalMicrosecond = value.Millisecond * 100 + value.Microsecond;
         if (totalMicrosecond == 0)
@@ -45,7 +47,8 @@ internal class TimeOnlyFormatter : ICsTomlFormatter<TimeOnly>
         }
     }
 
-    private static void SerializeCore(ref Utf8Writer writer, TimeOnly value, ReadOnlySpan<char> format)
+    private static void SerializeCore<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, TimeOnly value, ReadOnlySpan<char> format)
+        where TBufferWriter : IBufferWriter<byte>
     {
         value.TryFormat(writer.GetWriteSpan(format.Length), out var bytesWritten, format);
     }

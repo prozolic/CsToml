@@ -46,7 +46,7 @@ internal partial class CsTomlString :
         TomlStringType = type;
     }
 
-    internal override bool ToTomlString(ref Utf8Writer writer)
+    internal override bool ToTomlString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
     {
         if (TomlStringType == CsTomlStringType.Unquoted)
         {
@@ -123,7 +123,8 @@ internal partial class CsTomlString :
         return true;
     }
 
-    private bool ToTomlBasicString(ref Utf8Writer writer)
+    private bool ToTomlBasicString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
+        where TBufferWriter : IBufferWriter<byte>
     {
         writer.Write(CsTomlSyntax.Symbol.DOUBLEQUOTED);
 
@@ -172,7 +173,8 @@ internal partial class CsTomlString :
         return true;
     }
 
-    private bool ToTomlMultiLineBasicString(ref Utf8Writer writer)
+    private bool ToTomlMultiLineBasicString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
+        where TBufferWriter : IBufferWriter<byte>
     {
         writer.Write(CsTomlSyntax.Symbol.DOUBLEQUOTED);
         writer.Write(CsTomlSyntax.Symbol.DOUBLEQUOTED);
@@ -224,7 +226,8 @@ internal partial class CsTomlString :
         return true;
     }
 
-    private bool ToTomlLiteralString(ref Utf8Writer writer)
+    private bool ToTomlLiteralString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
+        where TBufferWriter : IBufferWriter<byte>
     {
         writer.Write(CsTomlSyntax.Symbol.SINGLEQUOTED);
         writer.Write(Value);
@@ -232,7 +235,8 @@ internal partial class CsTomlString :
         return true;
     }
 
-    private bool ToTomlMultiLineLiteralString(ref Utf8Writer writer)
+    private bool ToTomlMultiLineLiteralString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
+         where TBufferWriter : IBufferWriter<byte>
     {
         writer.Write(CsTomlSyntax.Symbol.SINGLEQUOTED);
         writer.Write(CsTomlSyntax.Symbol.SINGLEQUOTED);

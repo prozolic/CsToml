@@ -2,6 +2,7 @@
 using CsToml.Formatter;
 using CsToml.Utility;
 using CsToml.Values;
+using System.Buffers;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
@@ -361,7 +362,7 @@ internal ref struct CsTomlReader
         Advance(1); // "
 
         var writer = RecycleByteArrayPoolBufferWriter.Rent();
-        var utf8Writer = new Utf8Writer(writer);
+        var utf8Writer = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
 
         var closingQuotationMarks = false;
         while (TryPeek(out var ch))
@@ -375,7 +376,7 @@ internal ref struct CsTomlReader
             }
             else if (CsTomlSyntax.IsBackSlash(ch))
             {
-                FormatEscapeSequence(ref utf8Writer, multiLine: false);
+                FormatEscapeSequence(ref writer, multiLine: false);
                 continue;
             }
             utf8Writer.Write(ch);
@@ -423,7 +424,8 @@ internal ref struct CsTomlReader
 
         var closingThreeQuotationMarks = false;
         var writer = RecycleByteArrayPoolBufferWriter.Rent();
-        var utf8Writer = new Utf8Writer(writer);
+        var utf8Writer = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
+
         while (TryPeek(out var ch))
         {
             if (CsTomlSyntax.IsEscape(ch))
@@ -488,7 +490,7 @@ internal ref struct CsTomlReader
             }
             else if (CsTomlSyntax.IsBackSlash(ch))
             {
-                FormatEscapeSequence(ref utf8Writer, multiLine: true);
+                FormatEscapeSequence(ref writer, multiLine: true);
                 continue;
             }
 
@@ -514,11 +516,12 @@ internal ref struct CsTomlReader
 
     }
 
-    private void FormatEscapeSequence(ref Utf8Writer utf8Writer, bool multiLine)
+    private void FormatEscapeSequence<TBufferWriter>(ref TBufferWriter bufferWriter, bool multiLine)
+        where TBufferWriter : IBufferWriter<byte>
     {
         Advance(1); // /
 
-        var result = CsTomlString.TryFormatEscapeSequence(ref sequenceReader, ref utf8Writer, multiLine, true);
+        var result = CsTomlString.TryFormatEscapeSequence(ref sequenceReader, ref bufferWriter, multiLine, true);
         switch(result)
         {
             case CsTomlString.EscapeSequenceResult.Success:
@@ -1033,8 +1036,7 @@ internal ref struct CsTomlReader
                             var bufferWriter2 = RecycleByteArrayPoolBufferWriter.Rent();
                             try
                             {
-                                var wrtier = new Utf8Writer(bufferWriter2);
-                                WriteUntilWhiteSpaceOrNewLineOrCommaOrEndOfArrayForDateTime(ref wrtier);
+                                WriteUntilWhiteSpaceOrNewLineOrCommaOrEndOfArrayForDateTime(ref bufferWriter2);
                                 return ReadLocalTime(bufferWriter2.WrittenSpan);
                             }
                             finally
@@ -1057,8 +1059,7 @@ internal ref struct CsTomlReader
                             var bufferWriter2 = RecycleByteArrayPoolBufferWriter.Rent();
                             try
                             {
-                                var wrtier = new Utf8Writer(bufferWriter2);
-                                WriteUntilWhiteSpaceOrNewLineOrCommaOrEndOfArrayForDateTime(ref wrtier);
+                                WriteUntilWhiteSpaceOrNewLineOrCommaOrEndOfArrayForDateTime(ref bufferWriter2);
                                 return ReadLocalDateTimeOrOffset(bufferWriter2.WrittenSpan);
                             }
                             finally
@@ -1920,12 +1921,14 @@ internal ref struct CsTomlReader
         return bytes;
     }
 
-    private void WriteUntilWhiteSpaceOrNewLineOrCommaOrEndOfArrayForDateTime(ref Utf8Writer writer)
+    private void WriteUntilWhiteSpaceOrNewLineOrCommaOrEndOfArrayForDateTime<TBufferWriter>(ref TBufferWriter bufferWriter)
+        where TBufferWriter : IBufferWriter<byte>
     {
         var firstPosition = sequenceReader.Consumed;
         var delimiterSpace = false;
-
         var space = false;
+
+        var writer = new Utf8Writer<TBufferWriter>(ref bufferWriter);
         while (TryPeek(out var ch))
         {
             switch (ch)

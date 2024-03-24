@@ -1,6 +1,7 @@
 ﻿using CsToml.Error;
 using CsToml.Extension;
 using CsToml.Utility;
+using System.Buffers;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
@@ -350,9 +351,9 @@ internal partial class CsTomlTable : CsTomlValue
         return Empty;
     }
 
-    internal override bool ToTomlString(ref Utf8Writer writer)
+    internal override bool ToTomlString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
     {
-        var csTomlWriter = new CsTomlWriter(ref writer);
+        var csTomlWriter = new CsTomlWriter<TBufferWriter>(ref writer);
         var keys = new List<CsTomlString>();
         var tableNodes = new List<CsTomlString>();
         ToTomlStringCore(ref csTomlWriter, RootNode, keys, tableNodes);
@@ -360,7 +361,8 @@ internal partial class CsTomlTable : CsTomlValue
         return true;
     }
 
-    private void ToTomlStringCore(ref CsTomlWriter writer, CsTomlTableNode parentNode, List<CsTomlString> keys, List<CsTomlString> tableHeaderKeys)
+    private void ToTomlStringCore<TBufferWriter>(ref CsTomlWriter<TBufferWriter> writer, CsTomlTableNode parentNode, List<CsTomlString> keys, List<CsTomlString> tableHeaderKeys)
+        where TBufferWriter : IBufferWriter<byte>
     {
         if (parentNode.IsArrayOfTablesHeader)
         {

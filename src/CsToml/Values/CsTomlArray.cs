@@ -22,7 +22,7 @@ internal partial class CsTomlArray : CsTomlValue, IEnumerable<CsTomlValue>
     public CsTomlArray() : base(CsTomlType.Array)
     {}
 
-    internal override bool ToTomlString(ref Utf8Writer writer)
+    internal override bool ToTomlString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
     {
         writer.Write(CsTomlSyntax.Symbol.LEFTSQUAREBRACKET);
         writer.Write(CsTomlSyntax.Symbol.SPACE);

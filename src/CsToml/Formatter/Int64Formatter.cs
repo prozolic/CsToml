@@ -1,12 +1,14 @@
 ﻿using CsToml.Error;
 using CsToml.Utility;
+using System.Buffers;
 using System.Buffers.Text;
 
 namespace CsToml.Formatter;
 
 internal class Int64Formatter : ICsTomlFormatter<long>
 {
-    public static void Serialize(ref Utf8Writer writer, long value)
+    public static void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, long value)
+        where TBufferWriter : IBufferWriter<byte>
     {
         var length = CsTomlSyntax.Number.DigitsDecimalUnroll4(value);
         if (value < 0) length++;

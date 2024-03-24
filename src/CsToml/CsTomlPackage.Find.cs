@@ -2,6 +2,7 @@
 using CsToml.Formatter;
 using CsToml.Utility;
 using CsToml.Values;
+using System.Buffers;
 
 namespace CsToml;
 
@@ -69,25 +70,29 @@ public partial class CsTomlPackage
 
     public bool TryGetValue(ReadOnlySpan<char> key, out CsTomlValue? value, CsTomlPackageOptions? options = default)
     {
-        using var writer = new ArrayPoolBufferWriter<byte>(128);
-        var utf8Writer = new Utf8Writer(writer);
-        try
+        var writer = new ArrayPoolBufferWriter<byte>(128);
+        using(var _ = writer)
         {
-            ValueFormatter.Serialize(ref utf8Writer, key);
+            var utf8Writer = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
+            try
+            {
+                ValueFormatter.Serialize(ref utf8Writer, key);
+            }
+            catch (CsTomlException)
+            {
+                value = default;
+                return false;
+            }
+            return TryGetValue(writer.WrittenSpan, out value, options);
         }
-        catch (CsTomlException)
-        {
-            value = default;
-            return false;
-        }
-        return TryGetValue(writer.WrittenSpan, out value, options);
     }
 
     public bool TryGetValue(ReadOnlySpan<char> tableHeader, ReadOnlySpan<char> key, out CsTomlValue? value, CsTomlPackageOptions? options = default)
     {
-        using var writer = new ArrayPoolBufferWriter<byte>(128);
-        var tableHeaderWriter = new Utf8Writer(writer);
-        var keyrWriter = new Utf8Writer(writer);
+        var writer = new ArrayPoolBufferWriter<byte>(128);
+        using var _ = writer;
+        var tableHeaderWriter = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
+        var keyrWriter = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
         try
         {
             ValueFormatter.Serialize(ref tableHeaderWriter, tableHeader);
@@ -101,7 +106,7 @@ public partial class CsTomlPackage
         return TryGetValue(
             writer.WrittenSpan.Slice(0, tableHeaderWriter.WrittingCount),
             writer.WrittenSpan.Slice(tableHeaderWriter.WrittingCount, keyrWriter.WrittingCount),
-            out value, 
+            out value,
             options);
     }
 
@@ -183,18 +188,21 @@ public partial class CsTomlPackage
 
     public CsTomlValue? Find(ReadOnlySpan<char> keys, CsTomlPackageOptions? options = default)
     {
-        using var writer = new ArrayPoolBufferWriter<byte>(128);
-        var utf8Writer = new Utf8Writer(writer);
-        try
+        var writer = new ArrayPoolBufferWriter<byte>(128);
+        using (var _ = writer)
         {
-            ValueFormatter.Serialize(ref utf8Writer, keys);
-        }
-        catch (CsTomlException)
-        {
-            return default;
-        }
+            var utf8Writer = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
+            try
+            {
+                ValueFormatter.Serialize(ref utf8Writer, keys);
+            }
+            catch (CsTomlException)
+            {
+                return default;
+            }
 
-        return Find(writer.WrittenSpan, options);
+            return Find(writer.WrittenSpan, options);
+        }
     }
 
     public CsTomlValue? Find(ReadOnlySpan<ByteArray> keys, CsTomlPackageOptions? options = default)
@@ -229,9 +237,10 @@ public partial class CsTomlPackage
 
     public CsTomlValue? Find(ReadOnlySpan<char> tableHeader, ReadOnlySpan<char> key, CsTomlPackageOptions? options = default)
     {
-        using var writer = new ArrayPoolBufferWriter<byte>(128);
-        var tableHeaderWriter = new Utf8Writer(writer);
-        var keyrWriter = new Utf8Writer(writer);
+        var writer = new ArrayPoolBufferWriter<byte>(128);
+        using var _ = writer;
+        var tableHeaderWriter = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
+        var keyrWriter = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
         try
         {
             ValueFormatter.Serialize(ref tableHeaderWriter, tableHeader);
@@ -344,9 +353,10 @@ public partial class CsTomlPackage
 
     public CsTomlValue? Find(ReadOnlySpan<char> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<char> key, CsTomlPackageOptions? options = default)
     {
-        using var writer = new ArrayPoolBufferWriter<byte>(128);
-        var arrayOfTableHeaderWriter = new Utf8Writer(writer);
-        var keyWriter = new Utf8Writer(writer);
+        var writer = new ArrayPoolBufferWriter<byte>(128);
+        using var _ = writer;
+        var arrayOfTableHeaderWriter = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
+        var keyWriter = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
         try
         {
             ValueFormatter.Serialize(ref arrayOfTableHeaderWriter, arrayOfTableHeader);

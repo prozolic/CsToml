@@ -1,12 +1,14 @@
 ﻿using CsToml.Error;
 using CsToml.Utility;
 using CsToml.Values;
+using System.Buffers;
 
 namespace CsToml;
 
 public partial class CsTomlPackage
 {
-    internal void Serialize(ref Utf8Writer writer)
+    internal void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
+        where TBufferWriter : IBufferWriter<byte>
         => table.ToTomlString(ref writer);
 
     internal void Deserialize(ref Utf8SequenceReader reader, CsTomlSerializerOptions? options)

@@ -1,5 +1,5 @@
 ﻿using CsToml.Utility;
-using System.Diagnostics;
+using System.Buffers;
 using System.Runtime.CompilerServices;
 
 namespace CsToml.Formatter;
@@ -7,57 +7,66 @@ namespace CsToml.Formatter;
 internal sealed class ValueFormatter
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void Serialize(ref Utf8Writer writer, bool value)
+    public static void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, bool value)
+        where TBufferWriter : IBufferWriter<byte>
     {
-        SerializeCore<BoolFormatter, bool>(ref writer, value);
+        SerializeCore<BoolFormatter, TBufferWriter, bool>(ref writer, value);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void Serialize(ref Utf8Writer writer, long value)
+    public static void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, long value)
+        where TBufferWriter : IBufferWriter<byte>
     {
-        SerializeCore<Int64Formatter, long>(ref writer, value);
+        SerializeCore<Int64Formatter, TBufferWriter, long>(ref writer, value);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void Serialize(ref Utf8Writer writer, double value)
+    public static void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, double value)
+        where TBufferWriter : IBufferWriter<byte>
     {
-        SerializeCore<DoubleFormatter, double>(ref writer, value);
+        SerializeCore<DoubleFormatter, TBufferWriter, double>(ref writer, value);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void Serialize(ref Utf8Writer writer, DateTime value)
+    public static void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, DateTime value)
+        where TBufferWriter : IBufferWriter<byte>
     {
-        SerializeCore<DateTimeFormatter, DateTime>(ref writer, value);
+        SerializeCore<DateTimeFormatter, TBufferWriter, DateTime>(ref writer, value);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void Serialize(ref Utf8Writer writer, DateTimeOffset value)
+    public static void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, DateTimeOffset value)
+        where TBufferWriter : IBufferWriter<byte>
     {
-        SerializeCore<DateTimeOffsetFormatter, DateTimeOffset>(ref writer, value);
+        SerializeCore<DateTimeOffsetFormatter, TBufferWriter, DateTimeOffset>(ref writer, value);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void Serialize(ref Utf8Writer writer, DateOnly value)
+    public static void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, DateOnly value)
+        where TBufferWriter : IBufferWriter<byte>
     {
-        SerializeCore<DateOnlyFormatter, DateOnly>(ref writer, value);
+        SerializeCore<DateOnlyFormatter, TBufferWriter, DateOnly>(ref writer, value);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void Serialize(ref Utf8Writer writer, TimeOnly value)
+    public static void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, TimeOnly value)
+        where TBufferWriter : IBufferWriter<byte>
     {
-        SerializeCore<TimeOnlyFormatter, TimeOnly>(ref writer, value);
+        SerializeCore<TimeOnlyFormatter, TBufferWriter, TimeOnly>(ref writer, value);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void Serialize(ref Utf8Writer writer, string value)
+    public static void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, string value)
+        where TBufferWriter : IBufferWriter<byte>
     {
-        SerializeCore<StringFormatter, string>(ref writer, value);
+        SerializeCore<StringFormatter, TBufferWriter, string>(ref writer, value);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void Serialize(ref Utf8Writer writer, ReadOnlySpan<char> value)
+    public static void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, ReadOnlySpan<char> value)
+        where TBufferWriter : IBufferWriter<byte>
     {
-        SerializeCore<StringFormatter, char>(ref writer, value);
+        SerializeCore<StringFormatter, TBufferWriter, char>(ref writer, value);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -108,14 +117,16 @@ internal sealed class ValueFormatter
         DeserializeCore<StringFormatter, string>(ref reader, length, out value);
     }
 
-    private static void SerializeCore<TFormatter, TValue>(ref Utf8Writer writer, TValue value)
+    private static void SerializeCore<TFormatter, TBufferWriter, TValue>(ref Utf8Writer<TBufferWriter> writer, TValue value)
         where TFormatter : ICsTomlFormatter<TValue>
+        where TBufferWriter : IBufferWriter<byte>
     {
         TFormatter.Serialize(ref writer, value);
     }
 
-    private static void SerializeCore<TSpanFormatter, TValue>(ref Utf8Writer writer, ReadOnlySpan<TValue> value)
+    private static void SerializeCore<TSpanFormatter, TBufferWriter, TValue>(ref Utf8Writer<TBufferWriter> writer, ReadOnlySpan<TValue> value)
         where TSpanFormatter : ICsTomlSpanFormatter<TValue>
+        where TBufferWriter : IBufferWriter<byte>
         where TValue : struct
     {
         TSpanFormatter.Serialize(ref writer, value);
