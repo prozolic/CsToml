@@ -18,7 +18,7 @@ internal ref struct CsTomlWriter<TBufferWriter>
     public CsTomlWriter(ref Utf8Writer<TBufferWriter> bufferWriter)
     {
         writer = bufferWriter;
-        newLineCh = OperatingSystem.IsWindows() ? CsTomlSyntax.Symbol.WindowsNewLine : CsTomlSyntax.Symbol.UnixNewLine;
+        newLineCh = CsTomlSyntax.Symbol.GetNewLine();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -32,6 +32,37 @@ internal ref struct CsTomlWriter<TBufferWriter>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteSpace()
         => writer.Write(CsTomlSyntax.Symbol.SPACE);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteTable()
+        => writer.Write(CsTomlSyntax.Symbol.LEFTSQUAREBRACKET);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteTableEnd()
+        => writer.Write(CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteArrayOfTables()
+    {
+        WriteTable();
+        WriteTable();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteArrayOfTablesEnd()
+    {
+        WriteTableEnd();
+        WriteTableEnd();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteEquals()
+    {
+        var span = writer.GetWriteSpan(3);
+        span[2] = CsTomlSyntax.Symbol.SPACE;
+        span[1] = CsTomlSyntax.Symbol.EQUAL;
+        span[0] = CsTomlSyntax.Symbol.SPACE;
+    }
 
     public void WriteKeyValue(in CsTomlString key, CsTomlValue value)
     {
@@ -57,17 +88,9 @@ internal ref struct CsTomlWriter<TBufferWriter>
         }
     }
 
-    public void WriteEquals()
-    {
-        var span = writer.GetWriteSpan(3);
-        span[2] = CsTomlSyntax.Symbol.SPACE;
-        span[1] = CsTomlSyntax.Symbol.EQUAL;
-        span[0] = CsTomlSyntax.Symbol.SPACE;
-    }
-
     public void WriteTableHeader(ReadOnlySpan<CsTomlString> keysSpan)
     {
-        writer.Write(CsTomlSyntax.Symbol.LEFTSQUAREBRACKET);
+        WriteTable();
         if (keysSpan.Length > 0)
         {
             for (var i = 0; i < keysSpan.Length; i++)
@@ -75,14 +98,13 @@ internal ref struct CsTomlWriter<TBufferWriter>
                 WriterKey(in keysSpan[i], i < keysSpan.Length - 1);
             }
         }
-        writer.Write(CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET);
+        WriteTableEnd();
         WriteNewLine();
     }
 
     public void WriteArrayOfTablesHeader(ReadOnlySpan<CsTomlString> keysSpan)
     {
-        writer.Write(CsTomlSyntax.Symbol.LEFTSQUAREBRACKET);
-        writer.Write(CsTomlSyntax.Symbol.LEFTSQUAREBRACKET);
+        WriteArrayOfTables();
         if (keysSpan.Length > 0)
         {
             for (var i = 0; i < keysSpan.Length; i++)
@@ -90,8 +112,7 @@ internal ref struct CsTomlWriter<TBufferWriter>
                 WriterKey(in keysSpan[i], i < keysSpan.Length - 1);
             }
         }
-        writer.Write(CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET);
-        writer.Write(CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET);
+        WriteArrayOfTablesEnd();
         WriteNewLine();
     }
 

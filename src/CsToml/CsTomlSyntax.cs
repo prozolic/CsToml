@@ -118,8 +118,35 @@ internal static class CsTomlSyntax
         public const byte PERIOD = 0x2e;
         public const byte COMMA = 0x2c;
 
-        public static readonly byte[] UnixNewLine = [LINEFEED];
-        public static readonly byte[] WindowsNewLine = [CARRIAGE, LINEFEED]; 
+        private static readonly byte[] UnixNewLine = [LINEFEED];
+        private static readonly byte[] WindowsNewLine = [CARRIAGE, LINEFEED];
+        private static byte[]? NewLine;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ReadOnlySpan<byte> GetNewLine()
+        {
+            NewLine ??= OperatingSystem.IsWindows() ? WindowsNewLine : UnixNewLine;
+            return NewLine;
+        }
+
+        public static void SetNewline(NewLineOption option)
+        {
+            switch(option)
+            {
+                case NewLineOption.Default:
+                    NewLine = OperatingSystem.IsWindows() ? WindowsNewLine : UnixNewLine;
+                    break;
+                case NewLineOption.Lf:
+                    NewLine = UnixNewLine;
+                    break;
+                case NewLineOption.CrLf:
+                    NewLine = WindowsNewLine;
+                    break;
+                default:
+                    NewLine = OperatingSystem.IsWindows() ? WindowsNewLine : UnixNewLine;
+                    break;
+            }
+        }
     }
 
     public readonly struct DateTime
@@ -162,10 +189,6 @@ internal static class CsTomlSyntax
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsNewLine(byte rawByte)
         => IsCr(rawByte) || IsLf(rawByte);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsLineBreak(byte rawByte)
-        => IsLf(rawByte);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsBareKey(byte rawByte)

@@ -19,6 +19,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CsToml.Tests", "tests\CsTom
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CsToml.Generator", "src\CsToml.Generator\CsToml.Generator.csproj", "{1F890883-85D7-4A5A-9FF2-9355367F455F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsToml.Generator.Tests", "tests\CsToml.Generator.Tests\CsToml.Generator.Tests.csproj", "{9AEBDFED-E0B9-4C1D-94BE-B2D185DD1A2A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +47,10 @@ Global
 		{1F890883-85D7-4A5A-9FF2-9355367F455F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1F890883-85D7-4A5A-9FF2-9355367F455F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1F890883-85D7-4A5A-9FF2-9355367F455F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9AEBDFED-E0B9-4C1D-94BE-B2D185DD1A2A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9AEBDFED-E0B9-4C1D-94BE-B2D185DD1A2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9AEBDFED-E0B9-4C1D-94BE-B2D185DD1A2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9AEBDFED-E0B9-4C1D-94BE-B2D185DD1A2A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -55,6 +61,7 @@ Global
 		{0BE69029-0C9E-4A15-8E6F-1B0159399DC8} = {A15E98B9-5239-4EFB-A5D7-6E888B644890}
 		{80A764EF-0BBD-4237-8022-E17A4F86B4C0} = {D1DA58D2-DF19-442A-B61A-BE8A473DE878}
 		{1F890883-85D7-4A5A-9FF2-9355367F455F} = {A9C74E56-F4CF-45C0-8DD4-AEF20E74E454}
+		{9AEBDFED-E0B9-4C1D-94BE-B2D185DD1A2A} = {D1DA58D2-DF19-442A-B61A-BE8A473DE878}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D2BE6D04-CA64-4762-A4A8-413B4115D763}

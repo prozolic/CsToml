@@ -7,9 +7,21 @@ namespace CsToml;
 
 public partial class CsTomlPackage
 {
-    internal void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
+    internal void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, CsTomlSerializerOptions? options)
         where TBufferWriter : IBufferWriter<byte>
-        => table.ToTomlString(ref writer);
+    {
+        options ??= CsTomlSerializerOptions.Default;
+        CsTomlSyntax.Symbol.SetNewline(options.NewLine);
+        try
+        {
+            table.ToTomlString(ref writer);
+        }
+        catch (CsTomlException) 
+        {
+            if (options.IsThrowCsTomlException)
+                throw;
+        }
+    }
 
     internal void Deserialize(ref Utf8SequenceReader reader, CsTomlSerializerOptions? options)
     {

@@ -1,4 +1,5 @@
-﻿using CsToml.Formatter;
+﻿using CsToml.Error;
+using CsToml.Formatter;
 using CsToml.Utility;
 using CsToml.Values;
 using System.Buffers;
@@ -8,37 +9,47 @@ namespace CsToml;
 
 public partial class CsTomlSerializer : ICsTomlValueSerializer
 {
-    public static ByteMemoryResult Serialize<TPackagePart>(ref TPackagePart target)
+    public static ByteMemoryResult Serialize<TPackagePart>(ref TPackagePart target, CsTomlSerializerOptions? options = null)
         where TPackagePart : ICsTomlPackagePart<TPackagePart>
     {
         var writer = new ArrayPoolBufferWriter<byte>();
         using var _ = writer;
-        Serialize(ref writer, ref target);
+        Serialize(ref writer, ref target, options);
         return ByteMemoryResult.Create(writer);
     }
 
-    public static void Serialize<TBufferWriter, TPackagePart>(ref TBufferWriter bufferWriter, ref TPackagePart target)
+    public static void Serialize<TBufferWriter, TPackagePart>(ref TBufferWriter bufferWriter, ref TPackagePart target, CsTomlSerializerOptions? options = null)
         where TBufferWriter : IBufferWriter<byte>
         where TPackagePart : ICsTomlPackagePart<TPackagePart>
     {
-        TPackagePart.Serialize<TBufferWriter, CsTomlSerializer>(ref bufferWriter, ref target);
+        options ??= CsTomlSerializerOptions.Default;
+        CsTomlSyntax.Symbol.SetNewline(options.NewLine);
+        try
+        {
+            TPackagePart.Serialize<TBufferWriter, CsTomlSerializer>(ref bufferWriter, ref target, options);
+        }
+        catch (CsTomlException)
+        {
+            if (options.IsThrowCsTomlException)
+                throw;
+        }
     }
 
-    public static ByteMemoryResult Serialize<TPackage>(TPackage? package)
+    public static ByteMemoryResult Serialize<TPackage>(TPackage? package, CsTomlSerializerOptions? options = null)
         where TPackage : CsTomlPackage
     {
         var writer = new ArrayPoolBufferWriter<byte>();
         using var _ = writer;
-        Serialize(ref writer, package);
+        Serialize(ref writer, package, options);
         return ByteMemoryResult.Create(writer);
     }
 
-    public static void Serialize<TBufferWriter, TPackage>(ref TBufferWriter bufferWriter, TPackage? package)
+    public static void Serialize<TBufferWriter, TPackage>(ref TBufferWriter bufferWriter, TPackage? package, CsTomlSerializerOptions? options = null)
         where TBufferWriter : IBufferWriter<byte>
         where TPackage : CsTomlPackage
     {
         var utf8Writer = new Utf8Writer<TBufferWriter>(ref bufferWriter);
-        package?.Serialize(ref utf8Writer);
+        package?.Serialize(ref utf8Writer, options);
     }
 
     #region ICsTomlValueSerializer
@@ -148,13 +159,6 @@ public partial class CsTomlSerializer : ICsTomlValueSerializer
         }
     }
 
-    static void ICsTomlValueSerializer.SerializeKey<TBufferWriter>(ref TBufferWriter writer, ReadOnlySpan<char> value)
-    {
-        var cstomlStr = CsTomlString.ParseKey(value);
-        var utf8Writer = new Utf8Writer<TBufferWriter>(ref writer);
-        cstomlStr.ToTomlString(ref utf8Writer);
-    }
-
     static void ICsTomlValueSerializer.Serialize<TBufferWriter, TArrayItem>(ref TBufferWriter writer, IEnumerable<TArrayItem> value)
     {
         if (value is List<TArrayItem> list)
@@ -186,6 +190,43 @@ public partial class CsTomlSerializer : ICsTomlValueSerializer
             var utf8Writer = new Utf8Writer<TBufferWriter>(ref writer);
             arr.ToTomlString(ref utf8Writer);
         }
+    }
+
+    static void ICsTomlValueSerializer.SerializeKey<TBufferWriter>(ref TBufferWriter writer, ReadOnlySpan<char> value)
+    {
+        var cstomlStr = CsTomlString.ParseKey(value);
+        var utf8Writer = new Utf8Writer<TBufferWriter>(ref writer);
+        cstomlStr.ToTomlString(ref utf8Writer);
+    }
+
+    static void ICsTomlValueSerializer.SerializeTableHeader<TBufferWriter>(ref TBufferWriter writer, ReadOnlySpan<char> value)
+    {
+        var utf8Writer = new Utf8Writer<TBufferWriter>(ref writer);
+        var csTomlWriter = new CsTomlWriter<TBufferWriter>(ref utf8Writer);
+        var str = CsTomlString.ParseKey(value);
+        csTomlWriter.WriteTableHeader([str]);
+    }
+
+    static void ICsTomlValueSerializer.SerializeArrayOfTablesHeader<TBufferWriter>(ref TBufferWriter writer, ReadOnlySpan<char> value)
+    {
+        var utf8Writer = new Utf8Writer<TBufferWriter>(ref writer);
+        var csTomlWriter = new CsTomlWriter<TBufferWriter>(ref utf8Writer);
+        var str = CsTomlString.ParseKey(value);
+        csTomlWriter.WriteArrayOfTablesHeader([str]);
+    }
+
+    static void ICsTomlValueSerializer.SerializeNewLine<TBufferWriter>(ref TBufferWriter writer)
+    {
+        var utfWriter = new Utf8Writer<TBufferWriter>(ref writer);
+        var csTomlWriter = new CsTomlWriter<TBufferWriter>(ref utfWriter);
+        csTomlWriter.WriteNewLine();
+    }
+
+    static void ICsTomlValueSerializer.SerializeEqual<TBufferWriter>(ref TBufferWriter writer)
+    {
+        var utfWriter = new Utf8Writer<TBufferWriter>(ref writer);
+        var csTomlWriter = new CsTomlWriter<TBufferWriter>(ref utfWriter);
+        csTomlWriter.WriteEquals();
     }
 
     #endregion

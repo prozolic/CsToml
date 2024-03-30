@@ -68,15 +68,6 @@ internal sealed class CsTomlArrayOfTablesKeyAttribute : Attribute
         var generator = new CsTomlValueSerializerGenerator(typeSymbol, typeNode!);
         var serializerProcessCode = generator.Generate(context);
 
-        var param = serializerProcessCode.Length > 0 ? $$"""
-        var equals = " = "u8;
-        var linefeed = "\n"u8;
-        var tableStart = "["u8;
-        var tableEnd = "]"u8;
-        var arrayOfTableStart = "[["u8;
-        var arrayOfTableEnd = "]]"u8;
-""" : string.Empty;
-
         var code = $$"""
 #nullable enable
 #pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
@@ -94,9 +85,8 @@ namespace {{ns}};
 
 partial class {{typeSymbol.Name}} : ICsTomlPackagePart<{{typeSymbol.Name}}>
 {
-    static void ICsTomlPackagePart<{{typeSymbol.Name}}>.Serialize<TBufferWriter, ICsTomlValueSerializer>(ref TBufferWriter writer, ref {{typeSymbol.Name}} target)
+    static void ICsTomlPackagePart<{{typeSymbol.Name}}>.Serialize<TBufferWriter, ICsTomlValueSerializer>(ref TBufferWriter writer, ref {{typeSymbol.Name}} target, CsTomlSerializerOptions? options = null)
     {
-{{param}}
 
 {{serializerProcessCode}}
 
@@ -157,17 +147,15 @@ partial class {{typeSymbol.Name}} : ICsTomlPackagePart<{{typeSymbol.Name}}>
                         continue;
                     }
                     builder.AppendLine($"        ICsTomlValueSerializer.SerializeKey(ref writer, nameof({typeSymbol.Name}.{property.Name}));");
-                    builder.AppendLine($"        writer.Write(equals);");
+                    builder.AppendLine($"        ICsTomlValueSerializer.SerializeEqual(ref writer);");
                     builder.AppendLine($"        ICsTomlValueSerializer.Serialize(ref writer, target.{accessName}{property.Name});");
-                    builder.AppendLine($"        writer.Write(linefeed);");
+                    builder.AppendLine($"        ICsTomlValueSerializer.SerializeNewLine(ref writer);");
                 }
                 else if (type == CsTomlValueType.Table)
                 {
-                    builder.AppendLine($"        writer.Write(linefeed);");
-                    builder.AppendLine($"        writer.Write(tableStart);");
-                    builder.AppendLine($"        ICsTomlValueSerializer.SerializeKey(ref writer, nameof(target.{property.Name}));");
-                    builder.AppendLine($"        writer.Write(tableEnd);");
-                    builder.AppendLine($"        writer.Write(linefeed);");
+                    builder.AppendLine($"        ICsTomlValueSerializer.SerializeNewLine(ref writer);");
+                    builder.AppendLine($"        ICsTomlValueSerializer.SerializeTableHeader(ref writer, nameof(target.{property.Name}));");
+                    builder.AppendLine($"        ICsTomlValueSerializer.SerializeNewLine(ref writer);");
                     GenerateProcessCodeTable(
                         context, $"{property.Name}.", 
                         (INamedTypeSymbol)property.Type, 
@@ -190,11 +178,9 @@ partial class {{typeSymbol.Name}} : ICsTomlPackagePart<{{typeSymbol.Name}}>
                         a.AttributeClass!.Name == "CsTomlArrayOfTablesKeyAttribute").FirstOrDefault();
                     if (attr == null) continue;
 
-                    builder.AppendLine($"        writer.Write(linefeed);");
-                    builder.AppendLine($"        writer.Write(arrayOfTableStart);");
-                    builder.AppendLine($"        ICsTomlValueSerializer.SerializeKey(ref writer, \"{attr.ConstructorArguments[0].Value!}\");");
-                    builder.AppendLine($"        writer.Write(arrayOfTableEnd);");
-                    builder.AppendLine($"        writer.Write(linefeed);");
+                    builder.AppendLine($"        ICsTomlValueSerializer.SerializeNewLine(ref writer);");
+                    builder.AppendLine($"        ICsTomlValueSerializer.SerializeArrayOfTablesHeader(ref writer, \"{attr.ConstructorArguments[0].Value!}\");");
+                    builder.AppendLine($"        ICsTomlValueSerializer.SerializeNewLine(ref writer);");
 
                     GenerateProcessCodeCore(
                         context, $"{property.Name}.",
@@ -226,7 +212,7 @@ partial class {{typeSymbol.Name}} : ICsTomlPackagePart<{{typeSymbol.Name}}>
                         continue;
                     }
                     builder.AppendLine($"        ICsTomlValueSerializer.SerializeKey(ref writer, nameof({typeSymbol.Name}.{property.Name}));");
-                    builder.AppendLine($"        writer.Write(equals);");
+                    builder.AppendLine($"        ICsTomlValueSerializer.SerializeEqual(ref writer);");
                     if (property.Type.SpecialType == SpecialType.System_String)
                     {
                         builder.AppendLine($@"        if (string.IsNullOrEmpty(target.{accessName}{property.Name}))");
@@ -238,7 +224,7 @@ partial class {{typeSymbol.Name}} : ICsTomlPackagePart<{{typeSymbol.Name}}>
                     {
                         builder.AppendLine($"        ICsTomlValueSerializer.Serialize(ref writer, target.{accessName}{property.Name});");
                     }
-                    builder.AppendLine($"        writer.Write(linefeed);");
+                    builder.AppendLine($"        ICsTomlValueSerializer.SerializeNewLine(ref writer);");
 
                 }
                 else if (type == CsTomlValueType.Array)
@@ -253,9 +239,9 @@ partial class {{typeSymbol.Name}} : ICsTomlPackagePart<{{typeSymbol.Name}}>
                         continue;
                     }
                     builder.AppendLine($"        ICsTomlValueSerializer.SerializeKey(ref writer, nameof({typeSymbol.Name}.{property.Name}));");
-                    builder.AppendLine($"        writer.Write(equals);");
+                    builder.AppendLine($"        ICsTomlValueSerializer.SerializeEqual(ref writer);");
                     builder.AppendLine($"        ICsTomlValueSerializer.Serialize(ref writer, target.{accessName}{property.Name});");
-                    builder.AppendLine($"        writer.Write(linefeed);");
+                    builder.AppendLine($"        ICsTomlValueSerializer.SerializeNewLine(ref writer);");
                 }
             }
         }
@@ -265,7 +251,7 @@ partial class {{typeSymbol.Name}} : ICsTomlPackagePart<{{typeSymbol.Name}}>
             if (kind == CsTomlTypeKind.Primitive)
             {
                 builder.AppendLine($"        ICsTomlValueSerializer.SerializeKey(ref writer, nameof({typeSymbol.Name}.{property.Name}));");
-                builder.AppendLine($"        writer.Write(equals);");
+                builder.AppendLine($"        ICsTomlValueSerializer.SerializeEqual(ref writer);");
                 if (property.Type.SpecialType == SpecialType.System_String)
                 {
                     builder.AppendLine($@"        if (string.IsNullOrEmpty(target.{accessName}{property.Name}))");
@@ -277,7 +263,7 @@ partial class {{typeSymbol.Name}} : ICsTomlPackagePart<{{typeSymbol.Name}}>
                 {
                     builder.AppendLine($"        ICsTomlValueSerializer.Serialize(ref writer, target.{accessName}{property.Name});");
                 }
-                builder.AppendLine($"        writer.Write(linefeed);");
+                builder.AppendLine($"        ICsTomlValueSerializer.SerializeNewLine(ref writer);");
             }
             else if (kind == CsTomlTypeKind.Unknown)
             {
@@ -285,9 +271,9 @@ partial class {{typeSymbol.Name}} : ICsTomlPackagePart<{{typeSymbol.Name}}>
                 {
                     var unknownBuilder = new StringBuilder();
                     unknownBuilder.AppendLine($"        ICsTomlValueSerializer.SerializeKey(ref writer, nameof({typeSymbol.Name}.{property.Name}));");
-                    unknownBuilder.AppendLine($"        writer.Write(equals);");
+                    builder.AppendLine($"        ICsTomlValueSerializer.SerializeEqual(ref writer);");
                     unknownBuilder.AppendLine($"        ICsTomlValueSerializer.SerializeDynamic(ref writer, target.{accessName}{property.Name});");
-                    unknownBuilder.AppendLine($"        writer.Write(linefeed);");
+                    unknownBuilder.AppendLine($"        ICsTomlValueSerializer.SerializeNewLine(ref writer);");
                     builder.AppendLine(unknownBuilder.ToString());
                 }
                 catch (Exception)
