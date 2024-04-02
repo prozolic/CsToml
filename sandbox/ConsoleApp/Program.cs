@@ -1,6 +1,7 @@
 ﻿
 using ConsoleApp;
 using CsToml;
+using CsToml.Error;
 using System.Text;
 
 Console.WriteLine("Hello, World!");
@@ -45,6 +46,14 @@ number = 123
 var testpackage = CsTomlSerializer.Deserialize<TestPackage>(tomlText, CsTomlSerializerOptions.NoThrow);
 var testCsTomlpackage = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText, CsTomlSerializerOptions.NoThrow);
 
+if (package.Exceptions.Count > 0)
+{
+    foreach (CsTomlException? e in package.Exceptions)
+    {
+        // check error
+    }
+}
+
 if (testCsTomlpackage!.TryGetValue("key", out var value22))
 {
     var str = value22!.GetString();
@@ -52,11 +61,14 @@ if (testCsTomlpackage!.TryGetValue("key", out var value22))
 }
 
 var serializedTomlText = CsTomlSerializer.Serialize(testCsTomlpackage);
-Console.WriteLine(Encoding.UTF8.GetString(serializedTomlText));
+Console.WriteLine(Encoding.UTF8.GetString(serializedTomlText.ByteSpan));
+
+var result = CsTomlSerializer.Serialize(package);
+Console.WriteLine(Encoding.UTF8.GetString(result.ByteSpan));
 
 var part = new TestPackagePart();
-var partBytes = CsTomlSerializer.Serialize(ref part);
-var partPackage = CsTomlSerializer.Deserialize<CsTomlPackage>(partBytes);
+using var partBytes = CsTomlSerializer.Serialize(ref part);
+var partPackage = CsTomlSerializer.Deserialize<CsTomlPackage>(partBytes.ByteSpan);
 
 Console.WriteLine("END");
 
