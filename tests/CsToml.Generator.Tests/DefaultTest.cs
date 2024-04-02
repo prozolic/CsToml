@@ -11,7 +11,7 @@ public class DefaultTest
     public void SerializeTest()
     {
         var part = new TestPackagePart();
-        using var tomlBytes = CsTomlSerializer.Serialize(ref part, CsTomlSerializerOptions.CreateOptions(newLine: NewLineOption.CrLf));
+        using var tomlBytes = CsTomlSerializer.Serialize(ref part, CsTomlSerializerOptions.CreateOptions(newLine: NewLineOption.Default));
 
         Assert.Equal("""
 IntValue = 123
