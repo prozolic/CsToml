@@ -57,7 +57,7 @@ public partial class CsTomlSerializer
         }
     }
 
-    public static async ValueTask<TPackage?> ReadAndDeserializeAsync<TPackage>(string? path, CsTomlSerializerOptions? options = null, CancellationToken cancellationToken = default, bool configureAwait = true)
+    public static async ValueTask<TPackage?> ReadAndDeserializeAsync<TPackage>(string? path, CsTomlSerializerOptions? options = null, CancellationToken cancellationToken = default, bool configureAwait = false)
         where TPackage : CsTomlPackage, ICsTomlPackageCreator<TPackage>
     {
         cancellationToken.ThrowIfCancellationRequested();
