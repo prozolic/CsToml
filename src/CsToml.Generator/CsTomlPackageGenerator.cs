@@ -85,7 +85,7 @@ namespace {{ns}};
 
 partial class {{typeSymbol.Name}} : ICsTomlPackagePart<{{typeSymbol.Name}}>
 {
-    static void ICsTomlPackagePart<{{typeSymbol.Name}}>.Serialize<TBufferWriter, ICsTomlValueSerializer>(ref TBufferWriter writer, ref {{typeSymbol.Name}} target, CsTomlSerializerOptions? options = null)
+    static void ICsTomlPackagePart<{{typeSymbol.Name}}>.Serialize<TBufferWriter, ICsTomlValueSerializer>(ref TBufferWriter writer, ref {{typeSymbol.Name}} target, CsTomlSerializerOptions? options)
     {
 
 {{serializerProcessCode}}

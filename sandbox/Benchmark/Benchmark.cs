@@ -1,7 +1,7 @@
-﻿using BenchmarkDotNet.Attributes;
+﻿#nullable enable
+
+using BenchmarkDotNet.Attributes;
 using CsToml;
-using System.IO;
-using System.Reflection;
 using System.Text;
 
 namespace Benchmark;
@@ -9,8 +9,10 @@ namespace Benchmark;
 [Config(typeof(BenchmarkConfig))]
 public class Benchmark
 {
+#pragma warning disable CS8618
     private static byte[] tomlText;
     private static string tomlUtf16Text;
+#pragma warning restore CS8618
 
     [GlobalSetup]
     public void GlobalSetup()
