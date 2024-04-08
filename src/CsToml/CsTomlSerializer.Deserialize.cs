@@ -31,16 +31,15 @@ public partial class CsTomlSerializer
         }
         else
         {
-            // check BOM
-            Span<byte> utf8Bom = stackalloc byte[3];
-            RandomAccess.Read(handle, utf8Bom, 0);
-            var startIndex = Utf8Helper.ContainBOM(utf8Bom) ? 3 : 0;
-
-            using var bytes = new NativeByteMemoryArray(length - startIndex);
+            using var bytes = new NativeByteMemoryArray(length);
             var tomlMemories = bytes.AsMemoryList(0);
-            RandomAccess.Read(handle, tomlMemories, startIndex);
+            RandomAccess.Read(handle, tomlMemories, 0);
 
-            var startSegment = new ByteSequenceSegment(tomlMemories[0]);
+            // check BOM
+            var memory = tomlMemories[0];
+            var startIndex = Utf8Helper.ContainBOM(memory.Span[..3]) ? 3 : 0;
+
+            var startSegment = new ByteSequenceSegment(memory[startIndex..]);
             startSegment.SetRunningIndex(0);
             startSegment.SetNext(null);
 
@@ -82,16 +81,15 @@ public partial class CsTomlSerializer
         }
         else
         {
-            // check BOM
-            var utf8Bom = new byte[3];
-            await RandomAccess.ReadAsync(handle, utf8Bom.AsMemory(), 0, cancellationToken).ConfigureAwait(configureAwait); ;
-            var startIndex = Utf8Helper.ContainBOM(utf8Bom) ? 3 : 0;
-
-            using var bytes = new NativeByteMemoryArray(length - startIndex);
+            using var bytes = new NativeByteMemoryArray(length);
             var tomlMemories = bytes.AsMemoryList(0);
-            await RandomAccess.ReadAsync(handle, tomlMemories, startIndex, cancellationToken).ConfigureAwait(configureAwait);
+            await RandomAccess.ReadAsync(handle, tomlMemories, 0, cancellationToken).ConfigureAwait(configureAwait);
 
-            var startSegment = new ByteSequenceSegment(tomlMemories[0]);
+            // check BOM
+            var memory = tomlMemories[0];
+            var startIndex = Utf8Helper.ContainBOM(memory.Span[..3]) ? 3 : 0;
+
+            var startSegment = new ByteSequenceSegment(memory[startIndex..]);
             startSegment.SetRunningIndex(0);
             startSegment.SetNext(null);
 
