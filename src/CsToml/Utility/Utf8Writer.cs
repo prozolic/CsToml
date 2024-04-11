@@ -27,13 +27,7 @@ internal ref struct Utf8Writer<TBufferWriter>(ref TBufferWriter writer)
     {
         if (bytes.Length == 0) return;
 
-        var span = GetSpan(bytes.Length);
-
-        for (int i = 0; i < bytes.Length; i++)
-        {
-            span[i] = bytes[i];
-        }
-
+        bytes.CopyTo(GetSpan(bytes.Length));
         Advance(bytes.Length);
     }
 

@@ -204,8 +204,6 @@ internal ref struct CsTomlReader
 
     public CsTomlValue ReadValue()
     {
-        SkipWhiteSpace();
-
         if (!TryPeek(out var c)) ExceptionHelper.ThrowEndOfFileReached();
 
         return c switch

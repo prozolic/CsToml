@@ -32,7 +32,7 @@ internal class DoubleFormatter : ICsTomlFormatter<double>
     public static double Deserialize(ref Utf8Reader reader, int length)
     {
         var bytes = reader.ReadBytes(length);
-        if (bytes.Length < 3) throw new Exception();
+        if (bytes.Length < 3) ExceptionHelper.ThrowIncorrectTomlFloatFormat();
 
         // sign check
         if (CsTomlSyntax.IsPlusOrMinusSign(bytes[0]))
