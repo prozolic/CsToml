@@ -19,7 +19,6 @@ internal ref struct Utf8SequenceReader
     private SequencePosition currentPosition;
     private SequencePosition nextPosition;
     private bool moreData;
-    private readonly long length;
 
     public readonly ReadOnlySpan<byte> UnreadSpan
     {
@@ -37,17 +36,7 @@ internal ref struct Utf8SequenceReader
 
     public readonly long Remaining => Length - Consumed;
 
-    public readonly long Length
-    {
-        get
-        {
-            if (length < 0)
-            {
-                Unsafe.AsRef(in length) = Sequence.Length;
-            }
-            return length;
-        }
-    }
+    public readonly long Length { get; }
 
     public readonly bool IsFullSpan { get; init; }
 
@@ -56,7 +45,7 @@ internal ref struct Utf8SequenceReader
         CurrentSpanIndex = 0;
         Consumed = 0;
         Sequence = default;
-        length = span.Length;
+        Length = span.Length;
 
         nextPosition = default;
         CurrentSpan = span;
@@ -70,7 +59,7 @@ internal ref struct Utf8SequenceReader
         Consumed = 0;
         Sequence = sequence;
         currentPosition = sequence.Start;
-        length = -1;
+        Length = Sequence.Length;
 
         ReadOnlySpan<byte> first = sequence.First.Span;
         nextPosition = sequence.GetPosition(first.Length);
@@ -88,9 +77,6 @@ internal ref struct Utf8SequenceReader
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Advance(long count)
     {
-        if (length < 0)
-            ExceptionHelper.ThrowIncorrectTomlFormat();
-
         const long TooBigOrNegative = unchecked((long)0xFFFFFFFF80000000);
         if ((count & TooBigOrNegative) == 0 && CurrentSpan.Length - CurrentSpanIndex > (int)count)
         {
@@ -131,9 +117,6 @@ internal ref struct Utf8SequenceReader
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Rewind(long count)
     {
-        if (length < 0)
-            ExceptionHelper.ThrowIncorrectTomlFormat();
-
         if (count == 0)
         {
             return;
