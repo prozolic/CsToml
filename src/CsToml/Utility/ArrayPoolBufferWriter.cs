@@ -39,7 +39,8 @@ internal sealed class ArrayPoolBufferWriter<T> : IBufferWriter<T>, IDisposable
 
     public Memory<T> GetMemory(int sizeHint = 0)
     {
-        throw new NotSupportedException();
+        Reserve(sizeHint);
+        return buffer.AsMemory(index);
     }
 
     public Span<T> GetSpan(int sizeHint = 0)
@@ -48,13 +49,42 @@ internal sealed class ArrayPoolBufferWriter<T> : IBufferWriter<T>, IDisposable
         return buffer.AsSpan(index);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Memory<T> GetFullMemory()
+        => buffer.AsMemory();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Span<T> GetFullSpan()
+        => buffer.AsSpan();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear()
         => index = 0;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Reserve(int sizeHint)
     {
-        if (sizeHint < buffer.Length - index) return;
+        if (sizeHint > buffer.Length - index)
+        {
+            ReserveCore(sizeHint);
+        }
+    }
 
+    public void Return()
+    {
+        if (isRent)
+        {
+            isRent = false;
+            ArrayPool<T>.Shared.Return(buffer);
+        }
+    }
+
+    public void Dispose()
+        => Return();
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void ReserveCore(int sizeHint)
+    {
         var newSize = buffer.Length * 2;
         if (sizeHint > newSize)
         {
@@ -77,7 +107,6 @@ internal sealed class ArrayPoolBufferWriter<T> : IBufferWriter<T>, IDisposable
             buffer = newBuffer;
             isRent = true;
         }
-
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -92,16 +121,4 @@ internal sealed class ArrayPoolBufferWriter<T> : IBufferWriter<T>, IDisposable
 
         return capacity + 1;
     }
-
-    public void Return()
-    {
-        if (isRent)
-        {
-            isRent = false;
-            ArrayPool<T>.Shared.Return(buffer);
-        }
-    }
-
-    public void Dispose()
-        => Return();
 }

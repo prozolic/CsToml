@@ -1,17 +1,19 @@
 ﻿using CsToml.Utility;
 using System.Buffers;
-using System.Runtime.CompilerServices;
 
 namespace CsToml;
 
 public partial class CsTomlSerializer
 {
+    private static readonly string TomlExtension = ".toml";
+
     public static TPackage? ReadAndDeserialize<TPackage>(string? path, CsTomlSerializerOptions? options = null)
         where TPackage : CsTomlPackage, ICsTomlPackageCreator<TPackage>
     {
-        ExistsTomlFile(path);
+        if (Path.GetExtension(path) != TomlExtension)
+            throw new FormatException($"TOML files should use the extension .toml");
 
-        using var handle = File.OpenHandle(path!, FileMode.Open, FileAccess.Read, options: FileOptions.Asynchronous);
+        using var handle = File.OpenHandle(path!, FileMode.Open, FileAccess.Read, options: FileOptions.SequentialScan);
         var length = RandomAccess.GetLength(handle);
 
         if (length == 0)
@@ -20,14 +22,13 @@ public partial class CsTomlSerializer
         }
         else if (length <= Array.MaxLength)
         {
-            var bytes = new byte[length];
-            RandomAccess.Read(handle, bytes.AsSpan(), 0);
-            var startIndex = Utf8Helper.ContainBOM(bytes) ? 3 : 0;
-            var tomlText = bytes.AsSpan(startIndex);
+            using var bytes = new ArrayPoolBufferWriter<byte>((int)length);
+            var bytesSpan = bytes.GetFullSpan(); 
+            var readCount = RandomAccess.Read(handle, bytesSpan, 0);
 
-            var package = TPackage.CreatePackage();
-            DeserializeCore(tomlText, package, options);
-            return package;
+            var startIndex = Utf8Helper.ContainBOM(bytesSpan) ? 3 : 0;
+            var tomlText = bytesSpan.Slice(startIndex, readCount - startIndex);
+            return Deserialize<TPackage>(tomlText, options);
         }
         else
         {
@@ -37,7 +38,7 @@ public partial class CsTomlSerializer
 
             // check BOM
             var memory = tomlMemories[0];
-            var startIndex = Utf8Helper.ContainBOM(memory.Span[..3]) ? 3 : 0;
+            var startIndex = Utf8Helper.ContainBOM(memory.Span) ? 3 : 0;
 
             var startSegment = new ByteSequenceSegment(memory[startIndex..]);
             startSegment.SetRunningIndex(0);
@@ -49,20 +50,19 @@ public partial class CsTomlSerializer
                 endSegment = endSegment.AddNext(tomlMemories[i]);
             }
 
-            var package = TPackage.CreatePackage();
             var sequence = new ReadOnlySequence<byte>(startSegment, 0, endSegment, endSegment.Length);
-            DeserializeCore(sequence, package, options);
-            return package;
+            return Deserialize<TPackage>(sequence, options);
         }
     }
 
-    public static async ValueTask<TPackage?> ReadAndDeserializeAsync<TPackage>(string? path, CsTomlSerializerOptions? options = null, CancellationToken cancellationToken = default, bool configureAwait = false)
+    public static async ValueTask<TPackage?> ReadAndDeserializeAsync<TPackage>(string? path, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
         where TPackage : CsTomlPackage, ICsTomlPackageCreator<TPackage>
     {
-        cancellationToken.ThrowIfCancellationRequested();
-        ExistsTomlFile(path);
+        if (Path.GetExtension(path) != TomlExtension)
+            throw new FormatException($"TOML files should use the extension .toml");
 
-        using var handle = File.OpenHandle(path!, FileMode.Open, FileAccess.Read, options: FileOptions.Asynchronous);
+        cancellationToken.ThrowIfCancellationRequested();
+        using var handle = File.OpenHandle(path!, FileMode.Open, FileAccess.Read, options: FileOptions.SequentialScan | FileOptions.Asynchronous);
         var length = RandomAccess.GetLength(handle);
 
         if (length == 0)
@@ -71,13 +71,12 @@ public partial class CsTomlSerializer
         }
         else if (length <= Array.MaxLength)
         {
-            var bytes = new byte[length];
-            await RandomAccess.ReadAsync(handle, bytes.AsMemory(), 0, cancellationToken).ConfigureAwait(configureAwait);
+            using var bytes = new ArrayPoolBufferWriter<byte>((int)length);
+            var bytesMemory = bytes.GetFullMemory();
+            var readCount = await RandomAccess.ReadAsync(handle, bytesMemory, 0, cancellationToken).ConfigureAwait(configureAwait);
 
-            var startIndex = Utf8Helper.ContainBOM(bytes) ? 3 : 0;
-            var package = TPackage.CreatePackage();
-            DeserializeCore(bytes.AsSpan(startIndex), package, options);
-            return package;
+            var startIndex = Utf8Helper.ContainBOM(bytesMemory.Span) ? 3 : 0;
+            return Deserialize<TPackage>(bytesMemory.Span.Slice(startIndex, readCount - startIndex), options);
         }
         else
         {
@@ -87,7 +86,7 @@ public partial class CsTomlSerializer
 
             // check BOM
             var memory = tomlMemories[0];
-            var startIndex = Utf8Helper.ContainBOM(memory.Span[..3]) ? 3 : 0;
+            var startIndex = Utf8Helper.ContainBOM(memory.Span) ? 3 : 0;
 
             var startSegment = new ByteSequenceSegment(memory[startIndex..]);
             startSegment.SetRunningIndex(0);
@@ -99,10 +98,8 @@ public partial class CsTomlSerializer
                 endSegment = endSegment.AddNext(tomlMemories[i]);
             }
 
-            var package = TPackage.CreatePackage();
             var sequence = new ReadOnlySequence<byte>(startSegment, 0, endSegment, endSegment.Length);
-            DeserializeCore(sequence, package, options);
-            return package;
+            return Deserialize<TPackage>(sequence, options);
         }
     }
 
@@ -136,16 +133,6 @@ public partial class CsTomlSerializer
         package?.Deserialize(ref reader, options);
     }
 
-    private static readonly string TomlExtension = ".toml";
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void ExistsTomlFile(string? path)
-    {
-        if (Path.GetExtension(path) != TomlExtension) 
-            throw new FormatException($"TOML files should use the extension .toml");
-        if (!File.Exists(path)) 
-            throw new FileNotFoundException(nameof(path));
-    }
 }
 
 
