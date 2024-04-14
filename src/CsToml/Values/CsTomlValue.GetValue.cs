@@ -53,7 +53,7 @@ public partial class CsTomlValue
         }
     }
 
-    public bool TryGetArray(out IReadOnlyList<CsTomlValue> value)
+    public bool TryGetArray(out ReadOnlyCollection<CsTomlValue> value)
     {
         try
         {
