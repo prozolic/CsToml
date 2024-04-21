@@ -6,7 +6,7 @@ using System.Text.Unicode;
 
 namespace CsToml.Values;
 
-[DebuggerDisplay("CsTomlString: {Utf16String}")]
+[DebuggerDisplay("{Utf16String}")]
 internal partial class CsTomlString : 
     CsTomlValue,
     IEquatable<CsTomlString?>

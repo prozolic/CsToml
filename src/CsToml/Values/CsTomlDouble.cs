@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 namespace CsToml.Values;
 
-[DebuggerDisplay("CsTomlDouble: {Value}")]
+[DebuggerDisplay("{Value}")]
 internal partial class CsTomlDouble(double value, CsTomlDouble.DoubleKind kind = CsTomlDouble.DoubleKind.Normal) : 
     CsTomlValue(CsTomlType.Float),
     IEquatable<CsTomlDouble?>

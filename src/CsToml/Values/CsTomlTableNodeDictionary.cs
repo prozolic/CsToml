@@ -75,20 +75,25 @@ internal class CsTomlTableNodeDictionary
         return true;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool ContainsKey(CsTomlString key)
         => TryGetValue(key, out var _);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool ContainsKey(ReadOnlySpan<byte> key)
         => TryGetValue(key, out var _);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGetValue(CsTomlString key, out CsTomlTableNode? value)
         => TryGetValueCore(key.Value, key.GetHashCode(), out value);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGetValue(ReadOnlySpan<byte> key, out CsTomlTableNode? value)
         => TryGetValueCore(key, ByteArrayHash.ToInt32(key), out value);
 
     private bool TryGetValueCore(ReadOnlySpan<byte> key, int hashCode, out CsTomlTableNode? value)
     {
+        var buckets = this.buckets;
         if (buckets.Length == 0)
         {
             value = null;
@@ -97,7 +102,8 @@ internal class CsTomlTableNodeDictionary
 
         ref var bucket = ref GetBucket((uint)hashCode);
         var index = bucket - 1;
-        var ConflictCount = 0;
+        var conflictCount = 0;
+        var entries = this.entries;
         while (true)
         {
             if ((uint)index > (uint)buckets.Length)
@@ -111,7 +117,7 @@ internal class CsTomlTableNodeDictionary
             }
 
             index = e.next;
-            if (++ConflictCount > (uint)buckets.Length)
+            if (++conflictCount > (uint)buckets.Length)
             {
                 break;
             }
@@ -132,7 +138,10 @@ internal class CsTomlTableNodeDictionary
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private ref int GetBucket(uint hashCode)
-        => ref buckets[hashCode % buckets.Length];
+    {
+        var buckets = this.buckets!;
+        return ref buckets[(uint)hashCode % buckets.Length];
+    }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private void Reserve(int capacity)

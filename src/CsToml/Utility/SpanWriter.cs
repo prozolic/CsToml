@@ -16,4 +16,13 @@ internal ref struct SpanWriter(Span<byte> buffer)
         source[written++] = ch;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool TryWrite(byte ch)
+    {
+        if (written >= source.Length) return false;
+
+        Write(ch);
+        return true;
+    }
+
 }

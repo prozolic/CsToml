@@ -1,11 +1,10 @@
 ﻿using CsToml.Formatter;
 using CsToml.Utility;
-using System.Buffers;
 using System.Diagnostics;
 
 namespace CsToml.Values;
 
-[DebuggerDisplay("CsTomlBool: {Value}")]
+[DebuggerDisplay("{Value}")]
 internal partial class CsTomlBool(bool value) :
     CsTomlValue(CsTomlType.Boolean), 
     IEquatable<CsTomlBool?>

@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 
 namespace CsToml.Values;
 
-[DebuggerDisplay("CsTomlTable : {RootNode}")]
+[DebuggerDisplay("Count = {RootNode.NodeCount}")]
 internal partial class CsTomlTable : CsTomlValue
 {
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -15,6 +15,18 @@ internal partial class CsTomlTable : CsTomlValue
 
     [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
     public CsTomlTableNode RootNode => node;
+
+    public CsTomlTableNode this[ReadOnlySpan<byte> key]
+    {
+        get
+        {
+            if (RootNode.TryGetChildNode(key, out var value))
+            {
+                return value!;
+            }
+            return CsTomlTableNode.Empty;
+        }
+    }
 
     public CsTomlTable() : base(CsTomlType.Table) { }
 
