@@ -17,11 +17,13 @@ internal partial class CsTomlArray : CsTomlValue, IEnumerable<CsTomlValue>
 
     public IEnumerable<CsTomlValue> Values => values;
 
+    public override bool HasValue => true;
+
     public CsTomlValue LastValue => Count > 0 ? values[Count - 1] : Empty;
 
     public CsTomlValue this[int index] => values[index];
 
-    public CsTomlArray() : base(CsTomlType.Array)
+    public CsTomlArray() : base()
     {}
 
     internal override bool ToTomlString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)

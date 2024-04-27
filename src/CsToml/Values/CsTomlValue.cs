@@ -11,15 +11,9 @@ public abstract partial class CsTomlValue :
 {
     public static readonly CsTomlValue Empty = new CsTomlEmpty();
 
-    public CsTomlType Type { get;}
+    public virtual bool HasValue => false;
 
-    public bool HasValue
-        => this.Type != CsTomlType.None;
-
-    protected CsTomlValue(CsTomlType type)
-    {
-        this.Type = type;
-    }
+    protected CsTomlValue(){}
 
     internal virtual bool ToTomlString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer) // Write TOML format.
         where TBufferWriter : IBufferWriter<byte>
@@ -43,6 +37,6 @@ public abstract partial class CsTomlValue :
     [DebuggerDisplay("None")]
     private sealed class CsTomlEmpty : CsTomlValue
     {
-        public CsTomlEmpty() : base(CsTomlType.None) { }
+        public CsTomlEmpty() : base() { }
     }
 }

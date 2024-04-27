@@ -13,7 +13,7 @@ internal class CsTomlInlineTable : CsTomlValue
     [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
     internal CsTomlTableNode RootNode => inlineTable.RootNode;
 
-    public CsTomlInlineTable() : base(CsTomlType.InlineTable) 
+    public CsTomlInlineTable() : base() 
     {}
 
     public void AddKeyValue(CsTomlKey csTomlKey, CsTomlValue value, CsTomlTableNode? searchRootNode)

@@ -97,7 +97,7 @@ internal class DateTimeOffsetFormatter : ICsTomlFormatter<DateTimeOffset>
     public static DateTimeOffset Deserialize(ref Utf8Reader reader, int length)
     {
         var bytes = reader.ReadBytes(length);
-        if (bytes.Length < CsTomlSyntax.DateTime.OffsetDateTimeZFormat.Length) throw new ArgumentException();
+        if (bytes.Length < CsTomlSyntax.DateTime.OffsetDateTimeZFormatLength) throw new ArgumentException();
 
         if (CsTomlSyntax.IsHyphen(bytes[4]) && CsTomlSyntax.IsHyphen(bytes[7]) && (bytes[10] == CsTomlSyntax.AlphaBet.T || bytes[10] == CsTomlSyntax.AlphaBet.t || CsTomlSyntax.IsTabOrWhiteSpace(bytes[10])))
         {

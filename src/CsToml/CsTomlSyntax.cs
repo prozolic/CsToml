@@ -6,17 +6,17 @@ namespace CsToml;
 
 internal static class CsTomlSyntax
 {
-    public readonly struct Number
+    internal readonly struct Number
     {
-        public static readonly byte[] Value10 = "0123456789"u8.ToArray();
+        internal static readonly byte[] Value10 = [0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39];
 
         [DebuggerStepThrough]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int ParseDecimal(byte number) => number - 0x30;
+        internal static int ParseDecimal(byte number) => number - Value10[0];
 
         [DebuggerStepThrough]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int ParseHex(byte hexNumber)
+        internal static int ParseHex(byte hexNumber)
         {
             if (IsNumber(hexNumber)) return ParseDecimal(hexNumber);
             if ((AlphaBet.A <= hexNumber && hexNumber <= AlphaBet.F)) return hexNumber - 0x37;
@@ -24,7 +24,7 @@ internal static class CsTomlSyntax
             return -1;
         }
 
-        public static int DigitsDecimalUnroll4(long value)
+        internal static int DigitsDecimalUnroll4(long value)
         {
             var number = 1;
             value = Math.Abs(value);
@@ -41,82 +41,64 @@ internal static class CsTomlSyntax
         }
     }
 
-    public readonly struct Double
+    internal readonly struct Double
     {
-        // https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/floating-point-numeric-types
-        // double range: ±5.0 × 10−324 - ±1.7 × 10 308
-        public static readonly double[] PositivePosExps = new double[309];
-        public static readonly double[] NagativePosExps = new double[325];
+        internal static readonly double[] PositivePosExps15 = [1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13, 1e14, 1e15];
 
-        public const double Inf = double.PositiveInfinity;
-        public const double NInf = double.NegativeInfinity;
-        public const double Nan = double.NaN;
-        public const double PNan = -double.NaN;
-
-        static Double()
-        {
-            var pPosExps = PositivePosExps.AsSpan();
-            for (int i = 0; i < pPosExps.Length; i++)
-            {
-                pPosExps[i] = Math.Pow(10d , i);
-            }
-            var nPosExps = NagativePosExps.AsSpan();
-            for (int i = 0; i < nPosExps.Length; i++)
-            {
-                nPosExps[i] = Math.Pow(10d, -i);
-            }
-        }
+        internal const double Inf = double.PositiveInfinity;
+        internal const double NInf = double.NegativeInfinity;
+        internal const double Nan = double.NaN;
     }
 
-    public readonly struct AlphaBet
+    internal readonly struct AlphaBet
     {
-        public const byte a = 0x61;
-        public const byte b = 0x62;
-        public const byte e = 0x65;
-        public const byte f = 0x66;
-        public const byte i = 0x69;
-        public const byte l = 0x6c;
-        public const byte n = 0x6e;
-        public const byte o = 0x6f;
-        public const byte r = 0x72;
-        public const byte s = 0x73;
-        public const byte t = 0x74;
-        public const byte u = 0x75;
-        public const byte x = 0x78;
-        public const byte z = 0x7a;
+        internal const byte a = 0x61;
+        internal const byte b = 0x62;
+        internal const byte e = 0x65;
+        internal const byte f = 0x66;
+        internal const byte i = 0x69;
+        internal const byte l = 0x6c;
+        internal const byte n = 0x6e;
+        internal const byte o = 0x6f;
+        internal const byte r = 0x72;
+        internal const byte s = 0x73;
+        internal const byte t = 0x74;
+        internal const byte u = 0x75;
+        internal const byte x = 0x78;
+        internal const byte z = 0x7a;
 
-        public const byte A = 0x41;
-        public const byte E = 0x45;
-        public const byte F = 0x46;
-        public const byte T = 0x54;
-        public const byte U = 0x55;
-        public const byte Z = 0x5a;
+        internal const byte A = 0x41;
+        internal const byte E = 0x45;
+        internal const byte F = 0x46;
+        internal const byte T = 0x54;
+        internal const byte U = 0x55;
+        internal const byte Z = 0x5a;
     }
 
-    public readonly struct Symbol
+    internal readonly struct Symbol
     {
-        public const byte UNDERSCORE = 0x5f;
-        public const byte DASH = 0x2d;
-        public const byte BACKSPACE = 0x08;
-        public const byte TAB = 0x09;
-        public const byte SPACE = 0x20;
-        public const byte NUMBERSIGN = 0x23;
-        public const byte CARRIAGE = 0x0d;
-        public const byte LINEFEED = 0x0a;
-        public const byte FORMFEED = 0x0c;
-        public const byte DOUBLEQUOTED = 0x22;
-        public const byte SINGLEQUOTED = 0x27;
-        public const byte LEFTSQUAREBRACKET = 0x5b;
-        public const byte RIGHTSQUAREBRACKET = 0x5d;
-        public const byte LEFTBRACES = 0x7b;
-        public const byte RIGHTBRACES = 0x7d;
-        public const byte EQUAL = 0x3d;
-        public const byte PLUS = 0x2b;
-        public const byte MINUS = 0x2d;
-        public const byte BACKSLASH = 0x5c;
-        public const byte COLON = 0x3a;
-        public const byte PERIOD = 0x2e;
-        public const byte COMMA = 0x2c;
+        internal const byte UNDERSCORE = 0x5f;
+        internal const byte DASH = 0x2d;
+        internal const byte BACKSPACE = 0x08;
+        internal const byte TAB = 0x09;
+        internal const byte SPACE = 0x20;
+        internal const byte NUMBERSIGN = 0x23;
+        internal const byte CARRIAGE = 0x0d;
+        internal const byte LINEFEED = 0x0a;
+        internal const byte FORMFEED = 0x0c;
+        internal const byte DOUBLEQUOTED = 0x22;
+        internal const byte SINGLEQUOTED = 0x27;
+        internal const byte LEFTSQUAREBRACKET = 0x5b;
+        internal const byte RIGHTSQUAREBRACKET = 0x5d;
+        internal const byte LEFTBRACES = 0x7b;
+        internal const byte RIGHTBRACES = 0x7d;
+        internal const byte EQUAL = 0x3d;
+        internal const byte PLUS = 0x2b;
+        internal const byte MINUS = 0x2d;
+        internal const byte BACKSLASH = 0x5c;
+        internal const byte COLON = 0x3a;
+        internal const byte PERIOD = 0x2e;
+        internal const byte COMMA = 0x2c;
 
         private static readonly byte[] UnixNewLine = [LINEFEED];
         private static readonly byte[] WindowsNewLine = [CARRIAGE, LINEFEED];
@@ -149,173 +131,173 @@ internal static class CsTomlSyntax
         }
     }
 
-    public readonly struct DateTime
+    internal readonly struct DateTime
     {
-        public static readonly byte[] LocalTimeFormat = "HH:mm:ss"u8.ToArray();
-        public static readonly byte[] LocalDateFormat = "yyyy-MM-dd"u8.ToArray();
-        public static readonly byte[] LocalDateTimeFormat = "yyyy-MM-ddTHH:mm:ss"u8.ToArray();
-        public static readonly byte[] OffsetDateTimeZFormat = "yyyy-MM-ddTHH:mm:ssZ"u8.ToArray();
+        internal const byte LocalTimeFormatLength = 8; // HH:mm:ss
+        internal const byte LocalDateFormatLength = 10; // yyyy-MM-dd
+        internal const byte LocalDateTimeFormatLength = 19; // yyyy-MM-ddTHH:mm:ss
+        internal const byte OffsetDateTimeZFormatLength = 20; // yyyy-MM-ddTHH:mm:ssZ
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsEscape(byte rawByte) // U+0000-U+0008,U+000A=U+001F,U+007F
+    internal static bool IsEscape(byte rawByte) // U+0000-U+0008,U+000A=U+001F,U+007F
         => (0x00 <= rawByte && rawByte <= 0x08) || (0x0a <= rawByte && rawByte <= 0x1f) || rawByte == 0x7f;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsEscapeSequence(byte rawByte)
+    internal static bool IsEscapeSequence(byte rawByte)
         => rawByte == AlphaBet.b || rawByte == AlphaBet.t || rawByte == AlphaBet.n ||rawByte == AlphaBet.f || rawByte == AlphaBet.r ||
            IsDoubleQuoted(rawByte) || IsBackSlash(rawByte) || IsEscapeSequenceUnicode(rawByte);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsEscapeSequenceUnicode(byte rawByte)
+    internal static bool IsEscapeSequenceUnicode(byte rawByte)
         => rawByte == AlphaBet.u || rawByte == AlphaBet.U;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsNumberSign(byte rawByte)
+    internal static bool IsNumberSign(byte rawByte)
         => rawByte == Symbol.NUMBERSIGN;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsTab(byte rawByte)
+    internal static bool IsTab(byte rawByte)
         => rawByte == Symbol.TAB;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsCr(byte ch)
+    internal static bool IsCr(byte ch)
         => ch == Symbol.CARRIAGE;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsLf(byte ch) 
+    internal static bool IsLf(byte ch) 
         => ch == Symbol.LINEFEED;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsNewLine(byte rawByte)
+    internal static bool IsNewLine(byte rawByte)
         => IsCr(rawByte) || IsLf(rawByte);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsBareKey(byte rawByte)
+    internal static bool IsBareKey(byte rawByte)
         => IsAlphabet(rawByte) || IsNumber(rawByte) || IsKeySymbol(rawByte);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsKeySymbol(byte rawByte)
+    internal static bool IsKeySymbol(byte rawByte)
         => IsUnderScore(rawByte) || IsDash(rawByte);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsUnderScore(byte rawByte)
+    internal static bool IsUnderScore(byte rawByte)
         => rawByte == Symbol.UNDERSCORE;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsDash(byte rawByte)
+    internal static bool IsDash(byte rawByte)
         => rawByte == Symbol.DASH;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsDoubleQuoted(byte rawByte)
+    internal static bool IsDoubleQuoted(byte rawByte)
         => rawByte == Symbol.DOUBLEQUOTED;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsSingleQuoted(byte rawByte)
+    internal static bool IsSingleQuoted(byte rawByte)
         => rawByte == Symbol.SINGLEQUOTED;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsQuoted(byte rawByte)
+    internal static bool IsQuoted(byte rawByte)
         => IsDoubleQuoted(rawByte) || IsSingleQuoted(rawByte);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsLeftSquareBrackets(byte rawByte)
+    internal static bool IsLeftSquareBrackets(byte rawByte)
         => rawByte == Symbol.LEFTSQUAREBRACKET;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsRightSquareBrackets(byte rawByte)
+    internal static bool IsRightSquareBrackets(byte rawByte)
         => rawByte == Symbol.RIGHTSQUAREBRACKET;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsLeftBraces(byte rawByte)
+    internal static bool IsLeftBraces(byte rawByte)
         => rawByte == Symbol.LEFTBRACES;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsRightBraces(byte rawByte)
+    internal static bool IsRightBraces(byte rawByte)
         => rawByte == Symbol.RIGHTBRACES;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsTabOrWhiteSpace(byte rawByte)
+    internal static bool IsTabOrWhiteSpace(byte rawByte)
         => IsTab(rawByte) || IsWhiteSpace(rawByte);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsWhiteSpace(byte rawByte)
+    internal static bool IsWhiteSpace(byte rawByte)
         => rawByte == Symbol.SPACE;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsEqual(byte rawByte)
+    internal static bool IsEqual(byte rawByte)
         => rawByte == Symbol.EQUAL;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsNumber(byte rawByte)
+    internal static bool IsNumber(byte rawByte)
         => Number.Value10[0] <= rawByte && rawByte <= Number.Value10[9];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsBinary(byte rawByte)
+    internal static bool IsBinary(byte rawByte)
         => Number.Value10[0] <= rawByte && rawByte <= Number.Value10[1];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsOctal(byte rawByte)
+    internal static bool IsOctal(byte rawByte)
         => Number.Value10[0] <= rawByte && rawByte <= Number.Value10[7];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsHex(byte rawByte)
+    internal static bool IsHex(byte rawByte)
         => IsNumber(rawByte) || IsUpperHexAlphabet(rawByte) || IsLowerHexAlphabet(rawByte);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsUpperHexAlphabet(byte rawByte)
+    internal static bool IsUpperHexAlphabet(byte rawByte)
         => AlphaBet.A <= rawByte && rawByte <= AlphaBet.F;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsLowerHexAlphabet(byte rawByte)
+    internal static bool IsLowerHexAlphabet(byte rawByte)
         => AlphaBet.a <= rawByte && rawByte <= AlphaBet.f;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsAlphabet(byte rawByte)
+    internal static bool IsAlphabet(byte rawByte)
         => IsUpperAlphabet(rawByte) || IsLowerAlphabet(rawByte);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsUpperAlphabet(byte ch)
+    internal static bool IsUpperAlphabet(byte ch)
         => AlphaBet.A <= ch && ch <= AlphaBet.Z;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsLowerAlphabet(byte rawByte)
+    internal static bool IsLowerAlphabet(byte rawByte)
         => AlphaBet.a <= rawByte && rawByte <= AlphaBet.z;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsPlusSign(byte rawByte)
+    internal static bool IsPlusSign(byte rawByte)
         => rawByte == Symbol.PLUS;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsMinusSign(byte rawByte)
+    internal static bool IsMinusSign(byte rawByte)
         => rawByte == Symbol.MINUS;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsPlusOrMinusSign(byte rawByte)
+    internal static bool IsPlusOrMinusSign(byte rawByte)
         => IsPlusSign(rawByte) || IsMinusSign(rawByte);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsBackSlash(byte rawByte)
+    internal static bool IsBackSlash(byte rawByte)
         => rawByte == Symbol.BACKSLASH;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsHyphen(byte rawByte)
+    internal static bool IsHyphen(byte rawByte)
         => IsMinusSign(rawByte);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsColon(byte rawByte)
+    internal static bool IsColon(byte rawByte)
         => rawByte == Symbol.COLON;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsPeriod(byte rawByte)
+    internal static bool IsPeriod(byte rawByte)
         => rawByte == Symbol.PERIOD;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsExpSymbol(byte rawByte)
+    internal static bool IsExpSymbol(byte rawByte)
         => rawByte == AlphaBet.e || rawByte == AlphaBet.E;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsComma(byte rawByte)
+    internal static bool IsComma(byte rawByte)
         => rawByte == Symbol.COMMA;
 }
 

@@ -31,16 +31,18 @@ internal partial class CsTomlString :
     [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
     public ReadOnlySpan<byte> Value => bytes.AsSpan();
 
+    public override bool HasValue => true;
+
     [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
     public CsTomlStringType TomlStringType { get; }
 
-    public CsTomlString(ReadOnlySpan<byte> value, CsTomlStringType type = CsTomlStringType.Basic) : base(CsTomlType.String)
+    public CsTomlString(ReadOnlySpan<byte> value, CsTomlStringType type = CsTomlStringType.Basic) : base()
     {
         bytes = value.ToArray();
         TomlStringType = type;
     }
 
-    public CsTomlString(byte[] value, CsTomlStringType type = CsTomlStringType.Basic) : base(CsTomlType.String)
+    public CsTomlString(byte[] value, CsTomlStringType type = CsTomlStringType.Basic) : base()
     {
         bytes = value;
         TomlStringType = type;

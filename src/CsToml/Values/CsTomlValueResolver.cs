@@ -35,7 +35,7 @@ internal sealed class CsTomlValueResolver
                 csTomlValue = new CsTomlLocalDateTime(value);
                 return true;
             case var t when t == typeof(DateTimeOffset):
-                csTomlValue = new CsTomlOffsetDateTime(value, true);
+                csTomlValue = new CsTomlOffsetDateTime(value);
                 return true;
             case var t when t == typeof(DateOnly):
                 csTomlValue = new CsTomlLocalDate(value);

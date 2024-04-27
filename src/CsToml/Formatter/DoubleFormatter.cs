@@ -2,6 +2,7 @@
 using CsToml.Error;
 using CsToml.Utility;
 using System.Buffers;
+using System.Runtime.CompilerServices;
 
 namespace CsToml.Formatter;
 
@@ -105,13 +106,13 @@ internal class DoubleFormatter : ICsTomlFormatter<double>
             var nIndex = 1;
             while (index < utf8Bytes.Length && CsTomlSyntax.IsNumber(utf8Bytes[index]))
             {
-                decimalValue += CsTomlSyntax.Number.ParseDecimal(utf8Bytes[index++]) * CsTomlSyntax.Double.NagativePosExps[nIndex++];
+                decimalValue += CsTomlSyntax.Number.ParseDecimal(utf8Bytes[index++]) / GetPositiveExponent(nIndex++);
             }
         }
 
         // exponent part
         long exponentValue = 0;
-        double[] posExps = CsTomlSyntax.Double.PositivePosExps;
+        var plusSign = true;
         if (index < utf8Bytes.Length && CsTomlSyntax.IsExpSymbol(utf8Bytes[index]))
         {
             index++;
@@ -119,7 +120,7 @@ internal class DoubleFormatter : ICsTomlFormatter<double>
             {
                 if (CsTomlSyntax.IsMinusSign(utf8Bytes[index]))
                 {
-                    posExps = CsTomlSyntax.Double.NagativePosExps;
+                    plusSign = false;
                 }
                 index++;
             }
@@ -130,7 +131,21 @@ internal class DoubleFormatter : ICsTomlFormatter<double>
             }
         }
 
-        return (integerValue + decimalValue) * posExps[exponentValue];
+        return plusSign ?
+            (integerValue + decimalValue) * GetPositiveExponent(exponentValue) :
+            (integerValue + decimalValue) / GetPositiveExponent(exponentValue);
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static double GetPositiveExponent(long exponentValue)
+    {
+        if (exponentValue <= 15)
+        {
+            return CsTomlSyntax.Double.PositivePosExps15[exponentValue];
+        }
+
+        return Math.Pow(10d, exponentValue);
     }
 }
 

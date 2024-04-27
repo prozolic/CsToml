@@ -9,14 +9,14 @@ internal class DateOnlyFormatter : ICsTomlFormatter<DateOnly>
     public static void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, DateOnly value)
         where TBufferWriter : IBufferWriter<byte>
     {
-        value.TryFormat(writer.GetWriteSpan(CsTomlSyntax.DateTime.LocalDateFormat.Length), out int bytesWritten, "yyyy-MM-dd");
+        value.TryFormat(writer.GetWriteSpan(CsTomlSyntax.DateTime.LocalDateFormatLength), out int bytesWritten, "yyyy-MM-dd");
     }
 
     public static DateOnly Deserialize(ref Utf8Reader reader, int length)
     {
         var bytes = reader.ReadBytes(length);
 
-        if (bytes.Length != CsTomlSyntax.DateTime.LocalDateFormat.Length)
+        if (bytes.Length != CsTomlSyntax.DateTime.LocalDateFormatLength)
             ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
 
         // local date

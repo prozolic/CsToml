@@ -62,7 +62,7 @@ internal class DateTimeFormatter : ICsTomlFormatter<DateTime>
     public static DateTime Deserialize(ref Utf8Reader reader, int length)
     {
         var bytes = reader.ReadBytes(length);
-        if (bytes.Length < CsTomlSyntax.DateTime.LocalDateTimeFormat.Length)
+        if (bytes.Length < CsTomlSyntax.DateTime.LocalDateTimeFormatLength)
             ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
 
         if (CsTomlSyntax.IsHyphen(bytes[4]) && CsTomlSyntax.IsHyphen(bytes[7]) &&

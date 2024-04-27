@@ -28,7 +28,7 @@ internal partial class CsTomlTable : CsTomlValue
         }
     }
 
-    public CsTomlTable() : base(CsTomlType.Table) { }
+    public CsTomlTable() : base() { }
 
     public void AddKeyValue(CsTomlKey csTomlKey, CsTomlValue value, CsTomlTableNode? searchRootNode, IReadOnlyCollection<CsTomlString> comments)
     {

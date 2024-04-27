@@ -278,19 +278,21 @@ public partial class CsTomlPackage
         var arrayOfTablesValue = options.IsDottedKeys ?
             table.FindArrayOfTableOrValueAsDotted(arrayOfTableHeader) :
             table.FindArrayOfTableOrValue(arrayOfTableHeader);
-        if (arrayOfTablesValue.Type != CsTomlType.Array)
-            return default;
 
-        var csTomlArrayOfTables = arrayOfTablesValue as CsTomlArray;
-        if (csTomlArrayOfTables!.Count == 0 || csTomlArrayOfTables!.Count <= arrayIndex)
-            return default;
+        if (arrayOfTablesValue is CsTomlArray csTomlArrayOfTables)
+        {
+            if (csTomlArrayOfTables!.Count == 0 || csTomlArrayOfTables!.Count <= arrayIndex)
+                return default;
 
-        // find Value
-        var t = (csTomlArrayOfTables[arrayIndex]! as CsTomlTable)!;
-        var value = options.IsDottedKeys ?
-            t.FindArrayOfTableOrValueAsDotted(key) :
-            t.FindArrayOfTableOrValue(key);
-        return value.HasValue ? value : default;
+            // find Value
+            var t = (csTomlArrayOfTables[arrayIndex]! as CsTomlTable)!;
+            var value = options.IsDottedKeys ?
+                t.FindArrayOfTableOrValueAsDotted(key) :
+                t.FindArrayOfTableOrValue(key);
+            return value.HasValue ? value : default;
+        }
+
+        return default;
     }
 
     public CsTomlValue? Find(ReadOnlySpan<byte> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<ByteArray> key, CsTomlPackageOptions? options = default)
@@ -301,16 +303,19 @@ public partial class CsTomlPackage
         var arrayOfTablesValue = options.IsDottedKeys ?
             table.FindArrayOfTableOrValueAsDotted(arrayOfTableHeader) :
             table.FindArrayOfTableOrValue(arrayOfTableHeader);
-        if (arrayOfTablesValue.Type != CsTomlType.Array)
-            return default;
 
-        var csTomlArrayOfTables = arrayOfTablesValue as CsTomlArray;
-        if (csTomlArrayOfTables!.Count == 0 || csTomlArrayOfTables!.Count <= arrayIndex)
-            return default;
+        if (arrayOfTablesValue is CsTomlArray csTomlArrayOfTables)
+        {
+            if (csTomlArrayOfTables!.Count == 0 || csTomlArrayOfTables!.Count <= arrayIndex)
+                return default;
 
-        // find Value
-        var value = (csTomlArrayOfTables[arrayIndex]! as CsTomlTable)!.FindArrayOfTablesOrValue(key);
-        return value.HasValue ? value : default;
+            // find Value
+            var value = (csTomlArrayOfTables[arrayIndex]! as CsTomlTable)!.FindArrayOfTablesOrValue(key);
+            return value.HasValue ? value : default;
+
+        }
+
+        return default;
     }
 
     public CsTomlValue? Find(ReadOnlySpan<ByteArray> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<byte> key, CsTomlPackageOptions? options = default)
@@ -319,19 +324,20 @@ public partial class CsTomlPackage
 
         // find Array Of Tables
         var arrayOfTablesValue = table.FindArrayOfTablesOrValue(arrayOfTableHeader);
-        if (arrayOfTablesValue.Type != CsTomlType.Array)
-            return default;
+        if (arrayOfTablesValue is CsTomlArray csTomlArrayOfTables)
+        {
+            if (csTomlArrayOfTables!.Count == 0 || csTomlArrayOfTables!.Count <= arrayIndex)
+                return default;
 
-        var csTomlArrayOfTables = arrayOfTablesValue as CsTomlArray;
-        if (csTomlArrayOfTables!.Count == 0 || csTomlArrayOfTables!.Count <= arrayIndex)
-            return default;
+            // find Value
+            var t = (csTomlArrayOfTables[arrayIndex]! as CsTomlTable)!;
+            var value = options.IsDottedKeys ?
+                t.FindArrayOfTableOrValueAsDotted(key) :
+                t.FindArrayOfTableOrValue(key);
+            return value.HasValue ? value : default;
+        }
 
-        // find Value
-        var t = (csTomlArrayOfTables[arrayIndex]! as CsTomlTable)!;
-        var value = options.IsDottedKeys ?
-            t.FindArrayOfTableOrValueAsDotted(key) :
-            t.FindArrayOfTableOrValue(key);
-        return value.HasValue ? value : default;
+        return default;
     }
 
     public CsTomlValue? Find(ReadOnlySpan<ByteArray> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<ByteArray> key, CsTomlPackageOptions? options = default)
@@ -340,16 +346,17 @@ public partial class CsTomlPackage
 
         // find Array Of Tables
         var arrayOfTablesValue = table.FindArrayOfTablesOrValue(arrayOfTableHeader);
-        if (arrayOfTablesValue.Type != CsTomlType.Array)
-            return default;
+        if (arrayOfTablesValue is CsTomlArray csTomlArrayOfTables)
+        {
+            if (csTomlArrayOfTables!.Count == 0 || csTomlArrayOfTables!.Count <= arrayIndex)
+                return default;
 
-        var csTomlArrayOfTables = arrayOfTablesValue as CsTomlArray;
-        if (csTomlArrayOfTables!.Count == 0 || csTomlArrayOfTables!.Count <= arrayIndex)
-            return default;
-
-        // find Value
-        var value = (csTomlArrayOfTables[arrayIndex]! as CsTomlTable)!.FindArrayOfTablesOrValue(key);
-        return value.HasValue ? value : default;
+            // find Value
+            var value = (csTomlArrayOfTables[arrayIndex]! as CsTomlTable)!.FindArrayOfTablesOrValue(key);
+            return value.HasValue ? value : default;
+        }
+        
+        return default;
     }
 
     public CsTomlValue? Find(ReadOnlySpan<char> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<char> key, CsTomlPackageOptions? options = default)

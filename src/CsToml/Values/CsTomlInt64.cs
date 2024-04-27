@@ -6,10 +6,12 @@ namespace CsToml.Values;
 
 [DebuggerDisplay("{Value}")]
 internal partial class CsTomlInt64(long value) : 
-    CsTomlValue(CsTomlType.Integar), 
+    CsTomlValue(), 
     IEquatable<CsTomlInt64?>
 {
     public long Value { get; private set; } = value;
+
+    public override bool HasValue => true;
 
     internal override bool ToTomlString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
     {

@@ -13,9 +13,11 @@ internal sealed class CsTomlKey : CsTomlValue
 
     public IReadOnlyList<CsTomlString> DotKeys => dotKeys;
 
-    internal CsTomlKey() : base(CsTomlType.String){}
+    public override bool HasValue => true;
 
-    internal CsTomlKey(IReadOnlyList<CsTomlString> keys) : base(CsTomlType.String)
+    internal CsTomlKey() : base(){}
+
+    internal CsTomlKey(IReadOnlyList<CsTomlString> keys) : base()
     {
         if (keys?.Count != 0)
         {

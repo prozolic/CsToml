@@ -6,10 +6,12 @@ namespace CsToml.Values;
 
 [DebuggerDisplay("{Value}")]
 internal partial class CsTomlLocalDate(DateOnly value) :
-    CsTomlValue(CsTomlType.LocalDate), 
+    CsTomlValue(), 
     IEquatable<CsTomlLocalDate?>
 {
     public DateOnly Value { get; private set; } = value;
+
+    public override bool HasValue => true;
 
     internal override bool ToTomlString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
     {

@@ -5,11 +5,13 @@ using System.Diagnostics;
 namespace CsToml.Values;
 
 [DebuggerDisplay("{Value}")]
-internal partial class CsTomlOffsetDateTime(DateTimeOffset value, bool byNumber) : 
-    CsTomlValue(byNumber ? CsTomlType.OffsetDateTimeByNumber : CsTomlType.OffsetDateTime), 
+internal partial class CsTomlOffsetDateTime(DateTimeOffset value) : 
+    CsTomlValue(), 
     IEquatable<CsTomlOffsetDateTime?>
 {
     public DateTimeOffset Value { get; private set; } = value;
+
+    public override bool HasValue => true;
 
     internal override bool ToTomlString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
     {

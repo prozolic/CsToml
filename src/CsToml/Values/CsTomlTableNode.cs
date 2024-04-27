@@ -293,7 +293,7 @@ internal class CsTomlTableNode
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly CsTomlTableNode currentNode;
 
-        internal NodeCountDebuggerValue(CsTomlTableNode node) : base(CsTomlType.None)
+        internal NodeCountDebuggerValue(CsTomlTableNode node) : base()
         {
             currentNode = node;
         }

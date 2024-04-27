@@ -1007,7 +1007,7 @@ internal ref struct CsTomlReader
         }
 
         // check localtime or localdatetime
-        if (sequenceReader.Length >= sequenceReader.Consumed + CsTomlSyntax.DateTime.LocalTimeFormat.Length)
+        if (sequenceReader.Length >= sequenceReader.Consumed + CsTomlSyntax.DateTime.LocalTimeFormatLength)
         {
             var length = 5;
             Utf8Reader tempReader;
@@ -1646,13 +1646,13 @@ internal ref struct CsTomlReader
     private CsTomlValue ReadLocalDateTimeOrOffset(ReadOnlySpan<byte> bytes)
     {
         // local date
-        if (bytes.Length == CsTomlSyntax.DateTime.LocalDateFormat.Length)
+        if (bytes.Length == CsTomlSyntax.DateTime.LocalDateFormatLength)
         {
             return ReadLocalDate(bytes);
         }
 
         // offset datetime
-        if (bytes.Length >= CsTomlSyntax.DateTime.OffsetDateTimeZFormat.Length)
+        if (bytes.Length >= CsTomlSyntax.DateTime.OffsetDateTimeZFormatLength)
         {
             if (bytes[^1] == CsTomlSyntax.AlphaBet.Z || bytes[^1] == CsTomlSyntax.AlphaBet.z)
             {
@@ -1691,7 +1691,7 @@ internal ref struct CsTomlReader
 
     private CsTomlLocalDateTime ReadLocalDateTime(ReadOnlySpan<byte> bytes)
     {
-        if (bytes.Length < CsTomlSyntax.DateTime.LocalDateTimeFormat.Length) 
+        if (bytes.Length < CsTomlSyntax.DateTime.LocalDateTimeFormatLength) 
             ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
 
         if (!CsTomlSyntax.IsNumber(bytes[0])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
@@ -1715,7 +1715,7 @@ internal ref struct CsTomlReader
         if (!CsTomlSyntax.IsNumber(bytes[17])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
         if (!CsTomlSyntax.IsNumber(bytes[18])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
 
-        if (bytes.Length > CsTomlSyntax.DateTime.LocalDateTimeFormat.Length)
+        if (bytes.Length > CsTomlSyntax.DateTime.LocalDateTimeFormatLength)
         {
             if (!CsTomlSyntax.IsPeriod(bytes[19])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
             var index = 20;
@@ -1731,7 +1731,7 @@ internal ref struct CsTomlReader
 
     private CsTomlLocalDate ReadLocalDate(ReadOnlySpan<byte> bytes)
     {
-        if (bytes.Length < CsTomlSyntax.DateTime.LocalDateFormat.Length) ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
+        if (bytes.Length < CsTomlSyntax.DateTime.LocalDateFormatLength) ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
         if (!CsTomlSyntax.IsNumber(bytes[0])) ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
         if (!CsTomlSyntax.IsNumber(bytes[1])) ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
         if (!CsTomlSyntax.IsNumber(bytes[2])) ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
@@ -1750,7 +1750,7 @@ internal ref struct CsTomlReader
 
     private CsTomlLocalTime ReadLocalTime(ReadOnlySpan<byte> bytes)
     {
-        if (bytes.Length < CsTomlSyntax.DateTime.LocalTimeFormat.Length) ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
+        if (bytes.Length < CsTomlSyntax.DateTime.LocalTimeFormatLength) ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
         if (!CsTomlSyntax.IsNumber(bytes[0])) ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
         if (!CsTomlSyntax.IsNumber(bytes[1])) ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
         if (!CsTomlSyntax.IsColon(bytes[2])) ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
@@ -1760,7 +1760,7 @@ internal ref struct CsTomlReader
         if (!CsTomlSyntax.IsNumber(bytes[6])) ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
         if (!CsTomlSyntax.IsNumber(bytes[7])) ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
 
-        if (bytes.Length > CsTomlSyntax.DateTime.LocalTimeFormat.Length)
+        if (bytes.Length > CsTomlSyntax.DateTime.LocalTimeFormatLength)
         {
             if (!CsTomlSyntax.IsPeriod(bytes[8])) ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
             var index = 9;
@@ -1777,7 +1777,7 @@ internal ref struct CsTomlReader
 
     private CsTomlOffsetDateTime ReadOffsetDateTime(ReadOnlySpan<byte> bytes)
     {
-        if (bytes.Length < CsTomlSyntax.DateTime.OffsetDateTimeZFormat.Length) 
+        if (bytes.Length < CsTomlSyntax.DateTime.OffsetDateTimeZFormatLength) 
             ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
 
         if (!(bytes[^1] == CsTomlSyntax.AlphaBet.Z || bytes[^1] == CsTomlSyntax.AlphaBet.z)) 
@@ -1806,12 +1806,12 @@ internal ref struct CsTomlReader
 
         var tempReader = new Utf8Reader(bytes);
         ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out DateTimeOffset value);
-        return new CsTomlOffsetDateTime(value, false);
+        return new CsTomlOffsetDateTime(value);
     }
 
     private CsTomlOffsetDateTime ReadOffsetDateTimeByNumber(ReadOnlySpan<byte> bytes)
     {
-        if (bytes.Length < CsTomlSyntax.DateTime.OffsetDateTimeZFormat.Length) 
+        if (bytes.Length < CsTomlSyntax.DateTime.OffsetDateTimeZFormatLength) 
             ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
 
         if (!CsTomlSyntax.IsNumber(bytes[0])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
@@ -1864,7 +1864,7 @@ internal ref struct CsTomlReader
 
         var tempReader = new Utf8Reader(bytes);
         ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out DateTimeOffset value);
-        return new CsTomlOffsetDateTime(value, true);
+        return new CsTomlOffsetDateTime(value);
     }
 
     private ReadOnlySpan<byte> ReadUntilWhiteSpaceOrNewLineOrCommaOrEndOfArrayForDateTime()

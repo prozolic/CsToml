@@ -6,10 +6,12 @@ namespace CsToml.Values;
 
 [DebuggerDisplay("{Value}")]
 internal partial class CsTomlBool(bool value) :
-    CsTomlValue(CsTomlType.Boolean), 
+    CsTomlValue(), 
     IEquatable<CsTomlBool?>
 {
     public bool Value { get; private set; } = value;
+
+    public override bool HasValue => true;
 
     internal override bool ToTomlString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
     {

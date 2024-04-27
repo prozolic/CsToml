@@ -6,7 +6,7 @@ namespace CsToml.Values;
 
 [DebuggerDisplay("{Value}")]
 internal partial class CsTomlDouble(double value, CsTomlDouble.DoubleKind kind = CsTomlDouble.DoubleKind.Normal) : 
-    CsTomlValue(CsTomlType.Float),
+    CsTomlValue(),
     IEquatable<CsTomlDouble?>
 {
     public readonly static CsTomlDouble Inf = new(CsTomlSyntax.Double.Inf, DoubleKind.Inf);
@@ -24,6 +24,8 @@ internal partial class CsTomlDouble(double value, CsTomlDouble.DoubleKind kind =
     }
 
     public double Value { get; private set; } = value;
+
+    public override bool HasValue => true;
 
     internal DoubleKind Kind { get; } = kind;
 
