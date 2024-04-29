@@ -26,11 +26,11 @@ internal class Int64Formatter : ICsTomlFormatter<long>
         {
             switch (bytes[1])
             {
-                case 0x62: //0b:binary
+                case CsTomlSyntax.AlphaBet.b: //0b:binary
                     return DeserializeBinary(bytes[2..]);
-                case 0x6f: //0o:octal
+                case CsTomlSyntax.AlphaBet.o: //0o:octal
                     return DeserializeOctal(bytes[2..]);
-                case 0x78: //0x:hexadecimal
+                case CsTomlSyntax.AlphaBet.x: //0x:hexadecimal
                     return DeserializeHex(bytes[2..]);
             }
         }

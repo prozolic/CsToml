@@ -33,9 +33,10 @@ internal partial class CsTomlTable : CsTomlValue
     public void AddKeyValue(CsTomlKey csTomlKey, CsTomlValue value, CsTomlTableNode? searchRootNode, IReadOnlyCollection<CsTomlString> comments)
     {
         var currentNode = searchRootNode ?? RootNode;
-        var dotKeys = csTomlKey.DotKeys;
+        var dotKeys = csTomlKey.DotKeysSpan;
+        var lastKey = dotKeys[^1];
 
-        for (var i = 0; i < dotKeys.Count - 1; i++)
+        for (var i = 0; i < dotKeys.Length - 1; i++)
         {
             var sectionKey = dotKeys[i];
             if (currentNode!.TryAddGroupingPropertyNode(sectionKey, out var childNode))
@@ -60,17 +61,16 @@ internal partial class CsTomlTable : CsTomlValue
             ExceptionHelper.ThrowNotTurnIntoTable(csTomlKey.GetJoinName());
         }
 
-        var key = dotKeys[dotKeys.Count - 1];
-        currentNode.AddKeyValue(key, value, comments);
+        currentNode.AddKeyValue(lastKey, value, comments);
     }
 
     public void AddTableHeader(CsTomlKey csTomlKey, IReadOnlyCollection<CsTomlString> comments, out CsTomlTableNode? newNode)
     {
         var node = RootNode;
-        var dotKeys = csTomlKey.DotKeys;
+        var dotKeys = csTomlKey.DotKeysSpan;
 
         var addedNewNode = false;
-        for (var i = 0; i < dotKeys.Count; i++)
+        for (var i = 0; i < dotKeys.Length; i++)
         {
             var sectionKey = dotKeys[i];
             if (node!.TryAddGroupingPropertyNode(sectionKey, out var childNode))
@@ -122,10 +122,10 @@ internal partial class CsTomlTable : CsTomlValue
     public void AddArrayOfTablesHeader(CsTomlKey csTomlKey, IReadOnlyCollection<CsTomlString> comments, out CsTomlTableNode? newNode)
     {
         var currentNode = RootNode;
-        var dotKeys = csTomlKey.DotKeys;
+        var dotKeys = csTomlKey.DotKeysSpan;
 
         var addedNewNode = false;
-        for (var i = 0; i < dotKeys.Count; i++)
+        for (var i = 0; i < dotKeys.Length; i++)
         {
             var sectionKey = dotKeys[i];
             if (currentNode!.TryAddGroupingPropertyNode(sectionKey, out var childNode))
@@ -133,13 +133,13 @@ internal partial class CsTomlTable : CsTomlValue
                 addedNewNode = true;
                 currentNode = childNode;
                 currentNode.IsArrayOfTablesHeader = true;
-                currentNode.IsTableHeader = i < dotKeys.Count - 1;
+                currentNode.IsTableHeader = i < dotKeys.Length - 1;
                 continue;
             }
 
             if (childNode!.IsArrayOfTablesHeaderDefinitionPosition)
             {
-                if (i == dotKeys.Count - 1)
+                if (i == dotKeys.Length - 1)
                 {
                     currentNode = childNode;
                     continue;

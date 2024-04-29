@@ -154,68 +154,6 @@ internal class CsTomlTableNode
         return true;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal bool TryGetChildNodeOld(ReadOnlySpan<byte> key, out CsTomlTableNode? value)
-    {
-        var isBareKey = true;
-        var firstEscapeSequenceIndex = -1;
-        for (var i = 0; i < key.Length; i++)
-        {
-            isBareKey = CsTomlSyntax.IsBareKey(key[i]);
-            if (!isBareKey && CsTomlSyntax.IsBackSlash(key[i]))
-            {
-                firstEscapeSequenceIndex = i;
-                break;
-            }
-        }
-
-        if (isBareKey)
-        {
-            return TryGetChildNodeCore(key, out value);
-        }
-        else
-        {
-            var bufferSize = key.Length;
-            var reader = new Utf8Reader(key);
-            var bufferWriter = new ArrayPoolBufferWriter<byte>(bufferSize);
-            var utf8Writer = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref bufferWriter);
-
-            try
-            {
-                if (firstEscapeSequenceIndex >= 1)
-                {
-                    utf8Writer.Write(key[..firstEscapeSequenceIndex]);
-                    reader.Advance(firstEscapeSequenceIndex);
-                }
-
-                while (reader.TryPeek(out var ch))
-                {
-                    if (CsTomlSyntax.IsBackSlash(ch))
-                    {
-                        reader.Advance(1);
-                        var result = CsTomlString.TryFormatEscapeSequence(ref reader, ref bufferWriter, false, false);
-                        if (result == CsTomlString.EscapeSequenceResult.Failure)
-                        {
-                            value = default;
-                            return false;
-                        }
-                        continue;
-                    }
-
-                    utf8Writer.Write(ch);
-                    reader.Advance(1);
-                }
-
-                // search Quoted keys
-                return TryGetChildNodeCore(bufferWriter.WrittenSpan, out value);
-            }
-            finally
-            {
-                using (bufferWriter) { }
-            }
-        }
-    }
-
     internal bool TryGetChildNode(ReadOnlySpan<byte> key, out CsTomlTableNode? value)
     {
         var nodes = this.nodes;
@@ -254,16 +192,6 @@ internal class CsTomlTableNode
 
         // search Quoted keys
         return nodes.TryGetValue(bufferWriter.WrittenSpan, out value);
-    }
-
-    private bool TryGetChildNodeCore(ReadOnlySpan<byte> key, out CsTomlTableNode? value)
-    {
-        if (Value is CsTomlInlineTable t)
-        {
-            return t.RootNode.nodes.TryGetValue(key, out value);
-        }
-
-        return nodes.TryGetValue(key, out value);
     }
 
     private bool TryGetChildNode(ReadOnlySpan<char> keySpan, out CsTomlTableNode? value)

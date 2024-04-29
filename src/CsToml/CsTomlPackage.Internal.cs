@@ -29,7 +29,7 @@ public partial class CsTomlPackage
         var tomlReader = new CsTomlReader(ref reader);
         CsTomlTableNode? currentNode = table.RootNode;
 
-        var comments = new List<CsTomlString>();
+        var comments = new List<CsTomlString>(4);
         while (tomlReader.Peek())
         {
             // comment

@@ -955,7 +955,7 @@ internal ref struct CsTomlReader
         var firstPosition = sequenceReader.Consumed;
 
         // check prefix and 0x or 0o or 0b
-        if (TryPeek(out var first) && first == CsTomlSyntax.Number.Value10[0])
+        if (TryPeek(out var first) && first == CsTomlSyntax.Number.Zero)
         {
             Advance(1);
             if (TryPeek(out var formatsCh))
@@ -1198,7 +1198,7 @@ internal ref struct CsTomlReader
             if (writingSpan.Length > 2)
             {
                 // +00 or -01
-                if (writingSpan[1] == CsTomlSyntax.Number.Value10[0])
+                if (writingSpan[1] == CsTomlSyntax.Number.Zero)
                     ExceptionHelper.ThrowIncorrectTomlIntegerFormat();
             }
         }
@@ -1207,7 +1207,7 @@ internal ref struct CsTomlReader
             if (writingSpan.Length > 1)
             {
                 // 00 or 01
-                if (writingSpan[0] == CsTomlSyntax.Number.Value10[0])
+                if (writingSpan[0] == CsTomlSyntax.Number.Zero)
                     ExceptionHelper.ThrowIncorrectTomlIntegerFormat();
 
             }
@@ -1235,7 +1235,7 @@ internal ref struct CsTomlReader
         }
 
         var writer = new SpanWriter(stackalloc byte[32]);
-        writer.Write(CsTomlSyntax.Number.Value10[0]);
+        writer.Write(CsTomlSyntax.Number.Zero);
         writer.Write(CsTomlSyntax.AlphaBet.x);
 
         var underscore = false;
@@ -1297,7 +1297,7 @@ internal ref struct CsTomlReader
         }
 
         var writer = new SpanWriter(stackalloc byte[32]);
-        writer.Write(CsTomlSyntax.Number.Value10[0]);
+        writer.Write(CsTomlSyntax.Number.Zero);
         writer.Write(CsTomlSyntax.AlphaBet.o);
 
         var underscore = false;
@@ -1359,7 +1359,7 @@ internal ref struct CsTomlReader
         }
 
         var writer = new SpanWriter(stackalloc byte[32]);
-        writer.Write(CsTomlSyntax.Number.Value10[0]);
+        writer.Write(CsTomlSyntax.Number.Zero);
         writer.Write(CsTomlSyntax.AlphaBet.b);
 
         var underscore = false;
@@ -1427,7 +1427,7 @@ internal ref struct CsTomlReader
                 case CsTomlSyntax.AlphaBet.n:
                     if (CsTomlSyntax.IsPlusOrMinusSign(plusOrMinusCh)) Rewind(1);
                     return ReadDoubleInfOrNan();
-                case var zero when zero == CsTomlSyntax.Number.Value10[0]:
+                case var zero when zero == CsTomlSyntax.Number.Zero:
                     Advance(1);
                     if (TryPeek(out var secondNumberCh))
                     {

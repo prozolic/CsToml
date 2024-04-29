@@ -9,21 +9,15 @@ namespace CsToml.Values;
 [DebuggerDisplay("CsTomlKey: {DotKeys}")]
 internal sealed class CsTomlKey : CsTomlValue
 {
-    private List<CsTomlString> dotKeys = [];
+    private readonly List<CsTomlString> dotKeys = new(2);
 
     public IReadOnlyList<CsTomlString> DotKeys => dotKeys;
+
+    public ReadOnlySpan<CsTomlString> DotKeysSpan => CollectionsMarshal.AsSpan(dotKeys);
 
     public override bool HasValue => true;
 
     internal CsTomlKey() : base(){}
-
-    internal CsTomlKey(IReadOnlyList<CsTomlString> keys) : base()
-    {
-        if (keys?.Count != 0)
-        {
-            dotKeys.AddRange(keys!);
-        }
-    }
 
     internal string GetJoinName()
     {

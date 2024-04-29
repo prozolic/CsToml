@@ -1,6 +1,7 @@
 ﻿
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace CsToml;
 
@@ -8,11 +9,20 @@ internal static class CsTomlSyntax
 {
     internal readonly struct Number
     {
-        internal static readonly byte[] Value10 = [0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39];
+        internal const byte Zero = 0x30;
+        internal const byte One = 0x31;
+        internal const byte Two = 0x32;
+        internal const byte Three = 0x33;
+        internal const byte Four = 0x34;
+        internal const byte Five = 0x35;
+        internal const byte Six = 0x36;
+        internal const byte Seven = 0x37;
+        internal const byte Eight = 0x38;
+        internal const byte Nine = 0x39;
 
         [DebuggerStepThrough]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static int ParseDecimal(byte number) => number - Value10[0];
+        internal static int ParseDecimal(byte number) => number - Zero;
 
         [DebuggerStepThrough]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -29,7 +39,7 @@ internal static class CsTomlSyntax
             var number = 1;
             value = Math.Abs(value);
 
-            for (;;)
+            for (; ; )
             {
                 if (value < 10) return number;
                 if (value < 100) return number + 1;
@@ -105,29 +115,21 @@ internal static class CsTomlSyntax
         private static byte[]? NewLine;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ReadOnlySpan<byte> GetNewLine()
+        internal static ReadOnlySpan<byte> GetNewLine()
         {
             NewLine ??= OperatingSystem.IsWindows() ? WindowsNewLine : UnixNewLine;
             return NewLine;
         }
 
-        public static void SetNewline(NewLineOption option)
+        internal static void SetNewline(NewLineOption option)
         {
-            switch(option)
+            NewLine = option switch
             {
-                case NewLineOption.Default:
-                    NewLine = OperatingSystem.IsWindows() ? WindowsNewLine : UnixNewLine;
-                    break;
-                case NewLineOption.Lf:
-                    NewLine = UnixNewLine;
-                    break;
-                case NewLineOption.CrLf:
-                    NewLine = WindowsNewLine;
-                    break;
-                default:
-                    NewLine = OperatingSystem.IsWindows() ? WindowsNewLine : UnixNewLine;
-                    break;
-            }
+                NewLineOption.Default => OperatingSystem.IsWindows() ? WindowsNewLine : UnixNewLine,
+                NewLineOption.Lf => UnixNewLine,
+                NewLineOption.CrLf => WindowsNewLine,
+                _ => OperatingSystem.IsWindows() ? WindowsNewLine : UnixNewLine,
+            };
         }
     }
 
@@ -140,17 +142,79 @@ internal static class CsTomlSyntax
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static bool IsEscape(byte rawByte) // U+0000-U+0008,U+000A=U+001F,U+007F
-        => (0x00 <= rawByte && rawByte <= 0x08) || (0x0a <= rawByte && rawByte <= 0x1f) || rawByte == 0x7f;
+    internal static bool IsEscape(byte rawByte) // U+0000-U+0008,U+000A-U+001F,U+007F
+    {
+        ReadOnlySpan<bool> escapeTable =
+        [
+            true, true, true, true, true, true, true, true, true, false, true, true, true, true, true, true,                // 0x00 - 0x0f
+            true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,                 // 0x10 - 0x1f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x20 - 0x2f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x30 - 0x3f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x40 - 0x4f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x50 - 0x5f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x60 - 0x6f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true,  // 0x70 - 0x7f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x80 - 0x8f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x90 - 0x9f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xa0 - 0xaf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xb0 - 0xbf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xc0 - 0xcf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xd0 - 0xdf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
+        ];
+        return Unsafe.AddByteOffset(ref MemoryMarshal.GetReference(escapeTable), rawByte);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsEscapeSequence(byte rawByte)
-        => rawByte == AlphaBet.b || rawByte == AlphaBet.t || rawByte == AlphaBet.n ||rawByte == AlphaBet.f || rawByte == AlphaBet.r ||
-           IsDoubleQuoted(rawByte) || IsBackSlash(rawByte) || IsEscapeSequenceUnicode(rawByte);
+    {
+        ReadOnlySpan<bool> escapeTable =
+        [
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x00 - 0x0f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x10 - 0x1f
+            false, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false,  // 0x20 - 0x2f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x30 - 0x3f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x40 - 0x4f
+            false, false, false, false, false, true, false, false, false, false, false, false, true, false, false, false,   // 0x50 - 0x5f
+            false, false, true, false, false, false, true, false, false, false, false, false, false, false, true, false,    // 0x60 - 0x6f
+            false, false, true, false, true, true, false, false, false, false, false, false, false, false, false, false,    // 0x70 - 0x7f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x80 - 0x8f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x90 - 0x9f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xa0 - 0xaf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xb0 - 0xbf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xc0 - 0xcf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xd0 - 0xdf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
+        ];
+        return Unsafe.AddByteOffset(ref MemoryMarshal.GetReference(escapeTable), rawByte);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static bool IsEscapeSequenceUnicode(byte rawByte)
-        => rawByte == AlphaBet.u || rawByte == AlphaBet.U;
+    internal static bool IsBareKey(byte rawByte)
+    {
+        ReadOnlySpan<bool> escapeTable =
+        [
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x00 - 0x0f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x10 - 0x1f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false,  // 0x20 - 0x2f
+            true, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false,           // 0x30 - 0x3f
+            false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,                // 0x40 - 0x4f
+            true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, true,             // 0x50 - 0x5f
+            false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,                // 0x60 - 0x6f
+            true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false,            // 0x70 - 0x7f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x80 - 0x8f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x90 - 0x9f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xa0 - 0xaf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xb0 - 0xbf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xc0 - 0xcf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xd0 - 0xdf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
+        ];
+        return Unsafe.AddByteOffset(ref MemoryMarshal.GetReference(escapeTable), rawByte);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsNumberSign(byte rawByte)
@@ -171,10 +235,6 @@ internal static class CsTomlSyntax
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsNewLine(byte rawByte)
         => IsCr(rawByte) || IsLf(rawByte);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static bool IsBareKey(byte rawByte)
-        => IsAlphabet(rawByte) || IsNumber(rawByte) || IsKeySymbol(rawByte);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsKeySymbol(byte rawByte)
@@ -230,15 +290,15 @@ internal static class CsTomlSyntax
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsNumber(byte rawByte)
-        => Number.Value10[0] <= rawByte && rawByte <= Number.Value10[9];
+        => Number.Zero <= rawByte && rawByte <= Number.Nine;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsBinary(byte rawByte)
-        => Number.Value10[0] <= rawByte && rawByte <= Number.Value10[1];
+        => Number.Zero <= rawByte && rawByte <= Number.One;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsOctal(byte rawByte)
-        => Number.Value10[0] <= rawByte && rawByte <= Number.Value10[7];
+        => Number.Zero <= rawByte && rawByte <= Number.Seven;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsHex(byte rawByte)
