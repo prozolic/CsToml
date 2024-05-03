@@ -11,7 +11,7 @@ public partial class CsTomlPackage
         where TBufferWriter : IBufferWriter<byte>
     {
         options ??= CsTomlSerializerOptions.Default;
-        CsTomlSyntax.Symbol.SetNewline(options.NewLine);
+
         try
         {
             table.ToTomlString(ref writer);
@@ -178,10 +178,7 @@ public partial class CsTomlPackage
             reader.Advance(1); // skip "="
             reader.SkipWhiteSpace();
 
-            if (!reader.Peek()) ExceptionHelper.ThrowEndOfFileReached(); // value is nothing
-            var value = reader.ReadValue();
-
-            table.AddKeyValue(key, value, currentNode, comments);
+            table.AddKeyValue(key, reader.ReadValue(), currentNode, comments);
             return true;
         }
         catch (CsTomlException ce)

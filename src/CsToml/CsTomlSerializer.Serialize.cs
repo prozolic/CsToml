@@ -23,7 +23,6 @@ public partial class CsTomlSerializer : ICsTomlValueSerializer
         where TPackagePart : ICsTomlPackagePart<TPackagePart>
     {
         options ??= CsTomlSerializerOptions.Default;
-        CsTomlSyntax.Symbol.SetNewline(options.NewLine);
         try
         {
             TPackagePart.Serialize<TBufferWriter, CsTomlSerializer>(ref bufferWriter, ref target, options);
@@ -163,8 +162,8 @@ public partial class CsTomlSerializer : ICsTomlValueSerializer
     {
         if (value is List<TArrayItem> list)
         {
-            var arr = new CsTomlArray();
             var listSpan = CollectionsMarshal.AsSpan(list);
+            var arr = new CsTomlArray(listSpan.Length);
             for (int i = 0; i < listSpan.Length; i++)
             {
                 object? item = listSpan[i]!;

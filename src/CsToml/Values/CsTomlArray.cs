@@ -9,9 +9,11 @@ namespace CsToml.Values;
 
 [DebuggerTypeProxy(typeof(CsTomlArrayDebugView))]
 [DebuggerDisplay("Count = {Count}")]
-internal partial class CsTomlArray : CsTomlValue, IEnumerable<CsTomlValue>
+internal partial class CsTomlArray(int capacity) : 
+    CsTomlValue(), 
+    IEnumerable<CsTomlValue>
 {
-    private List<CsTomlValue> values = [];
+    private List<CsTomlValue> values = new(capacity);
 
     public int Count => values.Count;
 
@@ -23,7 +25,7 @@ internal partial class CsTomlArray : CsTomlValue, IEnumerable<CsTomlValue>
 
     public CsTomlValue this[int index] => values[index];
 
-    public CsTomlArray() : base()
+    public CsTomlArray() : this(4)
     {}
 
     internal override bool ToTomlString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)

@@ -81,19 +81,25 @@ internal ref struct CsTomlReader
     public CsTomlKey ReadKey()
     {
         SkipWhiteSpace();
-        if (!Peek()) ExceptionHelper.ThrowEndOfFileReached();
 
         var isTableHeader = false;
         var isArrayOfTablesHeader = false;
-        if (TryPeek(out var tableHeaderCh) && CsTomlSyntax.IsLeftSquareBrackets(tableHeaderCh))
+        if (TryPeek(out var tableHeaderCh))
         {
-            isTableHeader = true;
-            Advance(1);
-            if (TryPeek(out var ArrayOfTablesHeaderCh) && CsTomlSyntax.IsLeftSquareBrackets(ArrayOfTablesHeaderCh))
+            if (CsTomlSyntax.IsLeftSquareBrackets(tableHeaderCh))
             {
-                isArrayOfTablesHeader = true;
+                isTableHeader = true;
                 Advance(1);
+                if (TryPeek(out var ArrayOfTablesHeaderCh) && CsTomlSyntax.IsLeftSquareBrackets(ArrayOfTablesHeaderCh))
+                {
+                    isArrayOfTablesHeader = true;
+                    Advance(1);
+                }
             }
+        }
+        else
+        {
+            ExceptionHelper.ThrowEndOfFileReached();
         }
 
         var key = new CsTomlKey();
@@ -202,7 +208,7 @@ internal ref struct CsTomlReader
 
     public CsTomlValue ReadValue()
     {
-        if (!TryPeek(out var c)) ExceptionHelper.ThrowEndOfFileReached();
+        if (!TryPeek(out var c)) ExceptionHelper.ThrowEndOfFileReached();  // value is nothing
 
         return c switch
         {
@@ -426,30 +432,26 @@ internal ref struct CsTomlReader
         {
             if (CsTomlSyntax.IsEscape(ch))
             {
-                if (CsTomlSyntax.IsNewLine(ch))
+                if (CsTomlSyntax.IsLf(ch))
                 {
-                    if (CsTomlSyntax.IsCr(ch))
-                    {
-                        Advance(1);
-                        if (TryPeek(out var linebreakCh) && CsTomlSyntax.IsLf(linebreakCh))
-                        {
-                            Advance(1);
-                            utf8Writer.Write(ch);
-                            utf8Writer.Write(linebreakCh);
-                            IncreaseLineNumber();
-                            continue;
-                        }
-                        ExceptionHelper.ThrowEscapeCharactersIncluded(ch);
-                    }
                     Advance(1);
                     utf8Writer.Write(ch);
                     IncreaseLineNumber();
                     continue;
                 }
-                else
+                else if (CsTomlSyntax.IsCr(ch))
                 {
-                    ExceptionHelper.ThrowEscapeCharactersIncluded(ch);
+                    Advance(1);
+                    if (TryPeek(out var linebreakCh) && CsTomlSyntax.IsLf(linebreakCh))
+                    {
+                        Advance(1);
+                        utf8Writer.Write(ch);
+                        utf8Writer.Write(linebreakCh);
+                        IncreaseLineNumber();
+                        continue;
+                    }
                 }
+                ExceptionHelper.ThrowEscapeCharactersIncluded(ch);
             }
             else if (CsTomlSyntax.IsDoubleQuoted(ch))
             {
@@ -762,18 +764,25 @@ internal ref struct CsTomlReader
         var firstPosition = sequenceReader.Consumed;
         while (TryPeek(out var ch))
         {
-            if (CsTomlSyntax.IsTabOrWhiteSpace(ch))
-                break;
-            else if (CsTomlSyntax.IsPeriod(ch))
-                break;
-            else if (CsTomlSyntax.IsEqual(ch))
-                break;
-            else if (isTableHeader && CsTomlSyntax.IsRightSquareBrackets(ch))
-                break;
-            if (!CsTomlSyntax.IsBareKey(ch)) 
-                ExceptionHelper.ThrowNumericConversionFailed(ch);
+            switch(ch)
+            {
+                case CsTomlSyntax.Symbol.TAB:
+                case CsTomlSyntax.Symbol.SPACE:
+                case CsTomlSyntax.Symbol.PERIOD:
+                case CsTomlSyntax.Symbol.EQUAL:
+                    goto BREAK;
+                case CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET:
+                    if (isTableHeader) goto BREAK;
+                    break;
+                default:
+                    if (!CsTomlSyntax.IsBareKey(ch))
+                        ExceptionHelper.ThrowNumericConversionFailed(ch);
+                    break;
+            }
             Advance(1);
         }
+
+    BREAK:
         var endPosition = sequenceReader.Consumed;
         var length = endPosition - firstPosition;
         Rewind(length);
@@ -879,7 +888,6 @@ internal ref struct CsTomlReader
             Advance(1); // skip "="
             SkipWhiteSpace();
 
-            if (!Peek()) ExceptionHelper.ThrowEndOfFileReached(); // value is nothing
             inlineTable.AddKeyValue(key, ReadValue(), currentNode);
 
             SkipWhiteSpace();

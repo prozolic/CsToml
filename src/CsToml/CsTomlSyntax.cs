@@ -85,6 +85,14 @@ internal static class CsTomlSyntax
         internal const byte Z = 0x5a;
     }
 
+    internal readonly struct DateTime
+    {
+        internal const byte LocalTimeFormatLength = 8; // HH:mm:ss
+        internal const byte LocalDateFormatLength = 10; // yyyy-MM-dd
+        internal const byte LocalDateTimeFormatLength = 19; // yyyy-MM-ddTHH:mm:ss
+        internal const byte OffsetDateTimeZFormatLength = 20; // yyyy-MM-ddTHH:mm:ssZ
+    }
+
     internal readonly struct Symbol
     {
         internal const byte UNDERSCORE = 0x5f;
@@ -109,36 +117,11 @@ internal static class CsTomlSyntax
         internal const byte COLON = 0x3a;
         internal const byte PERIOD = 0x2e;
         internal const byte COMMA = 0x2c;
-
-        private static readonly byte[] UnixNewLine = [LINEFEED];
-        private static readonly byte[] WindowsNewLine = [CARRIAGE, LINEFEED];
-        private static byte[]? NewLine;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static ReadOnlySpan<byte> GetNewLine()
-        {
-            NewLine ??= OperatingSystem.IsWindows() ? WindowsNewLine : UnixNewLine;
-            return NewLine;
-        }
-
-        internal static void SetNewline(NewLineOption option)
-        {
-            NewLine = option switch
-            {
-                NewLineOption.Default => OperatingSystem.IsWindows() ? WindowsNewLine : UnixNewLine,
-                NewLineOption.Lf => UnixNewLine,
-                NewLineOption.CrLf => WindowsNewLine,
-                _ => OperatingSystem.IsWindows() ? WindowsNewLine : UnixNewLine,
-            };
-        }
     }
 
-    internal readonly struct DateTime
+    internal readonly struct Environment
     {
-        internal const byte LocalTimeFormatLength = 8; // HH:mm:ss
-        internal const byte LocalDateFormatLength = 10; // yyyy-MM-dd
-        internal const byte LocalDateTimeFormatLength = 19; // yyyy-MM-ddTHH:mm:ss
-        internal const byte OffsetDateTimeZFormatLength = 20; // yyyy-MM-ddTHH:mm:ssZ
+        internal static readonly byte[] NewLine = OperatingSystem.IsWindows() ? [Symbol.CARRIAGE, Symbol.LINEFEED] : [Symbol.LINEFEED];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

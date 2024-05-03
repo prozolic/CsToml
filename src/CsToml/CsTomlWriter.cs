@@ -18,7 +18,7 @@ internal ref struct CsTomlWriter<TBufferWriter>
     public CsTomlWriter(ref Utf8Writer<TBufferWriter> bufferWriter)
     {
         writer = bufferWriter;
-        newLineCh = CsTomlSyntax.Symbol.GetNewLine();
+        newLineCh = CsTomlSyntax.Environment.NewLine;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

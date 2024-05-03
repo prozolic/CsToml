@@ -1,6 +1,7 @@
 ﻿
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace CsToml.Utility;
 
@@ -12,7 +13,7 @@ internal ref struct Utf8Reader(ReadOnlySpan<byte> buffer)
 
     public int Position { get; private set; } = 0;
 
-    public byte this[int index] => source[index];
+    public readonly byte this[int index] => Unsafe.AddByteOffset(ref MemoryMarshal.GetReference(source), index);
 
     [DebuggerStepThrough]
     public ReadOnlySpan<byte> ReadBytes(int length)
@@ -48,7 +49,7 @@ internal ref struct Utf8Reader(ReadOnlySpan<byte> buffer)
     public bool TryPeek(out byte ch)
     {
         var value = Peek();
-        ch = value ? source[Position] : default;
+        ch = value ? Unsafe.AddByteOffset(ref MemoryMarshal.GetReference(source), Position) : default;
         return value;
     }
 }
