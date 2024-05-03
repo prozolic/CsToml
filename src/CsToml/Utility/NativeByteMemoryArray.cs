@@ -10,6 +10,7 @@ namespace CsToml.Utility;
 //
 // [Cysharp/NativeMemoryArray]
 // https://github.com/Cysharp/NativeMemoryArray
+// https://github.com/Cysharp/NativeMemoryArray/blob/master/LICENSE
 //
 // [Cysharp.Collections.NativeMemoryArray]
 // https://github.com/Cysharp/NativeMemoryArray/blob/master/src/NativeMemoryArray/NativeMemoryArray.cs

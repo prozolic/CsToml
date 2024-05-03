@@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
 //
 // [dotnet/runtime]
 // https://github.com/dotnet/runtime
+// https://github.com/dotnet/runtime/blob/main/LICENSE.TXT
 //
 // [System.Collections.Generic.Dictionary]
 // https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/System/Collections/Generic/Dictionary.cs
