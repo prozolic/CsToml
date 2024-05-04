@@ -24,7 +24,7 @@ StringValue = "TestPackagePart"
         }
         else
         {
-            Assert.Equal(text.Replace("\n", "\r\n"), Encoding.UTF8.GetString(tomlBytes.ByteSpan).Replace("\n", "\r\n"));
+            Assert.Equal(text.Replace("\r\n", "\n"), Encoding.UTF8.GetString(tomlBytes.ByteSpan).Replace("\r\n", "\n"));
         }
         var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlBytes.ByteSpan);
         Assert.Equal(part.IntValue, package!.Find("IntValue"u8)!.GetInt64());
