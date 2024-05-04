@@ -65,13 +65,6 @@ public static TPackage? Deserialize<TPackage>(ReadOnlySpan<byte> tomlText, CsTom
 public static TPackage? Deserialize<TPackage>(in ReadOnlySequence<byte> tomlTextSequence, CsTomlSerializerOptions? options = null)
 ```
 
-| Name(Argument) | Return |  
-| --- | --- |  
-| **ReadAndDeserialize**(`string?` path, `CsTomlSerializerOptions?` options = null) | `TPackage : CsTomlPackage, ICsTomlPackageCreator<TPackage>` |  
-| **ReadAndDeserializeAsync**(`string?` path, `CsTomlSerializerOptions?` options = null, `CancellationToken` cancellationToken = default) | `ValueTask<TPackage?> : CsTomlPackage, ICsTomlPackageCreator<TPackage>` |  
-| **Deserialize**(`ReadOnlySpan<byte>` tomlText, `CsTomlSerializerOptions?` options = null) | `TPackage : CsTomlPackage, ICsTomlPackageCreator<TPackage>` |  
-| **Deserialize**(`in ReadOnlySequence<byte>` tomlTextSequence, `CsTomlSerializerOptions?` options = null) | `TPackage : CsTomlPackage, ICsTomlPackageCreator<TPackage>` |  
-
 `ReadAndDeserialize` and `Deserialize` accepts `CsTomlSerializerOptions? options` as parameters.
 `IsThrowCsTomlException` determines whether an exception is thrown if a syntax error occurs during parsing.
 If you set to false, no syntax error is thrown. Errors that occur during analysis can be found at `CsTomlPackage.Exceptions`.
@@ -149,66 +142,6 @@ Console.WriteLine($"value = \"{str}\"");
 CsToml converts deserialized TOML format values to `CsTomlValue`.
 `CsTomlValue` can be obtained by calling `TryGetValue` and `Find`, the APIs of `CsTomlPackage`, with the key.
 
-There are two ways to search with the dot key.
-The first is to search using `ReadOnlySpan<ByteArray>` as the key.
-Since C#12, the ability to use collection expressions has made it convenient to create `ReadOnlySpan<ByteArray>` as well as to initialize arrays.  
-The second is to use the optional function CsTomlPackageOptions.DottedKeys.
-For example, to search for the dotted key `a.b`, execute `Find("a.b "u8, CsTomlPackageOptions.DottedKeys)`.
-The internal process is to split `"a.b"` into `a` and `b` before searching, but this is superior in performance because it splits the string without creating unnecessary strings.
-Note that the dot (.) as a delimiter, it may not be possible to search for some keys.
-If you want to search exactly, you should use `ReadOnlySpan<ByteArray>`.  
-
-```csharp
-var tomlText = @"
-key = ""value""
-number = 123
-dotted.keys = ""value""
-
-[table]
-key = ""value""
-
-[[ArrayOfTables]]
-key = ""value""
-
-[[ArrayOfTables]]
-number = 123
-"u8;
-
-var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText);
-
-{
-    var value = package!.Find("key"u8);
-    var rawValue = value?.GetString(); // "value"
-    var result = package!.TryGetValue("key"u8, out var value2); // "value"
-}
-
-// Dotted keys
-{
-    var value = package!.Find(["dotted"u8,"keys"u8]); // "value"
-    var result = package!.TryGetValue(["dotted"u8, "keys"u8], out var value2); // "value"
-
-    var value3 = package!.Find("dotted.keys"u8, CsTomlPackageOptions.DottedKeys); // "value"
-    var result2 = package!.TryGetValue("dotted.keys"u8, out var value4, CsTomlPackageOptions.DottedKeys); // "value"
-}
-
-// table
-{
-    var value = package!.Find("table"u8, "key"u8); // "value"
-    var result = package!.TryGetValue("table", "key", out var value2); // "value"
-}
-
-// ArrayOfTables
-{
-    var value = package!.Find("ArrayOfTables"u8, 0, "key"u8);  // "value"
-    var result = package!.TryGetValue("ArrayOfTables"u8, 0, "key"u8, out var value2); // "value"
-}
-{
-    var value = package!.Find("ArrayOfTables"u8, 1, "number"u8); // 123
-    var result = package!.TryGetValue("ArrayOfTables"u8, 1, "number"u8, out var value2); // 123
-}
-
-```
-
 ```csharp
 public bool TryGetValue(ReadOnlySpan<byte> key, out CsTomlValue? value, CsTomlPackageOptions? options = default)
 public bool TryGetValue(ReadOnlySpan<ByteArray> key, out CsTomlValue? value, CsTomlPackageOptions? options = default)
@@ -234,9 +167,78 @@ public CsTomlValue? Find(ReadOnlySpan<ByteArray> arrayOfTableHeader, int arrayIn
 public CsTomlValue? Find(ReadOnlySpan<char> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<char> key, CsTomlPackageOptions? options = default)
 ```
 
+There are three ways to search with the dot key.
+The first is to search using `ReadOnlySpan<ByteArray>` as the key.
+Since C#12, the ability to use collection expressions has made it convenient to create `ReadOnlySpan<ByteArray>` as well as to initialize arrays.  
+The second is to use the optional function CsTomlPackageOptions.DottedKeys.
+For example, to search for the dotted key `a.b`, execute `Find("a.b "u8, CsTomlPackageOptions.DottedKeys)`.
+The internal process is to split `"a.b"` into `a` and `b` before searching, but this is superior in performance because it splits the string without creating unnecessary strings.
+Note that the dot (.) as a delimiter, it may not be possible to search for some keys.
+If you want to search exactly, you should use `ReadOnlySpan<ByteArray>`.  
+The third is to use an indexer.
+For example, to search for the dotted key a.b, execute `package!["a"u8]["b"u8].Value`.
+It is possible to search faster than the above two.
+
+```csharp
+var tomlText = @"
+key = ""value""
+number = 123
+dotted.keys = ""value""
+
+[table]
+key = ""value""
+
+[[ArrayOfTables]]
+key = ""value""
+
+[[ArrayOfTables]]
+number = 123
+"u8;
+
+var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText);
+
+{
+    var value = package!.Find("key"u8);
+    var rawValue = value?.GetString(); // "value"
+    var result = package!.TryGetValue("key"u8, out var value2); // "value"
+    var result2 = package!["key"u8].Value.GetString();  // "value" 
+}
+
+// Dotted keys
+{
+    var value = package!.Find(["dotted"u8,"keys"u8]); // "value"
+    var result = package!.TryGetValue(["dotted"u8, "keys"u8], out var value2); // "value"
+
+    var value3 = package!.Find("dotted.keys"u8, CsTomlPackageOptions.DottedKeys); // "value"
+    var result2 = package!.TryGetValue("dotted.keys"u8, out var value4, CsTomlPackageOptions.DottedKeys); // "value"
+    var result3 = package!["dotted"u8]["keys"u8].Value.GetString();  // "value" 
+}
+
+// table
+{
+    var value = package!.Find("table"u8, "key"u8); // "value"
+    var result = package!.TryGetValue("table", "key", out var value2); // "value"
+    var result2 = package!["table"u8]["key"u8].Value.GetString();  // "value" 
+}
+
+// ArrayOfTables
+{
+    var value = package!.Find("ArrayOfTables"u8, 0, "key"u8);  // "value"
+    var result = package!.TryGetValue("ArrayOfTables"u8, 0, "key"u8, out var value2); // "value"
+    var result2 = package!["arrayOfTables"u8][0]["key"u8].Value.GetInt64() // "value"
+}
+{
+    var value = package!.Find("ArrayOfTables"u8, 1, "number"u8); // 123
+    var result = package!.TryGetValue("ArrayOfTables"u8, 1, "number"u8, out var value2); // 123
+    var result2 = package!["arrayOfTables"u8][1]["number"u8].Value.GetString() // 123
+}
+
+```
+
 ### Casting a toml value
 
 The following API is used to obtain internal values from CsTomlValue.
+`Get~` raises an exception, but `TryGet~` does not, and the return value can be used to determine if the acquisition was successful.
 
 ```csharp
 public ReadOnlyCollection<CsTomlValue> GetArray()
