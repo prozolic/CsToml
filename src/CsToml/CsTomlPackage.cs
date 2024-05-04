@@ -51,6 +51,21 @@ public readonly struct CsTomlNode
         }
     }
 
+    public CsTomlNode this[int index]
+    {
+        get
+        {
+            if (Value is CsTomlArray arrayValue)
+            {
+                var t = arrayValue[index] as CsTomlTable;
+                if (t == null) return Empty;
+
+                return new CsTomlNode(t!.RootNode);
+            }
+            return Empty;
+        }
+    }
+
     internal CsTomlNode(CsTomlTableNode node)
     {
         this.node = node;
