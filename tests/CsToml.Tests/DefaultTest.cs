@@ -1,5 +1,4 @@
-﻿using CsToml.Error;
-
+﻿
 namespace CsToml.Tests;
 
 public class DefaultTest
@@ -138,5 +137,20 @@ number2 = 123456
         }
 
     }
+
+    [Fact]
+    public void IndexerTest()
+    {
+        var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText)!;
+
+        Assert.Equal("value", package!["key"u8].Value.GetString());
+        Assert.Equal("value", package!["first"u8]["second"u8]["third"u8].Value.GetString());
+        Assert.Equal(123456, package!["number"u8].Value.GetInt64());
+        Assert.Equal("value", package!["Table"u8]["test"u8]["key"u8].Value.GetString());
+        Assert.Equal("value", package!["arrayOfTables"u8]["test"u8][0]["key"u8].Value.GetString());
+
+        Assert.False(package!["failed"u8].Value.HasValue);
+    }
+
 }
 
