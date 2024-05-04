@@ -13,12 +13,19 @@ public class DefaultTest
         var part = new TestPackagePart();
         using var tomlBytes = CsTomlSerializer.Serialize(ref part, CsTomlSerializerOptions.CreateOptions());
 
-        Assert.Equal("""
+        var text = """
 IntValue = 123
 StringValue = "TestPackagePart"
 
-""", Encoding.UTF8.GetString(tomlBytes.ByteSpan));
-
+""";
+        if (OperatingSystem.IsWindows())
+        {
+            Assert.Equal(text, Encoding.UTF8.GetString(tomlBytes.ByteSpan));
+        }
+        else
+        {
+            Assert.Equal(text.Replace("\n", "\r\n"), Encoding.UTF8.GetString(tomlBytes.ByteSpan).Replace("\n", "\r\n"));
+        }
         var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlBytes.ByteSpan);
         Assert.Equal(part.IntValue, package!.Find("IntValue"u8)!.GetInt64());
         Assert.Equal(part.StringValue, package!.Find("StringValue"u8)!.GetString());
