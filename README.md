@@ -17,7 +17,7 @@ number = 123
 
 var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText);
 
-if (package.TryGetValue("key", out var value))
+if (package.TryGetValue("key"u8, out var value))
 {
     var str = value!.GetString();
     Console.WriteLine($"key = {str}"); // key = value
