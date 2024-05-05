@@ -7,7 +7,7 @@ public partial class CsTomlSerializer
 {
     private static readonly string TomlExtension = ".toml";
 
-    public static TPackage? ReadAndDeserialize<TPackage>(string? path, CsTomlSerializerOptions? options = null)
+    public static TPackage? DeserializeFromFile<TPackage>(string? path, CsTomlSerializerOptions? options = null)
         where TPackage : CsTomlPackage, ICsTomlPackageCreator<TPackage>
     {
         if (Path.GetExtension(path) != TomlExtension)
@@ -55,7 +55,7 @@ public partial class CsTomlSerializer
         }
     }
 
-    public static async ValueTask<TPackage?> ReadAndDeserializeAsync<TPackage>(string? path, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
+    public static async ValueTask<TPackage?> DeserializeFromFileAsync<TPackage>(string? path, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
         where TPackage : CsTomlPackage, ICsTomlPackageCreator<TPackage>
     {
         if (Path.GetExtension(path) != TomlExtension)
