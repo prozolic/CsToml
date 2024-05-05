@@ -7,13 +7,14 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <Authors>prozolic</Authors>
-    <PackageTags>TOML,parser,writer,reader</PackageTags>
-    <Description>TOML parser for .NET.</Description>
+    <PackageTags>TOML,serializer,parser,writer,reader</PackageTags>
+    <Description>TOML Serializer for .NET.</Description>
     <Copyright>prozolic</Copyright>
     <PackageProjectUrl>https://github.com/prozolic/CsToml</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>$(PackageProjectUrl)</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <VersionPrefix>1.0.1</VersionPrefix>
   </PropertyGroup>
 
   <ItemGroup>

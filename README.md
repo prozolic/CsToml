@@ -1,6 +1,6 @@
-# CsToml - TOML Parser  for .NET
+# CsToml - TOML Serializer  for .NET
 
-CsToml is TOML parser for .NET.  
+CsToml is TOML Serializer for .NET.  
 For more information about TOML, visit the official website at [https://toml.io/en/](https://toml.io/en/)
 
 > [!NOTE]
