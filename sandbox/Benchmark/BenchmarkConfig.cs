@@ -1,4 +1,5 @@
-﻿using BenchmarkDotNet.Columns;
+﻿using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Columns;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Diagnosers;
 using BenchmarkDotNet.Exporters;
@@ -14,6 +15,8 @@ internal class BenchmarkConfig : ManualConfig
         AddDiagnoser(MemoryDiagnoser.Default);
         AddColumn(CategoriesColumn.Default);
         AddColumn(RankColumn.Arabic);
+        AddColumn(StatisticColumn.Min);
+        AddColumn(StatisticColumn.Max);
 
         //AddJob(Job.ShortRun);
         AddJob(Job.MediumRun);

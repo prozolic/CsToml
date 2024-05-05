@@ -2,15 +2,15 @@
 using ConsoleApp;
 using CsToml;
 using CsToml.Error;
+using System.Buffers;
 using System.Text;
 
 Console.WriteLine("Hello, World!");
 
 
-var package = CsTomlSerializer.ReadAndDeserialize<CsTomlPackage>("./../../../Toml/test.toml");
+var package = CsTomlSerializer.DeserializeFromFile<CsTomlPackage>("./../../../Toml/test.toml");
 
 {
-    var value = package!.Find("key"u8);
     var value2 = package!.Find("int1"u8);
     var value3 = package!.Find("int6"u8);
     var value4 = package!.Find("hex1"u8);
@@ -21,6 +21,10 @@ var package = CsTomlSerializer.ReadAndDeserialize<CsTomlPackage>("./../../../Tom
     var value9 = package!.Find("lt1"u8);
     var value10 = package!.Find("integers"u8)?.GetArrayValue(0);
     var value11 = package!.Find("nested_mixed_array"u8)?.GetArrayValue(0)?.GetArrayValue(1);
+    var _ = package!.Find("integers"u8)?.TryGetArray(out var value12);
+    var value13 = package!.Find("Name\\tJos\\u00E9");
+
+    var value14 = package!["products"u8][0]["name"u8];
 }
 {
     var value = package!.Find("table-1"u8, "key1"u8);
@@ -65,6 +69,9 @@ Console.WriteLine(Encoding.UTF8.GetString(serializedTomlText.ByteSpan));
 
 var result = CsTomlSerializer.Serialize(package);
 Console.WriteLine(Encoding.UTF8.GetString(result.ByteSpan));
+
+var buffer = new ArrayBufferWriter<byte>();
+CsTomlSerializer.Serialize(ref buffer, package);
 
 var part = new TestPackagePart();
 using var partBytes = CsTomlSerializer.Serialize(ref part);

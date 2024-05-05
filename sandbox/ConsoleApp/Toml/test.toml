@@ -39,6 +39,8 @@ str6 = """Here are fifteen quotation marks: ""\"""\"""\"""\"""\"."""
 # "This," she said, "is just a pointless statement."
 str7 = """"This," she said, "is just a pointless statement.""""
 
+"Name\tJos\u00E9" = 123
+
 # What you see is what you get.
 winpath  = 'C:\Users\nodejs\templates'
 winpath2 = '\\ServerX\admin$\system32\'
