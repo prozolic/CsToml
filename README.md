@@ -54,18 +54,18 @@ number = 123
 var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText);
 ```
 
-The basic API involve `CsTomlPackage? package = CsTomlSerializer.ReadAndDeserialize<CsTomlPackage>("test.toml")`, `CsTomlPackage? package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText)` and `CsTomlPackage? package = await CsTomlSerializer.ReadAndDeserializeAsync<CsTomlPackage>("test.toml")`.
-When parsing from TOML files, you can use `ReadAndDeserialize`.
+The basic API involve `CsTomlPackage? package = CsTomlSerializer.DeserializeFromFile<CsTomlPackage>("test.toml")`, `CsTomlPackage? package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText)` and `CsTomlPackage? package = await CsTomlSerializer.DeserializeFromFileAsync<CsTomlPackage>("test.toml")`.
+When parsing from TOML files, you can use `DeserializeFromFile`.
 When parsing from UTF-8 string(`ReadOnlySpan<byte>` or `ReadOnlySequence<byte>`) in TOML format, you can use `Deserialize`.  
 
 ```csharp
-public static TPackage? ReadAndDeserialize<TPackage>(string? path, CsTomlSerializerOptions? options = null)
-public static async ValueTask<TPackage?> ReadAndDeserializeAsync<TPackage>(string? path, CsTomlSerializerOptions? options = null, CancellationToken cancellationToken = default, bool configureAwait = true)
+public static TPackage? DeserializeFromFile<TPackage>(string? path, CsTomlSerializerOptions? options = null)
+public static async ValueTask<TPackage?> DeserializeFromFileAsync<TPackage>(string? path, CsTomlSerializerOptions? options = null, CancellationToken cancellationToken = default, bool configureAwait = true)
 public static TPackage? Deserialize<TPackage>(ReadOnlySpan<byte> tomlText, CsTomlSerializerOptions? options = null)
 public static TPackage? Deserialize<TPackage>(in ReadOnlySequence<byte> tomlTextSequence, CsTomlSerializerOptions? options = null)
 ```
 
-`ReadAndDeserialize` and `Deserialize` accepts `CsTomlSerializerOptions? options` as parameters.
+`DeserializeFromFile` and `Deserialize` accepts `CsTomlSerializerOptions? options` as parameters.
 `IsThrowCsTomlException` determines whether an exception is thrown if a syntax error occurs during parsing.
 If you set to false, no syntax error is thrown. Errors that occur during analysis can be found at `CsTomlPackage.Exceptions`.
 The default is true, which means that an error is thrown during parsing.  
