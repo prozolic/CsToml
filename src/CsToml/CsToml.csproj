@@ -12,6 +12,8 @@
     <Copyright>prozolic</Copyright>
     <PackageProjectUrl>https://github.com/prozolic/CsToml</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>$(PackageProjectUrl)</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
