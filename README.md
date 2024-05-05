@@ -39,7 +39,9 @@ Console.WriteLine(Encoding.UTF8.GetString(serializedTomlText));
 
 ## Installation
 
-preparing.
+This library is distributed via NuGet.
+
+> PM> Install-Package [CsToml](https://www.nuget.org/packages/CsToml/)
 
 ## Deserialize a toml format string or file
 
