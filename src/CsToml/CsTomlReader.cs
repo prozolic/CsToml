@@ -102,7 +102,7 @@ internal ref struct CsTomlReader
             ExceptionHelper.ThrowEndOfFileReached();
         }
 
-        var key = new CsTomlKey();
+        var keys = new List<CsTomlString>(2);
         var period = true;
         while (TryPeek(out var c))
         {
@@ -110,7 +110,7 @@ internal ref struct CsTomlReader
             {
                 if (!period) ExceptionHelper.ThrowIncorrectTomlFormat();
                 period = false;
-                key.Add(ReadKeyString(isTableHeader));
+                keys.Add(ReadKeyString(isTableHeader));
                 continue;
             }
             switch(c)
@@ -127,7 +127,7 @@ internal ref struct CsTomlReader
                             case CsTomlSyntax.Symbol.PERIOD:
                                 if (period)
                                 {
-                                    if (key.DotKeys.Count > 0)
+                                    if (keys.Count > 0)
                                         ExceptionHelper.ThrowPeriodUsedMoreThanOnce();
                                     else
                                         ExceptionHelper.ThrowTheDotIsDefinedFirst();
@@ -142,7 +142,7 @@ internal ref struct CsTomlReader
                             case CsTomlSyntax.Symbol.SINGLEQUOTED:
                             case var alphabet when CsTomlSyntax.IsAlphabet(alphabet):
                             case var number when CsTomlSyntax.IsNumber(number):
-                                if (key.DotKeys.Count > 0 && !period)
+                                if (keys.Count > 0 && !period)
                                     ExceptionHelper.ThrowIncorrectTomlFormat();
                                 continue;
                         }
@@ -150,7 +150,7 @@ internal ref struct CsTomlReader
                     }
                     goto BREAK;
                 case CsTomlSyntax.Symbol.EQUAL:
-                    if (key.DotKeys.Count == 0)
+                    if (keys.Count == 0)
                     {
                         ExceptionHelper.ThrowBareKeyIsEmpty();
                     }
@@ -158,7 +158,7 @@ internal ref struct CsTomlReader
                 case CsTomlSyntax.Symbol.PERIOD:
                     if (period)
                     {
-                        if (key.DotKeys.Count > 0)
+                        if (keys.Count > 0)
                             ExceptionHelper.ThrowPeriodUsedMoreThanOnce();
                         else
                             ExceptionHelper.ThrowTheDotIsDefinedFirst();
@@ -170,12 +170,12 @@ internal ref struct CsTomlReader
                 case CsTomlSyntax.Symbol.DOUBLEQUOTED:
                     if (!period) ExceptionHelper.ThrowIncorrectTomlFormat();
                     period = false;
-                    key.Add(ReadDoubleQuoteSingleLineString());
+                    keys.Add(ReadDoubleQuoteSingleLineString());
                     continue;
                 case CsTomlSyntax.Symbol.SINGLEQUOTED:
                     if (!period) ExceptionHelper.ThrowIncorrectTomlFormat();
                     period = false;
-                    key.Add(ReadSingleQuoteSingleLineString());
+                    keys.Add(ReadSingleQuoteSingleLineString());
                     continue;
                 case CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET:
                     if (isTableHeader)
@@ -203,7 +203,7 @@ internal ref struct CsTomlReader
             break;
         }
 
-        return key;
+        return new CsTomlKey(keys);
     }
 
     public CsTomlValue ReadValue()

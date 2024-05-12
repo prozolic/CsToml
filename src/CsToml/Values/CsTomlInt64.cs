@@ -5,9 +5,7 @@ using System.Diagnostics;
 namespace CsToml.Values;
 
 [DebuggerDisplay("{Value}")]
-internal partial class CsTomlInt64(long value) : 
-    CsTomlValue(), 
-    IEquatable<CsTomlInt64?>
+internal partial class CsTomlInt64(long value) : CsTomlValue()
 {
     public long Value { get; private set; } = value;
 
@@ -18,24 +16,6 @@ internal partial class CsTomlInt64(long value) :
         ValueFormatter.Serialize(ref writer, Value);
         return true;
     }
-
-    public override bool Equals(object? obj)
-    {
-        if (obj == null) return false;
-        if (obj.GetType() != typeof(CsTomlInt64)) return false;
-
-        return Equals((CsTomlInt64)obj);
-    }
-
-    public bool Equals(CsTomlInt64? other)
-    {
-        if (other == null) return false;
-
-        return Value.Equals(other.Value);
-    }
-
-    public override int GetHashCode()
-        => Value.GetHashCode();
 
     public override string ToString()
         => GetString();

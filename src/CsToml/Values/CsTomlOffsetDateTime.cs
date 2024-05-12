@@ -5,9 +5,7 @@ using System.Diagnostics;
 namespace CsToml.Values;
 
 [DebuggerDisplay("{Value}")]
-internal partial class CsTomlOffsetDateTime(DateTimeOffset value) : 
-    CsTomlValue(), 
-    IEquatable<CsTomlOffsetDateTime?>
+internal partial class CsTomlOffsetDateTime(DateTimeOffset value) : CsTomlValue()
 {
     public DateTimeOffset Value { get; private set; } = value;
 
@@ -18,24 +16,6 @@ internal partial class CsTomlOffsetDateTime(DateTimeOffset value) :
         ValueFormatter.Serialize(ref writer, Value);
         return true;
     }
-
-    public override bool Equals(object? obj)
-    {
-        if (obj == null) return false;
-        if (obj.GetType() != typeof(CsTomlOffsetDateTime)) return false;
-
-        return Equals((CsTomlOffsetDateTime)obj);
-    }
-
-    public bool Equals(CsTomlOffsetDateTime? other)
-    {
-        if (other == null) return false;
-
-        return Value.Equals(other.Value);
-    }
-
-    public override int GetHashCode()
-        => Value.GetHashCode();
 
     public override string ToString()
         => GetString();

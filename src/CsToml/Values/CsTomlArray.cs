@@ -13,7 +13,7 @@ internal partial class CsTomlArray(int capacity) :
     CsTomlValue(), 
     IEnumerable<CsTomlValue>
 {
-    private List<CsTomlValue> values = new(capacity);
+    private readonly List<CsTomlValue> values = new(capacity);
 
     public int Count => values.Count;
 

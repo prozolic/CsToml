@@ -50,15 +50,6 @@ internal partial class CsTomlString :
 
     internal override bool ToTomlString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
     {
-        if (TomlStringType == CsTomlStringType.Unquoted)
-        {
-            if (Length == 0)
-            {
-                return false;
-            }
-            writer.Write(Value);
-            return true;
-        }
         switch (TomlStringType)
         {
             case CsTomlStringType.Basic:
@@ -69,6 +60,15 @@ internal partial class CsTomlString :
                 return ToTomlLiteralString(ref writer);
             case CsTomlStringType.MultiLineLiteral:
                 return ToTomlMultiLineLiteralString(ref writer);
+            case CsTomlStringType.Unquoted:
+                {
+                    if (Length > 0)
+                    {
+                        writer.Write(Value);
+                        return true;
+                    }
+                    break;
+                }
         }
 
         return false;

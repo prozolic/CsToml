@@ -5,9 +5,7 @@ using System.Diagnostics;
 namespace CsToml.Values;
 
 [DebuggerDisplay("{Value}")]
-internal partial class CsTomlLocalDate(DateOnly value) :
-    CsTomlValue(), 
-    IEquatable<CsTomlLocalDate?>
+internal partial class CsTomlLocalDate(DateOnly value) : CsTomlValue()
 {
     public DateOnly Value { get; private set; } = value;
 
@@ -18,24 +16,6 @@ internal partial class CsTomlLocalDate(DateOnly value) :
         ValueFormatter.Serialize(ref writer, Value);
         return true;
     }
-
-    public override bool Equals(object? obj)
-    {
-        if (obj == null) return false;
-        if (obj.GetType() != typeof(CsTomlLocalDate)) return false;
-
-        return Equals((CsTomlLocalDate)obj);
-    }
-
-    public bool Equals(CsTomlLocalDate? other)
-    {
-        if (other == null) return false;
-
-        return Value.Equals(other.Value);
-    }
-
-    public override int GetHashCode()
-        => Value.GetHashCode();
 
     public override string ToString()
         => GetString();

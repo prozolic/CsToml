@@ -5,9 +5,7 @@ using System.Diagnostics;
 namespace CsToml.Values;
 
 [DebuggerDisplay("{Value}")]
-internal partial class CsTomlBool(bool value) :
-    CsTomlValue(), 
-    IEquatable<CsTomlBool?>
+internal partial class CsTomlBool(bool value) : CsTomlValue()
 {
     public bool Value { get; private set; } = value;
 
@@ -18,24 +16,6 @@ internal partial class CsTomlBool(bool value) :
         ValueFormatter.Serialize(ref writer, Value);
         return true;
     }
-
-    public override bool Equals(object? obj)
-    {
-        if (obj == null) return false;
-        if (obj.GetType() != typeof(CsTomlBool)) return false;
-
-        return Equals((CsTomlBool)obj);
-    }
-
-    public bool Equals(CsTomlBool? other)
-    {
-        if (other == null) return false;
-
-        return Value.Equals(other.Value);
-    }
-
-    public override int GetHashCode()
-        => Value ? 1 : 0;
 
     public override string ToString()
         => GetString();

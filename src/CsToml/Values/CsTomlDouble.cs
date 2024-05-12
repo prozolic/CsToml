@@ -5,9 +5,7 @@ using System.Diagnostics;
 namespace CsToml.Values;
 
 [DebuggerDisplay("{Value}")]
-internal partial class CsTomlDouble(double value, CsTomlDouble.DoubleKind kind = CsTomlDouble.DoubleKind.Normal) : 
-    CsTomlValue(),
-    IEquatable<CsTomlDouble?>
+internal partial class CsTomlDouble(double value, CsTomlDouble.DoubleKind kind = CsTomlDouble.DoubleKind.Normal) : CsTomlValue()
 {
     public readonly static CsTomlDouble Inf = new(CsTomlSyntax.Double.Inf, DoubleKind.Inf);
     public readonly static CsTomlDouble NInf = new (CsTomlSyntax.Double.NInf, DoubleKind.NInf);
@@ -56,24 +54,6 @@ internal partial class CsTomlDouble(double value, CsTomlDouble.DoubleKind kind =
         }
         return true;
     }
-
-    public override bool Equals(object? obj)
-    {
-        if (obj == null) return false;
-        if (obj.GetType() != typeof(CsTomlDouble)) return false;
-
-        return Equals((CsTomlDouble)obj);
-    }
-
-    public bool Equals(CsTomlDouble? other)
-    {
-        if (other == null) return false;
-
-        return Value.Equals(other.Value);
-    }
-
-    public override int GetHashCode()
-        => Value.GetHashCode();
 
     public override string ToString()
         => GetString();

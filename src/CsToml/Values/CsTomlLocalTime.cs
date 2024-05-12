@@ -5,9 +5,7 @@ using System.Diagnostics;
 namespace CsToml.Values;
 
 [DebuggerDisplay("{Value}")]
-internal partial class CsTomlLocalTime(TimeOnly value) : 
-    CsTomlValue(),
-    IEquatable<CsTomlLocalTime?>
+internal partial class CsTomlLocalTime(TimeOnly value) : CsTomlValue()
 {
     public TimeOnly Value { get; private set; } = value;
 
@@ -18,24 +16,6 @@ internal partial class CsTomlLocalTime(TimeOnly value) :
         ValueFormatter.Serialize(ref writer, Value);
         return true;
     }
-
-    public override bool Equals(object? obj)
-    {
-        if (obj == null) return false;
-        if (obj.GetType() != typeof(CsTomlLocalTime)) return false;
-
-        return Equals((CsTomlLocalTime)obj);
-    }
-
-    public bool Equals(CsTomlLocalTime? other)
-    {
-        if (other == null) return false;
-
-        return Value.Equals(other.Value);
-    }
-
-    public override int GetHashCode()
-        => Value.GetHashCode();
 
     public override string ToString()
         => GetString();

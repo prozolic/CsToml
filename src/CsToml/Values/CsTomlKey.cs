@@ -7,24 +7,25 @@ using System.Runtime.InteropServices;
 namespace CsToml.Values;
 
 [DebuggerDisplay("CsTomlKey: {DotKeys}")]
-internal sealed class CsTomlKey : CsTomlValue
+internal sealed class CsTomlKey
 {
-    private readonly List<CsTomlString> dotKeys = new(2);
+    private readonly List<CsTomlString> dotKeys;
 
     public IReadOnlyList<CsTomlString> DotKeys => dotKeys;
 
     public ReadOnlySpan<CsTomlString> DotKeysSpan => CollectionsMarshal.AsSpan(dotKeys);
 
-    public override bool HasValue => true;
-
-    internal CsTomlKey() : base(){}
+    internal CsTomlKey(List<CsTomlString> dotKeys)
+    {
+        this.dotKeys = dotKeys;
+    }
 
     internal string GetJoinName()
     {
         var bufferWriter = new ArrayPoolBufferWriter<byte>();
         using var _ = bufferWriter;
         var writer = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref bufferWriter);
-        var dotKeysSpan = CollectionsMarshal.AsSpan(dotKeys);
+        var dotKeysSpan = DotKeysSpan;
         for (int i = 0; i < dotKeysSpan.Length; i++)
         {
             dotKeysSpan[i].ToTomlString(ref writer);
@@ -36,7 +37,4 @@ internal sealed class CsTomlKey : CsTomlValue
         ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out string value);
         return value;
     }
-
-    public void Add(CsTomlString key)
-        => dotKeys.Add(key);
 }
