@@ -2,6 +2,7 @@
 
 using BenchmarkDotNet.Attributes;
 using CsToml;
+using CsToml.Extensions;
 
 namespace Benchmark;
 
@@ -17,13 +18,13 @@ public class ParseFromFileBenchmark
     [BenchmarkCategory("Benchmark"), Benchmark(Baseline = true)]
     public void CsTomlDeserializeFromFile()
     {
-        var package = CsTomlSerializer.DeserializeFromFile<CsTomlPackage>(TestTomlFilePath);
+        var package = CsTomlFileSerializer.Deserialize<CsTomlPackage>(TestTomlFilePath);
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]
     public async ValueTask CsTomlDeserializeFromFileAsync()
     {
-        var package = await CsTomlSerializer.DeserializeFromFileAsync<CsTomlPackage>(TestTomlFilePath);
+        var package = await CsTomlFileSerializer.DeserializeAsync<CsTomlPackage>(TestTomlFilePath);
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]

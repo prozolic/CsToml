@@ -23,6 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\CsToml.Extensions\CsToml.Extensions.csproj" />
     <ProjectReference Include="..\..\src\CsToml\CsToml.csproj" />
   </ItemGroup>
 

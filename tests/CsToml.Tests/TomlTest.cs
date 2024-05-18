@@ -1,3 +1,5 @@
+using CsToml.Extensions;
+
 namespace CsToml.Tests;
 
 /// <summary>
@@ -16,7 +18,7 @@ public class TomlTest
     [Theory, MemberData(nameof(ValidTomlFile))]
     public void ValidTest(string tomlFile)
     {
-        var package = CsTomlSerializer.DeserializeFromFile<CsTomlPackage>(tomlFile, CsTomlSerializerOptions.NoThrow);
+        var package = CsTomlFileSerializer.Deserialize<CsTomlPackage>(tomlFile, CsTomlSerializerOptions.NoThrow);
 
         if (package!.Exceptions.Count > 0)
         {
@@ -27,7 +29,7 @@ public class TomlTest
     [Theory, MemberData(nameof(InvalidTomlFile))]
     public void InvalidTest(string tomlFile)
     {
-        var package = CsTomlSerializer.DeserializeFromFile<CsTomlPackage>(tomlFile, CsTomlSerializerOptions.NoThrow);
+        var package = CsTomlFileSerializer.Deserialize<CsTomlPackage>(tomlFile, CsTomlSerializerOptions.NoThrow);
 
         if (package!.Exceptions.Count == 0)
         {

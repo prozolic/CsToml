@@ -2,13 +2,14 @@
 using ConsoleApp;
 using CsToml;
 using CsToml.Error;
+using CsToml.Extensions;
 using System.Buffers;
 using System.Text;
 
 Console.WriteLine("Hello, World!");
 
-
-var package = CsTomlSerializer.DeserializeFromFile<CsTomlPackage>("./../../../Toml/test.toml");
+var packageAsync = await CsTomlFileSerializer.DeserializeAsync<CsTomlPackage>("./../../../Toml/test.toml");
+var package = CsTomlFileSerializer.Deserialize<CsTomlPackage>("./../../../Toml/test.toml");
 
 {
     var value2 = package!.Find("int1"u8);
@@ -45,7 +46,7 @@ var package = CsTomlSerializer.DeserializeFromFile<CsTomlPackage>("./../../../To
 var tomlText = @"
 key = ""value""
 number = 123
-"u8;
+"u8.ToArray();
 
 var testpackage = CsTomlSerializer.Deserialize<TestPackage>(tomlText, CsTomlSerializerOptions.NoThrow);
 var testCsTomlpackage = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText, CsTomlSerializerOptions.NoThrow);

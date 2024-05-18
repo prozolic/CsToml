@@ -193,9 +193,10 @@ internal ref struct Utf8SequenceReader
             }
             else
             {
-                UnreadSpan.CopyTo(writer.GetSpan((int)unreadSize));
-                writer.Advance((int)unreadSize);
-                Advance((int)unreadSize);
+                var size = (int)unreadSize;
+                UnreadSpan[..size].CopyTo(writer.GetSpan(size));
+                writer.Advance(size);
+                Advance(size);
                 unreadSize = 0;
             }
         }
