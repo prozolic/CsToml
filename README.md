@@ -271,8 +271,9 @@ public bool TryGetNumber<T>(out T value)
 
 ## Extensions
 
-An extension option for CsToml is CsToml.Extensions.
+An extension option for `CsToml` is `CsToml.Extensions`.
 This option mainly provides an API to parse from TOML files.
+`CsToml.Extensions` references [Cysharp/NativeMemoryArray](https://github.com/Cysharp/NativeMemoryArray) as a dependent library.
 
 > PM> Install-Package [CsToml.Extensions](https://www.nuget.org/packages/CsToml.Extensions/)
 
@@ -293,4 +294,4 @@ Please note that we are using the TOML files located in the [‘tests/’ direct
 
 ## License
 
-MIT License. Some code is implemented based on [dotnet/runtime](https://github.com/dotnet/runtime) and [Cysharp/NativeMemoryArray](https://github.com/Cysharp/NativeMemoryArray), Please check the original license.
+MIT License. Some code is implemented based on [dotnet/runtime](https://github.com/dotnet/runtime), Please check the original license.
