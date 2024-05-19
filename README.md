@@ -43,6 +43,10 @@ This library is distributed via NuGet.
 
 > PM> Install-Package [CsToml](https://www.nuget.org/packages/CsToml/)
 
+Additional features are available by installing optional packages.(learn more in our [extensions section](#extensions))
+
+> PM> Install-Package [CsToml.Extensions](https://www.nuget.org/packages/CsToml.Extensions/)
+
 ## Deserialize a toml format string or file
 
 Deserializing from UTF-8 strings and TOML file paths to a `CsTomlPackage` is possible.  
@@ -56,18 +60,15 @@ number = 123
 var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText);
 ```
 
-The basic API involve `CsTomlPackage? package = CsTomlSerializer.DeserializeFromFile<CsTomlPackage>("test.toml")`, `CsTomlPackage? package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText)` and `CsTomlPackage? package = await CsTomlSerializer.DeserializeFromFileAsync<CsTomlPackage>("test.toml")`.
-When parsing from TOML files, you can use `DeserializeFromFile`.
+The basic API involve  `CsTomlPackage? package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText)`.
 When parsing from UTF-8 string(`ReadOnlySpan<byte>` or `ReadOnlySequence<byte>`) in TOML format, you can use `Deserialize`.  
 
 ```csharp
-public static TPackage? DeserializeFromFile<TPackage>(string? path, CsTomlSerializerOptions? options = null)
-public static async ValueTask<TPackage?> DeserializeFromFileAsync<TPackage>(string? path, CsTomlSerializerOptions? options = null, CancellationToken cancellationToken = default, bool configureAwait = true)
 public static TPackage? Deserialize<TPackage>(ReadOnlySpan<byte> tomlText, CsTomlSerializerOptions? options = null)
 public static TPackage? Deserialize<TPackage>(in ReadOnlySequence<byte> tomlTextSequence, CsTomlSerializerOptions? options = null)
 ```
 
-`DeserializeFromFile` and `Deserialize` accepts `CsTomlSerializerOptions? options` as parameters.
+`Deserialize` accepts `CsTomlSerializerOptions? options` as parameters.
 `IsThrowCsTomlException` determines whether an exception is thrown if a syntax error occurs during parsing.
 If you set to false, no syntax error is thrown. Errors that occur during analysis can be found at `CsTomlPackage.Exceptions`.
 The default is true, which means that an error is thrown during parsing.  
@@ -266,6 +267,24 @@ public bool TryGetDateTimeOffset(out DateTimeOffset value)
 public bool TryGetDateOnly(out DateOnly value)
 public bool TryGetTimeOnly(out TimeOnly value)
 public bool TryGetNumber<T>(out T value)
+```
+
+## Extensions
+
+An extension option for CsToml is CsToml.Extensions.
+This option mainly provides an API to parse from TOML files.
+
+> PM> Install-Package [CsToml.Extensions](https://www.nuget.org/packages/CsToml.Extensions/)
+
+The basic API involve `CsTomlPackage? package = CsTomlFileSerializer.Deserialize<CsTomlPackage>("test.toml")` and `CsTomlPackage? package = await CsTomlFileSerializer.DeserializeAsync<CsTomlPackage>("test.toml")`.
+
+```csharp
+var package = CsTomlFileSerializer.Deserialize<CsTomlPackage>("test.toml");
+```
+
+```csharp
+public static TPackage? Deserialize<TPackage>(string? path, CsTomlSerializerOptions? options = null)
+public static async ValueTask<TPackage?> DeserializeAsync<TPackage>(string? path, CsTomlSerializerOptions? options = null, CancellationToken cancellationToken = default, bool configureAwait = true)
 ```
 
 ## UnitTest
