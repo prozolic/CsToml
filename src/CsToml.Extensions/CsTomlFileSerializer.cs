@@ -1,5 +1,6 @@
 ﻿
 using System.Buffers;
+using System.IO.Pipelines;
 using CsToml.Extensions.Utility;
 using Cysharp.Collections;
 
@@ -103,6 +104,25 @@ public partial class CsTomlFileSerializer
             var sequence = new ReadOnlySequence<byte>(startSegment, 0, endSegment, endSegment.Length);
             return CsTomlSerializer.Deserialize<TPackage>(sequence, options);
         }
+    }
+
+    public static ValueTask<TPackage?> DeserializeAsync<TPackage>(Stream stream, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
+        where TPackage : CsTomlPackage, ICsTomlPackageCreator<TPackage>
+    {
+        return DeserializeAsync<TPackage>(PipeReader.Create(stream), options, configureAwait, cancellationToken);
+    }
+
+    public static async ValueTask<TPackage?> DeserializeAsync<TPackage>(PipeReader reader, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
+        where TPackage : CsTomlPackage, ICsTomlPackageCreator<TPackage>
+    {
+        var result = await reader.ReadAsync(cancellationToken).ConfigureAwait(configureAwait);
+
+        if (Utf8Helper.TryReadSequenceWithoutBOM(result.Buffer, out var buffer) == Utf8Helper.ReadSequenceWithoutBOMResult.Existed)
+        {
+            return CsTomlSerializer.Deserialize<TPackage>(buffer, options);
+        }
+
+        return CsTomlSerializer.Deserialize<TPackage>(result.Buffer, options);
     }
 
 }
