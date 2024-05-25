@@ -81,26 +81,8 @@ internal ref struct CsTomlReader
     public CsTomlKey ReadKey()
     {
         SkipWhiteSpace();
-
-        var isTableHeader = false;
-        var isArrayOfTablesHeader = false;
-        if (TryPeek(out var tableHeaderCh))
-        {
-            if (CsTomlSyntax.IsLeftSquareBrackets(tableHeaderCh))
-            {
-                isTableHeader = true;
-                Advance(1);
-                if (TryPeek(out var ArrayOfTablesHeaderCh) && CsTomlSyntax.IsLeftSquareBrackets(ArrayOfTablesHeaderCh))
-                {
-                    isArrayOfTablesHeader = true;
-                    Advance(1);
-                }
-            }
-        }
-        else
-        {
+        if (!Peek())
             ExceptionHelper.ThrowEndOfFileReached();
-        }
 
         var keys = new List<CsTomlString>(2);
         var period = true;
@@ -110,7 +92,7 @@ internal ref struct CsTomlReader
             {
                 if (!period) ExceptionHelper.ThrowIncorrectTomlFormat();
                 period = false;
-                keys.Add(ReadKeyString(isTableHeader));
+                keys.Add(ReadKeyString(false));
                 continue;
             }
             switch(c)
@@ -118,37 +100,7 @@ internal ref struct CsTomlReader
                 case CsTomlSyntax.Symbol.TAB:
                 case CsTomlSyntax.Symbol.SPACE:
                     SkipWhiteSpace();
-                    if (TryPeek(out var c2))
-                    {
-                        switch(c2)
-                        {
-                            case CsTomlSyntax.Symbol.EQUAL:
-                                goto BREAK;
-                            case CsTomlSyntax.Symbol.PERIOD:
-                                if (period)
-                                {
-                                    if (keys.Count > 0)
-                                        ExceptionHelper.ThrowPeriodUsedMoreThanOnce();
-                                    else
-                                        ExceptionHelper.ThrowTheDotIsDefinedFirst();
-                                }
-                                period = true;
-                                Advance(1);
-                                SkipWhiteSpace();
-                                continue;
-                            case CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET:
-                                continue;
-                            case CsTomlSyntax.Symbol.DOUBLEQUOTED:
-                            case CsTomlSyntax.Symbol.SINGLEQUOTED:
-                            case var alphabet when CsTomlSyntax.IsAlphabet(alphabet):
-                            case var number when CsTomlSyntax.IsNumber(number):
-                                if (keys.Count > 0 && !period)
-                                    ExceptionHelper.ThrowIncorrectTomlFormat();
-                                continue;
-                        }
-                        ExceptionHelper.ThrowIncorrectTomlFormat();
-                    }
-                    goto BREAK;
+                    continue;
                 case CsTomlSyntax.Symbol.EQUAL:
                     if (keys.Count == 0)
                     {
@@ -177,24 +129,6 @@ internal ref struct CsTomlReader
                     period = false;
                     keys.Add(ReadSingleQuoteSingleLineString());
                     continue;
-                case CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET:
-                    if (isTableHeader)
-                    {
-                        Advance(1);
-                        if (isArrayOfTablesHeader)
-                        {
-                            if (TryPeek(out var tableHeaderArrayEndCh) && CsTomlSyntax.IsRightSquareBrackets(tableHeaderArrayEndCh))
-                            {
-                                Advance(1);
-                            }
-                            else
-                            {
-                                ExceptionHelper.ThrowEndOfFileReached();
-                            }
-                        }
-                        goto BREAK;
-                    }
-                    return ExceptionHelper.NotReturnThrow<CsTomlKey>(ExceptionHelper.ThrowIncorrectTomlFormat);
                 default:
                     return ExceptionHelper.NotReturnThrow<CsTomlKey>(ExceptionHelper.ThrowIncorrectTomlFormat);
             }
@@ -202,6 +136,146 @@ internal ref struct CsTomlReader
         BREAK:
             break;
         }
+
+        return new CsTomlKey(keys);
+    }
+
+    public CsTomlKey ReadTableHeader()
+    {
+        Advance(1); // [
+
+        SkipWhiteSpace();
+        if (!Peek())
+            ExceptionHelper.ThrowEndOfFileReached();
+
+        var keys = new List<CsTomlString>(2);
+        var period = true;
+        var closingRightRightSquareBracket = false;
+        while (TryPeek(out var c))
+        {
+            if (CsTomlSyntax.IsBareKey(c))
+            {
+                if (!period) ExceptionHelper.ThrowIncorrectTomlFormat();
+                period = false;
+                keys.Add(ReadKeyString(true));
+                continue;
+            }
+            switch (c)
+            {
+                case CsTomlSyntax.Symbol.TAB:
+                case CsTomlSyntax.Symbol.SPACE:
+                    SkipWhiteSpace();
+                    continue;
+                case CsTomlSyntax.Symbol.PERIOD:
+                    if (period)
+                    {
+                        if (keys.Count > 0)
+                            ExceptionHelper.ThrowPeriodUsedMoreThanOnce();
+                        else
+                            ExceptionHelper.ThrowTheDotIsDefinedFirst();
+                    }
+                    period = true;
+                    Advance(1);
+                    SkipWhiteSpace();
+                    continue;
+                case CsTomlSyntax.Symbol.DOUBLEQUOTED:
+                    if (!period) ExceptionHelper.ThrowIncorrectTomlFormat();
+                    period = false;
+                    keys.Add(ReadDoubleQuoteSingleLineString());
+                    continue;
+                case CsTomlSyntax.Symbol.SINGLEQUOTED:
+                    if (!period) ExceptionHelper.ThrowIncorrectTomlFormat();
+                    period = false;
+                    keys.Add(ReadSingleQuoteSingleLineString());
+                    continue;
+                case CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET:
+                    closingRightRightSquareBracket = true;
+                    Advance(1);
+                    goto BREAK; // ]
+                default:
+                    return ExceptionHelper.NotReturnThrow<CsTomlKey>(ExceptionHelper.ThrowIncorrectTomlFormat);
+            }
+
+        BREAK:
+            break;
+        }
+
+        if (!closingRightRightSquareBracket)
+            ExceptionHelper.ThrowIncorrectTomlFormat();
+
+        return new CsTomlKey(keys);
+    }
+
+    public CsTomlKey ReadArrayOfTablesHeader()
+    {
+        Advance(2); // [[
+        SkipWhiteSpace();
+
+        if (!Peek())
+            ExceptionHelper.ThrowEndOfFileReached();
+
+        var keys = new List<CsTomlString>(2);
+        var period = true;
+        var closingRightRightSquareBracket = false;
+        while (TryPeek(out var c))
+        {
+            if (CsTomlSyntax.IsBareKey(c))
+            {
+                if (!period) ExceptionHelper.ThrowIncorrectTomlFormat();
+                period = false;
+                keys.Add(ReadKeyString(true));
+                continue;
+            }
+            switch (c)
+            {
+                case CsTomlSyntax.Symbol.TAB:
+                case CsTomlSyntax.Symbol.SPACE:
+                    SkipWhiteSpace();
+                    continue;
+                case CsTomlSyntax.Symbol.PERIOD:
+                    if (period)
+                    {
+                        if (keys.Count > 0)
+                            ExceptionHelper.ThrowPeriodUsedMoreThanOnce();
+                        else
+                            ExceptionHelper.ThrowTheDotIsDefinedFirst();
+                    }
+                    period = true;
+                    Advance(1);
+                    SkipWhiteSpace();
+                    continue;
+                case CsTomlSyntax.Symbol.DOUBLEQUOTED:
+                    if (!period) ExceptionHelper.ThrowIncorrectTomlFormat();
+                    period = false;
+                    keys.Add(ReadDoubleQuoteSingleLineString());
+                    continue;
+                case CsTomlSyntax.Symbol.SINGLEQUOTED:
+                    if (!period) ExceptionHelper.ThrowIncorrectTomlFormat();
+                    period = false;
+                    keys.Add(ReadSingleQuoteSingleLineString());
+                    continue;
+                case CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET:
+                    Advance(1);
+                    if (TryPeek(out var tableHeaderArrayEndCh) && CsTomlSyntax.IsRightSquareBrackets(tableHeaderArrayEndCh))
+                    {
+                        Advance(1);
+                        closingRightRightSquareBracket = true;
+                    }
+                    else
+                    {
+                        ExceptionHelper.ThrowEndOfFileReached();
+                    }
+                    goto BREAK;
+                default:
+                    return ExceptionHelper.NotReturnThrow<CsTomlKey>(ExceptionHelper.ThrowIncorrectTomlFormat);
+            }
+
+        BREAK:
+            break;
+        }
+
+        if (!closingRightRightSquareBracket)
+            ExceptionHelper.ThrowIncorrectTomlFormat();
 
         return new CsTomlKey(keys);
     }

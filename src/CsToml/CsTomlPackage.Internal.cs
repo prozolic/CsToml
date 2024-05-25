@@ -28,53 +28,76 @@ public partial class CsTomlPackage
         options ??= CsTomlSerializerOptions.Default;
         var tomlReader = new CsTomlReader(ref reader);
         CsTomlTableNode? currentNode = table.RootNode;
-
-        var comments = new List<CsTomlString>(4);
-        while (tomlReader.Peek())
+        try
         {
-            // comment
-            if (DeserializeComment(ref tomlReader, options, out var comment))
+            var comments = new List<CsTomlString>(4);
+            while (tomlReader.Peek())
             {
-                comments.Add(comment!);
-            }
-            if (!tomlReader.Peek()) goto BREAK;
-
-            if (TrySkipToNewLine(ref tomlReader, options))
-            {
-                if (!tomlReader.Peek()) goto BREAK;
-                continue;
-            }
-            if (!tomlReader.Peek()) goto BREAK;
-
-            // table or table array
-            tomlReader.SkipWhiteSpace();
-            if (tomlReader.TryPeek(out var leftSquareBracketsCh) && CsTomlSyntax.IsLeftSquareBrackets(leftSquareBracketsCh))
-            {
-                tomlReader.Advance(1);
-                if (!tomlReader.TryPeek(out var arrayOfTablesCh))
+                // comment
+                if (DeserializeComment(ref tomlReader, options, out var comment))
                 {
-                    if (options.IsThrowCsTomlException)
-                        throw new CsTomlLineNumberException("The TOML file has been read up to EOF, so analysis of the TOML file has been completed.", tomlReader.LineNumber);
-
-                    exceptions.Add(new CsTomlLineNumberException("The TOML file has been read up to EOF, so analysis of the TOML file has been completed.", tomlReader.LineNumber));
-                    goto BREAK;
+                    comments.Add(comment!);
                 }
+                if (!tomlReader.Peek()) goto BREAK;
 
-                tomlReader.Rewind(1);
-                if (CsTomlSyntax.IsLeftSquareBrackets(arrayOfTablesCh))
+                if (TrySkipToNewLine(ref tomlReader, options))
                 {
-                    if (DeserializeArrayOfTablesHeader(ref tomlReader, comments, options, out currentNode))
+                    if (!tomlReader.Peek()) goto BREAK;
+                    continue;
+                }
+                if (!tomlReader.Peek()) goto BREAK;
+
+                // table or table array
+                tomlReader.SkipWhiteSpace();
+                if (tomlReader.TryPeek(out var leftSquareBracketsCh) && CsTomlSyntax.IsLeftSquareBrackets(leftSquareBracketsCh))
+                {
+                    tomlReader.Advance(1);
+                    if (!tomlReader.TryPeek(out var arrayOfTablesCh))
+                    {
+                        if (options.IsThrowCsTomlException)
+                            throw new CsTomlLineNumberException("The TOML file has been read up to EOF, so analysis of the TOML file has been completed.", tomlReader.LineNumber);
+
+                        exceptions.Add(new CsTomlLineNumberException("The TOML file has been read up to EOF, so analysis of the TOML file has been completed.", tomlReader.LineNumber));
+                        goto BREAK;
+                    }
+
+                    tomlReader.Rewind(1);
+                    if (CsTomlSyntax.IsLeftSquareBrackets(arrayOfTablesCh))
+                    {
+                        if (DeserializeArrayOfTablesHeader(ref tomlReader, comments, options, out currentNode))
+                        {
+                            comments.Clear();
+                            DeserializeComment(ref tomlReader, options, out var arrayComment);
+                            if (!tomlReader.Peek()) goto BREAK;
+
+                            if (!TrySkipToNewLine(ref tomlReader, options))
+                            {
+                                if (options.IsThrowCsTomlException)
+                                    throw new CsTomlLineNumberException("There is a non-newline (or EOF) character after the table array header.", tomlReader.LineNumber);
+
+                                exceptions.Add(new CsTomlLineNumberException("There is a non-newline (or EOF) character after the table array header.", tomlReader.LineNumber));
+                                tomlReader.SkipOneLine();
+                            }
+                        }
+                        else
+                        {
+                            tomlReader.SkipOneLine();
+                        }
+                        continue;
+                    }
+
+                    if (DeserializeTableHeader(ref tomlReader, comments, options, out currentNode))
                     {
                         comments.Clear();
-                        DeserializeComment(ref tomlReader, options, out var arrayComment);
+                        DeserializeComment(ref tomlReader, options, out var arrayTableComment);
                         if (!tomlReader.Peek()) goto BREAK;
 
                         if (!TrySkipToNewLine(ref tomlReader, options))
                         {
                             if (options.IsThrowCsTomlException)
-                                throw new CsTomlLineNumberException("There is a non-newline (or EOF) character after the table array header.", tomlReader.LineNumber);
+                                throw new CsTomlLineNumberException("There is a character other than a newline (or EOF) after the table header.", tomlReader.LineNumber);
 
-                            exceptions.Add(new CsTomlLineNumberException("There is a non-newline (or EOF) character after the table array header.", tomlReader.LineNumber));
+                            exceptions.Add(new CsTomlLineNumberException("There is a character other than a newline (or EOF) after the table header.", tomlReader.LineNumber));
                             tomlReader.SkipOneLine();
                         }
                     }
@@ -85,18 +108,20 @@ public partial class CsTomlPackage
                     continue;
                 }
 
-                if (DeserializeTableHeader(ref tomlReader, comments, options, out currentNode))
+                // key and value
+                if (DeserializeKeyValue(ref tomlReader, currentNode!, options, comments))
                 {
                     comments.Clear();
-                    DeserializeComment(ref tomlReader, options, out var arrayTableComment);
+
+                    DeserializeComment(ref tomlReader, options, out var endComment);
                     if (!tomlReader.Peek()) goto BREAK;
 
                     if (!TrySkipToNewLine(ref tomlReader, options))
                     {
                         if (options.IsThrowCsTomlException)
-                            throw new CsTomlLineNumberException("There is a character other than a newline (or EOF) after the table header.", tomlReader.LineNumber);
+                            throw new CsTomlLineNumberException("There is a non-newline (or EOF) character after the key/value pair.", tomlReader.LineNumber);
 
-                        exceptions.Add(new CsTomlLineNumberException("There is a character other than a newline (or EOF) after the table header.", tomlReader.LineNumber));
+                        exceptions.Add(new CsTomlLineNumberException("There is a non-newline (or EOF) character after the key/value pair.", tomlReader.LineNumber));
                         tomlReader.SkipOneLine();
                     }
                 }
@@ -104,35 +129,15 @@ public partial class CsTomlPackage
                 {
                     tomlReader.SkipOneLine();
                 }
-                continue;
             }
 
-            // key and value
-            if (DeserializeKeyValue(ref tomlReader, currentNode!, options, comments))
-            {
-                comments.Clear();
-
-                DeserializeComment(ref tomlReader, options, out var endComment);
-                if (!tomlReader.Peek()) goto BREAK;
-
-                if (!TrySkipToNewLine(ref tomlReader, options))
-                {
-                    if (options.IsThrowCsTomlException)
-                        throw new CsTomlLineNumberException("There is a non-newline (or EOF) character after the key/value pair.", tomlReader.LineNumber);
-
-                    exceptions.Add(new CsTomlLineNumberException("There is a non-newline (or EOF) character after the key/value pair.", tomlReader.LineNumber));
-                    tomlReader.SkipOneLine();
-                }
-            }
-            else
-            {
-                tomlReader.SkipOneLine();
-            }
+        BREAK:
+            LineNumber = tomlReader.LineNumber;
         }
-
-    BREAK:
-        LineNumber = tomlReader.LineNumber;
-        RecycleByteArrayPoolBufferWriter.Release();
+        finally
+        {
+            RecycleByteArrayPoolBufferWriter.Release();
+        }
     }
 
     private bool DeserializeComment(ref CsTomlReader reader, CsTomlSerializerOptions options, out CsTomlString? comment)
@@ -203,7 +208,7 @@ public partial class CsTomlPackage
     {
         try
         {
-            var tableKey = reader.ReadKey();
+            var tableKey = reader.ReadTableHeader();
             table.AddTableHeader(tableKey, comments, out newNode);
             return true;
         }
@@ -227,7 +232,7 @@ public partial class CsTomlPackage
     {
         try
         {
-            var tableKey = reader.ReadKey();
+            var tableKey = reader.ReadArrayOfTablesHeader();
             table.AddArrayOfTablesHeader(tableKey, comments, out currentNode);
             return true;
         }
