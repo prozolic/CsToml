@@ -8,8 +8,21 @@ using System.Text;
 
 Console.WriteLine("Hello, World!");
 
-var packageAsync = await CsTomlFileSerializer.DeserializeAsync<CsTomlPackage>("./../../../Toml/test.toml");
-var package = CsTomlFileSerializer.Deserialize<CsTomlPackage>("./../../../Toml/test.toml");
+using (var stream = new FileStream("./../../../Toml/test.toml", FileMode.Open))
+{
+    var _ = await CsTomlStreamingSerializer.DeserializeAsync<CsTomlPackage>(stream);
+}
+
+using (var stream = new FileStream("./../../../Toml/test_withoutBOM.toml", FileMode.Open))
+{
+    var _ = await CsTomlStreamingSerializer.DeserializeAsync<CsTomlPackage>(stream);
+}
+
+var packageAsync = CsTomlFileSerializer.DeserializeAsync<CsTomlPackage>("./../../../Toml/test.toml");
+var package = CsTomlFileSerializer.Deserialize<TestPackage>("./../../../Toml/test.toml");
+
+using var serializedPackageTomlText = CsTomlSerializer.Serialize(package);
+var packageText = Encoding.UTF8.GetString(serializedPackageTomlText.ByteSpan);
 
 {
     var value2 = package!.Find("int1"u8);
@@ -26,6 +39,7 @@ var package = CsTomlFileSerializer.Deserialize<CsTomlPackage>("./../../../Toml/t
     var value13 = package!.Find("Name\\tJos\\u00E9");
 
     var value14 = package!["products"u8][0]["name"u8];
+    var value15 = package!["products"u8][0]["name"u8].Value.GetString();
 }
 {
     var value = package!.Find("table-1"u8, "key1"u8);
@@ -48,8 +62,7 @@ key = ""value""
 number = 123
 "u8.ToArray();
 
-var testpackage = CsTomlSerializer.Deserialize<TestPackage>(tomlText, CsTomlSerializerOptions.NoThrow);
-var testCsTomlpackage = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText, CsTomlSerializerOptions.NoThrow);
+var testCsTomlpackage = CsTomlSerializer.Deserialize<TestPackage>(tomlText, CsTomlSerializerOptions.NoThrow);
 
 if (package.Exceptions.Count > 0)
 {
@@ -65,10 +78,10 @@ if (testCsTomlpackage!.TryGetValue("key", out var value22))
     Console.WriteLine($"key = {str}"); // key = value
 }
 
-var serializedTomlText = CsTomlSerializer.Serialize(testCsTomlpackage);
+using var serializedTomlText = CsTomlSerializer.Serialize(testCsTomlpackage);
 Console.WriteLine(Encoding.UTF8.GetString(serializedTomlText.ByteSpan));
 
-var result = CsTomlSerializer.Serialize(package);
+using var result = CsTomlSerializer.Serialize(package);
 Console.WriteLine(Encoding.UTF8.GetString(result.ByteSpan));
 
 var buffer = new ArrayBufferWriter<byte>();

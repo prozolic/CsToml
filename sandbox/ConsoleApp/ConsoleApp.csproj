@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="System.IO.Pipelines" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\CsToml.Extensions\CsToml.Extensions.csproj" />
     <ProjectReference Include="..\..\src\CsToml\CsToml.csproj" />
     <ProjectReference Include="..\..\src\CsToml.Generator\CsToml.Generator.csproj">

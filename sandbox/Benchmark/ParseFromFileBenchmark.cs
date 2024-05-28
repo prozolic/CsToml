@@ -32,7 +32,7 @@ public class ParseFromFileBenchmark
     {
         using (var stream = new FileStream(TestTomlFilePath, FileMode.Open))
         {
-            var package = await CsTomlFileSerializer.DeserializeAsync<CsTomlPackage>(stream);
+            var package = await CsTomlStreamingSerializer.DeserializeAsync<CsTomlPackage>(stream);
         }
     }
 
