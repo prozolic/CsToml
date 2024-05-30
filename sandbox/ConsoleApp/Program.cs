@@ -4,21 +4,22 @@ using CsToml;
 using CsToml.Error;
 using CsToml.Extensions;
 using System.Buffers;
+using System.IO.Pipelines;
 using System.Text;
 
 Console.WriteLine("Hello, World!");
 
 using (var stream = new FileStream("./../../../Toml/test.toml", FileMode.Open))
 {
-    var _ = await CsTomlStreamingSerializer.DeserializeAsync<CsTomlPackage>(stream);
+    var streamPackage = await CsTomlStreamingSerializer.DeserializeAsync<CsTomlPackage>(stream);
 }
 
 using (var stream = new FileStream("./../../../Toml/test_withoutBOM.toml", FileMode.Open))
 {
-    var _ = await CsTomlStreamingSerializer.DeserializeAsync<CsTomlPackage>(stream);
+    var streamPackage = await CsTomlStreamingSerializer.DeserializeAsync<CsTomlPackage>(PipeReader.Create(stream));
 }
 
-var packageAsync = CsTomlFileSerializer.DeserializeAsync<CsTomlPackage>("./../../../Toml/test.toml");
+var packageAsync = await CsTomlFileSerializer.DeserializeAsync<CsTomlPackage>("./../../../Toml/test.toml");
 var package = CsTomlFileSerializer.Deserialize<TestPackage>("./../../../Toml/test.toml");
 
 using var serializedPackageTomlText = CsTomlSerializer.Serialize(package);

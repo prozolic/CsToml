@@ -99,7 +99,7 @@ number = 123
 "u8;
 
 var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText);
-var result = CsTomlSerializer.Serialize(package);
+using var result = CsTomlSerializer.Serialize(package);
 Console.WriteLine(Encoding.UTF8.GetString(result.ByteSpan));
 // key = "value"
 // number = 123
@@ -146,28 +146,31 @@ CsToml converts deserialized TOML format values to `CsTomlValue`.
 `CsTomlValue` can be obtained by calling `TryGetValue` and `Find`, the APIs of `CsTomlPackage`, with the key.
 
 ```csharp
-public bool TryGetValue(ReadOnlySpan<byte> key, out CsTomlValue? value, CsTomlPackageOptions? options = default)
-public bool TryGetValue(ReadOnlySpan<ByteArray> key, out CsTomlValue? value, CsTomlPackageOptions? options = default)
-public bool TryGetValue(ReadOnlySpan<byte> tableHeaderKey, ReadOnlySpan<byte> key, out CsTomlValue? value, CsTomlPackageOptions? options = default)
-public bool TryGetValue(ReadOnlySpan<ByteArray> tableHeader, ReadOnlySpan<byte> key, out CsTomlValue? value, CsTomlPackageOptions? options = default)
-public bool TryGetValue(ReadOnlySpan<char> key, out CsTomlValue? value, CsTomlPackageOptions? options = default)
-public bool TryGetValue(ReadOnlySpan<char> tableHeader, ReadOnlySpan<char> key, out CsTomlValue? value, CsTomlPackageOptions? options = default)
-public bool TryGetValue(ReadOnlySpan<byte> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<byte> key, out CsTomlValue? value, CsTomlPackageOptions? options = default)
-public bool TryGetValue(ReadOnlySpan<byte> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<ByteArray> key, out CsTomlValue? value, CsTomlPackageOptions? options = default)
-public bool TryGetValue(ReadOnlySpan<ByteArray> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<byte> key, out CsTomlValue? value, CsTomlPackageOptions? options = default)
-public bool TryGetValue(ReadOnlySpan<ByteArray> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<ByteArray> key, out CsTomlValue? value, CsTomlPackageOptions? options = default)
+public partial class CsTomlPackage
+{
+    public bool TryGetValue(ReadOnlySpan<byte> key, out CsTomlValue? value, CsTomlPackageOptions? options = default)
+    public bool TryGetValue(ReadOnlySpan<ByteArray> key, out CsTomlValue? value, CsTomlPackageOptions? options = default)
+    public bool TryGetValue(ReadOnlySpan<byte> tableHeaderKey, ReadOnlySpan<byte> key, out CsTomlValue? value,  CsTomlPackageOptions? options = default)
+    public bool TryGetValue(ReadOnlySpan<ByteArray> tableHeader, ReadOnlySpan<byte> key, out CsTomlValue? value,    CsTomlPackageOptions? options = default)
+    public bool TryGetValue(ReadOnlySpan<char> key, out CsTomlValue? value, CsTomlPackageOptions? options = default)
+    public bool TryGetValue(ReadOnlySpan<char> tableHeader, ReadOnlySpan<char> key, out CsTomlValue? value, CsTomlPackageOptions?   options = default)
+    public bool TryGetValue(ReadOnlySpan<byte> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<byte> key, out CsTomlValue? value,  CsTomlPackageOptions? options = default)
+    public bool TryGetValue(ReadOnlySpan<byte> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<ByteArray> key, out CsTomlValue?    value, CsTomlPackageOptions? options = default)
+    public bool TryGetValue(ReadOnlySpan<ByteArray> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<byte> key, out CsTomlValue?    value, CsTomlPackageOptions? options = default)
+    public bool TryGetValue(ReadOnlySpan<ByteArray> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<ByteArray> key, out    CsTomlValue? value, CsTomlPackageOptions? options = default)
 
-public CsTomlValue? Find(ReadOnlySpan<byte> keys, CsTomlPackageOptions? options = default)
-public CsTomlValue? Find(ReadOnlySpan<char> keys, CsTomlPackageOptions? options = default)
-public CsTomlValue? Find(ReadOnlySpan<ByteArray> keys, CsTomlPackageOptions? options = default)
-public CsTomlValue? Find(ReadOnlySpan<byte> tableHeader, ReadOnlySpan<byte> key, CsTomlPackageOptions? options = default)
-public CsTomlValue? Find(ReadOnlySpan<char> tableHeader, ReadOnlySpan<char> key, CsTomlPackageOptions? options = default)
-public CsTomlValue? Find(ReadOnlySpan<ByteArray> tableHeader, ReadOnlySpan<byte> key, CsTomlPackageOptions? options = default)
-public CsTomlValue? Find(ReadOnlySpan<byte> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<byte> key, CsTomlPackageOptions? options = default)
-public CsTomlValue? Find(ReadOnlySpan<byte> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<ByteArray> key, CsTomlPackageOptions? options = default)
-public CsTomlValue? Find(ReadOnlySpan<ByteArray> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<byte> key, CsTomlPackageOptions? options = default)
-public CsTomlValue? Find(ReadOnlySpan<ByteArray> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<ByteArray> key, CsTomlPackageOptions? options = default)
-public CsTomlValue? Find(ReadOnlySpan<char> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<char> key, CsTomlPackageOptions? options = default)
+    public CsTomlValue? Find(ReadOnlySpan<byte> keys, CsTomlPackageOptions? options = default)
+    public CsTomlValue? Find(ReadOnlySpan<char> keys, CsTomlPackageOptions? options = default)
+    public CsTomlValue? Find(ReadOnlySpan<ByteArray> keys, CsTomlPackageOptions? options = default)
+    public CsTomlValue? Find(ReadOnlySpan<byte> tableHeader, ReadOnlySpan<byte> key, CsTomlPackageOptions? options = default)
+    public CsTomlValue? Find(ReadOnlySpan<char> tableHeader, ReadOnlySpan<char> key, CsTomlPackageOptions? options = default)
+    public CsTomlValue? Find(ReadOnlySpan<ByteArray> tableHeader, ReadOnlySpan<byte> key, CsTomlPackageOptions? options = default)
+    public CsTomlValue? Find(ReadOnlySpan<byte> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<byte> key, CsTomlPackageOptions?   options = default)
+    public CsTomlValue? Find(ReadOnlySpan<byte> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<ByteArray> key,    CsTomlPackageOptions? options = default)
+    public CsTomlValue? Find(ReadOnlySpan<ByteArray> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<byte> key,    CsTomlPackageOptions? options = default)
+    public CsTomlValue? Find(ReadOnlySpan<ByteArray> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<ByteArray> key,   CsTomlPackageOptions? options = default)
+    public CsTomlValue? Find(ReadOnlySpan<char> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<char> key, CsTomlPackageOptions? options = default)
+}
 ```
 
 There are three ways to search with the dot key.
@@ -244,49 +247,73 @@ The following API is used to obtain internal values from CsTomlValue.
 `Get~` raises an exception, but `TryGet~` does not, and the return value can be used to determine if the acquisition was successful.
 
 ```csharp
-public ReadOnlyCollection<CsTomlValue> GetArray()
-public CsTomlValue GetArrayValue(int index)
-public virtual string GetString()
-public virtual long GetInt64()
-public virtual double GetDouble()
-public virtual bool GetBool()
-public virtual DateTime GetDateTime()
-public virtual DateTimeOffset GetDateTimeOffset()
-public virtual DateOnly GetDateOnly()
-public virtual TimeOnly GetTimeOnly()
-public T GetNumber<T>() where T : INumberBase<T>
+public partial class CsTomlValue
+{
+    public ReadOnlyCollection<CsTomlValue> GetArray()
+    public CsTomlValue GetArrayValue(int index)
+    public virtual string GetString()
+    public virtual long GetInt64()
+    public virtual double GetDouble()
+    public virtual bool GetBool()
+    public virtual DateTime GetDateTime()
+    public virtual DateTimeOffset GetDateTimeOffset()
+    public virtual DateOnly GetDateOnly()
+    public virtual TimeOnly GetTimeOnly()
+    public T GetNumber<T>() where T : INumberBase<T>
 
-public bool TryGetArray(out IReadOnlyList<CsTomlValue> value)
-public bool TryGetArrayValue(int index, out CsTomlValue value)
-public bool TryGetString(out string value)
-public bool TryGetInt64(out long value)
-public bool TryGetDouble(out double value)
-public bool TryGetBool(out bool value)
-public bool TryGetDateTime(out DateTime value)
-public bool TryGetDateTimeOffset(out DateTimeOffset value)
-public bool TryGetDateOnly(out DateOnly value)
-public bool TryGetTimeOnly(out TimeOnly value)
-public bool TryGetNumber<T>(out T value)
+    public bool TryGetArray(out IReadOnlyList<CsTomlValue> value)
+    public bool TryGetArrayValue(int index, out CsTomlValue value)
+    public bool TryGetString(out string value)
+    public bool TryGetInt64(out long value)
+    public bool TryGetDouble(out double value)
+    public bool TryGetBool(out bool value)
+    public bool TryGetDateTime(out DateTime value)
+    public bool TryGetDateTimeOffset(out DateTimeOffset value)
+    public bool TryGetDateOnly(out DateOnly value)
+    public bool TryGetTimeOnly(out TimeOnly value)
+    public bool TryGetNumber<T>(out T value)
+}
 ```
 
 ## Extensions
 
-An extension option for `CsToml` is `CsToml.Extensions`.
-This option mainly provides an API to parse from TOML files.
-`CsToml.Extensions` references [Cysharp/NativeMemoryArray](https://github.com/Cysharp/NativeMemoryArray) as a dependent library.
-
-> PM> Install-Package [CsToml.Extensions](https://www.nuget.org/packages/CsToml.Extensions/)
-
-The basic API involve `CsTomlPackage? package = CsTomlFileSerializer.Deserialize<CsTomlPackage>("test.toml")` and `CsTomlPackage? package = await CsTomlFileSerializer.DeserializeAsync<CsTomlPackage>("test.toml")`.
+An extension option for `CsToml` is `CsToml.Extensions`.  
+This option mainly provides an API for parsing toml files, as well as Stream and PipeReader based APIs.
+The basic API for parsing from toml file path involve `CsTomlFileSerializer.Deserialize` and `CsTomlFileSerializer.DeserializeAsync`.  
+The basic Stream-based API involve `CsTomlStreamingSerializer.Deserialize`.
 
 ```csharp
 var package = CsTomlFileSerializer.Deserialize<CsTomlPackage>("test.toml");
+var packageAsync = await CsTomlFileSerializer.DeserializeAsync<CsTomlPackage>("test.toml");
+
+using (var stream = new FileStream("test.toml", FileMode.Open))
+{
+    var streamPackage = await CsTomlStreamingSerializer.DeserializeAsync<CsTomlPackage>(stream);
+}
+
+using (var stream = new FileStream("test.toml", FileMode.Open))
+{
+    var pipeReaderPackage = await CsTomlStreamingSerializer.DeserializeAsync<CsTomlPackage>(PipeReader.Create(stream));
+}
 ```
 
 ```csharp
-public static TPackage? Deserialize<TPackage>(string? path, CsTomlSerializerOptions? options = null)
-public static async ValueTask<TPackage?> DeserializeAsync<TPackage>(string? path, CsTomlSerializerOptions? options = null, CancellationToken cancellationToken = default, bool configureAwait = true)
+public partial class CsTomlFileSerializer
+{
+    public static TPackage? Deserialize<TPackage>(string? path, CsTomlSerializerOptions? options = null)
+    public static async ValueTask<TPackage?> DeserializeAsync<TPackage>(string? path, CsTomlSerializerOptions? options = null, CancellationToken cancellationToken = default, bool configureAwait = true)
+}
+
+public partial class CsTomlStreamingSerializer
+{
+    public static ValueTask<TPackage> DeserializeAsync<TPackage>(Stream stream, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
+    public static ValueTask<TPackage> DeserializeAsync<TPackage>(PipeReader reader, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
+}
 ```
+
+## Third Party Libraries
+
+`CsToml.Extensions` references [Cysharp/NativeMemoryArray](https://github.com/Cysharp/NativeMemoryArray) as a dependent library.  
 
 ## UnitTest
 
