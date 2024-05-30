@@ -64,8 +64,11 @@ The basic API involve  `CsTomlPackage? package = CsTomlSerializer.Deserialize<Cs
 When parsing from UTF-8 string(`ReadOnlySpan<byte>` or `ReadOnlySequence<byte>`) in TOML format, you can use `Deserialize`.  
 
 ```csharp
-public static TPackage? Deserialize<TPackage>(ReadOnlySpan<byte> tomlText, CsTomlSerializerOptions? options = null)
-public static TPackage? Deserialize<TPackage>(in ReadOnlySequence<byte> tomlTextSequence, CsTomlSerializerOptions? options = null)
+public partial class CsTomlSerializer
+{
+    public static TPackage? Deserialize<TPackage>(ReadOnlySpan<byte> tomlText, CsTomlSerializerOptions? options =   null)
+    public static TPackage? Deserialize<TPackage>(in ReadOnlySequence<byte> tomlTextSequence,   CsTomlSerializerOptions? options = null)
+}
 ```
 
 `Deserialize` accepts `CsTomlSerializerOptions? options` as parameters.
@@ -116,10 +119,13 @@ The `ByteMemoryResult` returned from `Serialize(package)` is only valid until Di
 It is also possible to get it directly via `IBufferWriter<byte>`.
 
 ```csharp
-public static ByteMemoryResult Serialize<TPackagePart>(ref TPackagePart target)
-public static void Serialize<TBufferWriter, TPackagePart>(ref TBufferWriter bufferWriter, ref TPackagePart target)
-public static ByteMemoryResult Serialize<TPackage>(TPackage? package)
-public static void Serialize<TBufferWriter, TPackage>(ref TBufferWriter bufferWriter, TPackage? package)
+public partial class CsTomlSerializer
+{
+    public static ByteMemoryResult Serialize<TPackagePart>(ref TPackagePart target)
+    public static void Serialize<TBufferWriter, TPackagePart>(ref TBufferWriter bufferWriter, ref TPackagePart  target)
+    public static ByteMemoryResult Serialize<TPackage>(TPackage? package)
+    public static void Serialize<TBufferWriter, TPackage>(ref TBufferWriter bufferWriter, TPackage? package)
+}
 ```
 
 ## How to get the value
