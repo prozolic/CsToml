@@ -161,9 +161,13 @@ public partial class CsTomlPackage
                 exceptions.Add(new CsTomlLineNumberException(e, reader.LineNumber));
                 return false;
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                throw;
+                if (options.IsThrowCsTomlException)
+                    throw new CsTomlLineNumberException(e, reader.LineNumber);
+
+                exceptions.Add(new CsTomlLineNumberException(e, reader.LineNumber));
+                return false;
             }
         }
 
@@ -221,10 +225,14 @@ public partial class CsTomlPackage
             exceptions.Add(new CsTomlLineNumberException(e, reader.LineNumber));
             return false;
         }
-        catch (Exception)
+        catch (Exception e)
         {
+            if (options.IsThrowCsTomlException)
+                throw new CsTomlLineNumberException(e, reader.LineNumber);
+
             newNode = null;
-            throw;
+            exceptions.Add(new CsTomlLineNumberException(e, reader.LineNumber));
+            return false;
         }
     }
 
@@ -245,10 +253,14 @@ public partial class CsTomlPackage
             exceptions.Add(new CsTomlLineNumberException(e, reader.LineNumber));
             return false;
         }
-        catch (Exception)
+        catch (Exception e)
         {
+            if (options.IsThrowCsTomlException)
+                throw new CsTomlLineNumberException(e, reader.LineNumber);
+
             currentNode = null;
-            throw;
+            exceptions.Add(new CsTomlLineNumberException(e, reader.LineNumber));
+            return false;
         }
     }
 
