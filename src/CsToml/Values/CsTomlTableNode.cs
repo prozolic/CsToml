@@ -129,7 +129,7 @@ internal class CsTomlTableNode
         this.comments.AddRange(comments);
     }
 
-    internal void AddKeyValue(CsTomlString key, CsTomlValue value, IReadOnlyCollection<CsTomlString> comments)
+    internal void AddKeyValue(CsTomlDotKey key, CsTomlValue value, IReadOnlyCollection<CsTomlString> comments)
     {
         if (!IsGroupingProperty || nodes.ContainsKey(key))
         {
@@ -141,7 +141,7 @@ internal class CsTomlTableNode
         nodes.TryAdd(key, newNode);
     }
 
-    internal bool TryAddGroupingPropertyNode(CsTomlString key, out CsTomlTableNode childNode)
+    internal bool TryAddGroupingPropertyNode(CsTomlDotKey key, out CsTomlTableNode childNode)
     {
         if (nodes.TryGetValue(key, out var addedChildNode))
         {

@@ -30,7 +30,7 @@ internal partial class CsTomlTable : CsTomlValue
 
     public CsTomlTable() : base() { }
 
-    public void AddKeyValue(CsTomlKey csTomlKey, CsTomlValue value, CsTomlTableNode? searchRootNode, IReadOnlyCollection<CsTomlString> comments)
+    public void AddKeyValue(CsTomlDotKeyGroup csTomlKey, CsTomlValue value, CsTomlTableNode? searchRootNode, IReadOnlyCollection<CsTomlString> comments)
     {
         var currentNode = searchRootNode ?? RootNode;
         var dotKeys = csTomlKey.DotKeysSpan;
@@ -64,7 +64,7 @@ internal partial class CsTomlTable : CsTomlValue
         currentNode.AddKeyValue(lastKey, value, comments);
     }
 
-    public void AddTableHeader(CsTomlKey csTomlKey, IReadOnlyCollection<CsTomlString> comments, out CsTomlTableNode? newNode)
+    public void AddTableHeader(CsTomlDotKeyGroup csTomlKey, IReadOnlyCollection<CsTomlString> comments, out CsTomlTableNode? newNode)
     {
         var node = RootNode;
         var dotKeys = csTomlKey.DotKeysSpan;
@@ -119,7 +119,7 @@ internal partial class CsTomlTable : CsTomlValue
         newNode = node;
     }
 
-    public void AddArrayOfTablesHeader(CsTomlKey csTomlKey, IReadOnlyCollection<CsTomlString> comments, out CsTomlTableNode? newNode)
+    public void AddArrayOfTablesHeader(CsTomlDotKeyGroup csTomlKey, IReadOnlyCollection<CsTomlString> comments, out CsTomlTableNode? newNode)
     {
         var currentNode = RootNode;
         var dotKeys = csTomlKey.DotKeysSpan;
@@ -453,7 +453,7 @@ internal partial class CsTomlTable : CsTomlValue
                     var keysSpan = CollectionsMarshal.AsSpan(tableHeaderKeys);
                     writer.WriteTableHeader(keysSpan);
                     keys.Clear();
-                    writer.WriteKeyValueAndNewLine(in key, childNode.Value!);
+                    writer.WriteKeyValueAndNewLine(key, childNode.Value!);
                 }
                 else
                 {
@@ -466,10 +466,10 @@ internal partial class CsTomlTable : CsTomlValue
                     {
                         for (var i = 0; i < keysSpan.Length; i++)
                         {
-                            writer.WriterKey(in keysSpan[i], true);
+                            writer.WriterKey(keysSpan[i], true);
                         }
                     }
-                    writer.WriteKeyValueAndNewLine(in key, childNode.Value!);
+                    writer.WriteKeyValueAndNewLine(key, childNode.Value!);
                 }
             }
             tableHeaderKeys.Remove(key);

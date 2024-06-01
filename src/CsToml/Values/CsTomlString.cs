@@ -7,12 +7,10 @@ using System.Text.Unicode;
 namespace CsToml.Values;
 
 [DebuggerDisplay("{Utf16String}")]
-internal partial class CsTomlString : 
-    CsTomlValue,
-    IEquatable<CsTomlString?>
+internal partial class CsTomlString : CsTomlValue
 {
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-    private readonly byte[] bytes;
+    protected byte[] bytes;
 
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     public int Length => Value.Length;
@@ -73,32 +71,6 @@ internal partial class CsTomlString :
 
         return false;
     }
-
-    public override bool Equals(object? obj)
-    {
-        if (obj == null) return false;
-        if (obj.GetType() != typeof(CsTomlString)) return false;
-
-        return Equals((CsTomlString)obj);
-    }
-
-    public bool Equals(CsTomlString? other)
-    {
-        if (other == null) return false;
-
-        return Equals(other.Value);
-    }
-
-    public bool Equals(ReadOnlySpan<byte> other)
-    {
-        if (Length != other.Length) return false;
-        if (Length == 0) return true;
-
-        return Value.SequenceEqual(other);
-    }
-
-    public override int GetHashCode()
-        => ByteArrayHash.ToInt32(Value);
 
     public override string ToString()
         => GetString();

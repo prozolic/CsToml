@@ -36,7 +36,7 @@ internal class CsTomlTableNodeDictionary
         entries = [];
     }
 
-    public bool TryAdd(CsTomlString key, CsTomlTableNode value)
+    public bool TryAdd(CsTomlDotKey key, CsTomlTableNode value)
     {
         if (buckets.Length == 0)
             Initialize(0);
@@ -77,7 +77,7 @@ internal class CsTomlTableNodeDictionary
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool ContainsKey(CsTomlString key)
+    public bool ContainsKey(CsTomlDotKey key)
         => TryGetValue(key, out var _);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -85,7 +85,7 @@ internal class CsTomlTableNodeDictionary
         => TryGetValue(key, out var _);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetValue(CsTomlString key, out CsTomlTableNode? value)
+    public bool TryGetValue(CsTomlDotKey key, out CsTomlTableNode? value)
         => TryGetValueCore(key.Value, key.GetHashCode(), out value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -171,7 +171,7 @@ internal class CsTomlTableNodeDictionary
     {
         public int hashCode;
         public int next;
-        public CsTomlString key;
+        public CsTomlDotKey key;
         public CsTomlTableNode value;
     }
 
@@ -179,9 +179,9 @@ internal class CsTomlTableNodeDictionary
     {
         private readonly CsTomlTableNodeDictionary dictionary;
         private int index;
-        private KeyValuePair<CsTomlString, CsTomlTableNode> current;
+        private KeyValuePair<CsTomlDotKey, CsTomlTableNode> current;
 
-        public readonly KeyValuePair<CsTomlString, CsTomlTableNode> Current => current;
+        public readonly KeyValuePair<CsTomlDotKey, CsTomlTableNode> Current => current;
 
         public readonly KeyValuePairEnumerator GetEnumerator() => this;
 
@@ -199,7 +199,7 @@ internal class CsTomlTableNodeDictionary
                 ref var entry = ref dictionary.entries[index++];
                 if (entry.next >= -1)
                 {
-                    current = new KeyValuePair<CsTomlString, CsTomlTableNode>(entry.key, entry.value);
+                    current = new KeyValuePair<CsTomlDotKey, CsTomlTableNode>(entry.key, entry.value);
                     return true;
                 }
             }

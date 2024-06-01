@@ -6,13 +6,13 @@ using System.Xml.Linq;
 namespace CsToml.Debugger;
 
 [DebuggerDisplay("Key={Key}, Value={Value}")]
-internal sealed class CsTomlTableNodeKeyValuePairDebugView(KeyValuePair<CsTomlString, CsTomlTableNode> pair)
+internal sealed class CsTomlTableNodeKeyValuePairDebugView(KeyValuePair<CsTomlDotKey, CsTomlTableNode> pair)
 {
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-    private readonly KeyValuePair<CsTomlString, CsTomlTableNode> rawPair = pair;
+    private readonly KeyValuePair<CsTomlDotKey, CsTomlTableNode> rawPair = pair;
 
     [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
-    public CsTomlString Key => rawPair.Key;
+    public CsTomlDotKey Key => rawPair.Key;
 
     [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
     public CsTomlTableNode Value => rawPair.Value;

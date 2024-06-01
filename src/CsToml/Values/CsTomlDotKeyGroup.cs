@@ -7,15 +7,15 @@ using System.Runtime.InteropServices;
 namespace CsToml.Values;
 
 [DebuggerDisplay("CsTomlKey: {DotKeys}")]
-internal sealed class CsTomlKey
+internal sealed class CsTomlDotKeyGroup
 {
-    private readonly List<CsTomlString> dotKeys;
+    private readonly List<CsTomlDotKey> dotKeys;
 
-    public IReadOnlyList<CsTomlString> DotKeys => dotKeys;
+    public IReadOnlyList<CsTomlDotKey> DotKeys => dotKeys;
 
-    public ReadOnlySpan<CsTomlString> DotKeysSpan => CollectionsMarshal.AsSpan(dotKeys);
+    public ReadOnlySpan<CsTomlDotKey> DotKeysSpan => CollectionsMarshal.AsSpan(dotKeys);
 
-    internal CsTomlKey(List<CsTomlString> dotKeys)
+    internal CsTomlDotKeyGroup(List<CsTomlDotKey> dotKeys)
     {
         this.dotKeys = dotKeys;
     }
