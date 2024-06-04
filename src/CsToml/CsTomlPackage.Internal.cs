@@ -38,7 +38,6 @@ public partial class CsTomlPackage
                 {
                     comments.Add(comment!);
                 }
-                if (!tomlReader.Peek()) goto BREAK;
 
                 if (TrySkipToNewLine(ref tomlReader, options))
                 {

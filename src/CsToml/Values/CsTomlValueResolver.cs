@@ -16,7 +16,7 @@ internal sealed class CsTomlValueResolver
         switch (value.GetType())
         {
             case var t when t == typeof(bool):
-                csTomlValue = new CsTomlBool(value);
+                csTomlValue = value ? CsTomlBool.True : CsTomlBool.False;
                 return true;
             case var t when t == typeof(byte):
             case var t2 when t2 == typeof(sbyte):

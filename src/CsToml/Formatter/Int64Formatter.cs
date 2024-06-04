@@ -2,6 +2,8 @@
 using CsToml.Utility;
 using System.Buffers;
 using System.Buffers.Text;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace CsToml.Formatter;
 
@@ -22,15 +24,16 @@ internal class Int64Formatter : ICsTomlFormatter<long>
         var bytes = reader.ReadBytes(length);
 
         // hexadecimal, octal, or binary
-        if (bytes.Length > 2 && bytes[0] == 0x30)
+        if (bytes.Length > 2)
         {
-            switch (bytes[1])
+            var prefix = Unsafe.ReadUnaligned<short>(ref MemoryMarshal.GetReference<byte>(bytes));
+            switch (prefix)
             {
-                case CsTomlSyntax.AlphaBet.b: //0b:binary
+                case 25136: //0b:binary
                     return DeserializeBinary(bytes[2..]);
-                case CsTomlSyntax.AlphaBet.o: //0o:octal
+                case 28464: //0o:octal
                     return DeserializeOctal(bytes[2..]);
-                case CsTomlSyntax.AlphaBet.x: //0x:hexadecimal
+                case 30768: //0x:hexadecimal
                     return DeserializeHex(bytes[2..]);
             }
         }

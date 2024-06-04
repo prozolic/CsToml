@@ -1,15 +1,24 @@
 ﻿using CsToml.Formatter;
 using CsToml.Utility;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace CsToml.Values;
 
 [DebuggerDisplay("{Value}")]
-internal partial class CsTomlBool(bool value) : CsTomlValue()
+internal partial class CsTomlBool : CsTomlValue
 {
-    public bool Value { get; private set; } = value;
+    public static readonly CsTomlBool True = new(true);
+    public static readonly CsTomlBool False = new(false);
+
+    public bool Value { get; init; }
 
     public override bool HasValue => true;
+
+    private CsTomlBool(bool value) : base()
+    {
+        Value = value;
+    }
 
     internal override bool ToTomlString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
     {
