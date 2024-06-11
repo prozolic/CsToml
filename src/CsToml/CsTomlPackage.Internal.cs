@@ -178,11 +178,6 @@ public partial class CsTomlPackage
         try
         {
             var key = reader.ReadKey();
-
-            reader.SkipWhiteSpace();
-            if (!reader.TryPeek(out var equalCh)) ExceptionHelper.ThrowEndOfFileReached(); // = or value is nothing
-            if (!CsTomlSyntax.IsEqual(equalCh)) ExceptionHelper.ThrowNoEqualAfterTheKey(); // = is nothing
-
             reader.Advance(1); // skip "="
             reader.SkipWhiteSpace();
 

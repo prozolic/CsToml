@@ -171,7 +171,7 @@ internal class CsTomlTableNode
         var reader = new Utf8Reader(key);
         var bufferWriter = new ArrayPoolBufferWriter<byte>(bufferSize);
         using var _ = bufferWriter;
-        var writer = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref bufferWriter);
+        var utf8BufferWriter = new Utf8BufferWriter<ArrayPoolBufferWriter<byte>>(ref bufferWriter);
 
         while (reader.TryPeek(out var ch))
         {
@@ -183,10 +183,11 @@ internal class CsTomlTableNode
                     value = default;
                     return false;
                 }
+                utf8BufferWriter.Flush();
                 continue;
             }
 
-            writer.Write(ch);
+            utf8BufferWriter.Write(ch);
             reader.Advance(1);
         }
 

@@ -310,6 +310,7 @@ internal ref struct CsTomlReader
         }; ;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SkipWhiteSpace()
     {
         while (TryPeek(out var ch) && CsTomlSyntax.IsTabOrWhiteSpace(ch))
@@ -459,7 +460,7 @@ internal ref struct CsTomlReader
         var writer = RecycleByteArrayPoolBufferWriter.Rent();
         try
         {
-            var utf8Writer = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
+            var utf8BufferWriter = new Utf8BufferWriter<ArrayPoolBufferWriter<byte>>(ref writer);
 
             var closingQuotationMarks = false;
             while (TryPeek(out var ch))
@@ -474,9 +475,10 @@ internal ref struct CsTomlReader
                 else if (CsTomlSyntax.IsBackSlash(ch))
                 {
                     FormatEscapeSequence(ref writer, multiLine: false);
+                    utf8BufferWriter.Flush();
                     continue;
                 }
-                utf8Writer.Write(ch);
+                utf8BufferWriter.Write(ch);
                 Advance(1);
             }
             if (!closingQuotationMarks)
@@ -519,7 +521,7 @@ internal ref struct CsTomlReader
 
         var closingThreeQuotationMarks = false;
         var writer = RecycleByteArrayPoolBufferWriter.Rent();
-        var utf8Writer = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
+        var utf8BufferWriter = new Utf8BufferWriter<ArrayPoolBufferWriter<byte>>(ref writer);
 
         while (TryPeek(out var ch))
         {
@@ -528,7 +530,7 @@ internal ref struct CsTomlReader
                 if (CsTomlSyntax.IsLf(ch))
                 {
                     Advance(1);
-                    utf8Writer.Write(ch);
+                    utf8BufferWriter.Write(ch);
                     IncreaseLineNumber();
                     continue;
                 }
@@ -538,8 +540,8 @@ internal ref struct CsTomlReader
                     if (TryPeek(out var linebreakCh) && CsTomlSyntax.IsLf(linebreakCh))
                     {
                         Advance(1);
-                        utf8Writer.Write(ch);
-                        utf8Writer.Write(linebreakCh);
+                        utf8BufferWriter.Write(ch);
+                        utf8BufferWriter.Write(linebreakCh);
                         IncreaseLineNumber();
                         continue;
                     }
@@ -563,7 +565,7 @@ internal ref struct CsTomlReader
                                 if (++doubleQuotedCount >= 6)
                                     ExceptionHelper.ThrowConsecutiveQuotationMarksOf3();
                                 Advance(1);
-                                utf8Writer.Write(CsTomlSyntax.Symbol.DOUBLEQUOTED);
+                                utf8BufferWriter.Write(CsTomlSyntax.Symbol.DOUBLEQUOTED);
                                 continue;
                             }
                             closingThreeQuotationMarks = true;
@@ -575,17 +577,18 @@ internal ref struct CsTomlReader
                 }
                 for (int i = 0; i < doubleQuotedCount; i++)
                 {
-                    utf8Writer.Write(CsTomlSyntax.Symbol.DOUBLEQUOTED);
+                    utf8BufferWriter.Write(CsTomlSyntax.Symbol.DOUBLEQUOTED);
                 }
                 continue;
             }
             else if (CsTomlSyntax.IsBackSlash(ch))
             {
                 FormatEscapeSequence(ref writer, multiLine: true);
+                utf8BufferWriter.Flush();
                 continue;
             }
 
-            utf8Writer.Write(ch);
+            utf8BufferWriter.Write(ch);
             Advance(1);
         }
     BREAK:
@@ -983,11 +986,6 @@ internal ref struct CsTomlReader
         while (Peek())
         {
             var key = ReadKey();
-            SkipWhiteSpace();
-
-            if (!TryPeek(out var equalCh)) ExceptionHelper.ThrowEndOfFileReached(); // = or value is nothing
-            if (!CsTomlSyntax.IsEqual(equalCh)) ExceptionHelper.ThrowNoEqualAfterTheKey(); // = is nothing
-
             Advance(1); // skip "="
             SkipWhiteSpace();
 

@@ -1,5 +1,5 @@
 ﻿using CsToml.Error;
-
+using System.Runtime.InteropServices;
 
 namespace CsToml.Utility;
 
@@ -9,11 +9,17 @@ internal static class Utf8Helper
     {
         for (int i = 0; i < bytes.Length; i++)
         {
-            if ((bytes[i] & 0x80) == 0x00) continue;
+            if ((bytes[i] & 0x80) == 0x00) goto One;
             else if (((bytes[i] & 0xe0) == 0xc0)) goto Two;
             else if (((bytes[i] & 0xf0) == 0xe0)) goto Three;
             else if (((bytes[i] & 0xf8) == 0xf0)) goto Four;
             else return true;
+
+        One:
+            if (bytes.Length - i < 4) continue;
+            var block = MemoryMarshal.Read<uint>(bytes.Slice(i, 4));
+            if ((block & 0x80808080) == 0x00) i += 3;
+            continue;
 
         Two:
             if (bytes.Length <= ++i) return true;
