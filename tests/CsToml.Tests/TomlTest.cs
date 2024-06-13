@@ -18,23 +18,28 @@ public class TomlTest
     [Theory, MemberData(nameof(ValidTomlFile))]
     public void ValidTest(string tomlFile)
     {
-        var package = CsTomlFileSerializer.Deserialize<CsTomlPackage>(tomlFile, CsTomlSerializerOptions.NoThrow);
-
-        if (package!.Exceptions.Count > 0)
+        try
         {
-            Assert.Fail(package.Exceptions[0]!.InnerException!.ToString());
+            var package = CsTomlFileSerializer.Deserialize<CsTomlPackage>(tomlFile);
+        }
+        catch(Exception e)
+        {
+            Assert.Fail($"TomlFile:{tomlFile} Message:{e}");
         }
     }
 
     [Theory, MemberData(nameof(InvalidTomlFile))]
     public void InvalidTest(string tomlFile)
     {
-        var package = CsTomlFileSerializer.Deserialize<CsTomlPackage>(tomlFile, CsTomlSerializerOptions.NoThrow);
-
-        if (package!.Exceptions.Count == 0)
+        try
         {
-            Assert.Fail($@"{tomlFile}");
+            var package = CsTomlFileSerializer.Deserialize<CsTomlPackage>(tomlFile);
         }
+        catch (Exception)
+        {
+            return;
+        }
+        Assert.Fail($"TomlFile:{tomlFile}");
     }
 
     public static IEnumerable<object[]> ValidTomlFile()

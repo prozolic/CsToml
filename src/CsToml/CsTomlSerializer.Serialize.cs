@@ -27,10 +27,9 @@ public partial class CsTomlSerializer : ICsTomlValueSerializer
         {
             TPackagePart.Serialize<TBufferWriter, CsTomlSerializer>(ref bufferWriter, ref target, options);
         }
-        catch (CsTomlException)
+        catch (CsTomlException cte)
         {
-            if (options.IsThrowCsTomlException)
-                throw;
+            throw new CsTomlSerializeException([cte]);
         }
     }
 

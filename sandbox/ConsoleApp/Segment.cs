@@ -21,4 +21,13 @@ public class Segment<T> : ReadOnlySequenceSegment<T>
     {
         Next = next;
     }
+
+    public Segment<T> AddNext(ReadOnlyMemory<T> memory)
+    {
+        var segment = new Segment<T>(memory);
+        segment.SetRunningIndex(RunningIndex + Length);
+        segment.SetNext(null);
+        Next = segment;
+        return segment;
+    }
 }

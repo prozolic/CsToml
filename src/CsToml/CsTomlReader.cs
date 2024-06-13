@@ -319,6 +319,7 @@ internal ref struct CsTomlReader
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SkipOneLine()
     {
         while (TryPeek(out var ch))
@@ -404,12 +405,12 @@ internal ref struct CsTomlReader
 
     [DebuggerStepThrough]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryPeek(out byte ch)
+    public readonly bool TryPeek(out byte ch)
         => sequenceReader.TryPeek(out ch);
 
     [DebuggerStepThrough]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Peek()
+    public readonly bool Peek()
         => sequenceReader.Peek();
 
     private CsTomlString ReadDoubleQuoteString()

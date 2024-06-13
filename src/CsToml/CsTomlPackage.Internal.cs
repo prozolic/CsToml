@@ -16,10 +16,9 @@ public partial class CsTomlPackage
         {
             table.ToTomlString(ref writer);
         }
-        catch (CsTomlException) 
+        catch (CsTomlException cte)
         {
-            if (options.IsThrowCsTomlException)
-                throw;
+            throw new CsTomlSerializeException([cte]);
         }
     }
 
@@ -30,16 +29,18 @@ public partial class CsTomlPackage
         CsTomlTableNode? currentNode = table.RootNode;
         try
         {
+            List<CsTomlException> exceptions = [];
             var comments = new List<CsTomlString>(4);
+
             while (tomlReader.Peek())
             {
                 // comment
-                if (DeserializeComment(ref tomlReader, options, out var comment))
+                if (DeserializeComment(ref tomlReader, options, exceptions, out var comment))
                 {
                     comments.Add(comment!);
                 }
 
-                if (TrySkipToNewLine(ref tomlReader, options))
+                if (TrySkipToNewLine(ref tomlReader, options, exceptions))
                 {
                     if (!tomlReader.Peek()) goto BREAK;
                     continue;
@@ -53,9 +54,6 @@ public partial class CsTomlPackage
                     tomlReader.Advance(1);
                     if (!tomlReader.TryPeek(out var arrayOfTablesCh))
                     {
-                        if (options.IsThrowCsTomlException)
-                            throw new CsTomlLineNumberException("The TOML file has been read up to EOF, so analysis of the TOML file has been completed.", tomlReader.LineNumber);
-
                         exceptions.Add(new CsTomlLineNumberException("The TOML file has been read up to EOF, so analysis of the TOML file has been completed.", tomlReader.LineNumber));
                         goto BREAK;
                     }
@@ -63,17 +61,14 @@ public partial class CsTomlPackage
                     tomlReader.Rewind(1);
                     if (CsTomlSyntax.IsLeftSquareBrackets(arrayOfTablesCh))
                     {
-                        if (DeserializeArrayOfTablesHeader(ref tomlReader, comments, options, out currentNode))
+                        if (DeserializeArrayOfTablesHeader(ref tomlReader, comments, options, exceptions, out currentNode))
                         {
                             comments.Clear();
-                            DeserializeComment(ref tomlReader, options, out var arrayComment);
+                            DeserializeComment(ref tomlReader, options, exceptions, out var arrayComment);
                             if (!tomlReader.Peek()) goto BREAK;
 
-                            if (!TrySkipToNewLine(ref tomlReader, options))
+                            if (!TrySkipToNewLine(ref tomlReader, options, exceptions))
                             {
-                                if (options.IsThrowCsTomlException)
-                                    throw new CsTomlLineNumberException("There is a non-newline (or EOF) character after the table array header.", tomlReader.LineNumber);
-
                                 exceptions.Add(new CsTomlLineNumberException("There is a non-newline (or EOF) character after the table array header.", tomlReader.LineNumber));
                                 tomlReader.SkipOneLine();
                             }
@@ -85,17 +80,14 @@ public partial class CsTomlPackage
                         continue;
                     }
 
-                    if (DeserializeTableHeader(ref tomlReader, comments, options, out currentNode))
+                    if (DeserializeTableHeader(ref tomlReader, comments, options, exceptions, out currentNode))
                     {
                         comments.Clear();
-                        DeserializeComment(ref tomlReader, options, out var arrayTableComment);
+                        DeserializeComment(ref tomlReader, options, exceptions, out var arrayTableComment);
                         if (!tomlReader.Peek()) goto BREAK;
 
-                        if (!TrySkipToNewLine(ref tomlReader, options))
+                        if (!TrySkipToNewLine(ref tomlReader, options, exceptions))
                         {
-                            if (options.IsThrowCsTomlException)
-                                throw new CsTomlLineNumberException("There is a character other than a newline (or EOF) after the table header.", tomlReader.LineNumber);
-
                             exceptions.Add(new CsTomlLineNumberException("There is a character other than a newline (or EOF) after the table header.", tomlReader.LineNumber));
                             tomlReader.SkipOneLine();
                         }
@@ -108,18 +100,15 @@ public partial class CsTomlPackage
                 }
 
                 // key and value
-                if (DeserializeKeyValue(ref tomlReader, currentNode!, options, comments))
+                if (DeserializeKeyValue(ref tomlReader, currentNode!, options, exceptions, comments))
                 {
                     comments.Clear();
 
-                    DeserializeComment(ref tomlReader, options, out var endComment);
+                    DeserializeComment(ref tomlReader, options, exceptions, out var endComment);
                     if (!tomlReader.Peek()) goto BREAK;
 
-                    if (!TrySkipToNewLine(ref tomlReader, options))
+                    if (!TrySkipToNewLine(ref tomlReader, options, exceptions))
                     {
-                        if (options.IsThrowCsTomlException)
-                            throw new CsTomlLineNumberException("There is a non-newline (or EOF) character after the key/value pair.", tomlReader.LineNumber);
-
                         exceptions.Add(new CsTomlLineNumberException("There is a non-newline (or EOF) character after the key/value pair.", tomlReader.LineNumber));
                         tomlReader.SkipOneLine();
                     }
@@ -132,6 +121,8 @@ public partial class CsTomlPackage
 
         BREAK:
             LineNumber = tomlReader.LineNumber;
+            if (exceptions.Count > 0)
+                throw new CsTomlSerializeException(exceptions);
         }
         finally
         {
@@ -139,7 +130,7 @@ public partial class CsTomlPackage
         }
     }
 
-    private bool DeserializeComment(ref CsTomlReader reader, CsTomlSerializerOptions options, out CsTomlString? comment)
+    private bool DeserializeComment(ref CsTomlReader reader, CsTomlSerializerOptions options, List<CsTomlException> exceptions, out CsTomlString? comment)
     {
         comment = null;
         reader.SkipWhiteSpace();
@@ -154,17 +145,11 @@ public partial class CsTomlPackage
             }
             catch (CsTomlException e)
             {
-                if (options.IsThrowCsTomlException)
-                    throw new CsTomlLineNumberException(e, reader.LineNumber);
-
                 exceptions.Add(new CsTomlLineNumberException(e, reader.LineNumber));
                 return false;
             }
             catch (Exception e)
             {
-                if (options.IsThrowCsTomlException)
-                    throw new CsTomlLineNumberException(e, reader.LineNumber);
-
                 exceptions.Add(new CsTomlLineNumberException(e, reader.LineNumber));
                 return false;
             }
@@ -173,7 +158,7 @@ public partial class CsTomlPackage
         return false;
     }
 
-    private bool DeserializeKeyValue(ref CsTomlReader reader, CsTomlTableNode? currentNode, CsTomlSerializerOptions options, IReadOnlyCollection<CsTomlString> comments)
+    private bool DeserializeKeyValue(ref CsTomlReader reader, CsTomlTableNode? currentNode, CsTomlSerializerOptions options, List<CsTomlException> exceptions, IReadOnlyCollection<CsTomlString> comments)
     {
         try
         {
@@ -186,23 +171,17 @@ public partial class CsTomlPackage
         }
         catch (CsTomlException ce)
         {
-            if (options.IsThrowCsTomlException)
-                throw new CsTomlLineNumberException(ce, reader.LineNumber);
-
             exceptions.Add(new CsTomlLineNumberException(ce, reader.LineNumber));
             return false;
         }
         catch (Exception e)
         {
-            if (options.IsThrowCsTomlException)
-                throw new CsTomlLineNumberException(e, reader.LineNumber);
-
             exceptions.Add(new CsTomlLineNumberException(e, reader.LineNumber));
             return false;
         }
     }
 
-    private bool DeserializeTableHeader(ref CsTomlReader reader, IReadOnlyCollection<CsTomlString> comments, CsTomlSerializerOptions options, out CsTomlTableNode? newNode)
+    private bool DeserializeTableHeader(ref CsTomlReader reader, IReadOnlyCollection<CsTomlString> comments, CsTomlSerializerOptions options, List<CsTomlException> exceptions, out CsTomlTableNode? newNode)
     {
         try
         {
@@ -212,25 +191,19 @@ public partial class CsTomlPackage
         }
         catch (CsTomlException e)
         {
-            if (options.IsThrowCsTomlException)
-                throw new CsTomlLineNumberException(e, reader.LineNumber);
-
             newNode = null;
             exceptions.Add(new CsTomlLineNumberException(e, reader.LineNumber));
             return false;
         }
         catch (Exception e)
         {
-            if (options.IsThrowCsTomlException)
-                throw new CsTomlLineNumberException(e, reader.LineNumber);
-
             newNode = null;
             exceptions.Add(new CsTomlLineNumberException(e, reader.LineNumber));
             return false;
         }
     }
 
-    private bool DeserializeArrayOfTablesHeader(ref CsTomlReader reader, IReadOnlyCollection<CsTomlString> comments, CsTomlSerializerOptions options, out CsTomlTableNode? currentNode)
+    private bool DeserializeArrayOfTablesHeader(ref CsTomlReader reader, IReadOnlyCollection<CsTomlString> comments, CsTomlSerializerOptions options, List<CsTomlException> exceptions, out CsTomlTableNode? currentNode)
     {
         try
         {
@@ -240,25 +213,19 @@ public partial class CsTomlPackage
         }
         catch (CsTomlException e)
         {
-            if (options.IsThrowCsTomlException)
-                throw new CsTomlLineNumberException(e, reader.LineNumber);
-
             currentNode = null;
             exceptions.Add(new CsTomlLineNumberException(e, reader.LineNumber));
             return false;
         }
         catch (Exception e)
         {
-            if (options.IsThrowCsTomlException)
-                throw new CsTomlLineNumberException(e, reader.LineNumber);
-
             currentNode = null;
             exceptions.Add(new CsTomlLineNumberException(e, reader.LineNumber));
             return false;
         }
     }
 
-    private bool TrySkipToNewLine(ref CsTomlReader reader, CsTomlSerializerOptions options)
+    private bool TrySkipToNewLine(ref CsTomlReader reader, CsTomlSerializerOptions options, List<CsTomlException> exceptions)
     {
         reader.SkipWhiteSpace();
         if (!reader.TryPeek(out var newline)) return false;
@@ -269,9 +236,6 @@ public partial class CsTomlPackage
         }
         catch (CsTomlException e)
         {
-            if (options.IsThrowCsTomlException)
-                throw new CsTomlLineNumberException(e, reader.LineNumber);
-
             exceptions.Add(new CsTomlLineNumberException(e, reader.LineNumber));
             return false;
         }

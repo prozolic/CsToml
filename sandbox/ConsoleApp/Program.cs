@@ -63,15 +63,7 @@ key = ""value""
 number = 123
 "u8.ToArray();
 
-var testCsTomlpackage = CsTomlSerializer.Deserialize<TestPackage>(tomlText, CsTomlSerializerOptions.NoThrow);
-
-if (package.Exceptions.Count > 0)
-{
-    foreach (CsTomlException? e in package.Exceptions)
-    {
-        // check error
-    }
-}
+var testCsTomlpackage = CsTomlSerializer.Deserialize<TestPackage>(tomlText);
 
 if (testCsTomlpackage!.TryGetValue("key", out var value22))
 {
