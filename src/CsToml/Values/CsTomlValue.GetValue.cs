@@ -1,11 +1,17 @@
 ﻿using CsToml.Error;
 using System.Collections.ObjectModel;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 namespace CsToml.Values;
 
+
 public partial class CsTomlValue
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public virtual bool CanGetValue(CsTomlValueFeature feature)
+        => false;
+
     public virtual ReadOnlyCollection<CsTomlValue> GetArray()
         => ExceptionHelper.NotReturnThrow<ReadOnlyCollection<CsTomlValue>>(ExceptionHelper.ThrowInvalidCasting);
 
@@ -55,16 +61,13 @@ public partial class CsTomlValue
 
     public bool TryGetArray(out ReadOnlyCollection<CsTomlValue> value)
     {
-        try
+        if (CanGetValue(CsTomlValueFeature.Array))
         {
             value = GetArray();
             return true;
         }
-        catch (CsTomlException)
-        {
-            value = default!;
-            return false;
-        }
+        value = default!;
+        return false;
     }
 
     public bool TryGetArrayValue(int index, out CsTomlValue value)
@@ -83,128 +86,173 @@ public partial class CsTomlValue
 
     public bool TryGetString(out string value)
     {
-        try
+        if (CanGetValue(CsTomlValueFeature.String))
         {
-            value = GetString();
-            return true;
+            try
+            {
+                value = GetString();
+                return true;
+            }
+            catch(CsTomlException)
+            {
+                value = default!;
+                return false;
+            }
         }
-        catch (CsTomlException)
-        {
-            value = default!;
-            return false;
-        }
+        value = default!;
+        return false;
     }
 
     public bool TryGetInt64(out long value)
     {
-        try
+        if (CanGetValue(CsTomlValueFeature.Int64))
         {
-            value = GetInt64();
-            return true;
+            try
+            {
+                value = GetInt64();
+                return true;
+            }
+            catch (CsTomlException)
+            {
+                value = default!;
+                return false;
+            }
         }
-        catch (CsTomlException)
-        {
-            value = default;
-            return false;
-        }
+        value = default!;
+        return false;
     }
 
     public bool TryGetDouble(out double value)
     {
-        try
+        if (CanGetValue(CsTomlValueFeature.Double))
         {
-            value = GetDouble();
-            return true;
+            try
+            {
+                value = GetDouble();
+                return true;
+            }
+            catch (CsTomlException)
+            {
+                value = default!;
+                return false;
+            }
         }
-        catch (CsTomlException)
-        {
-            value = default;
-            return false;
-        }
+        value = default!;
+        return false;
     }
 
     public bool TryGetBool(out bool value)
     {
-        try
+        if (CanGetValue(CsTomlValueFeature.Bool))
         {
-            value = GetBool();
-            return true;
-        }
-        catch (CsTomlException)
-        {
-            value = default;
-            return false;
-        }
+            try
+            {
+                value = GetBool();
+                return true;
+            }
+            catch (CsTomlException)
+            {
+                value = default!;
+                return false;
+            }
+    }
+        value = default!;
+        return false;
     }
 
     public bool TryGetDateTime(out DateTime value)
     {
-        try
+        if (CanGetValue(CsTomlValueFeature.DateTime))
         {
-            value = GetDateTime();
-            return true;
+            try
+            {
+                value = GetDateTime();
+                return true;
+            }
+            catch (CsTomlException)
+            {
+                value = default!;
+                return false;
+            }
         }
-        catch (CsTomlException)
-        {
-            value = default;
-            return false;
-        }
+        value = default!;
+        return false;
     }
 
     public bool TryGetDateTimeOffset(out DateTimeOffset value)
     {
-        try
+        if (CanGetValue(CsTomlValueFeature.DateTimeOffset))
         {
-            value = GetDateTimeOffset();
-            return true;
+            try
+            {
+                value = GetDateTimeOffset();
+                return true;
+            }
+            catch (CsTomlException)
+            {
+                value = default!;
+                return false;
+            }
         }
-        catch (CsTomlException)
-        {
-            value = default;
-            return false;
-        }
+        value = default!;
+        return false;
     }
 
     public bool TryGetDateOnly(out DateOnly value)
     {
-        try
+        if (CanGetValue(CsTomlValueFeature.DateOnly))
         {
-            value = GetDateOnly();
-            return true;
+            try
+            {
+                value = GetDateOnly();
+                return true;
+            }
+            catch (CsTomlException)
+            {
+                value = default!;
+                return false;
+            }
         }
-        catch (CsTomlException)
-        {
-            value = default;
-            return false;
-        }
+        value = default!;
+        return false;
     }
 
     public bool TryGetTimeOnly(out TimeOnly value)
     {
-        try
+        if (CanGetValue(CsTomlValueFeature.TimeOnly))
         {
-            value = GetTimeOnly();
-            return true;
+            try
+            {
+                value = GetTimeOnly();
+                return true;
+            }
+            catch (CsTomlException)
+            {
+                value = default!;
+                return false;
+            }
         }
-        catch (CsTomlException)
-        {
-            value = default;
-            return false;
-        }
+        value = default!;
+        return false;
     }
 
     public bool TryGetNumber<T>(out T value) where T : INumberBase<T>
     {
-        try
+        if (CanGetValue(CsTomlValueFeature.Number))
         {
-            value = GetNumber<T>();
-            return true;
+            try
+            {
+                value = GetNumber<T>();
+                return true;
+            }
+            catch (CsTomlException)
+            {
+                value = default!;
+                return false;
+            }
         }
-        catch (CsTomlException)
-        {
-            value = default!;
-            return false;
-        }
+        value = default!;
+        return false;
     }
 
 }

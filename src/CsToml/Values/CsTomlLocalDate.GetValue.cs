@@ -1,10 +1,15 @@
 ﻿
 using CsToml.Extension;
+using System.Runtime.CompilerServices;
 
 namespace CsToml.Values;
 
 internal partial class CsTomlLocalDate
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override bool CanGetValue(CsTomlValueFeature feature)
+        => ((CsTomlValueFeature.String | CsTomlValueFeature.DateTime | CsTomlValueFeature.DateTimeOffset | CsTomlValueFeature.DateOnly) & feature) == feature;
+
     public override string GetString()
     {
         Span<char> destination = stackalloc char[32];
@@ -17,8 +22,6 @@ internal partial class CsTomlLocalDate
     public override DateTimeOffset GetDateTimeOffset() => Value.ToLocalDateTime();
 
     public override DateOnly GetDateOnly() => Value;
-
-    public override TimeOnly GetTimeOnly() => TimeOnly.MinValue;
 
 }
 

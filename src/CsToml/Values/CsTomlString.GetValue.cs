@@ -1,14 +1,24 @@
-﻿using System.Buffers.Text;
+﻿using CsToml.Error;
+using CsToml.Extension;
+using CsToml.Formatter;
+using CsToml.Utility;
+using System.Buffers.Text;
+using System.Runtime.CompilerServices;
 
 namespace CsToml.Values;
 
 internal partial class CsTomlString
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override bool CanGetValue(CsTomlValueFeature feature)
+        => ((CsTomlValueFeature.String | CsTomlValueFeature.Int64 | CsTomlValueFeature.Double | CsTomlValueFeature.Bool | 
+            CsTomlValueFeature.DateTime | CsTomlValueFeature.DateTimeOffset | CsTomlValueFeature.DateOnly | CsTomlValueFeature.TimeOnly) & feature) == feature;
+
     public override string GetString() => Utf16String;
 
     public override long GetInt64()
     {
-        if (Utf8Parser.TryParse(Value, out long value, out int bytesConsumed))
+        if (long.TryParse(Value, out var value))
         {
             return value;
         }
@@ -17,7 +27,7 @@ internal partial class CsTomlString
 
     public override double GetDouble()
     {
-        if (Utf8Parser.TryParse(Value, out double value, out int bytesConsumed))
+        if (double.TryParse(Value, out var value))
         {
             return value;
         }
@@ -26,16 +36,18 @@ internal partial class CsTomlString
 
     public override bool GetBool()
     {
-        if (Utf8Parser.TryParse(Value, out bool value, out int bytesConsumed))
+        if (BooleanExtensions.TryParse(Value, out var value))
         {
             return value;
         }
+
         return base.GetBool();
     }
 
     public override DateTime GetDateTime()
     {
-        if (Utf8Parser.TryParse(Value, out DateTime value, out int bytesConsumed))
+        var trimBytes = Value.TrimWhiteSpace();
+        if (Utf8Parser.TryParse(trimBytes, out DateTime value, out int bytesConsumed) && trimBytes.Length == bytesConsumed)
         {
             return value;
         }
@@ -44,7 +56,8 @@ internal partial class CsTomlString
 
     public override DateTimeOffset GetDateTimeOffset()
     {
-        if (Utf8Parser.TryParse(Value, out DateTimeOffset value, out int bytesConsumed))
+        var trimBytes = Value.TrimWhiteSpace();
+        if (Utf8Parser.TryParse(trimBytes, out DateTimeOffset value, out int bytesConsumed) && trimBytes.Length == bytesConsumed)
         {
             return value;
         }
