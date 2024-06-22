@@ -4,7 +4,9 @@ CsToml is TOML Serializer for .NET.
 For more information about TOML, visit the official website at [https://toml.io/en/](https://toml.io/en/)
 
 > [!NOTE]
-> It is currently in preview. The library name and API may undergo breaking changes.
+> It is currently in preview. The library name and API may undergo breaking changes.  
+> Currently the latest version is CsToml Ver.1.0.4.
+> The API specification has changed significantly in Ver.1.0.4. Some of them are no longer compatible with previous versions.
 
 ```csharp
 using CsToml;
@@ -17,11 +19,13 @@ number = 123
 
 var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText);
 
-if (package.TryGetValue("key"u8, out var value))
+if (package!.TryGetValue("key"u8, out var value))
 {
-    var str = value!.GetString();
+    var str = value!.GetString(); // value
     Console.WriteLine($"key = {str}"); // key = value
 }
+
+Console.WriteLine($"key = {package!.RootNode["key"u8].GetString()}"); // key = value
 
 var serializedTomlText = CsTomlSerializer.Serialize(package);
 Console.WriteLine(Encoding.UTF8.GetString(serializedTomlText));
@@ -61,32 +65,38 @@ var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText);
 ```
 
 The basic API involve  `CsTomlPackage? package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText)`.
-When parsing from UTF-8 string(`ReadOnlySpan<byte>` or `ReadOnlySequence<byte>`) in TOML format, you can use `Deserialize`.  
+When parsing from UTF-8 string(`ReadOnlySpan<byte>` or `ReadOnlySequence<byte>`) in TOML format, you can use `Deserialize`.
+`Deserialize` can be specified with `CsTomlSerializerOptions` as a parameter, but it is not necessary to specify it explicitly at this time. It may be used to add optional features in the future.
 
 ```csharp
 public partial class CsTomlSerializer
 {
-    public static TPackage? Deserialize<TPackage>(ReadOnlySpan<byte> tomlText, CsTomlSerializerOptions? options =   null)
+    public static TPackage? Deserialize<TPackage>(ReadOnlySpan<byte> tomlText, CsTomlSerializerOptions? options = null)
     public static TPackage? Deserialize<TPackage>(in ReadOnlySequence<byte> tomlTextSequence,   CsTomlSerializerOptions? options = null)
 }
 ```
 
-`Deserialize` accepts `CsTomlSerializerOptions? options` as parameters.
-`IsThrowCsTomlException` determines whether an exception is thrown if a syntax error occurs during parsing.
-If you set to false, no syntax error is thrown. Errors that occur during analysis can be found at `CsTomlPackage.Exceptions`.
-The default is true, which means that an error is thrown during parsing.  
+If a syntax error is found during `Deserialize` execution, an exception is thrown after parsing.
+To supplement the exception, specify `CsTomlSerializeException` in the `catch` block.
+The contents of the thrown exception can be viewed from `CsTomlException.InnerException`.
 
 ```csharp
-// throw CsTomlException
-var errorPackage = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText);
+var tomlText = @"
+key = ""value""
+number = ""Error
+"u8;
 
-// no CsTomlException is thrown
-var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText, CsTomlSerializerOptions.NoThrow);
-if (package.Exceptions.Count > 0)
+try
 {
-    foreach (CsTomlException? e in package.Exceptions)
+    // throw CsTomlException
+    var errorPackage = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText);
+}
+catch(CsTomlSerializeException ctse)
+{
+    foreach (var cte in ctse.Exceptions)
     {
-        // check error
+        // A syntax error (CsTomlException) occurred while parsing line 3 of the TOML file. Check InnerException for details.
+        var e = cte.InnerException; // InnerException: 10 is a character that cannot be converted to a number.
     }
 }
 ```
@@ -130,22 +140,6 @@ public partial class CsTomlSerializer
 
 ## How to get the value
 
-```csharp
-var tomlText = @"
-key = ""value""
-number = 123
-"u8;
-
-var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText);
-
-var value = package!.Find("key"u8);
-//var result = package!.TryGetValue("key"u8, out var value);
-
-string str = value!.GetString();
-Console.WriteLine($"value = \"{str}\"");
-// value = "value"
-```
-
 ### Searching for a toml value from a key
 
 CsToml converts deserialized TOML format values to `CsTomlValue`.
@@ -188,8 +182,7 @@ The internal process is to split `"a.b"` into `a` and `b` before searching, but 
 Note that the dot (.) as a delimiter, it may not be possible to search for some keys.
 If you want to search exactly, you should use `ReadOnlySpan<ByteArray>`.  
 The third is to use an indexer.
-For example, to search for the dotted key a.b, execute `package!["a"u8]["b"u8].Value`.
-It is possible to search faster than the above two.
+For example, to search for the dotted key a.b, execute `package!["a"u8]["b"u8].Value`. This is a faster and more detailed search than the two above.
 
 ```csharp
 var tomlText = @"
@@ -213,7 +206,7 @@ var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText);
     var value = package!.Find("key"u8);
     var rawValue = value?.GetString(); // "value"
     var result = package!.TryGetValue("key"u8, out var value2); // "value"
-    var result2 = package!["key"u8].Value.GetString();  // "value" 
+    var result2 = package!.RootNode["key"u8].GetString();  // "value" 
 }
 
 // Dotted keys
@@ -223,38 +216,41 @@ var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText);
 
     var value3 = package!.Find("dotted.keys"u8, CsTomlPackageOptions.DottedKeys); // "value"
     var result2 = package!.TryGetValue("dotted.keys"u8, out var value4, CsTomlPackageOptions.DottedKeys); // "value"
-    var result3 = package!["dotted"u8]["keys"u8].Value.GetString();  // "value" 
+    var result3 = package!.RootNode["dotted"u8]["keys"u8].GetString();  // "value" 
 }
 
 // table
 {
     var value = package!.Find("table"u8, "key"u8); // "value"
     var result = package!.TryGetValue("table", "key", out var value2); // "value"
-    var result2 = package!["table"u8]["key"u8].Value.GetString();  // "value" 
+    var result2 = package!.RootNode["table"u8]["key"u8].GetString();  // "value" 
 }
 
 // ArrayOfTables
 {
     var value = package!.Find("ArrayOfTables"u8, 0, "key"u8);  // "value"
     var result = package!.TryGetValue("ArrayOfTables"u8, 0, "key"u8, out var value2); // "value"
-    var result2 = package!["arrayOfTables"u8][0]["key"u8].Value.GetInt64() // "value"
+    var result2 = package!.RootNode["arrayOfTables"u8][0]["key"u8].GetInt64() // "value"
 }
 {
     var value = package!.Find("ArrayOfTables"u8, 1, "number"u8); // 123
     var result = package!.TryGetValue("ArrayOfTables"u8, 1, "number"u8, out var value2); // 123
-    var result2 = package!["arrayOfTables"u8][1]["number"u8].Value.GetString() // 123
+    var result2 = package!.RootNode["arrayOfTables"u8][1]["number"u8].GetString() // 123
 }
 
 ```
 
 ### Casting a toml value
 
-The following API is used to obtain internal values from CsTomlValue.
+The following API is used to obtain internal values from `CsTomlValue`.
 `Get~` raises an exception, but `TryGet~` does not, and the return value can be used to determine if the acquisition was successful.
+取得どうかはCanGetValueを使用することで判断できます。
 
 ```csharp
 public partial class CsTomlValue
 {
+    public virtual bool CanGetValue(CsTomlValueFeature feature)
+
     public ReadOnlyCollection<CsTomlValue> GetArray()
     public CsTomlValue GetArrayValue(int index)
     public virtual string GetString()
