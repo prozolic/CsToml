@@ -11,8 +11,8 @@ public partial class CsTomlPackage :
 {
     private readonly CsTomlTable table;
 
-    public CsTomlPackageNode this[ReadOnlySpan<byte> key]
-        => new(table[key]);
+    public CsTomlPackageNode RootNode
+        => new(table.RootNode);
 
     public long LineNumber { get; internal set; }
 

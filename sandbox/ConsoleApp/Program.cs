@@ -3,11 +3,28 @@ using ConsoleApp;
 using CsToml;
 using CsToml.Error;
 using CsToml.Extensions;
+using CsToml.Values;
 using System.Buffers;
+using System.Buffers.Text;
+using System.Collections.Generic;
 using System.IO.Pipelines;
 using System.Text;
 
+var tomlText22 = @"
+key = 123
+"u8.ToArray();
+
+var package234= CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText22);
+var value234 = package234.Find("key"u8)!.GetInt64();
+Console.WriteLine($"{value234}");
+
 Console.WriteLine("Hello, World!");
+
+if (Utf8Parser.TryParse("2017-06-12T12:30:45.768+00:00"u8, out DateTimeOffset valuebool, out int bytesConsumed, 'O'))
+{
+
+}
+
 
 using (var stream = new FileStream("./../../../Toml/test.toml", FileMode.Open))
 {
@@ -26,6 +43,20 @@ using var serializedPackageTomlText = CsTomlSerializer.Serialize(package);
 var packageText = Encoding.UTF8.GetString(serializedPackageTomlText.ByteSpan);
 
 {
+    var valuekeyValue = package!.RootNode["bare_key"u8].GetString();
+    var valuekeyValue2 = package!
+        .RootNode["fruit"u8]["apple"u8]["color"u8]
+        .GetString();
+    var valueKeyValue3 = package!
+        .RootNode["array"u8]["of"u8]["tables"u8][1]["arr"u8]
+        .GetArrayValue(1).GetString();
+    var valueKeyValue4 = package!.RootNode["array"]["of"]["tables"][2]["name"u8]["last"u8].GetString();
+    var valueKeyValue5 = package!.RootNode["contributors"u8][1]["name"u8].GetString();
+    var valueKeyValue6 = package!
+        .RootNode["array"u8]["of"u8]["tables"u8][2]["name"u8]["array"u8][1]["z"u8]
+        .GetArrayValue(0).GetInt64();
+}
+{
     var value2 = package!.Find("int1"u8);
     var value3 = package!.Find("int6"u8);
     var value4 = package!.Find("hex1"u8);
@@ -39,8 +70,8 @@ var packageText = Encoding.UTF8.GetString(serializedPackageTomlText.ByteSpan);
     var _ = package!.Find("integers"u8)?.TryGetArray(out var value12);
     var value13 = package!.Find("Name\\tJos\\u00E9");
 
-    var value14 = package!["products"u8][0]["name"u8];
-    var value15 = package!["products"u8][0]["name"u8].Value.GetString();
+    var value14 = package!.RootNode["products"u8][0]["name"u8];
+    var value15 = package!.RootNode["products"u8][3]["name"u8].GetString();
 }
 {
     var value = package!.Find("table-1"u8, "key1"u8);
@@ -59,20 +90,49 @@ var packageText = Encoding.UTF8.GetString(serializedPackageTomlText.ByteSpan);
 }
 
 var tomlText = @"
-key = ""value""
-number = 123
+str = ""string""
+int = 99
+flt = 1.0
+bool = true
+odt = 1979-05-27T07:32:00Z
+ldt = 1979-05-27T07:32:00
+ld1 = 1979-05-27
+array = [ 1, 2, 3 ]
+
+[[ArrayOfTables]]
+value = 1
+
+[[ArrayOfTables]]
+value2 = 2
+
+[[ArrayOfTables]]
+value3 = 3
+
 "u8.ToArray();
 
-var testCsTomlpackage = CsTomlSerializer.Deserialize<TestPackage>(tomlText);
 
-if (testCsTomlpackage!.TryGetValue("key", out var value22))
+try
 {
-    var str = value22!.GetString();
-    Console.WriteLine($"key = {str}"); // key = value
+    var testCsTomlpackage = CsTomlSerializer.Deserialize<TestPackage>(tomlText);
+}
+catch(CsTomlSerializeException ctse)
+{
+    foreach (var cte in ctse.Exceptions)
+    {
+        // A syntax error (CsTomlException) occurred while parsing line 3 of the TOML file. Check InnerException for details.
+        var e = cte.InnerException;
+    }
 }
 
-using var serializedTomlText = CsTomlSerializer.Serialize(testCsTomlpackage);
-Console.WriteLine(Encoding.UTF8.GetString(serializedTomlText.ByteSpan));
+
+//if (testCsTomlpackage!.TryGetValue("key", out var value22))
+//{
+//    var str = value22!.GetString();
+//    Console.WriteLine($"key = {str}"); // key = value
+//}
+
+//using var serializedTomlText = CsTomlSerializer.Serialize(testCsTomlpackage);
+//Console.WriteLine(Encoding.UTF8.GetString(serializedTomlText.ByteSpan));
 
 using var result = CsTomlSerializer.Serialize(package);
 Console.WriteLine(Encoding.UTF8.GetString(result.ByteSpan));

@@ -173,3 +173,12 @@ name = "Nail"
 sku = 284758393
 
 color = "gray"
+
+[[array.of.tables]]
+
+[[array.of.tables]]
+test = 2
+arr = [2, "tes2", 8]
+
+[[array.of.tables]]
+name = { first = "Tom", last = "Preston-Werner", array = [0,  { x = 1, y = 2, z = [999] }]}

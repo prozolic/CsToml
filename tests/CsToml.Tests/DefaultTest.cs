@@ -143,13 +143,13 @@ number2 = 123456
     {
         var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText)!;
 
-        Assert.Equal("value", package!["key"u8].Value.GetString());
-        Assert.Equal("value", package!["first"u8]["second"u8]["third"u8].Value.GetString());
-        Assert.Equal(123456, package!["number"u8].Value.GetInt64());
-        Assert.Equal("value", package!["Table"u8]["test"u8]["key"u8].Value.GetString());
-        Assert.Equal("value", package!["arrayOfTables"u8]["test"u8][0]["key"u8].Value.GetString());
+        Assert.Equal("value", package!.RootNode["key"u8].GetString());
+        Assert.Equal("value", package!.RootNode["first"u8]["second"u8]["third"u8].GetString());
+        Assert.Equal(123456, package!.RootNode["number"u8].GetInt64());
+        Assert.Equal("value", package!.RootNode["Table"u8]["test"u8]["key"u8].GetString());
+        Assert.Equal("value", package!.RootNode["arrayOfTables"u8]["test"u8][0]["key"u8].GetString());
 
-        Assert.False(package!["failed"u8].Value.HasValue);
+        Assert.False(package!.RootNode["failed"u8].HasValue);
     }
 
 }
