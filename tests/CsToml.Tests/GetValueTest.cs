@@ -254,7 +254,7 @@ value3 = 3
     public void OffsetDateTimeTest()
     {
         var value = package.Find("odt"u8);
-        Assert.Equal("1979/05/27 7:32:00 +00:00", value!.GetString());
+        Assert.Equal(new DateTimeOffset(1979, 5, 27, 7, 32, 0, TimeSpan.Zero).ToString(), value!.GetString());
         Assert.Throws<CsTomlException>(() => value!.GetInt64());
         Assert.Throws<CsTomlException>(() => value!.GetDouble());
         Assert.Throws<CsTomlException>(() => value!.GetBool());
@@ -274,7 +274,7 @@ value3 = 3
         var value = package.Find("odt"u8);
         {
             var result = value!.TryGetString(out var v);
-            Assert.Equal("1979/05/27 7:32:00 +00:00", v);
+            Assert.Equal(new DateTimeOffset(1979, 5, 27, 7, 32, 0, TimeSpan.Zero).ToString(), v);
         }
         {
             var result = value!.TryGetInt64(out var v);
@@ -317,7 +317,7 @@ value3 = 3
     public void LocalDateTimeTest()
     {
         var value = package.Find("ldt"u8);
-        Assert.Equal("1979/05/27 7:32:00", value!.GetString());
+        Assert.Equal(new DateTime(1979, 5, 27, 7, 32, 0).ToString(), value!.GetString());
         Assert.Throws<CsTomlException>(() => value!.GetInt64());
         Assert.Throws<CsTomlException>(() => value!.GetDouble());
         Assert.Throws<CsTomlException>(() => value!.GetBool());
@@ -337,7 +337,7 @@ value3 = 3
         var value = package.Find("ldt"u8);
         {
             var result = value!.TryGetString(out var v);
-            Assert.Equal("1979/05/27 7:32:00", v);
+            Assert.Equal(new DateTime(1979, 5, 27, 7, 32, 0).ToString(), v);
         }
         {
             var result = value!.TryGetInt64(out var v);
@@ -380,7 +380,7 @@ value3 = 3
     public void LocalDateTest()
     {
         var value = package.Find("ld1"u8);
-        Assert.Equal("1979/05/27", value!.GetString());
+        Assert.Equal(new DateOnly(1979, 5, 27).ToString(), value!.GetString());
         Assert.Throws<CsTomlException>(() => value!.GetInt64());
         Assert.Throws<CsTomlException>(() => value!.GetDouble());
         Assert.Throws<CsTomlException>(() => value!.GetBool());
@@ -400,7 +400,7 @@ value3 = 3
         var value = package.Find("ld1"u8);
         {
             var result = value!.TryGetString(out var v);
-            Assert.Equal("1979/05/27", v);
+            Assert.Equal(new DateOnly(1979, 5, 27).ToString(), v);
         }
         {
             var result = value!.TryGetInt64(out var v);
@@ -443,7 +443,7 @@ value3 = 3
     public void LocalTimeTest()
     {
         var value = package.Find("lt1"u8);
-        Assert.Equal("7:32", value!.GetString());
+        Assert.Equal(new TimeOnly(7,32,30).ToString(), value!.GetString());
         Assert.Throws<CsTomlException>(() => value!.GetInt64());
         Assert.Throws<CsTomlException>(() => value!.GetDouble());
         Assert.Throws<CsTomlException>(() => value!.GetBool());
@@ -461,7 +461,7 @@ value3 = 3
         var value = package.Find("lt1"u8);
         {
             var result = value!.TryGetString(out var v);
-            Assert.Equal("7:32", v);
+            Assert.Equal(new TimeOnly(7,32,30).ToString(), v);
         }
         {
             var result = value!.TryGetInt64(out var v);
