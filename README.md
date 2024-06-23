@@ -244,7 +244,7 @@ var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText);
 
 The following API is used to obtain internal values from `CsTomlValue`.
 `Get~` raises an exception, but `TryGet~` does not, and the return value can be used to determine if the acquisition was successful.
-取得どうかはCanGetValueを使用することで判断できます。
+Whether it can be obtained or not can be determined by using `CanGetValue`.
 
 ```csharp
 public partial class CsTomlValue
