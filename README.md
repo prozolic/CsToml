@@ -175,20 +175,14 @@ public partial class CsTomlPackage
 
 There are three ways to search with the dot key.
 The first is to search using `ReadOnlySpan<ByteArray>` as the key.
-Since C#12, the ability to use collection expressions has made it convenient to create `ReadOnlySpan<ByteArray>` as well as to initialize arrays.  
-The second is to use the optional function CsTomlPackageOptions.DottedKeys.
-For example, to search for the dotted key `a.b`, execute `Find("a.b "u8, CsTomlPackageOptions.DottedKeys)`.
-The internal process is to split `"a.b"` into `a` and `b` before searching, but this is superior in performance because it splits the string without creating unnecessary strings.
-Note that the dot (.) as a delimiter, it may not be possible to search for some keys.
-If you want to search exactly, you should use `ReadOnlySpan<ByteArray>`.  
-The third is to use an indexer.
-For example, to search for the dotted key a.b, execute `package!["a"u8]["b"u8].Value`. This is a faster and more detailed search than the two above.
+Since C#12, the ability to use collection expressions has made it convenient to create `ReadOnlySpan<ByteArray>` as well as to initialize arrays.
 
 ```csharp
 var tomlText = @"
 key = ""value""
 number = 123
 dotted.keys = ""value""
+array = [1, 2, 3]
 
 [table]
 key = ""value""
@@ -201,46 +195,175 @@ number = 123
 "u8;
 
 var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText);
-
 {
-    var value = package!.Find("key"u8);
-    var rawValue = value?.GetString(); // "value"
-    var result = package!.TryGetValue("key"u8, out var value2); // "value"
-    var result2 = package!.RootNode["key"u8].GetString();  // "value" 
-}
+    var tomlValue = package!.Find("key"u8);
+    var value = tomlValue!.GetString(); // "value"
 
+    var tomlValue2 = package!.Find("number"u8);
+    var value2 = tomlValue2!.GetInt64(); // "123"
+}
 // Dotted keys
 {
-    var value = package!.Find(["dotted"u8,"keys"u8]); // "value"
-    var result = package!.TryGetValue(["dotted"u8, "keys"u8], out var value2); // "value"
+    var tomlValue = package!.Find(["dotted"u8, "keys"u8]); // "value"
+    var value = tomlValue?.GetString(); // "value"
 
-    var value3 = package!.Find("dotted.keys"u8, CsTomlPackageOptions.DottedKeys); // "value"
-    var result2 = package!.TryGetValue("dotted.keys"u8, out var value4, CsTomlPackageOptions.DottedKeys); // "value"
-    var result3 = package!.RootNode["dotted"u8]["keys"u8].GetString();  // "value" 
+    var tomlValue2 = package!.Find("dotted.keys"u8, CsTomlPackageOptions.DottedKeys); 
+    var value2 = tomlValue2!.GetString(); // "value"
 }
-
+// array
+{
+    var tomlArray = package!.Find("array"u8);
+    foreach(var tomlValue in tomlArray!.GetArray())
+    {
+        var value = tomlValue!.GetInt64();
+    }
+}
 // table
 {
-    var value = package!.Find("table"u8, "key"u8); // "value"
-    var result = package!.TryGetValue("table", "key", out var value2); // "value"
-    var result2 = package!.RootNode["table"u8]["key"u8].GetString();  // "value" 
+    var tomlValue = package!.Find("table"u8, "key"u8); 
+    var value = tomlValue!.GetString(); // "value"
 }
-
 // ArrayOfTables
 {
-    var value = package!.Find("ArrayOfTables"u8, 0, "key"u8);  // "value"
-    var result = package!.TryGetValue("ArrayOfTables"u8, 0, "key"u8, out var value2); // "value"
-    var result2 = package!.RootNode["arrayOfTables"u8][0]["key"u8].GetInt64() // "value"
+    var tomlValue = package!.Find("ArrayOfTables"u8, 0, "key"u8);  // "value"
+    var value = tomlValue!.GetString(); // "value"
 }
-{
-    var value = package!.Find("ArrayOfTables"u8, 1, "number"u8); // 123
-    var result = package!.TryGetValue("ArrayOfTables"u8, 1, "number"u8, out var value2); // 123
-    var result2 = package!.RootNode["arrayOfTables"u8][1]["number"u8].GetString() // 123
-}
-
 ```
 
-### Casting a toml value
+The second is to use the optional function CsTomlPackageOptions.DottedKeys.
+For example, to search for the dotted key `a.b`, execute `Find("a.b "u8, CsTomlPackageOptions.DottedKeys)`.
+The internal process is to split `"a.b"` into `a` and `b` before searching, but this is superior in performance because it splits the string without creating unnecessary strings.
+Note that the dot (.) as a delimiter, it may not be possible to search for some keys.
+If you want to search exactly, you should use `ReadOnlySpan<ByteArray>`.
+
+```csharp
+var tomlText = @"
+key = ""value""
+number = 123
+dotted.keys = ""value""
+array = [1, 2, 3]
+
+[table]
+key = ""value""
+
+[[ArrayOfTables]]
+key = ""value""
+
+[[ArrayOfTables]]
+number = 123
+"u8;
+
+var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText);
+{
+    if(package!.TryGetValue("key"u8, out var tomlValue))
+    {
+        var value = tomlValue!.GetString(); // "value"
+    }
+    if (package!.TryGetValue("number"u8, out var tomlValue2))
+    {
+        var value2 = tomlValue2!.GetInt64(); // "123"
+    }
+}
+// Dotted keys
+{
+    if (package!.TryGetValue(["dotted"u8, "keys"u8], out var tomlValue))
+    {
+        var value = tomlValue!.GetString(); // "value"
+    }
+    if (package!.TryGetValue("dotted.keys"u8, out var tomlValue2, CsTomlPackageOptions.DottedKeys))
+    {
+        var value2 = tomlValue2!.GetString(); // "value"
+    }
+}
+// array
+{
+    if (package!.TryGetValue("array"u8, out var tomlArray))
+    {
+        foreach (var tomlValue in tomlArray!.GetArray())
+        {
+            var value = tomlValue!.GetInt64();
+        }
+    }
+}
+// table
+{
+    if (package!.TryGetValue("table"u8, "key"u8, out var tomlValue))
+    {
+        var value = tomlValue!.GetString(); // "value"
+    }
+}
+// ArrayOfTables
+{
+    if (package!.TryGetValue("ArrayOfTables"u8, 0, "key"u8, out var tomlValue))
+    {
+        var value = tomlValue!.GetString(); // "value"
+    }
+}
+```
+
+The third is a search using the `CsTomlPackage.RootNode` property and indexer.
+The advantage is that it is faster than `Find` and can search multiple combinations of values, such as inline tables and arrays.
+This will give you a `CsTomlPackageNode` instead of a `CsTomlValue`, but you can use the same API as the `CsTomlValue` to get the value.
+
+```csharp
+var tomlText = @"
+key = ""value""
+number = 123
+dotted.keys = ""value""
+array = [1, 2, 3]
+
+[table]
+key = ""value""
+
+[[ArrayOfTables]]
+key = ""value""
+
+[[ArrayOfTables]]
+number = 123
+"u8;
+
+var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText);
+{
+    var value = package!.RootNode["key"u8].GetString(); // "value"
+    var value2 = package!.RootNode["number"u8].GetInt64(); // 123
+}
+// Dotted keys
+{
+    var value = package!.RootNode["dotted"u8]["keys"].GetString(); // "value"
+}
+// array
+{
+    var tomlArray = package!.RootNode["array"].GetArray();
+    foreach (var tomlValue in tomlArray!)
+    {
+        var value = tomlValue!.GetInt64();
+    }
+}
+// table
+{
+    var value = package!.RootNode["table"u8]["key"u8].GetString(); // "value"
+}
+// ArrayOfTables
+{
+    var value = package!.RootNode["ArrayOfTables"u8][0]["key"u8].GetString(); // "value"
+}
+```
+
+### Casting a TOML value
+
+Each TOML value type can be cast as follows.
+
+| TOML Value Type        | Castable types from `CsTomlValue`                                                                          |
+|:-----------------------|:-----------------------------------------------------------------------------------------------------------|
+| `String`               | `string`, `long`, `double`, `bool`, `DateTime`, `DateTimeOffset`, `DateOnly`, `TimeOnly`, `INumberBase<T>` |
+| `Integer`              | `string`, `long`, `double`, `bool`,`INumberBase<T>`                                                        |
+| `Floating`             | `string`, `long`, `double`, `bool`,`INumberBase<T>`                                                        |
+| `Boolean`              | `string`, `long`, `double`, `bool`,`INumberBase<T>`                                                        |
+| `Offset Date-Time`     | `string`, `DateTime`, `DateTimeOffset`, `DateOnly`, `TimeOnly`                                             |
+| `Local Date-Time`      | `string`, `DateTime`, `DateTimeOffset`, `DateOnly`, `TimeOnly`                                             |
+| `Local Date`           | `string`, `DateTime`, `DateTimeOffset`, `DateOnly`                                                         |
+| `Local Time`           | `string`, `TimeOnly`                                                                                       |
+| `Array`                | `ReadOnlyCollection<CsTomlValue>`                                                                          |
 
 The following API is used to obtain internal values from `CsTomlValue`.
 `Get~` raises an exception, but `TryGet~` does not, and the return value can be used to determine if the acquisition was successful.
