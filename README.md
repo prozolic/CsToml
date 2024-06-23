@@ -1,4 +1,4 @@
-# CsToml - TOML Serializer  for .NET
+# [CsToml - TOML Serializer  for .NET](https://prozolic.github.io/CsToml)
 
 CsToml is TOML Serializer for .NET.  
 For more information about TOML, visit the official website at [https://toml.io/en/](https://toml.io/en/)
