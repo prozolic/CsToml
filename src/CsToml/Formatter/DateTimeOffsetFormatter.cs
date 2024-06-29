@@ -99,9 +99,9 @@ internal class DateTimeOffsetFormatter : ICsTomlFormatter<DateTimeOffset>
         var bytes = reader.ReadBytes(length);
         if (bytes.Length < CsTomlSyntax.DateTime.OffsetDateTimeZFormatLength) throw new ArgumentException();
 
-        if (CsTomlSyntax.IsHyphen(bytes[4]) && CsTomlSyntax.IsHyphen(bytes[7]) && (bytes[10] == CsTomlSyntax.AlphaBet.T || bytes[10] == CsTomlSyntax.AlphaBet.t || CsTomlSyntax.IsTabOrWhiteSpace(bytes[10])))
+        if (CsTomlSyntax.IsHyphen(bytes[4]) && CsTomlSyntax.IsHyphen(bytes[7]) && (bytes[10] == CsTomlSyntax.Alphabet.T || bytes[10] == CsTomlSyntax.Alphabet.t || CsTomlSyntax.IsTabOrWhiteSpace(bytes[10])))
         {
-            if (bytes[bytes.Length - 1] ==  CsTomlSyntax.AlphaBet.Z || bytes[bytes.Length - 1] == CsTomlSyntax.AlphaBet.z)
+            if (bytes[bytes.Length - 1] ==  CsTomlSyntax.Alphabet.Z || bytes[bytes.Length - 1] == CsTomlSyntax.Alphabet.z)
                 return DeserializeDateTimeOffset(bytes[..^1], bytes.Slice(bytes.Length - 1, 1));
 
             return DeserializeDateTimeOffset(bytes[..^6], bytes.Slice(bytes.Length - 6, 6));
@@ -172,7 +172,7 @@ internal class DateTimeOffsetFormatter : ICsTomlFormatter<DateTimeOffset>
             microsecond += DeserializeDecimal(bytes[25]);
         }
 
-        if (offsetBytes.Length == 1 && offsetBytes[0] == CsTomlSyntax.AlphaBet.Z || offsetBytes[0] == CsTomlSyntax.AlphaBet.z)
+        if (offsetBytes.Length == 1 && offsetBytes[0] == CsTomlSyntax.Alphabet.Z || offsetBytes[0] == CsTomlSyntax.Alphabet.z)
         {
             try
             {

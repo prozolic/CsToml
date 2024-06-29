@@ -25,7 +25,7 @@ internal static class BooleanExtensions
         {
             var falseValue = Unsafe.ReadUnaligned<int>(ref MemoryMarshal.GetReference<byte>(bytes));
             if (falseValue == 1936482662 // fals
-                && bytes[4] == CsTomlSyntax.AlphaBet.e) // e
+                && bytes[4] == CsTomlSyntax.Alphabet.e) // e
             {
                 value = false;
                 return true;
@@ -52,7 +52,7 @@ internal static class BooleanExtensions
         {
             var falseValue = Unsafe.ReadUnaligned<int>(ref MemoryMarshal.GetReference<byte>(trimValue));
             if (falseValue == 1936482662 // fals
-                && trimValue[4] == CsTomlSyntax.AlphaBet.e) // e
+                && trimValue[4] == CsTomlSyntax.Alphabet.e) // e
             {
                 value = false;
                 return true;

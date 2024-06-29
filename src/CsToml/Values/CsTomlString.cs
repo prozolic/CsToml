@@ -118,23 +118,23 @@ internal partial class CsTomlString : CsTomlValue
                     continue;
                 case CsTomlSyntax.Symbol.BACKSPACE:
                     writer.Write(CsTomlSyntax.Symbol.BACKSLASH);
-                    writer.Write(CsTomlSyntax.AlphaBet.b);
+                    writer.Write(CsTomlSyntax.Alphabet.b);
                     continue;
                 case CsTomlSyntax.Symbol.TAB:
                     writer.Write(CsTomlSyntax.Symbol.BACKSLASH);
-                    writer.Write(CsTomlSyntax.AlphaBet.t);
+                    writer.Write(CsTomlSyntax.Alphabet.t);
                     continue;
                 case CsTomlSyntax.Symbol.LINEFEED:
                     writer.Write(CsTomlSyntax.Symbol.BACKSLASH);
-                    writer.Write(CsTomlSyntax.AlphaBet.n);
+                    writer.Write(CsTomlSyntax.Alphabet.n);
                     continue;
                 case CsTomlSyntax.Symbol.FORMFEED:
                     writer.Write(CsTomlSyntax.Symbol.BACKSLASH);
-                    writer.Write(CsTomlSyntax.AlphaBet.f);
+                    writer.Write(CsTomlSyntax.Alphabet.f);
                     continue;
                 case CsTomlSyntax.Symbol.CARRIAGE:
                     writer.Write(CsTomlSyntax.Symbol.BACKSLASH);
-                    writer.Write(CsTomlSyntax.AlphaBet.r);
+                    writer.Write(CsTomlSyntax.Alphabet.r);
                     continue;
                 default:
                     writer.Write(ch);
@@ -170,23 +170,23 @@ internal partial class CsTomlString : CsTomlValue
                     continue;
                 case CsTomlSyntax.Symbol.BACKSPACE:
                     writer.Write(CsTomlSyntax.Symbol.BACKSLASH);
-                    writer.Write(CsTomlSyntax.AlphaBet.b);
+                    writer.Write(CsTomlSyntax.Alphabet.b);
                     continue;
                 case CsTomlSyntax.Symbol.TAB:
                     writer.Write(CsTomlSyntax.Symbol.BACKSLASH);
-                    writer.Write(CsTomlSyntax.AlphaBet.t);
+                    writer.Write(CsTomlSyntax.Alphabet.t);
                     continue;
                 case CsTomlSyntax.Symbol.LINEFEED:
                     writer.Write(CsTomlSyntax.Symbol.BACKSLASH);
-                    writer.Write(CsTomlSyntax.AlphaBet.n);
+                    writer.Write(CsTomlSyntax.Alphabet.n);
                     continue;
                 case CsTomlSyntax.Symbol.FORMFEED:
                     writer.Write(CsTomlSyntax.Symbol.BACKSLASH);
-                    writer.Write(CsTomlSyntax.AlphaBet.f);
+                    writer.Write(CsTomlSyntax.Alphabet.f);
                     continue;
                 case CsTomlSyntax.Symbol.CARRIAGE:
                     writer.Write(CsTomlSyntax.Symbol.BACKSLASH);
-                    writer.Write(CsTomlSyntax.AlphaBet.r);
+                    writer.Write(CsTomlSyntax.Alphabet.r);
                     continue;
                 default:
                     writer.Write(ch);

@@ -21,6 +21,13 @@ internal ref struct CsTomlReader
         LineNumber = 1;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Release()
+    {
+        RecycleByteArrayPoolBufferWriter.Release();
+        RecycleArrayPoolList<CsTomlDotKey>.Release();
+    }
+
     public CsTomlString ReadComment()
     {
         Advance(1); // #
@@ -78,13 +85,13 @@ internal ref struct CsTomlReader
         }
     }
 
-    public CsTomlDotKeyGroup ReadKey()
+    public ArrayPoolList<CsTomlDotKey> ReadKey()
     {
         SkipWhiteSpace();
         if (!Peek())
             ExceptionHelper.ThrowEndOfFileReached();
 
-        var keys = new List<CsTomlDotKey>(2);
+        var key = RecycleArrayPoolList<CsTomlDotKey>.Rent();
         var period = true;
         while (TryPeek(out var c))
         {
@@ -92,7 +99,7 @@ internal ref struct CsTomlReader
             {
                 if (!period) ExceptionHelper.ThrowIncorrectTomlFormat();
                 period = false;
-                keys.Add(ReadKeyString(false));
+                key.Add(ReadKeyString(false));
                 continue;
             }
             switch(c)
@@ -102,7 +109,7 @@ internal ref struct CsTomlReader
                     SkipWhiteSpace();
                     continue;
                 case CsTomlSyntax.Symbol.EQUAL:
-                    if (keys.Count == 0)
+                    if (key.Count == 0)
                     {
                         ExceptionHelper.ThrowBareKeyIsEmpty();
                     }
@@ -110,7 +117,7 @@ internal ref struct CsTomlReader
                 case CsTomlSyntax.Symbol.PERIOD:
                     if (period)
                     {
-                        if (keys.Count > 0)
+                        if (key.Count > 0)
                             ExceptionHelper.ThrowPeriodUsedMoreThanOnce();
                         else
                             ExceptionHelper.ThrowTheDotIsDefinedFirst();
@@ -122,25 +129,26 @@ internal ref struct CsTomlReader
                 case CsTomlSyntax.Symbol.DOUBLEQUOTED:
                     if (!period) ExceptionHelper.ThrowIncorrectTomlFormat();
                     period = false;
-                    keys.Add(ReadDoubleQuoteSingleLineStringForDotKey());
+                    key.Add(ReadDoubleQuoteSingleLineStringForDotKey());
                     continue;
                 case CsTomlSyntax.Symbol.SINGLEQUOTED:
                     if (!period) ExceptionHelper.ThrowIncorrectTomlFormat();
                     period = false;
-                    keys.Add(ReadSingleQuoteSingleLineStringForDotKey());
+                    key.Add(ReadSingleQuoteSingleLineStringForDotKey());
                     continue;
                 default:
-                    return ExceptionHelper.NotReturnThrow<CsTomlDotKeyGroup>(ExceptionHelper.ThrowIncorrectTomlFormat);
+                    ExceptionHelper.ThrowIncorrectTomlFormat();
+                    break;
             }
 
         BREAK:
             break;
         }
 
-        return new CsTomlDotKeyGroup(keys);
+        return key;
     }
 
-    public CsTomlDotKeyGroup ReadTableHeader()
+    public ArrayPoolList<CsTomlDotKey> ReadTableHeader()
     {
         Advance(1); // [
 
@@ -148,7 +156,7 @@ internal ref struct CsTomlReader
         if (!Peek())
             ExceptionHelper.ThrowEndOfFileReached();
 
-        var keys = new List<CsTomlDotKey>(2);
+        var key = RecycleArrayPoolList<CsTomlDotKey>.Rent();
         var period = true;
         var closingRightRightSquareBracket = false;
         while (TryPeek(out var c))
@@ -157,7 +165,7 @@ internal ref struct CsTomlReader
             {
                 if (!period) ExceptionHelper.ThrowIncorrectTomlFormat();
                 period = false;
-                keys.Add(ReadKeyString(true));
+                key.Add(ReadKeyString(true));
                 continue;
             }
             switch (c)
@@ -169,7 +177,7 @@ internal ref struct CsTomlReader
                 case CsTomlSyntax.Symbol.PERIOD:
                     if (period)
                     {
-                        if (keys.Count > 0)
+                        if (key.Count > 0)
                             ExceptionHelper.ThrowPeriodUsedMoreThanOnce();
                         else
                             ExceptionHelper.ThrowTheDotIsDefinedFirst();
@@ -181,19 +189,20 @@ internal ref struct CsTomlReader
                 case CsTomlSyntax.Symbol.DOUBLEQUOTED:
                     if (!period) ExceptionHelper.ThrowIncorrectTomlFormat();
                     period = false;
-                    keys.Add(ReadDoubleQuoteSingleLineStringForDotKey());
+                    key.Add(ReadDoubleQuoteSingleLineStringForDotKey());
                     continue;
                 case CsTomlSyntax.Symbol.SINGLEQUOTED:
                     if (!period) ExceptionHelper.ThrowIncorrectTomlFormat();
                     period = false;
-                    keys.Add(ReadSingleQuoteSingleLineStringForDotKey());
+                    key.Add(ReadSingleQuoteSingleLineStringForDotKey());
                     continue;
                 case CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET:
                     closingRightRightSquareBracket = true;
                     Advance(1);
                     goto BREAK; // ]
                 default:
-                    return ExceptionHelper.NotReturnThrow<CsTomlDotKeyGroup>(ExceptionHelper.ThrowIncorrectTomlFormat);
+                    ExceptionHelper.ThrowIncorrectTomlFormat();
+                    break;
             }
 
         BREAK:
@@ -203,10 +212,10 @@ internal ref struct CsTomlReader
         if (!closingRightRightSquareBracket)
             ExceptionHelper.ThrowIncorrectTomlFormat();
 
-        return new CsTomlDotKeyGroup(keys);
+        return key;
     }
 
-    public CsTomlDotKeyGroup ReadArrayOfTablesHeader()
+    public ArrayPoolList<CsTomlDotKey> ReadArrayOfTablesHeader()
     {
         Advance(2); // [[
         SkipWhiteSpace();
@@ -214,7 +223,7 @@ internal ref struct CsTomlReader
         if (!Peek())
             ExceptionHelper.ThrowEndOfFileReached();
 
-        var keys = new List<CsTomlDotKey>(2);
+        var key = RecycleArrayPoolList<CsTomlDotKey>.Rent();
         var period = true;
         var closingRightRightSquareBracket = false;
         while (TryPeek(out var c))
@@ -223,7 +232,7 @@ internal ref struct CsTomlReader
             {
                 if (!period) ExceptionHelper.ThrowIncorrectTomlFormat();
                 period = false;
-                keys.Add(ReadKeyString(true));
+                key.Add(ReadKeyString(true));
                 continue;
             }
             switch (c)
@@ -235,7 +244,7 @@ internal ref struct CsTomlReader
                 case CsTomlSyntax.Symbol.PERIOD:
                     if (period)
                     {
-                        if (keys.Count > 0)
+                        if (key.Count > 0)
                             ExceptionHelper.ThrowPeriodUsedMoreThanOnce();
                         else
                             ExceptionHelper.ThrowTheDotIsDefinedFirst();
@@ -247,12 +256,12 @@ internal ref struct CsTomlReader
                 case CsTomlSyntax.Symbol.DOUBLEQUOTED:
                     if (!period) ExceptionHelper.ThrowIncorrectTomlFormat();
                     period = false;
-                    keys.Add(ReadDoubleQuoteSingleLineStringForDotKey());
+                    key.Add(ReadDoubleQuoteSingleLineStringForDotKey());
                     continue;
                 case CsTomlSyntax.Symbol.SINGLEQUOTED:
                     if (!period) ExceptionHelper.ThrowIncorrectTomlFormat();
                     period = false;
-                    keys.Add(ReadSingleQuoteSingleLineStringForDotKey());
+                    key.Add(ReadSingleQuoteSingleLineStringForDotKey());
                     continue;
                 case CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET:
                     Advance(1);
@@ -267,7 +276,8 @@ internal ref struct CsTomlReader
                     }
                     goto BREAK;
                 default:
-                    return ExceptionHelper.NotReturnThrow<CsTomlDotKeyGroup>(ExceptionHelper.ThrowIncorrectTomlFormat);
+                    ExceptionHelper.ThrowIncorrectTomlFormat();
+                    break;
             }
 
         BREAK:
@@ -277,7 +287,7 @@ internal ref struct CsTomlReader
         if (!closingRightRightSquareBracket)
             ExceptionHelper.ThrowIncorrectTomlFormat();
 
-        return new CsTomlDotKeyGroup(keys);
+        return key;
     }
 
     public CsTomlValue ReadValue()
@@ -301,10 +311,10 @@ internal ref struct CsTomlReader
             CsTomlSyntax.Number.Eight => ReadNumericValueOrDate(),
             CsTomlSyntax.Number.Nine => ReadNumericValueOrDate(),
             CsTomlSyntax.Symbol.LEFTSQUAREBRACKET => ReadArray(),
-            CsTomlSyntax.AlphaBet.f => ReadBool(),
-            CsTomlSyntax.AlphaBet.i => ReadDoubleInfOrNan(),
-            CsTomlSyntax.AlphaBet.n => ReadDoubleInfOrNan(),
-            CsTomlSyntax.AlphaBet.t => ReadBool(),
+            CsTomlSyntax.Alphabet.f => ReadBool(),
+            CsTomlSyntax.Alphabet.i => ReadDoubleInfOrNan(),
+            CsTomlSyntax.Alphabet.n => ReadDoubleInfOrNan(),
+            CsTomlSyntax.Alphabet.t => ReadBool(),
             CsTomlSyntax.Symbol.LEFTBRACES => ReadInlineTable(),
             _ => ExceptionHelper.NotReturnThrow<CsTomlValue>(ExceptionHelper.ThrowIncorrectTomlFormat),
         }; ;
@@ -467,7 +477,9 @@ internal ref struct CsTomlReader
             while (TryPeek(out var ch))
             {
                 if (CsTomlSyntax.IsEscape(ch))
-                    ExceptionHelper.ThrowNumericConversionFailed(ch);
+                {
+                    ExceptionHelper.ThrowEscapeCharactersIncluded(ch);
+                }
                 else if (CsTomlSyntax.IsDoubleQuoted(ch))
                 {
                     closingQuotationMarks = true;
@@ -987,10 +999,16 @@ internal ref struct CsTomlReader
         while (Peek())
         {
             var key = ReadKey();
-            Advance(1); // skip "="
-            SkipWhiteSpace();
-
-            inlineTable.AddKeyValue(key, ReadValue(), currentNode);
+            try
+            {
+                Advance(1); // skip "="
+                SkipWhiteSpace();
+                inlineTable.AddKeyValue(key, ReadValue(), currentNode);
+            }
+            finally
+            {
+                key.Recycle();
+            }
 
             SkipWhiteSpace();
             if (TryPeek(out var ch))
@@ -1153,8 +1171,8 @@ internal ref struct CsTomlReader
                 case CsTomlSyntax.Symbol.COMMA:
                     goto BREAK;
                 case CsTomlSyntax.Symbol.PERIOD:
-                case CsTomlSyntax.AlphaBet.E:
-                case CsTomlSyntax.AlphaBet.e:
+                case CsTomlSyntax.Alphabet.E:
+                case CsTomlSyntax.Alphabet.e:
                     Rewind(sequenceReader.Consumed - firstPosition);
                     return ReadDouble();
             }
@@ -1177,17 +1195,17 @@ internal ref struct CsTomlReader
             {
                 switch (formatsCh)
                 {
-                    case CsTomlSyntax.AlphaBet.x:
+                    case CsTomlSyntax.Alphabet.x:
                         Advance(1);
                         return ReadHexNumeric();
-                    case CsTomlSyntax.AlphaBet.o:
+                    case CsTomlSyntax.Alphabet.o:
                         Advance(1);
                         return ReadOctalNumeric();
-                    case CsTomlSyntax.AlphaBet.b:
+                    case CsTomlSyntax.Alphabet.b:
                         Advance(1);
                         return ReadBinaryNumeric();
-                    case CsTomlSyntax.AlphaBet.e: // 0e...
-                    case CsTomlSyntax.AlphaBet.E: // 0E...
+                    case CsTomlSyntax.Alphabet.e: // 0e...
+                    case CsTomlSyntax.Alphabet.E: // 0E...
                         Rewind(sequenceReader.Consumed - firstPosition);
                         return ReadDouble();
                     default:
@@ -1196,7 +1214,7 @@ internal ref struct CsTomlReader
             }
             else if (CsTomlSyntax.IsTabOrWhiteSpace(formatsCh))
             {
-                return new CsTomlInt64(0);
+                return new CsTomlInt(0);
             }
             else if (CsTomlSyntax.IsNewLine(formatsCh))
             {
@@ -1205,16 +1223,16 @@ internal ref struct CsTomlReader
                     Advance(1);
                     if (TryPeek(out var linebreakCh) && CsTomlSyntax.IsLf(linebreakCh))
                     {
-                        return new CsTomlInt64(0);
+                        return new CsTomlInt(0);
                     }
                     return ExceptionHelper.NotReturnThrow<CsTomlValue, byte>(ExceptionHelper.ThrowIncorrectCompactEscapeCharacters, linebreakCh);
                 }
-                return new CsTomlInt64(0);
+                return new CsTomlInt(0);
             }
         }
         else
         {
-            return new CsTomlInt64(0);
+            return new CsTomlInt(0);
         }
         Rewind(sequenceReader.Consumed - firstPosition);
 
@@ -1307,8 +1325,8 @@ internal ref struct CsTomlReader
                 case CsTomlSyntax.Symbol.COMMA:
                     goto BREAK;
                 case CsTomlSyntax.Symbol.PERIOD:
-                case CsTomlSyntax.AlphaBet.E:
-                case CsTomlSyntax.AlphaBet.e:
+                case CsTomlSyntax.Alphabet.E:
+                case CsTomlSyntax.Alphabet.e:
                     Rewind(sequenceReader.Consumed - firstPosition);
                     return ReadDouble();
             }
@@ -1337,8 +1355,8 @@ internal ref struct CsTomlReader
                     {
                         switch (formatsCh)
                         {
-                            case CsTomlSyntax.AlphaBet.e: // 0e...
-                            case CsTomlSyntax.AlphaBet.E: // 0E...
+                            case CsTomlSyntax.Alphabet.e: // 0e...
+                            case CsTomlSyntax.Alphabet.E: // 0E...
                                 Rewind(sequenceReader.Consumed - firstPosition);
                                 return ReadDouble();
                             default:
@@ -1347,7 +1365,7 @@ internal ref struct CsTomlReader
                     }
                     else if (CsTomlSyntax.IsTabOrWhiteSpace(formatsCh))
                     {
-                        return new CsTomlInt64(0);
+                        return new CsTomlInt(0);
                     }
                     else if (CsTomlSyntax.IsNewLine(formatsCh))
                     {
@@ -1356,21 +1374,21 @@ internal ref struct CsTomlReader
                             Advance(1);
                             if (TryPeek(out var linebreakCh) && CsTomlSyntax.IsLf(linebreakCh))
                             {
-                                return new CsTomlInt64(0);
+                                return new CsTomlInt(0);
                             }
                             return ExceptionHelper.NotReturnThrow<CsTomlValue, byte>(ExceptionHelper.ThrowIncorrectCompactEscapeCharacters, linebreakCh);
                         }
 
-                        return new CsTomlInt64(0);
+                        return new CsTomlInt(0);
                     }
                 }
                 else
                 {
-                    return new CsTomlInt64(0);
+                    return new CsTomlInt(0);
                 }
                 Rewind(sequenceReader.Consumed - firstPosition);
             }
-            else if (first == CsTomlSyntax.AlphaBet.i || first == CsTomlSyntax.AlphaBet.n)
+            else if (first == CsTomlSyntax.Alphabet.i || first == CsTomlSyntax.Alphabet.n)
             {
                 Rewind(sequenceReader.Consumed - firstPosition);
                 return ReadDoubleInfOrNan();
@@ -1392,8 +1410,8 @@ internal ref struct CsTomlReader
                 case CsTomlSyntax.Symbol.COMMA:
                     goto BREAK;
                 case CsTomlSyntax.Symbol.PERIOD:
-                case CsTomlSyntax.AlphaBet.E:
-                case CsTomlSyntax.AlphaBet.e:
+                case CsTomlSyntax.Alphabet.E:
+                case CsTomlSyntax.Alphabet.e:
                     Rewind(sequenceReader.Consumed - firstPosition);
                     return ReadDouble();
             }
@@ -1431,7 +1449,7 @@ internal ref struct CsTomlReader
         return true;
     }
 
-    private CsTomlInt64 ReadDecimalNumeric()
+    private CsTomlInt ReadDecimalNumeric()
     {
         var writer = new SpanWriter(stackalloc byte[32]);
 
@@ -1477,7 +1495,7 @@ internal ref struct CsTomlReader
                     Advance(1);
                     continue;
                 default:
-                    return ExceptionHelper.NotReturnThrow<CsTomlInt64, byte>(ExceptionHelper.ThrowEscapeCharactersIncluded, ch);
+                    return ExceptionHelper.NotReturnThrow<CsTomlInt, byte>(ExceptionHelper.ThrowEscapeCharactersIncluded, ch);
             }
         }
     BREAK:
@@ -1508,10 +1526,10 @@ internal ref struct CsTomlReader
 
         var tempReader = new Utf8Reader(writingSpan);
         ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out long value);
-        return new CsTomlInt64(value);
+        return new CsTomlInt(value);
     }
 
-    private CsTomlInt64 ReadHexNumeric()
+    private CsTomlInt ReadHexNumeric()
     {
         if (TryPeek(out var firstCh))
         {
@@ -1529,7 +1547,7 @@ internal ref struct CsTomlReader
 
         var writer = new SpanWriter(stackalloc byte[32]);
         writer.Write(CsTomlSyntax.Number.Zero);
-        writer.Write(CsTomlSyntax.AlphaBet.x);
+        writer.Write(CsTomlSyntax.Alphabet.x);
 
         var underscore = false;
         while (TryPeek(out var ch))
@@ -1558,7 +1576,7 @@ internal ref struct CsTomlReader
                     Advance(1);
                     continue;
                 default:
-                    return ExceptionHelper.NotReturnThrow<CsTomlInt64, byte>(ExceptionHelper.ThrowEscapeCharactersIncluded, ch);
+                    return ExceptionHelper.NotReturnThrow<CsTomlInt, byte>(ExceptionHelper.ThrowEscapeCharactersIncluded, ch);
             }
 
         BREAK:
@@ -1570,10 +1588,10 @@ internal ref struct CsTomlReader
 
         var tempReader = new Utf8Reader(writer.WrittenSpan);
         ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out long value);
-        return new CsTomlInt64(value);
+        return new CsTomlInt(value);
     }
 
-    private CsTomlInt64 ReadOctalNumeric()
+    private CsTomlInt ReadOctalNumeric()
     {
         if (TryPeek(out var firstCh))
         {
@@ -1591,7 +1609,7 @@ internal ref struct CsTomlReader
 
         var writer = new SpanWriter(stackalloc byte[32]);
         writer.Write(CsTomlSyntax.Number.Zero);
-        writer.Write(CsTomlSyntax.AlphaBet.o);
+        writer.Write(CsTomlSyntax.Alphabet.o);
 
         var underscore = false;
         while (TryPeek(out var ch))
@@ -1620,7 +1638,7 @@ internal ref struct CsTomlReader
                     Advance(1);
                     continue;
                 default:
-                    return ExceptionHelper.NotReturnThrow<CsTomlInt64, byte>(ExceptionHelper.ThrowEscapeCharactersIncluded, ch);
+                    return ExceptionHelper.NotReturnThrow<CsTomlInt, byte>(ExceptionHelper.ThrowEscapeCharactersIncluded, ch);
             }
 
         BREAK:
@@ -1632,10 +1650,10 @@ internal ref struct CsTomlReader
 
         var tempReader = new Utf8Reader(writer.WrittenSpan);
         ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out long value);
-        return new CsTomlInt64(value);
+        return new CsTomlInt(value);
     }
 
-    private CsTomlInt64 ReadBinaryNumeric()
+    private CsTomlInt ReadBinaryNumeric()
     {
         if (TryPeek(out var firstCh))
         {
@@ -1653,7 +1671,7 @@ internal ref struct CsTomlReader
 
         var writer = new SpanWriter(stackalloc byte[32]);
         writer.Write(CsTomlSyntax.Number.Zero);
-        writer.Write(CsTomlSyntax.AlphaBet.b);
+        writer.Write(CsTomlSyntax.Alphabet.b);
 
         var underscore = false;
         while (TryPeek(out var ch))
@@ -1682,7 +1700,7 @@ internal ref struct CsTomlReader
                     Advance(1);
                     continue;
                 default:
-                    return ExceptionHelper.NotReturnThrow<CsTomlInt64, byte>(ExceptionHelper.ThrowEscapeCharactersIncluded, ch);
+                    return ExceptionHelper.NotReturnThrow<CsTomlInt, byte>(ExceptionHelper.ThrowEscapeCharactersIncluded, ch);
             }
 
         BREAK:
@@ -1694,10 +1712,10 @@ internal ref struct CsTomlReader
 
         var tempReader = new Utf8Reader(writer.WrittenSpan);
         ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out long value);
-        return new CsTomlInt64(value);
+        return new CsTomlInt(value);
     }
 
-    private CsTomlDouble ReadDouble()
+    private CsTomlFloat ReadDouble()
     {
         var writer = new SpanWriter(stackalloc byte[32]);
 
@@ -1713,11 +1731,11 @@ internal ref struct CsTomlReader
             switch (firstNumberCh)
             {
                 case CsTomlSyntax.Symbol.UNDERSCORE:
-                    return ExceptionHelper.NotReturnThrow<CsTomlDouble>(ExceptionHelper.ThrowUnderscoreUsedFirst);
+                    return ExceptionHelper.NotReturnThrow<CsTomlFloat>(ExceptionHelper.ThrowUnderscoreUsedFirst);
                 case CsTomlSyntax.Symbol.PERIOD:
-                    return ExceptionHelper.NotReturnThrow<CsTomlDouble>(ExceptionHelper.ThrowPeriodUsedFirst);
-                case CsTomlSyntax.AlphaBet.i:
-                case CsTomlSyntax.AlphaBet.n:
+                    return ExceptionHelper.NotReturnThrow<CsTomlFloat>(ExceptionHelper.ThrowPeriodUsedFirst);
+                case CsTomlSyntax.Alphabet.i:
+                case CsTomlSyntax.Alphabet.n:
                     if (CsTomlSyntax.IsPlusOrMinusSign(plusOrMinusCh)) Rewind(1);
                     return ReadDoubleInfOrNan();
                 case var zero when zero == CsTomlSyntax.Number.Zero:
@@ -1727,8 +1745,8 @@ internal ref struct CsTomlReader
                         switch(secondNumberCh)
                         {
                             case CsTomlSyntax.Symbol.PERIOD: // 0.1 ..
-                            case CsTomlSyntax.AlphaBet.e: // 0e...
-                            case CsTomlSyntax.AlphaBet.E: // 0E...
+                            case CsTomlSyntax.Alphabet.e: // 0e...
+                            case CsTomlSyntax.Alphabet.E: // 0E...
                                 break;
                             default:
                                 ExceptionHelper.ThrowIncorrectTomlFloatFormat();
@@ -1775,8 +1793,8 @@ internal ref struct CsTomlReader
                     writer.Write(ch);
                     Advance(1);
                     continue;
-                case CsTomlSyntax.AlphaBet.e:
-                case CsTomlSyntax.AlphaBet.E:
+                case CsTomlSyntax.Alphabet.e:
+                case CsTomlSyntax.Alphabet.E:
                     if (!number) ExceptionHelper.ThrowExponentPartUsedWhereNotSurroundedByNumbers();
                     if (exp) ExceptionHelper.ThrowTheExponentPartUsedMoreThanOnce();
                     number = false;
@@ -1803,7 +1821,7 @@ internal ref struct CsTomlReader
                 case CsTomlSyntax.Symbol.NUMBERSIGN:
                     goto BREAK;
                 default:
-                    return ExceptionHelper.NotReturnThrow<CsTomlDouble, byte>(ExceptionHelper.ThrowEscapeCharactersIncluded, ch);
+                    return ExceptionHelper.NotReturnThrow<CsTomlFloat, byte>(ExceptionHelper.ThrowEscapeCharactersIncluded, ch);
             }
 
         BREAK:
@@ -1823,8 +1841,8 @@ internal ref struct CsTomlReader
             case CsTomlSyntax.Symbol.PERIOD:
                 ExceptionHelper.ThrowPeriodIsUsedAtTheEnd();
                 break;
-            case CsTomlSyntax.AlphaBet.e:
-            case CsTomlSyntax.AlphaBet.E:
+            case CsTomlSyntax.Alphabet.e:
+            case CsTomlSyntax.Alphabet.E:
                 ExceptionHelper.ThrowExponentPartIsUsedAtTheEnd();
                 break;
             case CsTomlSyntax.Symbol.PLUS:
@@ -1835,10 +1853,10 @@ internal ref struct CsTomlReader
 
         var tempReader = new Utf8Reader(writingSpan);
         ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out double value);
-        return new CsTomlDouble(value);
+        return new CsTomlFloat(value);
     }
 
-    private CsTomlDouble ReadDoubleInfOrNan()
+    private CsTomlFloat ReadDoubleInfOrNan()
     {
         if (sequenceReader.Length < sequenceReader.Consumed + 3) ExceptionHelper.ThrowIncorrectTomlFloatFormat();
 
@@ -1858,17 +1876,17 @@ internal ref struct CsTomlReader
                 tempReader = new Utf8Reader(writer.WrittenSpan);
             }
 
-            if (tempReader[0] == CsTomlSyntax.AlphaBet.i &&
-                tempReader[1] == CsTomlSyntax.AlphaBet.n &&
-                tempReader[2] == CsTomlSyntax.AlphaBet.f)
+            if (tempReader[0] == CsTomlSyntax.Alphabet.i &&
+                tempReader[1] == CsTomlSyntax.Alphabet.n &&
+                tempReader[2] == CsTomlSyntax.Alphabet.f)
             {
-                return CsTomlDouble.Inf;
+                return CsTomlFloat.Inf;
             }
-            else if (tempReader[0] == CsTomlSyntax.AlphaBet.n &&
-                tempReader[1] == CsTomlSyntax.AlphaBet.a &&
-                tempReader[2] == CsTomlSyntax.AlphaBet.n)
+            else if (tempReader[0] == CsTomlSyntax.Alphabet.n &&
+                tempReader[1] == CsTomlSyntax.Alphabet.a &&
+                tempReader[2] == CsTomlSyntax.Alphabet.n)
             {
-                return CsTomlDouble.Nan;
+                return CsTomlFloat.Nan;
             }
         }
         finally
@@ -1897,36 +1915,36 @@ internal ref struct CsTomlReader
 
             if (CsTomlSyntax.IsPlusSign(tempReader[0]))
             {
-                if (tempReader[1] == CsTomlSyntax.AlphaBet.i &&
-                    tempReader[2] == CsTomlSyntax.AlphaBet.n &&
-                    tempReader[3] == CsTomlSyntax.AlphaBet.f)
+                if (tempReader[1] == CsTomlSyntax.Alphabet.i &&
+                    tempReader[2] == CsTomlSyntax.Alphabet.n &&
+                    tempReader[3] == CsTomlSyntax.Alphabet.f)
                 {
-                    return CsTomlDouble.Inf;
+                    return CsTomlFloat.Inf;
                 }
-                else if (tempReader[1] == CsTomlSyntax.AlphaBet.n &&
-                    tempReader[2] == CsTomlSyntax.AlphaBet.a &&
-                    tempReader[3] == CsTomlSyntax.AlphaBet.n)
+                else if (tempReader[1] == CsTomlSyntax.Alphabet.n &&
+                    tempReader[2] == CsTomlSyntax.Alphabet.a &&
+                    tempReader[3] == CsTomlSyntax.Alphabet.n)
                 {
-                    return CsTomlDouble.Nan;
+                    return CsTomlFloat.Nan;
                 }
             }
             else if (CsTomlSyntax.IsMinusSign(tempReader[0]))
             {
-                if (tempReader[1] == CsTomlSyntax.AlphaBet.i &&
-                    tempReader[2] == CsTomlSyntax.AlphaBet.n &&
-                    tempReader[3] == CsTomlSyntax.AlphaBet.f)
+                if (tempReader[1] == CsTomlSyntax.Alphabet.i &&
+                    tempReader[2] == CsTomlSyntax.Alphabet.n &&
+                    tempReader[3] == CsTomlSyntax.Alphabet.f)
                 {
-                    return CsTomlDouble.NInf;
+                    return CsTomlFloat.NInf;
                 }
-                else if (tempReader[1] == CsTomlSyntax.AlphaBet.n &&
-                    tempReader[2] == CsTomlSyntax.AlphaBet.a &&
-                    tempReader[3] == CsTomlSyntax.AlphaBet.n)
+                else if (tempReader[1] == CsTomlSyntax.Alphabet.n &&
+                    tempReader[2] == CsTomlSyntax.Alphabet.a &&
+                    tempReader[3] == CsTomlSyntax.Alphabet.n)
                 {
-                    return CsTomlDouble.PNan;
+                    return CsTomlFloat.PNan;
                 }
             }
             Rewind(4);
-            return ExceptionHelper.NotReturnThrow<CsTomlDouble>(ExceptionHelper.ThrowIncorrectTomlFloatFormat);
+            return ExceptionHelper.NotReturnThrow<CsTomlFloat>(ExceptionHelper.ThrowIncorrectTomlFloatFormat);
         }
         finally
         {
@@ -1947,7 +1965,7 @@ internal ref struct CsTomlReader
         // offset datetime
         if (bytes.Length >= CsTomlSyntax.DateTime.OffsetDateTimeZFormatLength)
         {
-            if (bytes[^1] == CsTomlSyntax.AlphaBet.Z || bytes[^1] == CsTomlSyntax.AlphaBet.z)
+            if (bytes[^1] == CsTomlSyntax.Alphabet.Z || bytes[^1] == CsTomlSyntax.Alphabet.z)
             {
                 return ReadOffsetDateTime(bytes);
             }
@@ -1997,7 +2015,7 @@ internal ref struct CsTomlReader
         if (!CsTomlSyntax.IsHyphen(bytes[7])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
         if (!CsTomlSyntax.IsNumber(bytes[8])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
         if (!CsTomlSyntax.IsNumber(bytes[9])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
-        if (!(CsTomlSyntax.IsWhiteSpace(bytes[10]) || bytes[10] == CsTomlSyntax.AlphaBet.T || bytes[10] == CsTomlSyntax.AlphaBet.t)) 
+        if (!(CsTomlSyntax.IsWhiteSpace(bytes[10]) || bytes[10] == CsTomlSyntax.Alphabet.T || bytes[10] == CsTomlSyntax.Alphabet.t)) 
             ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
         if (!CsTomlSyntax.IsNumber(bytes[11])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
         if (!CsTomlSyntax.IsNumber(bytes[12])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
@@ -2073,7 +2091,7 @@ internal ref struct CsTomlReader
         if (bytes.Length < CsTomlSyntax.DateTime.OffsetDateTimeZFormatLength) 
             ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
 
-        if (!(bytes[^1] == CsTomlSyntax.AlphaBet.Z || bytes[^1] == CsTomlSyntax.AlphaBet.z)) 
+        if (!(bytes[^1] == CsTomlSyntax.Alphabet.Z || bytes[^1] == CsTomlSyntax.Alphabet.z)) 
             ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
 
         if (!CsTomlSyntax.IsNumber(bytes[0])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
@@ -2086,7 +2104,7 @@ internal ref struct CsTomlReader
         if (!CsTomlSyntax.IsHyphen(bytes[7])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
         if (!CsTomlSyntax.IsNumber(bytes[8])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
         if (!CsTomlSyntax.IsNumber(bytes[9])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!(CsTomlSyntax.IsWhiteSpace(bytes[10]) || bytes[10] == CsTomlSyntax.AlphaBet.T || bytes[10] == CsTomlSyntax.AlphaBet.t)) 
+        if (!(CsTomlSyntax.IsWhiteSpace(bytes[10]) || bytes[10] == CsTomlSyntax.Alphabet.T || bytes[10] == CsTomlSyntax.Alphabet.t)) 
             ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
         if (!CsTomlSyntax.IsNumber(bytes[11])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
         if (!CsTomlSyntax.IsNumber(bytes[12])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
@@ -2117,7 +2135,7 @@ internal ref struct CsTomlReader
         if (!CsTomlSyntax.IsHyphen(bytes[7])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
         if (!CsTomlSyntax.IsNumber(bytes[8])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
         if (!CsTomlSyntax.IsNumber(bytes[9])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!(CsTomlSyntax.IsWhiteSpace(bytes[10]) || bytes[10] == CsTomlSyntax.AlphaBet.T || bytes[10] == CsTomlSyntax.AlphaBet.t)) 
+        if (!(CsTomlSyntax.IsWhiteSpace(bytes[10]) || bytes[10] == CsTomlSyntax.Alphabet.T || bytes[10] == CsTomlSyntax.Alphabet.t)) 
             ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
         if (!CsTomlSyntax.IsNumber(bytes[11])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
         if (!CsTomlSyntax.IsNumber(bytes[12])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();

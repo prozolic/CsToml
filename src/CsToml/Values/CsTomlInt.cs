@@ -5,7 +5,7 @@ using System.Diagnostics;
 namespace CsToml.Values;
 
 [DebuggerDisplay("{Value}")]
-internal partial class CsTomlInt64(long value) : CsTomlValue()
+internal partial class CsTomlInt(long value) : CsTomlValue()
 {
     public long Value { get; private set; } = value;
 

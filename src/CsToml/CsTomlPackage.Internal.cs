@@ -30,7 +30,7 @@ public partial class CsTomlPackage
         try
         {
             List<CsTomlException> exceptions = [];
-            var comments = new List<CsTomlString>(4);
+            var comments = new List<CsTomlString>();
 
             while (tomlReader.Peek())
             {
@@ -126,7 +126,7 @@ public partial class CsTomlPackage
         }
         finally
         {
-            RecycleByteArrayPoolBufferWriter.Release();
+            CsTomlReader.Release();
         }
     }
 
@@ -163,10 +163,16 @@ public partial class CsTomlPackage
         try
         {
             var key = reader.ReadKey();
-            reader.Advance(1); // skip "="
-            reader.SkipWhiteSpace();
-
-            table.AddKeyValue(key, reader.ReadValue(), currentNode, comments);
+            try
+            {
+                reader.Advance(1); // skip "="
+                reader.SkipWhiteSpace();
+                table.AddKeyValue(key, reader.ReadValue(), currentNode, comments);
+            }
+            finally
+            {
+                key.Recycle();
+            }
             return true;
         }
         catch (CsTomlException ce)
@@ -186,7 +192,14 @@ public partial class CsTomlPackage
         try
         {
             var tableKey = reader.ReadTableHeader();
-            table.AddTableHeader(tableKey, comments, out newNode);
+            try
+            {
+                table.AddTableHeader(tableKey, comments, out newNode);
+            }
+            finally
+            {
+                tableKey.Recycle();
+            }
             return true;
         }
         catch (CsTomlException e)
@@ -208,7 +221,14 @@ public partial class CsTomlPackage
         try
         {
             var tableKey = reader.ReadArrayOfTablesHeader();
-            table.AddArrayOfTablesHeader(tableKey, comments, out currentNode);
+            try
+            {
+                table.AddArrayOfTablesHeader(tableKey, comments, out currentNode);
+            }
+            finally
+            {
+                tableKey.Recycle();
+            }
             return true;
         }
         catch (CsTomlException e)

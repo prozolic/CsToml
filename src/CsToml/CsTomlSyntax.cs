@@ -29,8 +29,8 @@ internal static class CsTomlSyntax
         internal static int ParseHex(byte hexNumber)
         {
             if (IsNumber(hexNumber)) return ParseDecimal(hexNumber);
-            if ((AlphaBet.A <= hexNumber && hexNumber <= AlphaBet.F)) return hexNumber - 0x37;
-            if ((AlphaBet.a <= hexNumber && hexNumber <= AlphaBet.f)) return hexNumber - 0x57;
+            if ((Alphabet.A <= hexNumber && hexNumber <= Alphabet.F)) return hexNumber - 0x37;
+            if ((Alphabet.a <= hexNumber && hexNumber <= Alphabet.f)) return hexNumber - 0x57;
             return -1;
         }
 
@@ -51,7 +51,7 @@ internal static class CsTomlSyntax
         }
     }
 
-    internal readonly struct Double
+    internal readonly struct Float
     {
         internal static readonly double[] PositivePosExps15 = [1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13, 1e14, 1e15];
 
@@ -60,7 +60,7 @@ internal static class CsTomlSyntax
         internal const double Nan = double.NaN;
     }
 
-    internal readonly struct AlphaBet
+    internal readonly struct Alphabet
     {
         internal const byte a = 0x61;
         internal const byte b = 0x62;
@@ -152,7 +152,7 @@ internal static class CsTomlSyntax
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsEscapeSequence(byte rawByte)
     {
-        ReadOnlySpan<bool> escapeTable =
+        ReadOnlySpan<bool> escapeSequenceTable =
         [
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x00 - 0x0f
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x10 - 0x1f
@@ -171,13 +171,13 @@ internal static class CsTomlSyntax
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
         ];
-        return Unsafe.AddByteOffset(ref MemoryMarshal.GetReference(escapeTable), rawByte);
+        return Unsafe.AddByteOffset(ref MemoryMarshal.GetReference(escapeSequenceTable), rawByte);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsBareKey(byte rawByte)
     {
-        ReadOnlySpan<bool> escapeTable =
+        ReadOnlySpan<bool> barekeyTable =
         [
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x00 - 0x0f
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x10 - 0x1f
@@ -196,7 +196,7 @@ internal static class CsTomlSyntax
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
         ];
-        return Unsafe.AddByteOffset(ref MemoryMarshal.GetReference(escapeTable), rawByte);
+        return Unsafe.AddByteOffset(ref MemoryMarshal.GetReference(barekeyTable), rawByte);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -289,11 +289,11 @@ internal static class CsTomlSyntax
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsUpperHexAlphabet(byte rawByte)
-        => AlphaBet.A <= rawByte && rawByte <= AlphaBet.F;
+        => Alphabet.A <= rawByte && rawByte <= Alphabet.F;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsLowerHexAlphabet(byte rawByte)
-        => AlphaBet.a <= rawByte && rawByte <= AlphaBet.f;
+        => Alphabet.a <= rawByte && rawByte <= Alphabet.f;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsAlphabet(byte rawByte)
@@ -301,11 +301,11 @@ internal static class CsTomlSyntax
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsUpperAlphabet(byte ch)
-        => AlphaBet.A <= ch && ch <= AlphaBet.Z;
+        => Alphabet.A <= ch && ch <= Alphabet.Z;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsLowerAlphabet(byte rawByte)
-        => AlphaBet.a <= rawByte && rawByte <= AlphaBet.z;
+        => Alphabet.a <= rawByte && rawByte <= Alphabet.z;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsPlusSign(byte rawByte)
@@ -337,7 +337,7 @@ internal static class CsTomlSyntax
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsExpSymbol(byte rawByte)
-        => rawByte == AlphaBet.e || rawByte == AlphaBet.E;
+        => rawByte == Alphabet.e || rawByte == Alphabet.E;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsComma(byte rawByte)

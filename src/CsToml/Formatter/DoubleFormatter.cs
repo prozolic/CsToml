@@ -39,34 +39,34 @@ internal class DoubleFormatter : ICsTomlFormatter<double>
         if (CsTomlSyntax.IsPlusOrMinusSign(bytes[0]))
         {
             var plusOrMinus = CsTomlSyntax.IsPlusSign(bytes[0]) ? 1 : -1;
-            if (bytes[1] == CsTomlSyntax.AlphaBet.i &&
-                bytes[2] == CsTomlSyntax.AlphaBet.n &&
-                bytes[3] == CsTomlSyntax.AlphaBet.f)
+            if (bytes[1] == CsTomlSyntax.Alphabet.i &&
+                bytes[2] == CsTomlSyntax.Alphabet.n &&
+                bytes[3] == CsTomlSyntax.Alphabet.f)
             {
-                return plusOrMinus * CsTomlSyntax.Double.Inf;
+                return plusOrMinus * CsTomlSyntax.Float.Inf;
             }
-            if (bytes[1] == CsTomlSyntax.AlphaBet.n &&
-                bytes[2] == CsTomlSyntax.AlphaBet.a &&
-                bytes[3] == CsTomlSyntax.AlphaBet.n)
+            if (bytes[1] == CsTomlSyntax.Alphabet.n &&
+                bytes[2] == CsTomlSyntax.Alphabet.a &&
+                bytes[3] == CsTomlSyntax.Alphabet.n)
             {
-                return plusOrMinus * CsTomlSyntax.Double.Nan;
+                return plusOrMinus * CsTomlSyntax.Float.Nan;
             }
 
             return plusOrMinus * DeserializeDouble(bytes[1..]);
         }
         else
         {
-            if (bytes[0] == CsTomlSyntax.AlphaBet.i &&
-                bytes[1] == CsTomlSyntax.AlphaBet.n &&
-                bytes[2] == CsTomlSyntax.AlphaBet.f)
+            if (bytes[0] == CsTomlSyntax.Alphabet.i &&
+                bytes[1] == CsTomlSyntax.Alphabet.n &&
+                bytes[2] == CsTomlSyntax.Alphabet.f)
             {
-                return CsTomlSyntax.Double.Inf;
+                return CsTomlSyntax.Float.Inf;
             }
-            if (bytes[0] == CsTomlSyntax.AlphaBet.n &&
-                bytes[1] == CsTomlSyntax.AlphaBet.a &&
-                bytes[2] == CsTomlSyntax.AlphaBet.n)
+            if (bytes[0] == CsTomlSyntax.Alphabet.n &&
+                bytes[1] == CsTomlSyntax.Alphabet.a &&
+                bytes[2] == CsTomlSyntax.Alphabet.n)
             {
-                return CsTomlSyntax.Double.Nan;
+                return CsTomlSyntax.Float.Nan;
             }
 
             return DeserializeDouble(bytes);
@@ -142,7 +142,7 @@ internal class DoubleFormatter : ICsTomlFormatter<double>
     {
         if (exponentValue <= 15)
         {
-            return CsTomlSyntax.Double.PositivePosExps15[exponentValue];
+            return CsTomlSyntax.Float.PositivePosExps15[exponentValue];
         }
 
         return Math.Pow(10d, exponentValue);

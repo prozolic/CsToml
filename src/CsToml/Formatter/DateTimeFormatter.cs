@@ -66,7 +66,7 @@ internal class DateTimeFormatter : ICsTomlFormatter<DateTime>
             ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
 
         if (CsTomlSyntax.IsHyphen(bytes[4]) && CsTomlSyntax.IsHyphen(bytes[7]) &&
-            (CsTomlSyntax.IsTabOrWhiteSpace(bytes[10]) || bytes[10] == CsTomlSyntax.AlphaBet.T || bytes[10] == CsTomlSyntax.AlphaBet.t))
+            (CsTomlSyntax.IsTabOrWhiteSpace(bytes[10]) || bytes[10] == CsTomlSyntax.Alphabet.T || bytes[10] == CsTomlSyntax.Alphabet.t))
         {
             return DeserializeLocalDateTime(bytes);
         }

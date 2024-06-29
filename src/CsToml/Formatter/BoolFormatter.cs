@@ -13,18 +13,18 @@ internal class BoolFormatter : ICsTomlFormatter<bool>
     {
         if (value)
         {
-            writer.Write(CsTomlSyntax.AlphaBet.t);
-            writer.Write(CsTomlSyntax.AlphaBet.r);
-            writer.Write(CsTomlSyntax.AlphaBet.u);
-            writer.Write(CsTomlSyntax.AlphaBet.e);
+            writer.Write(CsTomlSyntax.Alphabet.t);
+            writer.Write(CsTomlSyntax.Alphabet.r);
+            writer.Write(CsTomlSyntax.Alphabet.u);
+            writer.Write(CsTomlSyntax.Alphabet.e);
         }
         else
         {
-            writer.Write(CsTomlSyntax.AlphaBet.f);
-            writer.Write(CsTomlSyntax.AlphaBet.a);
-            writer.Write(CsTomlSyntax.AlphaBet.l);
-            writer.Write(CsTomlSyntax.AlphaBet.s);
-            writer.Write(CsTomlSyntax.AlphaBet.e);
+            writer.Write(CsTomlSyntax.Alphabet.f);
+            writer.Write(CsTomlSyntax.Alphabet.a);
+            writer.Write(CsTomlSyntax.Alphabet.l);
+            writer.Write(CsTomlSyntax.Alphabet.s);
+            writer.Write(CsTomlSyntax.Alphabet.e);
         }
     }
 
@@ -44,7 +44,7 @@ internal class BoolFormatter : ICsTomlFormatter<bool>
         {
             var falseValue = Unsafe.ReadUnaligned<int>(ref MemoryMarshal.GetReference<byte>(bytes));
             if (falseValue == 1936482662 // fals
-                && bytes[4] == CsTomlSyntax.AlphaBet.e) // e
+                && bytes[4] == CsTomlSyntax.Alphabet.e) // e
             {
                 return false;
             }

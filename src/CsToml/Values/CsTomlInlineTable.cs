@@ -16,7 +16,7 @@ internal class CsTomlInlineTable : CsTomlValue
     public CsTomlInlineTable() : base() 
     {}
 
-    public void AddKeyValue(CsTomlDotKeyGroup csTomlKey, CsTomlValue value, CsTomlTableNode? searchRootNode)
+    public void AddKeyValue(ArrayPoolList<CsTomlDotKey> csTomlKey, CsTomlValue value, CsTomlTableNode? searchRootNode)
         => inlineTable.AddKeyValue(csTomlKey, value, searchRootNode, []);
 
     internal override bool ToTomlString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)

@@ -26,10 +26,10 @@ internal sealed class CsTomlValueResolver
             case var t6 when t6 == typeof(ulong):
             case var t7 when t7 == typeof(short):
             case var t8 when t8 == typeof(ushort):
-                csTomlValue = new CsTomlInt64(value);
+                csTomlValue = new CsTomlInt(value);
                 return true;
             case var t when t == typeof(double):
-                csTomlValue = new CsTomlDouble(value);
+                csTomlValue = new CsTomlFloat(value);
                 return true;
             case var t when t == typeof(DateTime):
                 csTomlValue = new CsTomlLocalDateTime(value);

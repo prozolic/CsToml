@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace CsToml.Values;
 
-internal partial class CsTomlInt64
+internal partial class CsTomlFloat
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override bool CanGetValue(CsTomlValueFeature feature)
@@ -16,10 +16,10 @@ internal partial class CsTomlInt64
         return destination[..charsWritten].ToString();
     }
 
-    public override long GetInt64() => Value;
+    public override long GetInt64() => (long)Value;
 
     public override double GetDouble() => Value;
 
-    public override bool GetBool() => Value != 0;
+    public override bool GetBool() => Value != 0d;
 }
 

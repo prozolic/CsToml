@@ -5,14 +5,14 @@ using System.Diagnostics;
 namespace CsToml.Values;
 
 [DebuggerDisplay("{Value}")]
-internal partial class CsTomlDouble(double value, CsTomlDouble.DoubleKind kind = CsTomlDouble.DoubleKind.Normal) : CsTomlValue()
+internal partial class CsTomlFloat(double value, CsTomlFloat.FloatKind kind = CsTomlFloat.FloatKind.Normal) : CsTomlValue()
 {
-    public readonly static CsTomlDouble Inf = new(CsTomlSyntax.Double.Inf, DoubleKind.Inf);
-    public readonly static CsTomlDouble NInf = new (CsTomlSyntax.Double.NInf, DoubleKind.NInf);
-    public readonly static CsTomlDouble Nan = new (CsTomlSyntax.Double.Nan, DoubleKind.Nan);
-    public readonly static CsTomlDouble PNan = new(CsTomlSyntax.Double.Inf, DoubleKind.PNan);
+    public readonly static CsTomlFloat Inf = new(CsTomlSyntax.Float.Inf, FloatKind.Inf);
+    public readonly static CsTomlFloat NInf = new (CsTomlSyntax.Float.NInf, FloatKind.NInf);
+    public readonly static CsTomlFloat Nan = new (CsTomlSyntax.Float.Nan, FloatKind.Nan);
+    public readonly static CsTomlFloat PNan = new(CsTomlSyntax.Float.Inf, FloatKind.PNan);
 
-    internal enum DoubleKind : byte
+    internal enum FloatKind : byte
     {
         Normal,
         Inf,
@@ -25,11 +25,11 @@ internal partial class CsTomlDouble(double value, CsTomlDouble.DoubleKind kind =
 
     public override bool HasValue => true;
 
-    internal DoubleKind Kind { get; } = kind;
+    internal FloatKind Kind { get; } = kind;
 
     internal override bool ToTomlString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
     {
-        if (Kind == DoubleKind.Normal)
+        if (Kind == FloatKind.Normal)
         {
             ValueFormatter.Serialize(ref writer, Value);
             return true;
@@ -37,16 +37,16 @@ internal partial class CsTomlDouble(double value, CsTomlDouble.DoubleKind kind =
 
         switch(Kind)
         {
-            case DoubleKind.Inf:
+            case FloatKind.Inf:
                 writer.Write("inf"u8);
                 break;
-            case DoubleKind.NInf:
+            case FloatKind.NInf:
                 writer.Write("-inf"u8);
                 break;
-            case DoubleKind.Nan:
+            case FloatKind.Nan:
                 writer.Write("nan"u8);
                 break;
-            case DoubleKind.PNan:
+            case FloatKind.PNan:
                 writer.Write("-nan"u8);
                 break;
             default:

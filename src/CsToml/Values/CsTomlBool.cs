@@ -59,10 +59,10 @@ internal partial class CsTomlBool : CsTomlValue
                 bytesWritten = 0;
                 return false;
             }
-            utf8Destination[0] = CsTomlSyntax.AlphaBet.T;
-            utf8Destination[1] = CsTomlSyntax.AlphaBet.r;
-            utf8Destination[2] = CsTomlSyntax.AlphaBet.u;
-            utf8Destination[3] = CsTomlSyntax.AlphaBet.e;
+            utf8Destination[0] = CsTomlSyntax.Alphabet.T;
+            utf8Destination[1] = CsTomlSyntax.Alphabet.r;
+            utf8Destination[2] = CsTomlSyntax.Alphabet.u;
+            utf8Destination[3] = CsTomlSyntax.Alphabet.e;
             bytesWritten = 4;
         }
         else
@@ -72,11 +72,11 @@ internal partial class CsTomlBool : CsTomlValue
                 bytesWritten = 0;
                 return false;
             }
-            utf8Destination[0] = CsTomlSyntax.AlphaBet.F;
-            utf8Destination[1] = CsTomlSyntax.AlphaBet.a;
-            utf8Destination[2] = CsTomlSyntax.AlphaBet.l;
-            utf8Destination[3] = CsTomlSyntax.AlphaBet.s;
-            utf8Destination[4] = CsTomlSyntax.AlphaBet.e;
+            utf8Destination[0] = CsTomlSyntax.Alphabet.F;
+            utf8Destination[1] = CsTomlSyntax.Alphabet.a;
+            utf8Destination[2] = CsTomlSyntax.Alphabet.l;
+            utf8Destination[3] = CsTomlSyntax.Alphabet.s;
+            utf8Destination[4] = CsTomlSyntax.Alphabet.e;
             bytesWritten = 5;
         }
         return true;

@@ -1,4 +1,5 @@
-﻿using CsToml.Utility;
+﻿using CsToml.Formatter;
+using CsToml.Utility;
 using System.Diagnostics;
 
 namespace CsToml.Values;
@@ -30,14 +31,37 @@ internal sealed class CsTomlDotKey :
     }
 
     public bool Equals(ReadOnlySpan<byte> other)
-    {
-        if (Length != other.Length) return false;
-        if (Length == 0) return true;
-
-        return Value.SequenceEqual(other);
-    }
+        => Value.SequenceEqual(other);
 
     public override int GetHashCode()
         => ByteArrayHash.ToInt32(Value);
 }
 
+internal static class CsTomlDotKeyExtensions
+{
+    public static void Recycle(this ArrayPoolList<CsTomlDotKey> key)
+    {
+        if (key.IsRent)
+        {
+            RecycleArrayPoolList<CsTomlDotKey>.Return(key);
+        }
+    }
+
+    public static string GetJoinName(this ReadOnlySpan<CsTomlDotKey> key)
+    {
+        var bufferWriter = new ArrayPoolBufferWriter<byte>();
+        using var _ = bufferWriter;
+        var writer = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref bufferWriter);
+
+        for (int i = 0; i < key.Length; i++)
+        {
+            key[i].ToTomlString(ref writer);
+            if (i < key.Length - 1)
+                writer.Write(CsTomlSyntax.Symbol.PERIOD);
+        }
+
+        var tempReader = new Utf8Reader(bufferWriter.WrittenSpan);
+        ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out string value);
+        return value;
+    }
+}

@@ -140,22 +140,22 @@ internal partial class CsTomlString
                 case CsTomlSyntax.Symbol.BACKSLASH:
                     utf8Writer.Write(CsTomlSyntax.Symbol.BACKSLASH);
                     goto BREAK;
-                case CsTomlSyntax.AlphaBet.b:
+                case CsTomlSyntax.Alphabet.b:
                     utf8Writer.Write(CsTomlSyntax.Symbol.BACKSPACE);
                     goto BREAK;
-                case CsTomlSyntax.AlphaBet.t:
+                case CsTomlSyntax.Alphabet.t:
                     utf8Writer.Write(CsTomlSyntax.Symbol.TAB);
                     goto BREAK;
-                case CsTomlSyntax.AlphaBet.n:
+                case CsTomlSyntax.Alphabet.n:
                     utf8Writer.Write(CsTomlSyntax.Symbol.LINEFEED);
                     goto BREAK;
-                case CsTomlSyntax.AlphaBet.f:
+                case CsTomlSyntax.Alphabet.f:
                     utf8Writer.Write(CsTomlSyntax.Symbol.FORMFEED);
                     goto BREAK;
-                case CsTomlSyntax.AlphaBet.r:
+                case CsTomlSyntax.Alphabet.r:
                     utf8Writer.Write(CsTomlSyntax.Symbol.CARRIAGE);
                     goto BREAK;
-                case CsTomlSyntax.AlphaBet.u:
+                case CsTomlSyntax.Alphabet.u:
                     reader.Advance(1);
                     try
                     {
@@ -167,7 +167,7 @@ internal partial class CsTomlString
                         return EscapeSequenceResult.Failure;
                     }
                     return EscapeSequenceResult.Success;
-                case CsTomlSyntax.AlphaBet.U:
+                case CsTomlSyntax.Alphabet.U:
                     reader.Advance(1);
                     try
                     {
@@ -212,22 +212,22 @@ internal partial class CsTomlString
                 case CsTomlSyntax.Symbol.BACKSLASH:
                     utf8Writer.Write(CsTomlSyntax.Symbol.BACKSLASH);
                     goto BREAK;
-                case CsTomlSyntax.AlphaBet.b:
+                case CsTomlSyntax.Alphabet.b:
                     utf8Writer.Write(CsTomlSyntax.Symbol.BACKSPACE);
                     goto BREAK;
-                case CsTomlSyntax.AlphaBet.t:
+                case CsTomlSyntax.Alphabet.t:
                     utf8Writer.Write(CsTomlSyntax.Symbol.TAB);
                     goto BREAK;
-                case CsTomlSyntax.AlphaBet.n:
+                case CsTomlSyntax.Alphabet.n:
                     utf8Writer.Write(CsTomlSyntax.Symbol.LINEFEED);
                     goto BREAK;
-                case CsTomlSyntax.AlphaBet.f:
+                case CsTomlSyntax.Alphabet.f:
                     utf8Writer.Write(CsTomlSyntax.Symbol.FORMFEED);
                     goto BREAK;
-                case CsTomlSyntax.AlphaBet.r:
+                case CsTomlSyntax.Alphabet.r:
                     utf8Writer.Write(CsTomlSyntax.Symbol.CARRIAGE);
                     goto BREAK;
-                case CsTomlSyntax.AlphaBet.u:
+                case CsTomlSyntax.Alphabet.u:
                     reader.Advance(1);
                     try
                     {
@@ -239,7 +239,7 @@ internal partial class CsTomlString
                         return EscapeSequenceResult.Failure;
                     }
                     return EscapeSequenceResult.Success;
-                case CsTomlSyntax.AlphaBet.U:
+                case CsTomlSyntax.Alphabet.U:
                     reader.Advance(1);
                     try
                     {
