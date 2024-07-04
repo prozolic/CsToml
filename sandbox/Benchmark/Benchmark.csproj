@@ -10,6 +10,7 @@
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.13.12" />
     <PackageReference Include="Samboy063.Tomlet" Version="5.3.1" />
+    <PackageReference Include="Tomlyn" Version="0.17.0" />
     <PackageReference Include="Tommy" Version="3.1.2" />
   </ItemGroup>
 

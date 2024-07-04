@@ -43,5 +43,11 @@ public class ParseBenchmark
         var parser = new Tomlet.TomlParser();
         var document = parser.Parse(tomlUtf16Text);
     }
+
+    [BenchmarkCategory("Benchmark"), Benchmark]
+    public void TomlynParse()
+    {
+        var document = Tomlyn.Toml.ToModel(tomlUtf16Text);
+    }
 }
 
