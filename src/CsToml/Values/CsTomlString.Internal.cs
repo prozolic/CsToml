@@ -14,7 +14,7 @@ internal partial class CsTomlString
         Unescaped
     }
 
-    public static CsTomlString ParseKey(ReadOnlySpan<byte> utf16String)
+    internal static CsTomlDotKey ParseKey(ReadOnlySpan<byte> utf16String)
     {
         if (Utf8Helper.ContainInvalidSequences(utf16String))
             ExceptionHelper.ThrowInvalidCodePoints();
@@ -43,27 +43,27 @@ internal partial class CsTomlString
         }
         if (barekey)
         {
-            return new CsTomlString(utf16String, CsTomlStringType.Unquoted);
+            return new CsTomlDotKey(utf16String, CsTomlStringType.Unquoted);
         }
 
         if (backslash && !singleQuoted)
         {
-            return new CsTomlString(utf16String, CsTomlStringType.Basic);
+            return new CsTomlDotKey(utf16String, CsTomlStringType.Basic);
         }
 
         if (doubleQuoted && !singleQuoted)
         {
-            return new CsTomlString(utf16String, CsTomlStringType.Literal);
+            return new CsTomlDotKey(utf16String, CsTomlStringType.Literal);
         }
 
         if (Utf8Helper.ContainsEscapeChar(utf16String, true))
         {
-            return new CsTomlString(utf16String, CsTomlStringType.Literal);
+            return new CsTomlDotKey(utf16String, CsTomlStringType.Literal);
         }
-        return new CsTomlString(utf16String, CsTomlStringType.Basic);
+        return new CsTomlDotKey(utf16String, CsTomlStringType.Basic);
     }
 
-    public static CsTomlString ParseKey(ReadOnlySpan<char> utf16String)
+    internal static CsTomlDotKey ParseKey(ReadOnlySpan<char> utf16String)
     {
         var writer = new ArrayPoolBufferWriter<byte>(128);
         using var _ = writer;
@@ -73,7 +73,7 @@ internal partial class CsTomlString
         return ParseKey(writer.WrittenSpan);
     }
 
-    public static CsTomlString Parse(ReadOnlySpan<byte> utf16String)
+    internal static CsTomlString Parse(ReadOnlySpan<byte> utf16String)
     {
         if (Utf8Helper.ContainInvalidSequences(utf16String))
             ExceptionHelper.ThrowInvalidCodePoints();
@@ -111,7 +111,7 @@ internal partial class CsTomlString
         return new CsTomlString(utf16String, CsTomlStringType.Basic);
     }
 
-    public static CsTomlString Parse(ReadOnlySpan<char> utf16String)
+    internal static CsTomlString Parse(ReadOnlySpan<char> utf16String)
     {
         var writer = new ArrayPoolBufferWriter<byte>(128);
         using var _ = writer;
@@ -121,7 +121,7 @@ internal partial class CsTomlString
         return Parse(writer.WrittenSpan);
     }
 
-    public static EscapeSequenceResult TryFormatEscapeSequence<TBufferWriter>(ref Utf8Reader reader, ref TBufferWriter buffferWriter, bool multiLine, bool throwError)
+    internal static EscapeSequenceResult TryFormatEscapeSequence<TBufferWriter>(ref Utf8Reader reader, ref TBufferWriter buffferWriter, bool multiLine, bool throwError)
         where TBufferWriter : IBufferWriter<byte>
     {
         if (!reader.TryPeek(out var ch)) ExceptionHelper.ThrowEndOfFileReached();
@@ -193,7 +193,7 @@ internal partial class CsTomlString
         return EscapeSequenceResult.Success;
     }
 
-    public static EscapeSequenceResult TryFormatEscapeSequence<TBufferWriter>(ref Utf8SequenceReader reader, ref TBufferWriter buffferWriter, bool multiLine, bool throwError)
+    internal static EscapeSequenceResult TryFormatEscapeSequence<TBufferWriter>(ref Utf8SequenceReader reader, ref TBufferWriter buffferWriter, bool multiLine, bool throwError)
         where TBufferWriter : IBufferWriter<byte>
     {
         if (!reader.TryPeek(out var ch)) ExceptionHelper.ThrowEndOfFileReached();

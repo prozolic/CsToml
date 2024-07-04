@@ -64,14 +64,14 @@ internal ref struct CsTomlWriter<TBufferWriter>
         span[0] = CsTomlSyntax.Symbol.SPACE;
     }
 
-    public void WriteKeyValue(CsTomlString key, CsTomlValue value)
+    public void WriteKeyValue(CsTomlDotKey key, CsTomlValue value)
     {
         WriterKey(key, false);
         WriteEquals();
         value.ToTomlString(ref writer);
     }
 
-    public void WriteKeyValueAndNewLine(CsTomlString key, CsTomlValue value)
+    public void WriteKeyValueAndNewLine(CsTomlDotKey key, CsTomlValue value)
     {
         WriterKey(key, false);
         WriteEquals();
@@ -79,7 +79,7 @@ internal ref struct CsTomlWriter<TBufferWriter>
         WriteNewLine();
     }
 
-    public void WriterKey(CsTomlString key, bool isGroupingProperty)
+    public void WriterKey(CsTomlDotKey key, bool isGroupingProperty)
     {
         key.ToTomlString(ref writer);
         if (isGroupingProperty)
@@ -88,7 +88,7 @@ internal ref struct CsTomlWriter<TBufferWriter>
         }
     }
 
-    public void WriteTableHeader(ReadOnlySpan<CsTomlString> keysSpan)
+    public void WriteTableHeader(ReadOnlySpan<CsTomlDotKey> keysSpan)
     {
         WriteTable();
         if (keysSpan.Length > 0)
@@ -102,7 +102,7 @@ internal ref struct CsTomlWriter<TBufferWriter>
         WriteNewLine();
     }
 
-    public void WriteArrayOfTablesHeader(ReadOnlySpan<CsTomlString> keysSpan)
+    public void WriteArrayOfTablesHeader(ReadOnlySpan<CsTomlDotKey> keysSpan)
     {
         WriteArrayOfTables();
         if (keysSpan.Length > 0)

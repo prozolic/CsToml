@@ -1,8 +1,4 @@
-﻿using CsToml.Error;
-using CsToml.Extension;
-using CsToml.Formatter;
-using CsToml.Utility;
-using System.Buffers.Text;
+﻿
 using System.Runtime.CompilerServices;
 
 namespace CsToml.Values;
@@ -18,7 +14,7 @@ internal partial class CsTomlString
 
     public override long GetInt64()
     {
-        if (long.TryParse(Value, out var value))
+        if (long.TryParse(Utf16String.AsSpan(), out var value))
         {
             return value;
         }
@@ -27,7 +23,7 @@ internal partial class CsTomlString
 
     public override double GetDouble()
     {
-        if (double.TryParse(Value, out var value))
+        if (double.TryParse(Utf16String.AsSpan(), out var value))
         {
             return value;
         }
@@ -36,18 +32,16 @@ internal partial class CsTomlString
 
     public override bool GetBool()
     {
-        if (BooleanExtensions.TryParse(Value, out var value))
+        if (bool.TryParse(Utf16String.AsSpan(), out var value))
         {
             return value;
         }
-
         return base.GetBool();
     }
 
     public override DateTime GetDateTime()
     {
-        var trimBytes = Value.TrimWhiteSpace();
-        if (Utf8Parser.TryParse(trimBytes, out DateTime value, out int bytesConsumed) && trimBytes.Length == bytesConsumed)
+        if (DateTime.TryParse(Utf16String.AsSpan(), out var value))
         {
             return value;
         }
@@ -56,12 +50,11 @@ internal partial class CsTomlString
 
     public override DateTimeOffset GetDateTimeOffset()
     {
-        var trimBytes = Value.TrimWhiteSpace();
-        if (Utf8Parser.TryParse(trimBytes, out DateTimeOffset value, out int bytesConsumed) && trimBytes.Length == bytesConsumed)
+        if (DateTimeOffset.TryParse(Utf16String.AsSpan(), out var value))
         {
             return value;
         }
-        return base.GetDateTimeOffset();
+        return base.GetDateTime();
     }
 
     public override DateOnly GetDateOnly()

@@ -253,7 +253,7 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void ThrowKeyIsDefined(CsTomlString keyName)
+    internal static void ThrowKeyIsDefined(CsTomlDotKey keyName)
     {
         ThrowException($@"Key '{keyName.Utf16String}' is already defined.");
     }

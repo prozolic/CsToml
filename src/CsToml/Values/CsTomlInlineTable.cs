@@ -25,7 +25,7 @@ internal class CsTomlInlineTable : CsTomlValue
         var csTomlWriter = new CsTomlWriter<TBufferWriter>(ref writer);
         csTomlWriter.WriteSpace();
 
-        var keys = new List<CsTomlString>();
+        var keys = new List<CsTomlDotKey>();
         ToTomlStringCore(ref csTomlWriter, RootNode, keys);
 
         csTomlWriter.WriteSpace();
@@ -33,7 +33,7 @@ internal class CsTomlInlineTable : CsTomlValue
         return false;
     }
 
-    private void ToTomlStringCore<TBufferWriter>(ref CsTomlWriter<TBufferWriter> writer, CsTomlTableNode parentNode, List<CsTomlString> keys)
+    private void ToTomlStringCore<TBufferWriter>(ref CsTomlWriter<TBufferWriter> writer, CsTomlTableNode parentNode, List<CsTomlDotKey> keys)
         where TBufferWriter : IBufferWriter<byte>
     {
         var count = 0;

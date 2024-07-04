@@ -65,7 +65,7 @@ internal ref struct CsTomlReader
             if (Utf8Helper.ContainInvalidSequences(bytes))
                 ExceptionHelper.ThrowInvalidCodePoints();
 
-            return new CsTomlString(bytes, CsTomlString.CsTomlStringType.Unquoted);
+            return new CsTomlString(bytes, CsTomlStringType.Unquoted);
         }
         else
         {
@@ -76,7 +76,7 @@ internal ref struct CsTomlReader
                 if (Utf8Helper.ContainInvalidSequences(rent.WrittenSpan))
                     ExceptionHelper.ThrowInvalidCodePoints();
 
-                return new CsTomlString(rent.WrittenSpan, CsTomlString.CsTomlStringType.Unquoted);
+                return new CsTomlString(rent.WrittenSpan, CsTomlStringType.Unquoted);
             }
             finally
             {
@@ -456,15 +456,16 @@ internal ref struct CsTomlReader
 
     private CsTomlString ReadDoubleQuoteSingleLineString()
     {
-        return new CsTomlString(ReadDoubleQuoteSingleLineStringCore(), CsTomlString.CsTomlStringType.Basic);
+        return ReadDoubleQuoteSingleLineStringCore<CsTomlString>();
     }
 
     private CsTomlDotKey ReadDoubleQuoteSingleLineStringForDotKey()
     {
-        return new CsTomlDotKey(ReadDoubleQuoteSingleLineStringCore(), CsTomlString.CsTomlStringType.Basic);
+        return ReadDoubleQuoteSingleLineStringCore<CsTomlDotKey>();
     }
 
-    private byte[] ReadDoubleQuoteSingleLineStringCore()
+    private T ReadDoubleQuoteSingleLineStringCore<T>()
+        where T : CsTomlValue, ICsTomlStringCreator<T>
     {
         Advance(1); // "
 
@@ -502,7 +503,7 @@ internal ref struct CsTomlReader
             if (Utf8Helper.ContainInvalidSequences(writer.WrittenSpan))
                 ExceptionHelper.ThrowInvalidCodePoints();
 
-            return writer.WrittenSpan.ToArray();
+            return T.CreateString(writer.WrittenSpan, CsTomlStringType.Basic);
         }
         finally
         {
@@ -614,7 +615,7 @@ internal ref struct CsTomlReader
             if (Utf8Helper.ContainInvalidSequences(writer.WrittenSpan))
                 ExceptionHelper.ThrowInvalidCodePoints();
 
-            return new CsTomlString(writer.WrittenSpan, CsTomlString.CsTomlStringType.MultiLineBasic);
+            return new CsTomlString(writer.WrittenSpan, CsTomlStringType.MultiLineBasic);
         }
         finally
         {
@@ -680,15 +681,16 @@ internal ref struct CsTomlReader
 
     private CsTomlString ReadSingleQuoteSingleLineString()
     {
-        return new CsTomlString(ReadSingleQuoteSingleLineStringCore(), CsTomlString.CsTomlStringType.Literal);
+        return ReadSingleQuoteSingleLineStringCore<CsTomlString>();
     }
 
     private CsTomlDotKey ReadSingleQuoteSingleLineStringForDotKey()
     {
-        return new CsTomlDotKey(ReadSingleQuoteSingleLineStringCore(), CsTomlString.CsTomlStringType.Literal);
+        return ReadSingleQuoteSingleLineStringCore<CsTomlDotKey>();
     }
 
-    private byte[] ReadSingleQuoteSingleLineStringCore()
+    private T ReadSingleQuoteSingleLineStringCore<T>()
+        where T : CsTomlValue, ICsTomlStringCreator<T>
     {
         var firstPosition = sequenceReader.Consumed;
 
@@ -725,7 +727,7 @@ internal ref struct CsTomlReader
                 ExceptionHelper.ThrowInvalidCodePoints();
             try
             {
-                return bytes.ToArray();
+                return T.CreateString(bytes, CsTomlStringType.Literal);
             }
             finally
             {
@@ -741,7 +743,7 @@ internal ref struct CsTomlReader
                 if (Utf8Helper.ContainInvalidSequences(rent.WrittenSpan))
                     ExceptionHelper.ThrowInvalidCodePoints();
 
-                return rent.WrittenSpan.ToArray();
+                return T.CreateString(bytes, CsTomlStringType.Literal);
             }
             finally
             {
@@ -852,7 +854,7 @@ internal ref struct CsTomlReader
                 ExceptionHelper.ThrowInvalidCodePoints();
             try
             {
-                return new CsTomlString(bytes, CsTomlString.CsTomlStringType.MultiLineLiteral);
+                return new CsTomlString(bytes, CsTomlStringType.MultiLineLiteral);
             }
             finally
             {
@@ -868,7 +870,7 @@ internal ref struct CsTomlReader
                 if (Utf8Helper.ContainInvalidSequences(rent.WrittenSpan))
                     ExceptionHelper.ThrowInvalidCodePoints();
 
-                return new CsTomlString(rent.WrittenSpan, CsTomlString.CsTomlStringType.MultiLineLiteral);
+                return new CsTomlString(rent.WrittenSpan, CsTomlStringType.MultiLineLiteral);
             }
             finally
             {
@@ -908,13 +910,13 @@ internal ref struct CsTomlReader
 
         if (sequenceReader.TryFullSpan(length, out var bytes))
         {
-            return new CsTomlDotKey(bytes, CsTomlString.CsTomlStringType.Unquoted);
+            return new CsTomlDotKey(bytes, CsTomlStringType.Unquoted);
         }
         var rent = RecycleByteArrayPoolBufferWriter.Rent();
         try
         {
             sequenceReader.TryGetbytes(length, rent);
-            return new CsTomlDotKey(rent.WrittenSpan, CsTomlString.CsTomlStringType.Unquoted);
+            return new CsTomlDotKey(rent.WrittenSpan, CsTomlStringType.Unquoted);
         }
         finally
         {

@@ -1,19 +1,100 @@
 ﻿using CsToml.Formatter;
 using CsToml.Utility;
+using System.Buffers;
 using System.Diagnostics;
+using System.Text.Unicode;
 
 namespace CsToml.Values;
 
 [DebuggerDisplay("{Utf16String}")]
 internal sealed class CsTomlDotKey :
-    CsTomlString, 
+    CsTomlValue,
+    ICsTomlStringCreator<CsTomlDotKey>,
     IEquatable<CsTomlDotKey?>
 {
-    public CsTomlDotKey(ReadOnlySpan<byte> value, CsTomlStringType type = CsTomlStringType.Basic) : base(value, type)
-    {}
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private byte[] bytes;
 
-    public CsTomlDotKey(byte[] value, CsTomlStringType type = CsTomlStringType.Basic) : base(value, type)
-    {}
+    public override bool HasValue => true;
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
+    public CsTomlStringType TomlStringType { get; }
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
+    public ReadOnlySpan<byte> Value => bytes.AsSpan();
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
+    public string Utf16String
+    {
+        get
+        {
+            var tempReader = new Utf8Reader(Value);
+            ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out string value);
+            return value;
+        }
+    }
+
+    public static CsTomlDotKey CreateString(ReadOnlySpan<byte> value, CsTomlStringType type = CsTomlStringType.Basic)
+    {
+        return new CsTomlDotKey(value, type);
+    }
+
+    public CsTomlDotKey(ReadOnlySpan<byte> value, CsTomlStringType type = CsTomlStringType.Basic) : base()
+    {
+        bytes = value.ToArray();
+        TomlStringType = type;
+    }
+
+    public override string ToString()
+        => Utf16String;
+
+    public override bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
+    {
+        var status = Utf8.ToUtf16(Value, destination, out var bytesRead, out charsWritten, replaceInvalidSequences: false);
+        return status == OperationStatus.Done;
+    }
+
+    public override string ToString(string? format, IFormatProvider? formatProvider)
+        => GetString();
+
+    public override bool TryFormat(Span<byte> utf8Destination, out int bytesWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
+    {
+        if (utf8Destination.Length < Value.Length)
+        {
+            bytesWritten = 0;
+            return false;
+        }
+
+        Value.TryCopyTo(utf8Destination);
+        bytesWritten = Value.Length;
+        return true;
+    }
+
+    internal override bool ToTomlString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
+    {
+        switch (TomlStringType)
+        {
+            case CsTomlStringType.Basic:
+                return CsTomlString.ToTomlBasicString(ref writer, Value);
+            case CsTomlStringType.MultiLineBasic:
+                return CsTomlString.ToTomlMultiLineBasicString(ref writer, Value);
+            case CsTomlStringType.Literal:
+                return CsTomlString.ToTomlLiteralString(ref writer, Value);
+            case CsTomlStringType.MultiLineLiteral:
+                return CsTomlString.ToTomlMultiLineLiteralString(ref writer, Value);
+            case CsTomlStringType.Unquoted:
+                {
+                    if (Value.Length > 0)
+                    {
+                        writer.Write(Value);
+                        return true;
+                    }
+                    break;
+                }
+        }
+
+        return false;
+    }
 
     public override bool Equals(object? obj)
     {

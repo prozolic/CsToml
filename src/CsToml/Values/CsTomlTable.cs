@@ -366,14 +366,14 @@ internal partial class CsTomlTable : CsTomlValue
     internal override bool ToTomlString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
     {
         var csTomlWriter = new CsTomlWriter<TBufferWriter>(ref writer);
-        var keys = new List<CsTomlString>();
-        var tableNodes = new List<CsTomlString>();
+        var keys = new List<CsTomlDotKey>();
+        var tableNodes = new List<CsTomlDotKey>();
         ToTomlStringCore(ref csTomlWriter, RootNode, keys, tableNodes);
 
         return true;
     }
 
-    private void ToTomlStringCore<TBufferWriter>(ref CsTomlWriter<TBufferWriter> writer, CsTomlTableNode parentNode, List<CsTomlString> keys, List<CsTomlString> tableHeaderKeys)
+    private void ToTomlStringCore<TBufferWriter>(ref CsTomlWriter<TBufferWriter> writer, CsTomlTableNode parentNode, List<CsTomlDotKey> keys, List<CsTomlDotKey> tableHeaderKeys)
         where TBufferWriter : IBufferWriter<byte>
     {
         if (parentNode.IsArrayOfTablesHeader)

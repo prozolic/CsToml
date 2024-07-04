@@ -7,102 +7,99 @@ using System.Text.Unicode;
 namespace CsToml.Values;
 
 [DebuggerDisplay("{Utf16String}")]
-internal partial class CsTomlString : CsTomlValue
+internal partial class CsTomlString :
+    CsTomlValue,
+    ICsTomlStringCreator<CsTomlString>
 {
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-    protected byte[] bytes;
-
-    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-    public int Length => Value.Length;
-
-    [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
-    public string Utf16String
-    {
-        get
-        {
-            var tempReader = new Utf8Reader(Value);
-            ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out string value);
-            return value;
-        }
-    }
-
-    [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
-    public ReadOnlySpan<byte> Value => bytes.AsSpan();
+    private string utf16String;
 
     public override bool HasValue => true;
 
     [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
     public CsTomlStringType TomlStringType { get; }
 
-    public CsTomlString(ReadOnlySpan<byte> value, CsTomlStringType type = CsTomlStringType.Basic) : base()
+    [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
+    public string Value => utf16String;
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
+    public string Utf16String => utf16String;
+
+    public static CsTomlString CreateString(ReadOnlySpan<byte> value, CsTomlStringType type = CsTomlStringType.Basic)
     {
-        bytes = value.ToArray();
-        TomlStringType = type;
+        return new CsTomlString(value, type);
     }
 
-    public CsTomlString(byte[] value, CsTomlStringType type = CsTomlStringType.Basic) : base()
+    public CsTomlString(ReadOnlySpan<byte> value, CsTomlStringType type = CsTomlStringType.Basic) : base()
     {
-        bytes = value;
         TomlStringType = type;
+        var tempReader = new Utf8Reader(value);
+        ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out utf16String);
+    }
+
+    public override bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
+    {
+        if (destination.Length < Value.Length)
+        {
+            charsWritten = 0;
+            return false;
+        }
+        Value.TryCopyTo(destination);
+        charsWritten = Value.Length;
+        return true;
+    }
+
+    public override string ToString(string? format, IFormatProvider? formatProvider)
+        => GetString();
+
+    public override bool TryFormat(Span<byte> utf8Destination, out int bytesWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
+    {
+        var status = Utf8.FromUtf16(Utf16String.AsSpan(), utf8Destination, out var bytesRead, out bytesWritten, replaceInvalidSequences: false);
+        return status == OperationStatus.Done;
     }
 
     internal override bool ToTomlString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
     {
-        switch (TomlStringType)
+        var bufferWriter = new ArrayPoolBufferWriter<byte>(128);
+        var utf8Writer = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref bufferWriter);
+        ValueFormatter.Serialize(ref utf8Writer, Utf16String.AsSpan());
+
+        try
         {
-            case CsTomlStringType.Basic:
-                return ToTomlBasicString(ref writer);
-            case CsTomlStringType.MultiLineBasic:
-                return ToTomlMultiLineBasicString(ref writer);
-            case CsTomlStringType.Literal:
-                return ToTomlLiteralString(ref writer);
-            case CsTomlStringType.MultiLineLiteral:
-                return ToTomlMultiLineLiteralString(ref writer);
-            case CsTomlStringType.Unquoted:
-                {
-                    if (Length > 0)
+            switch (TomlStringType)
+            {
+                case CsTomlStringType.Basic:
+                    return ToTomlBasicString(ref writer, bufferWriter.WrittenSpan);
+                case CsTomlStringType.MultiLineBasic:
+                    return ToTomlMultiLineBasicString(ref writer, bufferWriter.WrittenSpan);
+                case CsTomlStringType.Literal:
+                    return ToTomlLiteralString(ref writer, bufferWriter.WrittenSpan);
+                case CsTomlStringType.MultiLineLiteral:
+                    return ToTomlMultiLineLiteralString(ref writer, bufferWriter.WrittenSpan);
+                case CsTomlStringType.Unquoted:
                     {
-                        writer.Write(Value);
-                        return true;
+                        if (Value.Length > 0)
+                        {
+                            writer.Write(bufferWriter.WrittenSpan);
+                            return true;
+                        }
+                        break;
                     }
-                    break;
-                }
+            }
+        }
+        finally
+        {
+            using (bufferWriter) { }
         }
 
         return false;
     }
 
-    public override string ToString()
-        => GetString();
-
-    public override bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
-    {
-        var status = Utf8.ToUtf16(Value, destination, out var bytesRead, out charsWritten, replaceInvalidSequences: false);
-        return status == OperationStatus.Done;
-    }
-
-    public override string ToString(string? format, IFormatProvider? formatProvider) 
-        => GetString();
-
-    public override bool TryFormat(Span<byte> utf8Destination, out int bytesWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
-    {
-        if (utf8Destination.Length < Value.Length)
-        {
-            bytesWritten = 0;
-            return false;
-        }
-
-        Value.TryCopyTo(utf8Destination);
-        bytesWritten = Value.Length;
-        return true;
-    }
-
-    private bool ToTomlBasicString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
+    internal static bool ToTomlBasicString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, ReadOnlySpan<byte> byteSpan)
         where TBufferWriter : IBufferWriter<byte>
     {
         writer.Write(CsTomlSyntax.Symbol.DOUBLEQUOTED);
 
-        var byteSpan = Value;
         for (int i = 0; i < byteSpan.Length; i++)
         {
             var ch = byteSpan[i];
@@ -147,15 +144,14 @@ internal partial class CsTomlString : CsTomlValue
         return true;
     }
 
-    private bool ToTomlMultiLineBasicString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
+    internal static bool ToTomlMultiLineBasicString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, ReadOnlySpan<byte> byteSpan)
         where TBufferWriter : IBufferWriter<byte>
     {
         writer.Write(CsTomlSyntax.Symbol.DOUBLEQUOTED);
         writer.Write(CsTomlSyntax.Symbol.DOUBLEQUOTED);
         writer.Write(CsTomlSyntax.Symbol.DOUBLEQUOTED);
 
-        var byteSpan = Value;
-        for (int i = 0; i < byteSpan.Length;i++)
+        for (int i = 0; i < byteSpan.Length; i++)
         {
             var ch = byteSpan[i];
             switch (ch)
@@ -200,35 +196,34 @@ internal partial class CsTomlString : CsTomlValue
         return true;
     }
 
-    private bool ToTomlLiteralString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
+    internal static bool ToTomlLiteralString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, ReadOnlySpan<byte> byteSpan)
         where TBufferWriter : IBufferWriter<byte>
     {
         writer.Write(CsTomlSyntax.Symbol.SINGLEQUOTED);
-        writer.Write(Value);
+        writer.Write(byteSpan);
         writer.Write(CsTomlSyntax.Symbol.SINGLEQUOTED);
         return true;
     }
 
-    private bool ToTomlMultiLineLiteralString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
+    internal static bool ToTomlMultiLineLiteralString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, ReadOnlySpan<byte> byteSpan)
          where TBufferWriter : IBufferWriter<byte>
     {
         writer.Write(CsTomlSyntax.Symbol.SINGLEQUOTED);
         writer.Write(CsTomlSyntax.Symbol.SINGLEQUOTED);
         writer.Write(CsTomlSyntax.Symbol.SINGLEQUOTED);
-        writer.Write(Value);
+        writer.Write(byteSpan);
         writer.Write(CsTomlSyntax.Symbol.SINGLEQUOTED);
         writer.Write(CsTomlSyntax.Symbol.SINGLEQUOTED);
         writer.Write(CsTomlSyntax.Symbol.SINGLEQUOTED);
         return true;
     }
+}
 
-    public enum CsTomlStringType : byte
-    {
-        Unquoted,
-        Basic,
-        MultiLineBasic,
-        Literal,
-        MultiLineLiteral
-    }
-
+internal enum CsTomlStringType : byte
+{
+    Unquoted,
+    Basic,
+    MultiLineBasic,
+    Literal,
+    MultiLineLiteral
 }
