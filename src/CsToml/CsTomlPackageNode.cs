@@ -3,10 +3,12 @@ using CsToml.Error;
 using CsToml.Formatter;
 using CsToml.Utility;
 using CsToml.Values;
+using System.Buffers;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Text.Unicode;
 
 namespace CsToml;
 
@@ -22,12 +24,29 @@ public struct CsTomlPackageNode
     {
         get
         {
-            var writer = new ArrayPoolBufferWriter<byte>(128);
-            using var _ = writer;
-            var keyrWriter = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
+            // buffer size to 3 times worst-case (UTF16 -> UTF8)
+            var maxBufferSize = (key.Length + 1) * 3;
+            if (maxBufferSize < 1024)
+            {
+                Span<byte> utf8Span = stackalloc byte[maxBufferSize];
+                var status = Utf8.FromUtf16(key, utf8Span,  out int charsRead, out int bytesWritten, replaceInvalidSequences: false);
+                if (status != System.Buffers.OperationStatus.Done)
+                {
+                    if (status == OperationStatus.InvalidData)
+                        ExceptionHelper.ThrowInvalidByteIncluded();
+                    ExceptionHelper.ThrowBufferTooSmallFailed();
+                }
+                return this[utf8Span[..bytesWritten]];
+            }
+            else
+            {
+                var writer = new ArrayPoolBufferWriter<byte>(128);
+                using var _ = writer;
+                var keyrWriter = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
 
-            ValueFormatter.Serialize(ref keyrWriter, key);
-            return this[writer.WrittenSpan[..keyrWriter.WrittingCount]];
+                ValueFormatter.Serialize(ref keyrWriter, key);
+                return this[writer.WrittenSpan[..keyrWriter.WrittingCount]];
+            }
         }
     }
 

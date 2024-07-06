@@ -3,6 +3,7 @@ using CsToml.Formatter;
 using CsToml.Utility;
 using CsToml.Values;
 using System.Buffers;
+using System.Text.Unicode;
 
 namespace CsToml;
 
@@ -70,46 +71,91 @@ public partial class CsTomlPackage
 
     public bool TryGetValue(ReadOnlySpan<char> key, out CsTomlValue? value, CsTomlPackageOptions? options = default)
     {
-        var writer = new ArrayPoolBufferWriter<byte>(128);
-        using var _ = writer;
-
-        var utf8Writer = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
-        try
+        // buffer size to 3 times worst-case (UTF16 -> UTF8)
+        var maxBufferSize = (key.Length + 1) * 3;
+        if (maxBufferSize < 1024)
         {
-            ValueFormatter.Serialize(ref utf8Writer, key);
-        }
-        catch (CsTomlException)
-        {
-            value = default;
-            return false;
-        }
+            Span<byte> utf8Span = stackalloc byte[maxBufferSize];
+            var status = Utf8.FromUtf16(key, utf8Span, out int charsRead, out int bytesWritten, replaceInvalidSequences: false);
+            if (status != System.Buffers.OperationStatus.Done)
+            {
+                if (status == OperationStatus.InvalidData)
+                    ExceptionHelper.ThrowInvalidByteIncluded();
+                ExceptionHelper.ThrowBufferTooSmallFailed();
+            }
 
-        return TryGetValue(writer.WrittenSpan, out value, options);
+            return TryGetValue(utf8Span[..bytesWritten], out value, options);
+        }
+        else
+        {
+            var writer = new ArrayPoolBufferWriter<byte>(128);
+            using var _ = writer;
+
+            var utf8Writer = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
+            try
+            {
+                ValueFormatter.Serialize(ref utf8Writer, key);
+            }
+            catch (CsTomlException)
+            {
+                value = default;
+                return false;
+            }
+
+            return TryGetValue(writer.WrittenSpan, out value, options);
+        }
     }
 
     public bool TryGetValue(ReadOnlySpan<char> tableHeader, ReadOnlySpan<char> key, out CsTomlValue? value, CsTomlPackageOptions? options = default)
     {
-        var writer = new ArrayPoolBufferWriter<byte>(128);
-        using var _ = writer;
-
-        var tableHeaderWriter = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
-        var keyrWriter = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
-        try
+        // buffer size to 3 times worst-case (UTF16 -> UTF8)
+        var maxBufferSize = (tableHeader.Length + key.Length + 1) * 3;
+        if (maxBufferSize < 1024)
         {
-            ValueFormatter.Serialize(ref tableHeaderWriter, tableHeader);
-            ValueFormatter.Serialize(ref keyrWriter, key);
+            Span<byte> utf8Span = stackalloc byte[maxBufferSize];
+            var status = Utf8.FromUtf16(tableHeader, utf8Span, out int _, out int bytesWritten, replaceInvalidSequences: false);
+            if (status != System.Buffers.OperationStatus.Done)
+            {
+                if (status == OperationStatus.InvalidData)
+                    ExceptionHelper.ThrowInvalidByteIncluded();
+                ExceptionHelper.ThrowBufferTooSmallFailed();
+            }
+            var status2 = Utf8.FromUtf16(key, utf8Span.Slice(bytesWritten), out int __, out int bytesWritten2, replaceInvalidSequences: false);
+            if (status2 != System.Buffers.OperationStatus.Done)
+            {
+                if (status == OperationStatus.InvalidData)
+                    ExceptionHelper.ThrowInvalidByteIncluded();
+                ExceptionHelper.ThrowBufferTooSmallFailed();
+            }
+            return TryGetValue(
+                utf8Span.Slice(0, bytesWritten),
+                utf8Span.Slice(bytesWritten, bytesWritten2),
+                out value,
+                options);
         }
-        catch (CsTomlException)
+        else
         {
-            value = default;
-            return false;
-        }
+            var writer = new ArrayPoolBufferWriter<byte>(128);
+            using var _ = writer;
 
-        return TryGetValue(
-            writer.WrittenSpan.Slice(0, tableHeaderWriter.WrittingCount),
-            writer.WrittenSpan.Slice(tableHeaderWriter.WrittingCount, keyrWriter.WrittingCount),
-            out value,
-            options);
+            var tableHeaderWriter = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
+            var keyrWriter = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
+            try
+            {
+                ValueFormatter.Serialize(ref tableHeaderWriter, tableHeader);
+                ValueFormatter.Serialize(ref keyrWriter, key);
+            }
+            catch (CsTomlException)
+            {
+                value = default;
+                return false;
+            }
+            return TryGetValue(
+                    writer.WrittenSpan.Slice(0, tableHeaderWriter.WrittingCount),
+                    writer.WrittenSpan.Slice(tableHeaderWriter.WrittingCount, keyrWriter.WrittingCount),
+                    out value,
+                    options);
+        }
     }
 
     public bool TryGetValue(ReadOnlySpan<byte> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<byte> key, out CsTomlValue? value, CsTomlPackageOptions? options = default)
@@ -190,20 +236,37 @@ public partial class CsTomlPackage
 
     public CsTomlValue? Find(ReadOnlySpan<char> keys, CsTomlPackageOptions? options = default)
     {
-        var writer = new ArrayPoolBufferWriter<byte>(128);
-        using var _ = writer;
-
-        var utf8Writer = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
-        try
+        var maxBufferSize = (keys.Length + 1) * 3;
+        if (maxBufferSize < 1024)
         {
-            ValueFormatter.Serialize(ref utf8Writer, keys);
-        }
-        catch (CsTomlException)
-        {
-            return default;
-        }
+            Span<byte> utf8Span = stackalloc byte[maxBufferSize];
+            var status = Utf8.FromUtf16(keys, utf8Span, out int _, out int bytesWritten, replaceInvalidSequences: false);
+            if (status != System.Buffers.OperationStatus.Done)
+            {
+                if (status == OperationStatus.InvalidData)
+                    ExceptionHelper.ThrowInvalidByteIncluded();
+                ExceptionHelper.ThrowBufferTooSmallFailed();
+            }
 
-        return Find(writer.WrittenSpan, options);
+            return Find(utf8Span[..bytesWritten], options);
+        }
+        else
+        {
+            var writer = new ArrayPoolBufferWriter<byte>(128);
+            using var _ = writer;
+
+            var utf8Writer = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
+            try
+            {
+                ValueFormatter.Serialize(ref utf8Writer, keys);
+            }
+            catch (CsTomlException)
+            {
+                return default;
+            }
+
+            return Find(writer.WrittenSpan, options);
+        }
     }
 
     public CsTomlValue? Find(ReadOnlySpan<ByteArray> keys, CsTomlPackageOptions? options = default)
@@ -238,24 +301,52 @@ public partial class CsTomlPackage
 
     public CsTomlValue? Find(ReadOnlySpan<char> tableHeader, ReadOnlySpan<char> key, CsTomlPackageOptions? options = default)
     {
-        var writer = new ArrayPoolBufferWriter<byte>(128);
-        using var _ = writer;
-        var tableHeaderWriter = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
-        var keyrWriter = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
-        try
+        // buffer size to 3 times worst-case (UTF16 -> UTF8)
+        var maxBufferSize = (tableHeader.Length + key.Length + 1) * 3;
+        if (maxBufferSize < 1024)
         {
-            ValueFormatter.Serialize(ref tableHeaderWriter, tableHeader);
-            ValueFormatter.Serialize(ref keyrWriter, key);
-        }
-        catch (CsTomlException)
-        {
-            return default;
-        }
+            Span<byte> utf8Span = stackalloc byte[maxBufferSize];
+            var status = Utf8.FromUtf16(tableHeader, utf8Span, out int _, out int bytesWritten, replaceInvalidSequences: false);
+            if (status != System.Buffers.OperationStatus.Done)
+            {
+                if (status == OperationStatus.InvalidData)
+                    ExceptionHelper.ThrowInvalidByteIncluded();
+                ExceptionHelper.ThrowBufferTooSmallFailed();
+            }
+            var status2 = Utf8.FromUtf16(key, utf8Span.Slice(bytesWritten), out int __, out int bytesWritten2, replaceInvalidSequences: false);
+            if (status2 != System.Buffers.OperationStatus.Done)
+            {
+                if (status == OperationStatus.InvalidData)
+                    ExceptionHelper.ThrowInvalidByteIncluded();
+                ExceptionHelper.ThrowBufferTooSmallFailed();
+            }
 
-        return Find(
-            writer.WrittenSpan.Slice(0, tableHeaderWriter.WrittingCount),
-            writer.WrittenSpan.Slice(tableHeaderWriter.WrittingCount, keyrWriter.WrittingCount),
-            options);
+            return Find(
+                utf8Span.Slice(0, bytesWritten),
+                utf8Span.Slice(bytesWritten, bytesWritten2),
+                options);
+        }
+        else
+        {
+            var writer = new ArrayPoolBufferWriter<byte>(128);
+            using var _ = writer;
+            var tableHeaderWriter = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
+            var keyrWriter = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
+            try
+            {
+                ValueFormatter.Serialize(ref tableHeaderWriter, tableHeader);
+                ValueFormatter.Serialize(ref keyrWriter, key);
+            }
+            catch (CsTomlException)
+            {
+                return default;
+            }
+
+            return Find(
+                writer.WrittenSpan.Slice(0, tableHeaderWriter.WrittingCount),
+                writer.WrittenSpan.Slice(tableHeaderWriter.WrittingCount, keyrWriter.WrittingCount),
+                options);
+        }
     }
 
     public CsTomlValue? Find(ReadOnlySpan<ByteArray> tableHeader, ReadOnlySpan<byte> key, CsTomlPackageOptions? options = default)
@@ -361,24 +452,53 @@ public partial class CsTomlPackage
 
     public CsTomlValue? Find(ReadOnlySpan<char> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<char> key, CsTomlPackageOptions? options = default)
     {
-        var writer = new ArrayPoolBufferWriter<byte>(128);
-        using var _ = writer;
-        var arrayOfTableHeaderWriter = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
-        var keyWriter = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
-        try
+        // buffer size to 3 times worst-case (UTF16 -> UTF8)
+        var maxBufferSize = (arrayOfTableHeader.Length + key.Length + 1) * 3;
+        if (maxBufferSize < 1024)
         {
-            ValueFormatter.Serialize(ref arrayOfTableHeaderWriter, arrayOfTableHeader);
-            ValueFormatter.Serialize(ref keyWriter, key);
+            Span<byte> utf8Span = stackalloc byte[maxBufferSize];
+            var status = Utf8.FromUtf16(arrayOfTableHeader, utf8Span, out int _, out int bytesWritten, replaceInvalidSequences: false);
+            if (status != System.Buffers.OperationStatus.Done)
+            {
+                if (status == OperationStatus.InvalidData)
+                    ExceptionHelper.ThrowInvalidByteIncluded();
+                ExceptionHelper.ThrowBufferTooSmallFailed();
+            }
+            var status2 = Utf8.FromUtf16(key, utf8Span.Slice(bytesWritten), out int __, out int bytesWritten2, replaceInvalidSequences: false);
+            if (status2 != System.Buffers.OperationStatus.Done)
+            {
+                if (status == OperationStatus.InvalidData)
+                    ExceptionHelper.ThrowInvalidByteIncluded();
+                ExceptionHelper.ThrowBufferTooSmallFailed();
+            }
+
+            return Find(
+                utf8Span.Slice(0, bytesWritten),
+                arrayIndex,
+                utf8Span.Slice(bytesWritten, bytesWritten2),
+                options);
         }
-        catch (CsTomlException)
+        else
         {
-            return default;
+            var writer = new ArrayPoolBufferWriter<byte>(128);
+            using var _ = writer;
+            var arrayOfTableHeaderWriter = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
+            var keyWriter = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
+            try
+            {
+                ValueFormatter.Serialize(ref arrayOfTableHeaderWriter, arrayOfTableHeader);
+                ValueFormatter.Serialize(ref keyWriter, key);
+            }
+            catch (CsTomlException)
+            {
+                return default;
+            }
+            return Find(
+                writer.WrittenSpan.Slice(0, arrayOfTableHeaderWriter.WrittingCount),
+                arrayIndex,
+                writer.WrittenSpan.Slice(arrayOfTableHeaderWriter.WrittingCount, keyWriter.WrittingCount),
+                options);
         }
-        return Find(
-            writer.WrittenSpan.Slice(0, arrayOfTableHeaderWriter.WrittingCount),
-            arrayIndex,
-            writer.WrittenSpan.Slice(arrayOfTableHeaderWriter.WrittingCount, keyWriter.WrittingCount),
-            options);
     }
 
 }
