@@ -32,84 +32,85 @@ internal class CsTomlTableNode
 
     internal bool IsGroupingProperty 
     {
-        get => nodeType.Has(CsTomlTableNodeType.GroupingProperty);
+        get => (nodeType & CsTomlTableNodeType.GroupingProperty) == CsTomlTableNodeType.GroupingProperty;
         set
         {
             if (value)
             {
-                CsTomlTableNodeTypeExtensions.Add(ref nodeType, CsTomlTableNodeType.GroupingProperty);
+                nodeType |= CsTomlTableNodeType.GroupingProperty;
             }
             else
             {
-                CsTomlTableNodeTypeExtensions.Remove(ref nodeType, CsTomlTableNodeType.GroupingProperty);
+                nodeType &= ~CsTomlTableNodeType.GroupingProperty;
             }
         }
     }
 
     internal bool IsTableHeader 
     {
-        get => nodeType.Has(CsTomlTableNodeType.TableHeaderProperty);
+        get => (nodeType & CsTomlTableNodeType.TableHeaderProperty) == CsTomlTableNodeType.TableHeaderProperty;
         set
         {
             if (value)
             {
-                CsTomlTableNodeTypeExtensions.Add(ref nodeType, CsTomlTableNodeType.TableHeaderProperty);
+                nodeType |= CsTomlTableNodeType.TableHeaderProperty;
             }
             else
             {
-                CsTomlTableNodeTypeExtensions.Remove(ref nodeType, CsTomlTableNodeType.TableHeaderProperty);
+                nodeType &= ~CsTomlTableNodeType.TableHeaderProperty;
             }
         }
     }
 
     internal bool IsTableHeaderDefinitionPosition
     {
-        get => nodeType.Has(CsTomlTableNodeType.TableHeaderDefinitionPosition);
+        get => (nodeType & CsTomlTableNodeType.TableHeaderDefinitionPosition) == CsTomlTableNodeType.TableHeaderDefinitionPosition;
         set
         {
             if (value)
             {
-                CsTomlTableNodeTypeExtensions.Add(ref nodeType, CsTomlTableNodeType.TableHeaderDefinitionPosition);
+                nodeType |= CsTomlTableNodeType.TableHeaderDefinitionPosition;
             }
             else
             {
-                CsTomlTableNodeTypeExtensions.Remove(ref nodeType, CsTomlTableNodeType.TableHeaderDefinitionPosition);
+                nodeType &= ~CsTomlTableNodeType.TableHeaderDefinitionPosition;
             }
         }
     }
 
     internal bool IsArrayOfTablesHeader 
     {
-        get => nodeType.Has(CsTomlTableNodeType.ArrayOfTablesHeaderProperty);
+        get => (nodeType & CsTomlTableNodeType.ArrayOfTablesHeaderProperty) == CsTomlTableNodeType.ArrayOfTablesHeaderProperty;
         set
         {
             if (value)
             {
-                CsTomlTableNodeTypeExtensions.Add(ref nodeType, CsTomlTableNodeType.ArrayOfTablesHeaderProperty);
+                nodeType |= CsTomlTableNodeType.ArrayOfTablesHeaderProperty;
             }
             else
             {
-                CsTomlTableNodeTypeExtensions.Remove(ref nodeType, CsTomlTableNodeType.ArrayOfTablesHeaderProperty);
+                nodeType &= ~CsTomlTableNodeType.ArrayOfTablesHeaderProperty;
             }
         }
     }
 
     internal bool IsArrayOfTablesHeaderDefinitionPosition
     {
-        get => nodeType.Has(CsTomlTableNodeType.ArrayOfTablesHeaderDefinitionPosition);
+        get => (nodeType & CsTomlTableNodeType.ArrayOfTablesHeaderDefinitionPosition) == CsTomlTableNodeType.ArrayOfTablesHeaderDefinitionPosition;
         set
         {
             if (value)
             {
-                CsTomlTableNodeTypeExtensions.Add(ref nodeType, CsTomlTableNodeType.ArrayOfTablesHeaderDefinitionPosition);
+                nodeType |= CsTomlTableNodeType.ArrayOfTablesHeaderDefinitionPosition;
             }
             else
             {
-                CsTomlTableNodeTypeExtensions.Remove(ref nodeType, CsTomlTableNodeType.ArrayOfTablesHeaderDefinitionPosition);
+                nodeType &= ~CsTomlTableNodeType.ArrayOfTablesHeaderDefinitionPosition;
             }
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static CsTomlTableNode CreateGroupingPropertyNode()
     {
         var node = new CsTomlTableNode() { IsGroupingProperty = true};
@@ -124,10 +125,7 @@ internal class CsTomlTableNode
     internal CsTomlTableNode() {}
 
     internal void AddComment(IReadOnlyCollection<CsTomlString> comments)
-    {
-        if (comments.Count == 0) return;
-        this.comments.AddRange(comments);
-    }
+        => this.comments.AddRange(comments);
 
     internal void AddKeyValue(CsTomlDotKey key, CsTomlValue value, IReadOnlyCollection<CsTomlString> comments)
     {
@@ -137,7 +135,10 @@ internal class CsTomlTableNode
         }
 
         var newNode = new CsTomlTableNode() { Value = value };
-        newNode.AddComment(comments);
+        if (comments.Count > 0)
+        {
+            newNode.AddComment(comments);
+        }
         nodes.TryAdd(key, newNode);
     }
 

@@ -114,8 +114,11 @@ internal partial class CsTomlTable : CsTomlValue
             }
         }
 
-        node!.AddComment(comments);
-        node.IsTableHeaderDefinitionPosition = true;
+        if (comments.Count > 0)
+        {
+            node!.AddComment(comments);
+        }
+        node!.IsTableHeaderDefinitionPosition = true;
         newNode = node;
     }
 
@@ -181,7 +184,10 @@ internal partial class CsTomlTable : CsTomlValue
         }
         var table = new CsTomlTable();
         (currentNode.Value as CsTomlArray)?.Add(table);
-        currentNode.AddComment(comments);
+        if (comments.Count > 0)
+        {
+            currentNode.AddComment(comments);
+        }
         newNode = table.RootNode;
     }
 

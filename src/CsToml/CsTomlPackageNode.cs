@@ -18,7 +18,7 @@ public struct CsTomlPackageNode
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private CsTomlTableNode node;
 
-    internal readonly CsTomlValue Value => node.Value!;
+    public readonly CsTomlValue Value => node.Value!;
 
     public CsTomlPackageNode this[ReadOnlySpan<char> key]
     {
