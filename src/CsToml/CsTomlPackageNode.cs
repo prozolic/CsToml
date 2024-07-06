@@ -111,7 +111,7 @@ public struct CsTomlPackageNode
     public readonly TimeOnly GetTimeOnly()
         => Value.GetTimeOnly();
 
-    public readonly T GetNumber<T>() where T : INumberBase<T>
+    public readonly T GetNumber<T>() where T : struct, INumberBase<T>
         => Value.GetNumber<T>();
 
     public readonly bool TryGetArray(out ReadOnlyCollection<CsTomlValue> value)
@@ -144,7 +144,7 @@ public struct CsTomlPackageNode
     public readonly bool TryGetTimeOnly(out TimeOnly value)
         => Value.TryGetTimeOnly(out value);
 
-    public readonly bool TryGetNumber<T>(out T value) where T : INumberBase<T>
+    public readonly bool TryGetNumber<T>(out T value) where T : struct, INumberBase<T>
         => Value.TryGetNumber<T>(out value);
 
 }

@@ -17,7 +17,7 @@ internal class StringFormatter : ICsTomlFormatter<string>, ICsTomlSpanFormatter<
     public static void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, ReadOnlySpan<char> value)
         where TBufferWriter : IBufferWriter<byte>
     {
-        // buffer size to 3 times worst-case (UTF8 -> UTF16)
+        // buffer size to 3 times worst-case (UTF16 -> UTF8)
         var maxBufferSize = (value.Length + 1) * 3;
 
         var status = Utf8.FromUtf16(value, writer.GetSpan(maxBufferSize),
@@ -43,7 +43,7 @@ internal class StringFormatter : ICsTomlFormatter<string>, ICsTomlSpanFormatter<
     {
         var maxBufferSize = utf8Bytes.Length * 2;
 
-        if (maxBufferSize <= 128)
+        if (maxBufferSize <= 1024)
         {
             Span<char> bufferBytesSpan = stackalloc char[maxBufferSize];
             var status = Utf8.ToUtf16(utf8Bytes, bufferBytesSpan, out var bytesRead, out var charsWritten, replaceInvalidSequences: false);
@@ -53,6 +53,7 @@ internal class StringFormatter : ICsTomlFormatter<string>, ICsTomlSpanFormatter<
                     ExceptionHelper.ThrowInvalidByteIncluded();
                 ExceptionHelper.ThrowBufferTooSmallFailed();
             }
+
             return new string(bufferBytesSpan[..charsWritten]);
         }
         else

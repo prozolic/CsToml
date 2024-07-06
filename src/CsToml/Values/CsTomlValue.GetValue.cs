@@ -42,7 +42,7 @@ public partial class CsTomlValue
     public virtual TimeOnly GetTimeOnly()
         => ExceptionHelper.NotReturnThrow<TimeOnly>(ExceptionHelper.ThrowInvalidCasting);
 
-    public T GetNumber<T>() where T : INumberBase<T>
+    public T GetNumber<T>() where T : struct, INumberBase<T>
     {
         var value = GetDouble();
         try
@@ -236,7 +236,7 @@ public partial class CsTomlValue
         return false;
     }
 
-    public bool TryGetNumber<T>(out T value) where T : INumberBase<T>
+    public bool TryGetNumber<T>(out T value) where T : struct, INumberBase<T>
     {
         if (CanGetValue(CsTomlValueFeature.Number))
         {

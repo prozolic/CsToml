@@ -162,17 +162,19 @@ public partial class CsTomlPackage
     {
         try
         {
-            var key = reader.ReadKey();
+            var key = RecycleArrayPoolList<CsTomlDotKey>.Rent();
             try
             {
+                reader.ReadKey(key);
                 reader.Advance(1); // skip "="
                 reader.SkipWhiteSpace();
                 table.AddKeyValue(key, reader.ReadValue(), currentNode, comments);
             }
             finally
             {
-                key.Recycle();
+                RecycleArrayPoolList<CsTomlDotKey>.Return(key);
             }
+
             return true;
         }
         catch (CsTomlException ce)
@@ -191,14 +193,15 @@ public partial class CsTomlPackage
     {
         try
         {
-            var tableKey = reader.ReadTableHeader();
+            var tableHeaderKey = RecycleArrayPoolList<CsTomlDotKey>.Rent();
             try
             {
-                table.AddTableHeader(tableKey, comments, out newNode);
+                reader.ReadTableHeader(tableHeaderKey);
+                table.AddTableHeader(tableHeaderKey, comments, out newNode);
             }
             finally
             {
-                tableKey.Recycle();
+                RecycleArrayPoolList<CsTomlDotKey>.Return(tableHeaderKey);
             }
             return true;
         }
@@ -220,15 +223,17 @@ public partial class CsTomlPackage
     {
         try
         {
-            var tableKey = reader.ReadArrayOfTablesHeader();
+            var arrayOfTablesHeaderKey = RecycleArrayPoolList<CsTomlDotKey>.Rent();
             try
             {
-                table.AddArrayOfTablesHeader(tableKey, comments, out currentNode);
+                reader.ReadArrayOfTablesHeader(arrayOfTablesHeaderKey);
+                table.AddArrayOfTablesHeader(arrayOfTablesHeaderKey, comments, out currentNode);
             }
             finally
             {
-                tableKey.Recycle();
+                RecycleArrayPoolList<CsTomlDotKey>.Return(arrayOfTablesHeaderKey);
             }
+
             return true;
         }
         catch (CsTomlException e)

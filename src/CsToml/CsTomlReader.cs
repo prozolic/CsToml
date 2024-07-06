@@ -85,13 +85,12 @@ internal ref struct CsTomlReader
         }
     }
 
-    public ArrayPoolList<CsTomlDotKey> ReadKey()
+    public void ReadKey(ArrayPoolList<CsTomlDotKey> key)
     {
         SkipWhiteSpace();
         if (!Peek())
             ExceptionHelper.ThrowEndOfFileReached();
 
-        var key = RecycleArrayPoolList<CsTomlDotKey>.Rent();
         var period = true;
         while (TryPeek(out var c))
         {
@@ -102,7 +101,7 @@ internal ref struct CsTomlReader
                 key.Add(ReadKeyString(false));
                 continue;
             }
-            switch(c)
+            switch (c)
             {
                 case CsTomlSyntax.Symbol.TAB:
                 case CsTomlSyntax.Symbol.SPACE:
@@ -144,11 +143,9 @@ internal ref struct CsTomlReader
         BREAK:
             break;
         }
-
-        return key;
     }
 
-    public ArrayPoolList<CsTomlDotKey> ReadTableHeader()
+    public void ReadTableHeader(ArrayPoolList<CsTomlDotKey> tableHeaderKey)
     {
         Advance(1); // [
 
@@ -156,7 +153,6 @@ internal ref struct CsTomlReader
         if (!Peek())
             ExceptionHelper.ThrowEndOfFileReached();
 
-        var key = RecycleArrayPoolList<CsTomlDotKey>.Rent();
         var period = true;
         var closingRightRightSquareBracket = false;
         while (TryPeek(out var c))
@@ -165,7 +161,7 @@ internal ref struct CsTomlReader
             {
                 if (!period) ExceptionHelper.ThrowIncorrectTomlFormat();
                 period = false;
-                key.Add(ReadKeyString(true));
+                tableHeaderKey.Add(ReadKeyString(true));
                 continue;
             }
             switch (c)
@@ -177,7 +173,7 @@ internal ref struct CsTomlReader
                 case CsTomlSyntax.Symbol.PERIOD:
                     if (period)
                     {
-                        if (key.Count > 0)
+                        if (tableHeaderKey.Count > 0)
                             ExceptionHelper.ThrowPeriodUsedMoreThanOnce();
                         else
                             ExceptionHelper.ThrowTheDotIsDefinedFirst();
@@ -189,12 +185,12 @@ internal ref struct CsTomlReader
                 case CsTomlSyntax.Symbol.DOUBLEQUOTED:
                     if (!period) ExceptionHelper.ThrowIncorrectTomlFormat();
                     period = false;
-                    key.Add(ReadDoubleQuoteSingleLineStringForDotKey());
+                    tableHeaderKey.Add(ReadDoubleQuoteSingleLineStringForDotKey());
                     continue;
                 case CsTomlSyntax.Symbol.SINGLEQUOTED:
                     if (!period) ExceptionHelper.ThrowIncorrectTomlFormat();
                     period = false;
-                    key.Add(ReadSingleQuoteSingleLineStringForDotKey());
+                    tableHeaderKey.Add(ReadSingleQuoteSingleLineStringForDotKey());
                     continue;
                 case CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET:
                     closingRightRightSquareBracket = true;
@@ -211,11 +207,9 @@ internal ref struct CsTomlReader
 
         if (!closingRightRightSquareBracket)
             ExceptionHelper.ThrowIncorrectTomlFormat();
-
-        return key;
     }
 
-    public ArrayPoolList<CsTomlDotKey> ReadArrayOfTablesHeader()
+    public void ReadArrayOfTablesHeader(ArrayPoolList<CsTomlDotKey> arrayOfTablesHeaderKey)
     {
         Advance(2); // [[
         SkipWhiteSpace();
@@ -223,7 +217,6 @@ internal ref struct CsTomlReader
         if (!Peek())
             ExceptionHelper.ThrowEndOfFileReached();
 
-        var key = RecycleArrayPoolList<CsTomlDotKey>.Rent();
         var period = true;
         var closingRightRightSquareBracket = false;
         while (TryPeek(out var c))
@@ -232,7 +225,7 @@ internal ref struct CsTomlReader
             {
                 if (!period) ExceptionHelper.ThrowIncorrectTomlFormat();
                 period = false;
-                key.Add(ReadKeyString(true));
+                arrayOfTablesHeaderKey.Add(ReadKeyString(true));
                 continue;
             }
             switch (c)
@@ -244,7 +237,7 @@ internal ref struct CsTomlReader
                 case CsTomlSyntax.Symbol.PERIOD:
                     if (period)
                     {
-                        if (key.Count > 0)
+                        if (arrayOfTablesHeaderKey.Count > 0)
                             ExceptionHelper.ThrowPeriodUsedMoreThanOnce();
                         else
                             ExceptionHelper.ThrowTheDotIsDefinedFirst();
@@ -256,12 +249,12 @@ internal ref struct CsTomlReader
                 case CsTomlSyntax.Symbol.DOUBLEQUOTED:
                     if (!period) ExceptionHelper.ThrowIncorrectTomlFormat();
                     period = false;
-                    key.Add(ReadDoubleQuoteSingleLineStringForDotKey());
+                    arrayOfTablesHeaderKey.Add(ReadDoubleQuoteSingleLineStringForDotKey());
                     continue;
                 case CsTomlSyntax.Symbol.SINGLEQUOTED:
                     if (!period) ExceptionHelper.ThrowIncorrectTomlFormat();
                     period = false;
-                    key.Add(ReadSingleQuoteSingleLineStringForDotKey());
+                    arrayOfTablesHeaderKey.Add(ReadSingleQuoteSingleLineStringForDotKey());
                     continue;
                 case CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET:
                     Advance(1);
@@ -287,7 +280,6 @@ internal ref struct CsTomlReader
         if (!closingRightRightSquareBracket)
             ExceptionHelper.ThrowIncorrectTomlFormat();
 
-        return key;
     }
 
     public CsTomlValue ReadValue()
@@ -998,36 +990,38 @@ internal ref struct CsTomlReader
             return inlineTable;
         }
 
-        while (Peek())
+        var key = RecycleArrayPoolList<CsTomlDotKey>.Rent();
+        try
         {
-            var key = ReadKey();
-            try
+            while (Peek())
             {
+                ReadKey(key);
                 Advance(1); // skip "="
                 SkipWhiteSpace();
                 inlineTable.AddKeyValue(key, ReadValue(), currentNode);
-            }
-            finally
-            {
-                key.Recycle();
-            }
+                key.Clear();
 
-            SkipWhiteSpace();
-            if (TryPeek(out var ch))
-            {
-                if (CsTomlSyntax.IsComma(ch))
+                SkipWhiteSpace();
+                if (TryPeek(out var ch))
                 {
-                    Advance(1);
-                    SkipWhiteSpace();
-                    continue;
+                    if (CsTomlSyntax.IsComma(ch))
+                    {
+                        Advance(1);
+                        SkipWhiteSpace();
+                        continue;
+                    }
+                    if (CsTomlSyntax.IsRightBraces(ch))
+                    {
+                        Advance(1);
+                        break;
+                    }
+                    ExceptionHelper.ThrowIncorrectTomlInlineTableFormat();
                 }
-                if (CsTomlSyntax.IsRightBraces(ch))
-                {
-                    Advance(1);
-                    break;
-                }
-                ExceptionHelper.ThrowIncorrectTomlInlineTableFormat();
             }
+        }
+        finally
+        {
+            RecycleArrayPoolList<CsTomlDotKey>.Return(key);
         }
 
         return inlineTable;

@@ -120,14 +120,6 @@ internal sealed class CsTomlDotKey :
 
 internal static class CsTomlDotKeyExtensions
 {
-    public static void Recycle(this ArrayPoolList<CsTomlDotKey> key)
-    {
-        if (key.IsRent)
-        {
-            RecycleArrayPoolList<CsTomlDotKey>.Return(key);
-        }
-    }
-
     public static string GetJoinName(this ReadOnlySpan<CsTomlDotKey> key)
     {
         var bufferWriter = new ArrayPoolBufferWriter<byte>();
