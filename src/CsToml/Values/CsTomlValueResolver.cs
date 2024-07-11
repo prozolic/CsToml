@@ -26,7 +26,7 @@ internal sealed class CsTomlValueResolver
             case var t6 when t6 == typeof(ulong):
             case var t7 when t7 == typeof(short):
             case var t8 when t8 == typeof(ushort):
-                csTomlValue = new CsTomlInt(value);
+                csTomlValue = CsTomlInt.Create(value);
                 return true;
             case var t when t == typeof(double):
                 csTomlValue = new CsTomlFloat(value);

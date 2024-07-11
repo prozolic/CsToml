@@ -1210,7 +1210,7 @@ internal ref struct CsTomlReader
             }
             else if (CsTomlSyntax.IsTabOrWhiteSpace(formatsCh))
             {
-                return new CsTomlInt(0);
+                return CsTomlInt.Zero;
             }
             else if (CsTomlSyntax.IsNewLine(formatsCh))
             {
@@ -1219,16 +1219,16 @@ internal ref struct CsTomlReader
                     Advance(1);
                     if (TryPeek(out var linebreakCh) && CsTomlSyntax.IsLf(linebreakCh))
                     {
-                        return new CsTomlInt(0);
+                        return CsTomlInt.Zero;
                     }
                     return ExceptionHelper.NotReturnThrow<CsTomlValue, byte>(ExceptionHelper.ThrowIncorrectCompactEscapeCharacters, linebreakCh);
                 }
-                return new CsTomlInt(0);
+                return CsTomlInt.Zero;
             }
         }
         else
         {
-            return new CsTomlInt(0);
+            return CsTomlInt.Zero;
         }
         Rewind(sequenceReader.Consumed - firstPosition);
 
@@ -1361,7 +1361,7 @@ internal ref struct CsTomlReader
                     }
                     else if (CsTomlSyntax.IsTabOrWhiteSpace(formatsCh))
                     {
-                        return new CsTomlInt(0);
+                        return CsTomlInt.Zero;
                     }
                     else if (CsTomlSyntax.IsNewLine(formatsCh))
                     {
@@ -1370,17 +1370,17 @@ internal ref struct CsTomlReader
                             Advance(1);
                             if (TryPeek(out var linebreakCh) && CsTomlSyntax.IsLf(linebreakCh))
                             {
-                                return new CsTomlInt(0);
+                                return CsTomlInt.Zero;
                             }
                             return ExceptionHelper.NotReturnThrow<CsTomlValue, byte>(ExceptionHelper.ThrowIncorrectCompactEscapeCharacters, linebreakCh);
                         }
 
-                        return new CsTomlInt(0);
+                        return CsTomlInt.Zero;
                     }
                 }
                 else
                 {
-                    return new CsTomlInt(0);
+                    return CsTomlInt.Zero;
                 }
                 Rewind(sequenceReader.Consumed - firstPosition);
             }
@@ -1522,7 +1522,7 @@ internal ref struct CsTomlReader
 
         var tempReader = new Utf8Reader(writingSpan);
         ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out long value);
-        return new CsTomlInt(value);
+        return CsTomlInt.Create(value);
     }
 
     private CsTomlInt ReadHexNumeric()
@@ -1584,7 +1584,7 @@ internal ref struct CsTomlReader
 
         var tempReader = new Utf8Reader(writer.WrittenSpan);
         ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out long value);
-        return new CsTomlInt(value);
+        return CsTomlInt.Create(value);
     }
 
     private CsTomlInt ReadOctalNumeric()
@@ -1646,7 +1646,7 @@ internal ref struct CsTomlReader
 
         var tempReader = new Utf8Reader(writer.WrittenSpan);
         ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out long value);
-        return new CsTomlInt(value);
+        return CsTomlInt.Create(value);
     }
 
     private CsTomlInt ReadBinaryNumeric()
@@ -1708,7 +1708,7 @@ internal ref struct CsTomlReader
 
         var tempReader = new Utf8Reader(writer.WrittenSpan);
         ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out long value);
-        return new CsTomlInt(value);
+        return CsTomlInt.Create(value);
     }
 
     private CsTomlFloat ReadDouble()

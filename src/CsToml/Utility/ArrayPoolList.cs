@@ -11,7 +11,7 @@ internal sealed class ArrayPoolList<T> : IDisposable
     private int index;
     private bool isRent = true; 
 
-    public ReadOnlySpan<T> DotKeysSpan => array.AsSpan(0, index);
+    public ReadOnlySpan<T> WrittenSpan => array.AsSpan(0, index);
 
     public int Count => index;
 

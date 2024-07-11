@@ -36,12 +36,16 @@ internal class CsTomlTableNodeDictionary
         entries = [];
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryAdd(CsTomlDotKey key, CsTomlTableNode value)
+        => TryAddCore(key, key.GetHashCode(), value);
+
+    private bool TryAddCore(CsTomlDotKey key, int keyHashCode, CsTomlTableNode value)
     {
         if (buckets.Length == 0)
             Initialize(0);
 
-        var hashCode = key.GetHashCode();
+        var hashCode = keyHashCode;
         ref var bucket = ref GetBucket((uint)hashCode);
 
         var index = bucket - 1;
@@ -74,6 +78,20 @@ internal class CsTomlTableNodeDictionary
         bucket = index + 1;
 
         return true;
+    }
+
+    public bool TryGetValueOrAdd(CsTomlDotKey key, Func<CsTomlTableNode> valueFactory, out CsTomlTableNode? existingValue, out CsTomlTableNode? addedValue)
+    {
+        var hashCode = key.GetHashCode();
+        if (TryGetValueCore(key.Value, hashCode, out existingValue))
+        {
+            addedValue = null;
+            return true;
+        }
+
+        addedValue = valueFactory();
+        TryAddCore(key, hashCode, addedValue);
+        return false;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

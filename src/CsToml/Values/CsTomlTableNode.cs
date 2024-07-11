@@ -129,29 +129,27 @@ internal class CsTomlTableNode
 
     internal void AddKeyValue(CsTomlDotKey key, CsTomlValue value, IReadOnlyCollection<CsTomlString> comments)
     {
-        if (!IsGroupingProperty || nodes.ContainsKey(key))
-        {
-            ExceptionHelper.ThrowKeyIsDefined(key);
-        }
-
         var newNode = new CsTomlTableNode() { Value = value };
         if (comments.Count > 0)
         {
             newNode.AddComment(comments);
         }
-        nodes.TryAdd(key, newNode);
+
+        if (!IsGroupingProperty || !nodes.TryAdd(key, newNode))
+        {
+            ExceptionHelper.ThrowKeyIsDefined(key);
+        }
     }
 
     internal bool TryAddGroupingPropertyNode(CsTomlDotKey key, out CsTomlTableNode childNode)
     {
-        if (nodes.TryGetValue(key, out var addedChildNode))
+        if (nodes.TryGetValueOrAdd(key, CreateGroupingPropertyNode, out var existingNode, out var newNode))
         {
-            childNode = addedChildNode!;
+            childNode = existingNode!;
             return false;
         }
 
-        childNode = CreateGroupingPropertyNode();
-        nodes.TryAdd(key, childNode);
+        childNode = newNode!;
         return true;
     }
 
