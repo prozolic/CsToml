@@ -47,13 +47,12 @@ number2 = 123456
         var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText);
 
         {
-            var result = package!.TryGetValue("key"u8, out var value);
-            Assert.True(result);
+            Assert.True(package!.TryGetValue("key"u8, out var value));
             Assert.Equal("value", value?.GetString());
         }
         {
-            var result = package.TryGetValue("first.second.third"u8, out var value, CsTomlPackageOptions.DottedKeys);
-            Assert.True(result);
+            Assert.False(package.TryGetValue("first.second.third"u8, out var _));
+            Assert.True(package.TryGetValue("first.second.third"u8, out var value, true));
             Assert.Equal("value", value?.GetString());
         }
         {
@@ -62,29 +61,53 @@ number2 = 123456
             Assert.Equal("value", value?.GetString());
         }
         {
-            var result = package.TryGetValue("first.second.third", out var value, CsTomlPackageOptions.DottedKeys);
-            Assert.True(result);
+            Assert.False(package.TryGetValue("first.second.third", out var _));
+            Assert.True(package.TryGetValue("first.second.third", out var value, true));
             Assert.Equal("value", value?.GetString());
         }
         {
-            var result = package.TryGetValue(["first"u8,"second"u8,"third"u8], out var value, CsTomlPackageOptions.DottedKeys);
-            Assert.True(result);
+            Assert.True(package.TryGetValue(["first"u8, "second"u8, "third"u8], out var value));
             Assert.Equal("value", value?.GetString());
         }
         {
-            var result = package.TryGetValue("number"u8, out var value);
-            Assert.True(result);
+            Assert.True(package.TryGetValue("number"u8, out var value));
             Assert.Equal(123456, value?.GetInt64());
         }
         {
-            var result = package.TryGetValue("Table.test"u8, "key"u8, out var value, CsTomlPackageOptions.DottedKeys);
-            Assert.True(result);
+            Assert.False(package.TryGetValue("Table.test"u8, "key"u8, out var _));
+            Assert.True(package.TryGetValue("Table.test"u8, "key"u8, out var value, true));
             Assert.Equal("value", value?.GetString());
+
+            Assert.True(package.TryGetValue(["Table"u8, "test"u8], "key"u8, out var value2));
+            Assert.Equal("value", value2?.GetString());
+
+            Assert.False(package.TryGetValue("Table.test"u8, ["first"u8, "second"u8, "third"u8], out var __, false));
+            Assert.True(package.TryGetValue("Table.test"u8, ["first"u8, "second"u8, "third"u8], out var value3, true));
+            Assert.Equal("value", value3?.GetString());
+
+            Assert.True(package.TryGetValue(["Table"u8, "test"u8], ["first"u8, "second"u8, "third"u8], out var value4));
+            Assert.Equal("value", value4?.GetString());
         }
         {
-            var result = package.TryGetValue("arrayOfTables.test"u8, 0, "key"u8, out var value, CsTomlPackageOptions.DottedKeys);
-            Assert.True(result);
+            Assert.False(package.TryGetValue("arrayOfTables.test"u8, 0, "key"u8, out var _));
+            Assert.True(package.TryGetValue("arrayOfTables.test"u8, 0, "key"u8, out var value, true));
             Assert.Equal("value", value?.GetString());
+
+            Assert.False(package.TryGetValue("arrayOfTables.test"u8, 0, "first.second.third"u8, out var __));
+            Assert.False(package.TryGetValue("arrayOfTables.test"u8, 0, "first.second.third"u8, out var ___, isTableHeaderAsDottedKeys:true));
+            Assert.False(package.TryGetValue("arrayOfTables.test"u8, 0, "first.second.third"u8, out var ____, isDottedKeys: true));
+            Assert.True(package.TryGetValue("arrayOfTables.test"u8, 0, "first.second.third"u8, out var value2, true, true));
+            Assert.Equal("value", value2?.GetString());
+        }
+        {
+            Assert.False(package.TryGetValue(["arrayOfTables"u8, "test"u8], 0, "first.second.third"u8, out var _));
+            Assert.True(package.TryGetValue(["arrayOfTables"u8, "test"u8], 0, "first.second.third"u8, out var value, true));
+            Assert.Equal("value", value?.GetString());
+            Assert.False(package.TryGetValue("arrayOfTables.test"u8, 0, ["first"u8, "second"u8, "third"u8], out var __));
+            Assert.True(package.TryGetValue("arrayOfTables.test"u8, 0, ["first"u8, "second"u8, "third"u8], out var value2, true));
+            Assert.Equal("value", value2?.GetString());
+            Assert.True(package.TryGetValue(["arrayOfTables"u8, "test"u8], 0, ["first"u8, "second"u8, "third"u8], out var value3));
+            Assert.Equal("value", value3?.GetString());
         }
         {
             var result = package.TryGetValue("failed"u8, out var value);
@@ -100,36 +123,44 @@ number2 = 123456
         var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText)!;
 
         {
-            var value = package.Find("key"u8);
-            Assert.Equal("value", value?.GetString());
+            Assert.Equal("value", package.Find("key"u8)?.GetString());
         }
         {
-            var value = package.Find("first.second.third"u8, CsTomlPackageOptions.DottedKeys);
-            Assert.Equal("value", value?.GetString());
+            Assert.Null(package.Find("first.second.third"u8));
+            Assert.Equal("value", package.Find("first.second.third"u8, true)?.GetString());
         }
         {
-            var value = package.Find("key");
-            Assert.Equal("value", value?.GetString());
+            Assert.Equal("value", package.Find("key")?.GetString());
         }
         {
-            var value = package.Find("first.second.third",CsTomlPackageOptions.DottedKeys);
-            Assert.Equal("value", value?.GetString());
+            Assert.Null(package.Find("first.second.third"));
+            Assert.Equal("value", package.Find("first.second.third", true)?.GetString());
         }
         {
-            var value = package.Find(["first"u8, "second"u8, "third"u8], CsTomlPackageOptions.DottedKeys);
-            Assert.Equal("value", value?.GetString());
+            Assert.Equal("value", package.Find(["first"u8, "second"u8, "third"u8])?.GetString());
         }
         {
-            var value = package.Find("number"u8);
-            Assert.Equal(123456, value?.GetInt64());
+            Assert.Equal(123456, package.Find("number"u8)?.GetInt64());
         }
         {
-            var value = package.Find("Table.test"u8, "key"u8, CsTomlPackageOptions.DottedKeys);
-            Assert.Equal("value", value?.GetString());
+            Assert.Null(package.Find("Table.test"u8, "key"u8));
+            Assert.Equal("value", package.Find("Table.test"u8, "key"u8, true)?.GetString());
         }
         {
-            var value = package.Find("arrayOfTables.test"u8, 0, "key"u8, CsTomlPackageOptions.DottedKeys);
-            Assert.Equal("value", value?.GetString());
+            Assert.Null(package.Find("arrayOfTables.test"u8, 0, "key"u8));
+            Assert.Equal("value", package.Find("arrayOfTables.test"u8, 0, "key"u8, isTableHeaderAsDottedKeys:true)?.GetString());
+
+            Assert.Null(package.Find("arrayOfTables.test"u8, 0, "first.second.third"u8));
+            Assert.Null(package.Find("arrayOfTables.test"u8, 0, "first.second.third"u8, isDottedKeys:true));
+            Assert.Null(package.Find("arrayOfTables.test"u8, 0, "first.second.third"u8, isTableHeaderAsDottedKeys:true));
+            Assert.Equal("value", package.Find("arrayOfTables.test"u8, 0, "first.second.third"u8, true, true)?.GetString());
+        }
+        {
+            Assert.Null(package.Find(["arrayOfTables"u8, "test"u8], 0, "first.second.third"u8));
+            Assert.Equal("value", package.Find(["arrayOfTables"u8, "test"u8], 0, "first.second.third"u8, true)?.GetString());
+            Assert.Null(package.Find("arrayOfTables.test"u8, 0, ["first"u8, "second"u8, "third"u8]));
+            Assert.Equal("value", package.Find("arrayOfTables.test"u8, 0, ["first"u8, "second"u8, "third"u8], true)?.GetString());
+            Assert.Equal("value", package.Find(["arrayOfTables"u8, "test"u8], 0, ["first"u8, "second"u8, "third"u8])?.GetString());
         }
         {
             var value = package.Find("failed"u8);

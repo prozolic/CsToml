@@ -1,14 +1,15 @@
 ﻿using CsToml.Error;
+using CsToml.Formatter;
+using CsToml.Utility;
+using System.Buffers;
 using System.Collections.ObjectModel;
 using System.Numerics;
-using System.Runtime.CompilerServices;
+using System.Text.Unicode;
 
 namespace CsToml.Values;
 
-
 public partial class CsTomlValue
 {
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public virtual bool CanGetValue(CsTomlValueFeature feature)
         => false;
 
@@ -56,6 +57,44 @@ public partial class CsTomlValue
         catch(NotSupportedException)
         {
             return ExceptionHelper.NotReturnThrow<T, string>(ExceptionHelper.ThrowNotSupported, nameof(T.CreateChecked));
+        }
+    }
+
+    public virtual CsTomlValue? Find(ReadOnlySpan<byte> keys, bool isDottedKeys = false)
+        => default;
+
+    public CsTomlValue? Find(ReadOnlySpan<char> keys, bool isDottedKeys = false)
+    {
+        var maxBufferSize = (keys.Length + 1) * 3;
+        if (maxBufferSize < 1024)
+        {
+            Span<byte> utf8Span = stackalloc byte[maxBufferSize];
+            var status = Utf8.FromUtf16(keys, utf8Span, out int _, out int bytesWritten, replaceInvalidSequences: false);
+            if (status != System.Buffers.OperationStatus.Done)
+            {
+                if (status == OperationStatus.InvalidData)
+                    ExceptionHelper.ThrowInvalidByteIncluded();
+                ExceptionHelper.ThrowBufferTooSmallFailed();
+            }
+
+            return Find(utf8Span[..bytesWritten], isDottedKeys);
+        }
+        else
+        {
+            var writer = new ArrayPoolBufferWriter<byte>(128);
+            using var _ = writer;
+
+            var utf8Writer = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
+            try
+            {
+                ValueFormatter.Serialize(ref utf8Writer, keys);
+            }
+            catch (CsTomlException)
+            {
+                return default;
+            }
+
+            return Find(writer.WrittenSpan, isDottedKeys);
         }
     }
 
@@ -255,5 +294,15 @@ public partial class CsTomlValue
         return false;
     }
 
+    public bool TryGetValue(ReadOnlySpan<byte> key, out CsTomlValue? value, bool isDotKey = false)
+    {
+        if (CanGetValue(CsTomlValueFeature.Table) || CanGetValue(CsTomlValueFeature.InlineTable))
+        {
+            value = Find(key, isDotKey);
+            return value != default;
+        }
+        value = default;
+        return false;
+    }
 }
 

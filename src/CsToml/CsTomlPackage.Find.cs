@@ -9,232 +9,13 @@ namespace CsToml;
 
 public partial class CsTomlPackage
 {
-    public bool TryGetValue(ReadOnlySpan<byte> key, out CsTomlValue? value, CsTomlPackageOptions? options = default)
-    {
-        var findResult = Find(key, options);
-        if (findResult?.HasValue ?? false)
-        {
-            value = findResult;
-            return true;
-        }
-        else
-        {
-            value = default;
-            return false;
-        }
-    }
+    public CsTomlValue? Find(ReadOnlySpan<byte> keys, bool isDottedKeys = false)
+        => table.Find(keys, isDottedKeys);
 
-    public bool TryGetValue(ReadOnlySpan<ByteArray> key, out CsTomlValue? value, CsTomlPackageOptions? options = default)
-    {
-        var findResult = Find(key, options);
-        if (findResult?.HasValue ?? false)
-        {
-            value = findResult;
-            return true;
-        }
-        else
-        {
-            value = default;
-            return false;
-        }
-    }
+    public CsTomlValue? Find(ReadOnlySpan<ByteArray> keys)
+        => table.Find(keys);
 
-    public bool TryGetValue(ReadOnlySpan<byte> tableHeaderKey, ReadOnlySpan<byte> key, out CsTomlValue? value, CsTomlPackageOptions? options = default)
-    {
-        var findResult = Find(tableHeaderKey, key, options);
-        if (findResult?.HasValue ?? false)
-        {
-            value = findResult;
-            return true;
-        }
-        else
-        {
-            value = default;
-            return false;
-        }
-    }
-
-    public bool TryGetValue(ReadOnlySpan<ByteArray> tableHeader, ReadOnlySpan<byte> key, out CsTomlValue? value, CsTomlPackageOptions? options = default)
-    {
-        var findResult = Find(tableHeader, key, options);
-        if (findResult?.HasValue ?? false)
-        {
-            value = findResult;
-            return true;
-        }
-        else
-        {
-            value = default;
-            return false;
-        }
-    }
-
-    public bool TryGetValue(ReadOnlySpan<char> key, out CsTomlValue? value, CsTomlPackageOptions? options = default)
-    {
-        // buffer size to 3 times worst-case (UTF16 -> UTF8)
-        var maxBufferSize = (key.Length + 1) * 3;
-        if (maxBufferSize < 1024)
-        {
-            Span<byte> utf8Span = stackalloc byte[maxBufferSize];
-            var status = Utf8.FromUtf16(key, utf8Span, out int charsRead, out int bytesWritten, replaceInvalidSequences: false);
-            if (status != System.Buffers.OperationStatus.Done)
-            {
-                if (status == OperationStatus.InvalidData)
-                    ExceptionHelper.ThrowInvalidByteIncluded();
-                ExceptionHelper.ThrowBufferTooSmallFailed();
-            }
-
-            return TryGetValue(utf8Span[..bytesWritten], out value, options);
-        }
-        else
-        {
-            var writer = new ArrayPoolBufferWriter<byte>(128);
-            using var _ = writer;
-
-            var utf8Writer = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
-            try
-            {
-                ValueFormatter.Serialize(ref utf8Writer, key);
-            }
-            catch (CsTomlException)
-            {
-                value = default;
-                return false;
-            }
-
-            return TryGetValue(writer.WrittenSpan, out value, options);
-        }
-    }
-
-    public bool TryGetValue(ReadOnlySpan<char> tableHeader, ReadOnlySpan<char> key, out CsTomlValue? value, CsTomlPackageOptions? options = default)
-    {
-        // buffer size to 3 times worst-case (UTF16 -> UTF8)
-        var maxBufferSize = (tableHeader.Length + key.Length + 1) * 3;
-        if (maxBufferSize < 1024)
-        {
-            Span<byte> utf8Span = stackalloc byte[maxBufferSize];
-            var status = Utf8.FromUtf16(tableHeader, utf8Span, out int _, out int bytesWritten, replaceInvalidSequences: false);
-            if (status != System.Buffers.OperationStatus.Done)
-            {
-                if (status == OperationStatus.InvalidData)
-                    ExceptionHelper.ThrowInvalidByteIncluded();
-                ExceptionHelper.ThrowBufferTooSmallFailed();
-            }
-            var status2 = Utf8.FromUtf16(key, utf8Span.Slice(bytesWritten), out int __, out int bytesWritten2, replaceInvalidSequences: false);
-            if (status2 != System.Buffers.OperationStatus.Done)
-            {
-                if (status == OperationStatus.InvalidData)
-                    ExceptionHelper.ThrowInvalidByteIncluded();
-                ExceptionHelper.ThrowBufferTooSmallFailed();
-            }
-            return TryGetValue(
-                utf8Span.Slice(0, bytesWritten),
-                utf8Span.Slice(bytesWritten, bytesWritten2),
-                out value,
-                options);
-        }
-        else
-        {
-            var writer = new ArrayPoolBufferWriter<byte>(128);
-            using var _ = writer;
-
-            var tableHeaderWriter = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
-            var keyrWriter = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
-            try
-            {
-                ValueFormatter.Serialize(ref tableHeaderWriter, tableHeader);
-                ValueFormatter.Serialize(ref keyrWriter, key);
-            }
-            catch (CsTomlException)
-            {
-                value = default;
-                return false;
-            }
-            return TryGetValue(
-                    writer.WrittenSpan.Slice(0, tableHeaderWriter.WrittingCount),
-                    writer.WrittenSpan.Slice(tableHeaderWriter.WrittingCount, keyrWriter.WrittingCount),
-                    out value,
-                    options);
-        }
-    }
-
-    public bool TryGetValue(ReadOnlySpan<byte> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<byte> key, out CsTomlValue? value, CsTomlPackageOptions? options = default)
-    {
-        options ??= CsTomlPackageOptions.Default;
-
-        var findResult = Find(arrayOfTableHeader, arrayIndex, key, options);
-        if (findResult?.HasValue ?? false)
-        {
-            value = findResult;
-            return true;
-        }
-        else
-        {
-            value = default;
-            return false;
-        }
-    }
-
-    public bool TryGetValue(ReadOnlySpan<byte> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<ByteArray> key, out CsTomlValue? value, CsTomlPackageOptions? options = default)
-    {
-        options ??= CsTomlPackageOptions.Default;
-
-        var findResult = Find(arrayOfTableHeader, arrayIndex, key, options);
-        if (findResult?.HasValue ?? false)
-        {
-            value = findResult;
-            return true;
-        }
-        else
-        {
-            value = default;
-            return false;
-        }
-    }
-
-    public bool TryGetValue(ReadOnlySpan<ByteArray> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<byte> key, out CsTomlValue? value, CsTomlPackageOptions? options = default)
-    {
-        options ??= CsTomlPackageOptions.Default;
-
-        var findResult = Find(arrayOfTableHeader, arrayIndex, key, options);
-        if (findResult?.HasValue ?? false)
-        {
-            value = findResult;
-            return true;
-        }
-        else
-        {
-            value = default;
-            return false;
-        }
-    }
-
-    public bool TryGetValue(ReadOnlySpan<ByteArray> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<ByteArray> key, out CsTomlValue? value, CsTomlPackageOptions? options = default)
-    {
-        options ??= CsTomlPackageOptions.Default;
-
-        var findResult = Find(arrayOfTableHeader, arrayIndex, key, options);
-        if (findResult?.HasValue ?? false)
-        {
-            value = findResult;
-            return true;
-        }
-        else
-        {
-            value = default;
-            return false;
-        }
-    }
-
-    public CsTomlValue? Find(ReadOnlySpan<byte> keys, CsTomlPackageOptions? options = default)
-    {
-        options ??= CsTomlPackageOptions.Default;
-        
-        var value = options.IsDottedKeys ? table.FindAsDottedKey(keys) : table.FindAsKey(keys);
-        return value.HasValue ? value : default;
-    }
-
-    public CsTomlValue? Find(ReadOnlySpan<char> keys, CsTomlPackageOptions? options = default)
+    public CsTomlValue? Find(ReadOnlySpan<char> keys, bool isDottedKeys = false)
     {
         var maxBufferSize = (keys.Length + 1) * 3;
         if (maxBufferSize < 1024)
@@ -248,7 +29,7 @@ public partial class CsTomlPackage
                 ExceptionHelper.ThrowBufferTooSmallFailed();
             }
 
-            return Find(utf8Span[..bytesWritten], options);
+            return Find(utf8Span[..bytesWritten], isDottedKeys);
         }
         else
         {
@@ -265,41 +46,55 @@ public partial class CsTomlPackage
                 return default;
             }
 
-            return Find(writer.WrittenSpan, options);
+            return Find(writer.WrittenSpan, isDottedKeys);
         }
     }
 
-    public CsTomlValue? Find(ReadOnlySpan<ByteArray> keys, CsTomlPackageOptions? options = default)
+    public CsTomlValue? Find(ReadOnlySpan<byte> tableHeader, ReadOnlySpan<byte> key, bool isTableHeaderAsDottedKeys = false, bool isDottedKeys = false)
     {
-        options ??= CsTomlPackageOptions.Default;
+        var tableNode = isTableHeaderAsDottedKeys ? table.FindNodeAsDottedKey(table.RootNode, tableHeader) : table.FindNode(table.RootNode, tableHeader);
+        if (tableNode.NodeCount == 0 && !tableNode.IsTableHeaderDefinitionPosition) return default;
 
-        var value = table.FindAsDottedKey(keys);
-        return value.HasValue ? value : default;
-    }
-
-    public CsTomlValue? Find(ReadOnlySpan<byte> tableHeader, ReadOnlySpan<byte> key, CsTomlPackageOptions? options = default)
-    {
-        options ??= CsTomlPackageOptions.Default;
-
-        if (options.IsDottedKeys)
-        {
-            if (table.TryGetSubTable(tableHeader, key, out var value))
-            {
-                return value!;
-            }
-        }
-        else
-        {
-            if (table.TryGetTable(tableHeader, key, out var value))
-            {
-                return value!;
-            }
-        }
+        var keyNode = isDottedKeys ? table.FindNodeAsDottedKey(tableNode, key) : table.FindNode(tableNode, key);
+        if (keyNode.NodeCount == 0 && !keyNode.IsGroupingProperty) return keyNode.Value;
 
         return default;
     }
 
-    public CsTomlValue? Find(ReadOnlySpan<char> tableHeader, ReadOnlySpan<char> key, CsTomlPackageOptions? options = default)
+    public CsTomlValue? Find(ReadOnlySpan<byte> tableHeader, ReadOnlySpan<ByteArray> key, bool isTableHeaderAsDottedKeys = false)
+    {
+        var tableNode = isTableHeaderAsDottedKeys ? table.FindNodeAsDottedKey(table.RootNode, tableHeader) : table.FindNode(table.RootNode, tableHeader);
+        if (tableNode.NodeCount == 0 && !tableNode.IsTableHeaderDefinitionPosition) return default;
+
+        var keyNode = table.FindNode(tableNode, key);
+        if (keyNode.NodeCount == 0 && !keyNode.IsGroupingProperty) return keyNode.Value;
+
+        return default;
+    }
+
+    public CsTomlValue? Find(ReadOnlySpan<ByteArray> tableHeader, ReadOnlySpan<byte> key, bool isDottedKeys = false)
+    {
+        var tableNode = table.FindNode(table.RootNode, tableHeader);
+        if (tableNode.NodeCount == 0 && !tableNode.IsTableHeaderDefinitionPosition) return default;
+
+        var keyNode = isDottedKeys ? table.FindNodeAsDottedKey(tableNode, key) : table.FindNode(tableNode, key);
+        if (keyNode.NodeCount == 0 && !keyNode.IsGroupingProperty) return keyNode.Value;
+
+        return default;
+    }
+
+    public CsTomlValue? Find(ReadOnlySpan<ByteArray> tableHeader, ReadOnlySpan<ByteArray> key)
+    {
+        var tableNode = table.FindNode(table.RootNode, tableHeader);
+        if (tableNode.NodeCount == 0 && !tableNode.IsTableHeaderDefinitionPosition) return default;
+
+        var keyNode = table.FindNode(tableNode, key);
+        if (keyNode.NodeCount == 0 && !keyNode.IsGroupingProperty) return keyNode.Value;
+
+        return default;
+    }
+
+    public CsTomlValue? Find(ReadOnlySpan<char> tableHeader, ReadOnlySpan<char> key, bool isTableHeaderAsDottedKeys = false, bool isDottedKeys = false)
     {
         // buffer size to 3 times worst-case (UTF16 -> UTF8)
         var maxBufferSize = (tableHeader.Length + key.Length + 1) * 3;
@@ -324,7 +119,7 @@ public partial class CsTomlPackage
             return Find(
                 utf8Span.Slice(0, bytesWritten),
                 utf8Span.Slice(bytesWritten, bytesWritten2),
-                options);
+                isTableHeaderAsDottedKeys, isDottedKeys);
         }
         else
         {
@@ -345,28 +140,14 @@ public partial class CsTomlPackage
             return Find(
                 writer.WrittenSpan.Slice(0, tableHeaderWriter.WrittingCount),
                 writer.WrittenSpan.Slice(tableHeaderWriter.WrittingCount, keyrWriter.WrittingCount),
-                options);
+                isDottedKeys);
         }
     }
 
-    public CsTomlValue? Find(ReadOnlySpan<ByteArray> tableHeader, ReadOnlySpan<byte> key, CsTomlPackageOptions? options = default)
+    public CsTomlValue? Find(ReadOnlySpan<byte> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<byte> key, bool isTableHeaderAsDottedKeys = false, bool isDottedKeys = false)
     {
-        options ??= CsTomlPackageOptions.Default;
-
-        if (table.TryGetSubTable(tableHeader, key, out var value))
-        {
-            return value!;
-        }
-
-        return default;
-    }
-
-    public CsTomlValue? Find(ReadOnlySpan<byte> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<byte> key, CsTomlPackageOptions? options = default)
-    {
-        options ??= CsTomlPackageOptions.Default;
-
         // find Array Of Tables
-        var arrayOfTablesValue = options.IsDottedKeys ?
+        var arrayOfTablesValue = isTableHeaderAsDottedKeys ?
             table.FindArrayOfTableOrValueAsDotted(arrayOfTableHeader) :
             table.FindArrayOfTableOrValue(arrayOfTableHeader);
 
@@ -377,7 +158,7 @@ public partial class CsTomlPackage
 
             // find Value
             var t = (csTomlArrayOfTables[arrayIndex]! as CsTomlTable)!;
-            var value = options.IsDottedKeys ?
+            var value = isDottedKeys ?
                 t.FindArrayOfTableOrValueAsDotted(key) :
                 t.FindArrayOfTableOrValue(key);
             return value.HasValue ? value : default;
@@ -386,12 +167,10 @@ public partial class CsTomlPackage
         return default;
     }
 
-    public CsTomlValue? Find(ReadOnlySpan<byte> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<ByteArray> key, CsTomlPackageOptions? options = default)
+    public CsTomlValue? Find(ReadOnlySpan<byte> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<ByteArray> key, bool isTableHeaderAsDottedKeys = false)
     {
-        options ??= CsTomlPackageOptions.Default;
-
         // find Array Of Tables
-        var arrayOfTablesValue = options.IsDottedKeys ?
+        var arrayOfTablesValue = isTableHeaderAsDottedKeys ?
             table.FindArrayOfTableOrValueAsDotted(arrayOfTableHeader) :
             table.FindArrayOfTableOrValue(arrayOfTableHeader);
 
@@ -409,10 +188,8 @@ public partial class CsTomlPackage
         return default;
     }
 
-    public CsTomlValue? Find(ReadOnlySpan<ByteArray> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<byte> key, CsTomlPackageOptions? options = default)
+    public CsTomlValue? Find(ReadOnlySpan<ByteArray> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<byte> key, bool isDottedKeys = false)
     {
-        options ??= CsTomlPackageOptions.Default;
-
         // find Array Of Tables
         var arrayOfTablesValue = table.FindArrayOfTablesOrValue(arrayOfTableHeader);
         if (arrayOfTablesValue is CsTomlArray csTomlArrayOfTables)
@@ -422,7 +199,7 @@ public partial class CsTomlPackage
 
             // find Value
             var t = (csTomlArrayOfTables[arrayIndex]! as CsTomlTable)!;
-            var value = options.IsDottedKeys ?
+            var value = isDottedKeys ?
                 t.FindArrayOfTableOrValueAsDotted(key) :
                 t.FindArrayOfTableOrValue(key);
             return value.HasValue ? value : default;
@@ -431,10 +208,8 @@ public partial class CsTomlPackage
         return default;
     }
 
-    public CsTomlValue? Find(ReadOnlySpan<ByteArray> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<ByteArray> key, CsTomlPackageOptions? options = default)
+    public CsTomlValue? Find(ReadOnlySpan<ByteArray> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<ByteArray> key)
     {
-        options ??= CsTomlPackageOptions.Default;
-
         // find Array Of Tables
         var arrayOfTablesValue = table.FindArrayOfTablesOrValue(arrayOfTableHeader);
         if (arrayOfTablesValue is CsTomlArray csTomlArrayOfTables)
@@ -446,11 +221,11 @@ public partial class CsTomlPackage
             var value = (csTomlArrayOfTables[arrayIndex]! as CsTomlTable)!.FindArrayOfTablesOrValue(key);
             return value.HasValue ? value : default;
         }
-        
+
         return default;
     }
 
-    public CsTomlValue? Find(ReadOnlySpan<char> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<char> key, CsTomlPackageOptions? options = default)
+    public CsTomlValue? Find(ReadOnlySpan<char> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<char> key, bool isDottedKeys = false)
     {
         // buffer size to 3 times worst-case (UTF16 -> UTF8)
         var maxBufferSize = (arrayOfTableHeader.Length + key.Length + 1) * 3;
@@ -476,7 +251,7 @@ public partial class CsTomlPackage
                 utf8Span.Slice(0, bytesWritten),
                 arrayIndex,
                 utf8Span.Slice(bytesWritten, bytesWritten2),
-                options);
+                isDottedKeys);
         }
         else
         {
@@ -497,9 +272,238 @@ public partial class CsTomlPackage
                 writer.WrittenSpan.Slice(0, arrayOfTableHeaderWriter.WrittingCount),
                 arrayIndex,
                 writer.WrittenSpan.Slice(arrayOfTableHeaderWriter.WrittingCount, keyWriter.WrittingCount),
-                options);
+                isDottedKeys);
         }
     }
 
+    public bool TryGetValue(ReadOnlySpan<byte> key, out CsTomlValue? value, bool isDottedKeys = false)
+    {
+        var findResult = Find(key, isDottedKeys);
+        if (findResult?.HasValue ?? false)
+        {
+            value = findResult;
+            return true;
+        }
+        else
+        {
+            value = default;
+            return false;
+        }
+    }
+
+    public bool TryGetValue(ReadOnlySpan<ByteArray> key, out CsTomlValue? value)
+    {
+        var findResult = Find(key);
+        if (findResult?.HasValue ?? false)
+        {
+            value = findResult;
+            return true;
+        }
+        else
+        {
+            value = default;
+            return false;
+        }
+    }
+
+    public bool TryGetValue(ReadOnlySpan<byte> tableHeaderKey, ReadOnlySpan<byte> key, out CsTomlValue? value, bool isTableHeaderAsDottedKeys = false, bool isDottedKeys = false)
+    {
+        value = Find(tableHeaderKey, key, isTableHeaderAsDottedKeys, isDottedKeys);
+        return value?.HasValue ?? false;
+    }
+
+    public bool TryGetValue(ReadOnlySpan<byte> tableHeaderKey, ReadOnlySpan<ByteArray> key, out CsTomlValue? value, bool isTableHeaderAsDottedKeys = false)
+    {
+        var findResult = Find(tableHeaderKey, key, isTableHeaderAsDottedKeys);
+        if (findResult?.HasValue ?? false)
+        {
+            value = findResult;
+            return true;
+        }
+        else
+        {
+            value = default;
+            return false;
+        }
+    }
+
+    public bool TryGetValue(ReadOnlySpan<ByteArray> tableHeader, ReadOnlySpan<byte> key, out CsTomlValue? value, bool isDottedKeys = false)
+    {
+        var findResult = Find(tableHeader, key, isDottedKeys);
+        if (findResult?.HasValue ?? false)
+        {
+            value = findResult;
+            return true;
+        }
+        else
+        {
+            value = default;
+            return false;
+        }
+    }
+
+    public bool TryGetValue(ReadOnlySpan<ByteArray> tableHeader, ReadOnlySpan<ByteArray> key, out CsTomlValue? value)
+    {
+        var findResult = Find(tableHeader, key);
+        if (findResult?.HasValue ?? false)
+        {
+            value = findResult;
+            return true;
+        }
+        else
+        {
+            value = default;
+            return false;
+        }
+    }
+
+    public bool TryGetValue(ReadOnlySpan<char> key, out CsTomlValue? value, bool isDottedKeys = false)
+    {
+        // buffer size to 3 times worst-case (UTF16 -> UTF8)
+        var maxBufferSize = (key.Length + 1) * 3;
+        if (maxBufferSize < 1024)
+        {
+            Span<byte> utf8Span = stackalloc byte[maxBufferSize];
+            var status = Utf8.FromUtf16(key, utf8Span, out int charsRead, out int bytesWritten, replaceInvalidSequences: false);
+            if (status != System.Buffers.OperationStatus.Done)
+            {
+                if (status == OperationStatus.InvalidData)
+                    ExceptionHelper.ThrowInvalidByteIncluded();
+                ExceptionHelper.ThrowBufferTooSmallFailed();
+            }
+
+            return TryGetValue(utf8Span[..bytesWritten], out value, isDottedKeys);
+        }
+        else
+        {
+            var writer = new ArrayPoolBufferWriter<byte>(128);
+            using var _ = writer;
+
+            var utf8Writer = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
+            try
+            {
+                ValueFormatter.Serialize(ref utf8Writer, key);
+            }
+            catch (CsTomlException)
+            {
+                value = default;
+                return false;
+            }
+
+            return TryGetValue(writer.WrittenSpan, out value, isDottedKeys);
+        }
+    }
+
+    public bool TryGetValue(ReadOnlySpan<char> tableHeader, ReadOnlySpan<char> key, out CsTomlValue? value, bool isTableHeaderAsDottedKeys = false, bool isDottedKeys = false)
+    {
+        // buffer size to 3 times worst-case (UTF16 -> UTF8)
+        var maxBufferSize = (tableHeader.Length + key.Length + 1) * 3;
+        if (maxBufferSize < 1024)
+        {
+            Span<byte> utf8Span = stackalloc byte[maxBufferSize];
+            var status = Utf8.FromUtf16(tableHeader, utf8Span, out int _, out int bytesWritten, replaceInvalidSequences: false);
+            if (status != System.Buffers.OperationStatus.Done)
+            {
+                if (status == OperationStatus.InvalidData)
+                    ExceptionHelper.ThrowInvalidByteIncluded();
+                ExceptionHelper.ThrowBufferTooSmallFailed();
+            }
+            var status2 = Utf8.FromUtf16(key, utf8Span.Slice(bytesWritten), out int __, out int bytesWritten2, replaceInvalidSequences: false);
+            if (status2 != System.Buffers.OperationStatus.Done)
+            {
+                if (status == OperationStatus.InvalidData)
+                    ExceptionHelper.ThrowInvalidByteIncluded();
+                ExceptionHelper.ThrowBufferTooSmallFailed();
+            }
+            return TryGetValue(
+                utf8Span.Slice(0, bytesWritten),
+                utf8Span.Slice(bytesWritten, bytesWritten2),
+                out value,
+                isTableHeaderAsDottedKeys, isDottedKeys);
+        }
+        else
+        {
+            var writer = new ArrayPoolBufferWriter<byte>(128);
+            using var _ = writer;
+
+            var tableHeaderWriter = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
+            var keyrWriter = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
+            try
+            {
+                ValueFormatter.Serialize(ref tableHeaderWriter, tableHeader);
+                ValueFormatter.Serialize(ref keyrWriter, key);
+            }
+            catch (CsTomlException)
+            {
+                value = default;
+                return false;
+            }
+            return TryGetValue(
+                    writer.WrittenSpan.Slice(0, tableHeaderWriter.WrittingCount),
+                    writer.WrittenSpan.Slice(tableHeaderWriter.WrittingCount, keyrWriter.WrittingCount),
+                    out value,
+                    isTableHeaderAsDottedKeys, isDottedKeys);
+        }
+    }
+
+    public bool TryGetValue(ReadOnlySpan<byte> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<byte> key, out CsTomlValue? value, bool isTableHeaderAsDottedKeys = false, bool isDottedKeys = false)
+    {
+        var findResult = Find(arrayOfTableHeader, arrayIndex, key, isTableHeaderAsDottedKeys, isDottedKeys);
+        if (findResult?.HasValue ?? false)
+        {
+            value = findResult;
+            return true;
+        }
+        else
+        {
+            value = default;
+            return false;
+        }
+    }
+
+    public bool TryGetValue(ReadOnlySpan<byte> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<ByteArray> key, out CsTomlValue? value, bool isTableHeaderAsDottedKeys = false)
+    {
+        var findResult = Find(arrayOfTableHeader, arrayIndex, key, isTableHeaderAsDottedKeys);
+        if (findResult?.HasValue ?? false)
+        {
+            value = findResult;
+            return true;
+        }
+        else
+        {
+            value = default;
+            return false;
+        }
+    }
+
+    public bool TryGetValue(ReadOnlySpan<ByteArray> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<byte> key, out CsTomlValue? value, bool isDottedKeys = false)
+    {
+        var findResult = Find(arrayOfTableHeader, arrayIndex, key, isDottedKeys);
+        if (findResult?.HasValue ?? false)
+        {
+            value = findResult;
+            return true;
+        }
+        else
+        {
+            value = default;
+            return false;
+        }
+    }
+
+    public bool TryGetValue(ReadOnlySpan<ByteArray> arrayOfTableHeader, int arrayIndex, ReadOnlySpan<ByteArray> key, out CsTomlValue? value)
+    {
+        var findResult = Find(arrayOfTableHeader, arrayIndex, key);
+        if (findResult?.HasValue ?? false)
+        {
+            value = findResult;
+            return true;
+        }
+        else
+        {
+            value = default;
+            return false;
+        }
+    }
 }
 

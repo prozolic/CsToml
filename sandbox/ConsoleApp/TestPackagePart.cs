@@ -6,6 +6,24 @@ namespace ConsoleApp;
 [CsTomlPackagePart]
 public partial class TestPackagePart
 {
+    [CsTomlPackageValue(CsTomlValueType.Array)]
+    public int[] value { get; set; } = [1, 2, 3, 4, 5];
+
+    [CsTomlPackageValue(CsTomlValueType.Array)]
+    public List<long> value2 { get; set; } = [1, 2, 3, 4, 5];
+
+    [CsTomlPackageValue(CsTomlValueType.Array)]
+    public double[] valued { get; set; } =  [1.1, 2, 3.4, 4.5, 5];
+
+    [CsTomlPackageValue(CsTomlValueType.Array)]
+    public bool[] value3 { get; set; } = [false, true, false, true];
+
+    [CsTomlPackageValue(CsTomlValueType.Array)]
+    public DateTime[] value4 { get; set; } = [DateTime.Now, DateTime.Now.AddHours(1), DateTime.Now.AddHours(2)];
+
+    [CsTomlPackageValue(CsTomlValueType.Array)]
+    public string[] value5 { get; set; } = ["test", "test", "C:\\Users\\nodejs\\templates", "\\\\ServerX\\admin$\\system32\\"];
+
     public ushort Ignore { get; set; } = 2;
     [CsTomlPackageValue(CsTomlValueType.Array)]
     public int[] intArr { get; set; } = new int[] { 2, 3, 4, 5 };
@@ -14,7 +32,11 @@ public partial class TestPackagePart
     [CsTomlPackageValue(CsTomlValueType.Array)]
     public IEnumerable<object> oArr2 => oArr;
     [CsTomlPackageValue(CsTomlValueType.Array)]
-    public List<object> oArr3 { get; set; } = new List<object>(new object[] { 2, "test", 4.02d, DateTime.Now });
+    public List<object> oArr3 { get; set; } = new List<object>(new object[] { new long[] { 1, 2, 3 }, 2, new object[] { 2, "test", 4.02d, DateTime.Now },  });
+
+    [CsTomlPackageValue(CsTomlValueType.KeyValue)]
+    public string EmptyStr { get; set; } = string.Empty;
+
     [CsTomlPackageValue(CsTomlValueType.Array)]
     public ICollection<object> oArr4 => oArr;
     [CsTomlPackageValue(CsTomlValueType.KeyValue)]

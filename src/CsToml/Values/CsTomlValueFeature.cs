@@ -15,4 +15,6 @@ public enum CsTomlValueFeature
     DateOnly = 1 << 7,
     TimeOnly = 1 << 8,
     Array = 1 << 9,
+    Table = 1 << 10,
+    InlineTable = 1 << 11,
 }

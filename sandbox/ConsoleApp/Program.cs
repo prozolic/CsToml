@@ -7,16 +7,20 @@ using CsToml.Values;
 using System.Buffers;
 using System.Buffers.Text;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO.Pipelines;
 using System.Text;
 
-var tomlText22 = @"
-key = 123
+
+var tomlText22  = @"
+[a.b.c]
+int64-max.a.a = 9223372036854775807
+int64-max-neg = -9223372036854775808
+
 "u8.ToArray();
 
 var package234= CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText22);
-var value234 = package234.Find("key"u8)!.GetInt64();
-Console.WriteLine($"{value234}");
+
 
 Console.WriteLine("Hello, World!");
 
@@ -24,7 +28,6 @@ if (Utf8Parser.TryParse("2017-06-12T12:30:45.768+00:00"u8, out DateTimeOffset va
 {
 
 }
-
 
 using (var stream = new FileStream("./../../../Toml/test.toml", FileMode.Open))
 {
@@ -41,6 +44,7 @@ var package = CsTomlFileSerializer.Deserialize<TestPackage>("./../../../Toml/tes
 
 using var serializedPackageTomlText = CsTomlSerializer.Serialize(package);
 var packageText = Encoding.UTF8.GetString(serializedPackageTomlText.ByteSpan);
+var package2 = CsTomlSerializer.Deserialize<CsTomlPackage>(serializedPackageTomlText.ByteSpan);
 
 {
     var valuekeyValue = package!.RootNode["bare_key"u8].GetString();
@@ -71,22 +75,25 @@ var packageText = Encoding.UTF8.GetString(serializedPackageTomlText.ByteSpan);
     var value13 = package!.Find("Name\\tJos\\u00E9");
 
     var value14 = package!.RootNode["products"u8][0]["name"u8];
-    var value15 = package!.RootNode["products"u8][3]["name"u8].GetString();
+    //var value15 = package!.RootNode["products"u8][3]["name"u8].GetString();
 }
 {
     var value = package!.Find("table-1"u8, "key1"u8);
     var value2 = package!.TryGetValue("table-1", "key1", out var ___);
 }
 {
-    var value = package!.Find("fruit.apple.texture"u8, "smooth"u8, CsTomlPackageOptions.DottedKeys);
-    var value2 = package!.Find(["fruit"u8, "apple"u8, "texture"u8], "smooth"u8, CsTomlPackageOptions.DottedKeys);
-    var value3 = package!.TryGetValue("fruit.apple.texture"u8, "smooth"u8, out var ____, CsTomlPackageOptions.DottedKeys);
-    var value4 = package!.TryGetValue(["fruit"u8, "apple"u8, "texture"u8], "smooth"u8, out var _____, CsTomlPackageOptions.DottedKeys);
+    var value = package!.Find("fruit.apple.texture"u8, "smooth"u8, isTableHeaderAsDottedKeys:true, isDottedKeys: true);
+    var value2 = package!.Find(["fruit"u8, "apple"u8, "texture"u8], "smooth"u8);
+    var value3 = package!.TryGetValue("fruit.apple.texture"u8, "smooth"u8, out var ____, isDottedKeys:true);
+    var value4 = package!.TryGetValue(["fruit"u8, "apple"u8, "texture"u8], "smooth"u8, out var _____);
 }
 {
     var value = package!.Find("products"u8, 0, "name"u8);
     var value2 = package!.Find("products", 0, "name");
     var value3 = package!.Find("products"u8, 1, "name"u8);
+    var value4 = package!.Find("array.of.tables"u8, 2, "name.array"u8, true, true);
+    var arr = value4!.GetArrayValue(1);
+    var a = arr.Find("z"u8)!.GetArrayValue(0).GetInt64();
 }
 
 var tomlText = @"

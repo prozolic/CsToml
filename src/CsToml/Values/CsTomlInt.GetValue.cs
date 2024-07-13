@@ -1,11 +1,8 @@
 ﻿
-using System.Runtime.CompilerServices;
-
 namespace CsToml.Values;
 
 internal partial class CsTomlInt
 {
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override bool CanGetValue(CsTomlValueFeature feature)
         => ((CsTomlValueFeature.String | CsTomlValueFeature.Int64 | CsTomlValueFeature.Double | CsTomlValueFeature.Bool | CsTomlValueFeature.Number) & feature) == feature;
 

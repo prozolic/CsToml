@@ -1,12 +1,10 @@
 ﻿
 using CsToml.Extension;
-using System.Runtime.CompilerServices;
 
 namespace CsToml.Values;
 
 internal partial class CsTomlLocalDate
 {
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override bool CanGetValue(CsTomlValueFeature feature)
         => ((CsTomlValueFeature.String | CsTomlValueFeature.DateTime | CsTomlValueFeature.DateTimeOffset | CsTomlValueFeature.DateOnly) & feature) == feature;
 

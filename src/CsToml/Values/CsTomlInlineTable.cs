@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 namespace CsToml.Values;
 
 [DebuggerDisplay("CsTomlInlineTable : {RootNode}")]
-internal class CsTomlInlineTable : CsTomlValue
+internal partial class CsTomlInlineTable : CsTomlValue
 {
     private readonly CsTomlTable inlineTable = new CsTomlTable();
 
@@ -16,7 +16,7 @@ internal class CsTomlInlineTable : CsTomlValue
     public CsTomlInlineTable() : base() 
     {}
 
-    public void AddKeyValue(ArrayPoolList<CsTomlDotKey> csTomlKey, CsTomlValue value, CsTomlTableNode? searchRootNode)
+    internal void AddKeyValue(ArrayPoolList<CsTomlDotKey> csTomlKey, CsTomlValue value, CsTomlTableNode? searchRootNode)
         => inlineTable.AddKeyValue(csTomlKey, value, searchRootNode, []);
 
     internal override bool ToTomlString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)

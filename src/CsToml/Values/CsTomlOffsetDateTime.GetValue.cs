@@ -1,11 +1,8 @@
 ﻿
-using System.Runtime.CompilerServices;
-
 namespace CsToml.Values;
 
 internal partial class CsTomlOffsetDateTime
 {
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override bool CanGetValue(CsTomlValueFeature feature)
         => ((CsTomlValueFeature.String | CsTomlValueFeature.DateTime | CsTomlValueFeature.DateTimeOffset | CsTomlValueFeature.DateOnly | CsTomlValueFeature.TimeOnly) & feature) == feature;
 
