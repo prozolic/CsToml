@@ -30,11 +30,22 @@ internal partial class CsTomlString :
         return new CsTomlString(value, type);
     }
 
+    public static CsTomlString CreateEmpty(CsTomlStringType type = CsTomlStringType.Basic)
+    {
+        return new CsTomlString(string.Empty, type);
+    }
+
     public CsTomlString(ReadOnlySpan<byte> value, CsTomlStringType type = CsTomlStringType.Basic) : base()
     {
         TomlStringType = type;
         var tempReader = new Utf8Reader(value);
         ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out utf16String);
+    }
+
+    private CsTomlString(string value, CsTomlStringType type = CsTomlStringType.Basic) : base()
+    {
+        TomlStringType = type;
+        utf16String = value;
     }
 
     public override bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)

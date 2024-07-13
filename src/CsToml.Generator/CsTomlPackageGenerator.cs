@@ -25,7 +25,8 @@ internal enum CsTomlValueType : byte
     KeyValue = 0,
     Array = 1,
     Table = 2,
-    ArrayOfTables = 3
+    ArrayOfTables = 3,
+    InlineTable = 4
 }
 
 [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
@@ -216,7 +217,7 @@ partial class {{typeSymbol.Name}} : ICsTomlPackagePart<{{typeSymbol.Name}}>
                     if (property.Type.SpecialType == SpecialType.System_String)
                     {
                         builder.AppendLine($@"        if (string.IsNullOrEmpty(target.{accessName}{property.Name}))");
-                        builder.AppendLine($@"            ICsTomlValueSerializer.Serialize(ref writer, []);");
+                        builder.AppendLine($@"            ICsTomlValueSerializer.Serialize(ref writer, Span<char>.Empty);");
                         builder.AppendLine($@"        else");
                         builder.AppendLine($@"            ICsTomlValueSerializer.Serialize(ref writer, target.{accessName}{property.Name}.AsSpan());");
                     }
@@ -255,7 +256,7 @@ partial class {{typeSymbol.Name}} : ICsTomlPackagePart<{{typeSymbol.Name}}>
                 if (property.Type.SpecialType == SpecialType.System_String)
                 {
                     builder.AppendLine($@"        if (string.IsNullOrEmpty(target.{accessName}{property.Name}))");
-                    builder.AppendLine($@"            ICsTomlValueSerializer.Serialize(ref writer, []);");
+                    builder.AppendLine($@"            ICsTomlValueSerializer.Serialize(ref writer, Span<char>.Empty);");
                     builder.AppendLine($@"        else");
                     builder.AppendLine($@"            ICsTomlValueSerializer.Serialize(ref writer, target.{accessName}{property.Name}.AsSpan());");
                 }

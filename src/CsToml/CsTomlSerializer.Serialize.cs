@@ -3,7 +3,6 @@ using CsToml.Formatter;
 using CsToml.Utility;
 using CsToml.Values;
 using System.Buffers;
-using System.Runtime.InteropServices;
 
 namespace CsToml;
 
@@ -159,35 +158,8 @@ public partial class CsTomlSerializer : ICsTomlValueSerializer
 
     static void ICsTomlValueSerializer.Serialize<TBufferWriter, TArrayItem>(ref TBufferWriter writer, IEnumerable<TArrayItem> value)
     {
-        if (value is List<TArrayItem> list)
-        {
-            var listSpan = CollectionsMarshal.AsSpan(list);
-            var arr = new CsTomlArray(listSpan.Length);
-            for (int i = 0; i < listSpan.Length; i++)
-            {
-                object? item = listSpan[i]!;
-                if (CsTomlValueResolver.TryResolve(ref item, out var v))
-                {
-                    arr.Add(v!);
-                }
-            }
-            var utf8Writer = new Utf8Writer<TBufferWriter>(ref writer);
-            arr.ToTomlString(ref utf8Writer);
-        }
-        else
-        {
-            var arr = new CsTomlArray();
-            foreach (var item in value)
-            {
-                object? i = item;
-                if (CsTomlValueResolver.TryResolve(ref i, out var v))
-                {
-                    arr.Add(v!);
-                }
-            }
-            var utf8Writer = new Utf8Writer<TBufferWriter>(ref writer);
-            arr.ToTomlString(ref utf8Writer);
-        }
+        var utf8Writer = new Utf8Writer<TBufferWriter>(ref writer);
+        CsTomlArray.Parse(value).ToTomlString(ref utf8Writer);
     }
 
     static void ICsTomlValueSerializer.SerializeKey<TBufferWriter>(ref TBufferWriter writer, ReadOnlySpan<char> value)
@@ -225,6 +197,96 @@ public partial class CsTomlSerializer : ICsTomlValueSerializer
         var utfWriter = new Utf8Writer<TBufferWriter>(ref writer);
         var csTomlWriter = new CsTomlWriter<TBufferWriter>(ref utfWriter);
         csTomlWriter.WriteEquals();
+    }
+
+    static void ICsTomlValueSerializer.Serialize<TBufferWriter>(ref TBufferWriter writer, IEnumerable<bool> value)
+    {
+        var utf8Writer = new Utf8Writer<TBufferWriter>(ref writer);
+        CsTomlArray.Parse(value).ToTomlString(ref utf8Writer);
+    }
+
+    static void ICsTomlValueSerializer.Serialize<TBufferWriter>(ref TBufferWriter writer, IEnumerable<byte> value)
+    {
+        var utf8Writer = new Utf8Writer<TBufferWriter>(ref writer);
+        CsTomlArray.Parse(value).ToTomlString(ref utf8Writer);
+    }
+
+    static void ICsTomlValueSerializer.Serialize<TBufferWriter>(ref TBufferWriter writer, IEnumerable<sbyte> value)
+    {
+        var utf8Writer = new Utf8Writer<TBufferWriter>(ref writer);
+        CsTomlArray.Parse(value).ToTomlString(ref utf8Writer);
+    }
+
+    static void ICsTomlValueSerializer.Serialize<TBufferWriter>(ref TBufferWriter writer, IEnumerable<int> value)
+    {
+        var utf8Writer = new Utf8Writer<TBufferWriter>(ref writer);
+        CsTomlArray.Parse(value).ToTomlString(ref utf8Writer);
+    }
+
+    static void ICsTomlValueSerializer.Serialize<TBufferWriter>(ref TBufferWriter writer, IEnumerable<uint> value)
+    {
+        var utf8Writer = new Utf8Writer<TBufferWriter>(ref writer);
+        CsTomlArray.Parse(value).ToTomlString(ref utf8Writer);
+    }
+
+    static void ICsTomlValueSerializer.Serialize<TBufferWriter>(ref TBufferWriter writer, IEnumerable<long> value)
+    {
+        var utf8Writer = new Utf8Writer<TBufferWriter>(ref writer);
+        CsTomlArray.Parse(value).ToTomlString(ref utf8Writer);
+    }
+
+    static void ICsTomlValueSerializer.Serialize<TBufferWriter>(ref TBufferWriter writer, IEnumerable<ulong> value)
+    {
+        var utf8Writer = new Utf8Writer<TBufferWriter>(ref writer);
+        CsTomlArray.Parse(value).ToTomlString(ref utf8Writer);
+    }
+
+    static void ICsTomlValueSerializer.Serialize<TBufferWriter>(ref TBufferWriter writer, IEnumerable<short> value)
+    {
+        var utf8Writer = new Utf8Writer<TBufferWriter>(ref writer);
+        CsTomlArray.Parse(value).ToTomlString(ref utf8Writer);
+    }
+
+    static void ICsTomlValueSerializer.Serialize<TBufferWriter>(ref TBufferWriter writer, IEnumerable<ushort> value)
+    {
+        var utf8Writer = new Utf8Writer<TBufferWriter>(ref writer);
+        CsTomlArray.Parse(value).ToTomlString(ref utf8Writer);
+    }
+
+    static void ICsTomlValueSerializer.Serialize<TBufferWriter>(ref TBufferWriter writer, IEnumerable<double> value)
+    {
+        var utf8Writer = new Utf8Writer<TBufferWriter>(ref writer);
+        CsTomlArray.Parse(value).ToTomlString(ref utf8Writer);
+    }
+
+    static void ICsTomlValueSerializer.Serialize<TBufferWriter>(ref TBufferWriter writer, IEnumerable<DateTime> value)
+    {
+        var utf8Writer = new Utf8Writer<TBufferWriter>(ref writer);
+        CsTomlArray.Parse(value).ToTomlString(ref utf8Writer);
+    }
+
+    static void ICsTomlValueSerializer.Serialize<TBufferWriter>(ref TBufferWriter writer, IEnumerable<DateTimeOffset> value)
+    {
+        var utf8Writer = new Utf8Writer<TBufferWriter>(ref writer);
+        CsTomlArray.Parse(value).ToTomlString(ref utf8Writer);
+    }
+
+    static void ICsTomlValueSerializer.Serialize<TBufferWriter>(ref TBufferWriter writer, IEnumerable<DateOnly> value)
+    {
+        var utf8Writer = new Utf8Writer<TBufferWriter>(ref writer);
+        CsTomlArray.Parse(value).ToTomlString(ref utf8Writer);
+    }
+
+    static void ICsTomlValueSerializer.Serialize<TBufferWriter>(ref TBufferWriter writer, IEnumerable<TimeOnly> value)
+    {
+        var utf8Writer = new Utf8Writer<TBufferWriter>(ref writer);
+        CsTomlArray.Parse(value).ToTomlString(ref utf8Writer);
+    }
+
+    static void ICsTomlValueSerializer.Serialize<TBufferWriter>(ref TBufferWriter writer, IEnumerable<string> value)
+    {
+        var utf8Writer = new Utf8Writer<TBufferWriter>(ref writer);
+        CsTomlArray.Parse(value).ToTomlString(ref utf8Writer);
     }
 
     #endregion
