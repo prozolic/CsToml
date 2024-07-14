@@ -11,4 +11,11 @@ internal partial class CsTomlTable
         var value = isDotKey ? FindAsDottedKey(keys) : FindAsKey(keys);
         return value.HasValue ? value : base.Find(keys, isDotKey);
     }
+
+    public override CsTomlValue? Find(ReadOnlySpan<ByteArray> dottedKeys)
+    {
+        var value = FindNode(RootNode, dottedKeys).Value!;
+        return value.HasValue ? value : base.Find(dottedKeys);
+    }
+
 }

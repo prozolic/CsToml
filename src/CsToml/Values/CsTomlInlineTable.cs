@@ -10,6 +10,8 @@ internal partial class CsTomlInlineTable : CsTomlValue
 {
     private readonly CsTomlTable inlineTable = new CsTomlTable();
 
+    public override bool HasValue => true;
+
     [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
     internal CsTomlTableNode RootNode => inlineTable.RootNode;
 

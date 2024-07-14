@@ -1,4 +1,6 @@
 ﻿
+using Newtonsoft.Json.Linq;
+
 namespace CsToml.Tests;
 
 public class DefaultTest
@@ -11,6 +13,8 @@ public class DefaultTest
 key = ""value""
 first.second.third = ""value""
 number = 123456
+array = [123 , ""456"", true]
+inlineTable = { key = 1 , key2 = ""value"" , key3 = [ 123, 456, 789], key4 = { key = ""inlinetable"" }}
 
 [Table.test]
 key = ""value""
@@ -54,6 +58,9 @@ number2 = 123456
             Assert.False(package.TryGetValue("first.second.third"u8, out var _));
             Assert.True(package.TryGetValue("first.second.third"u8, out var value, true));
             Assert.Equal("value", value?.GetString());
+
+            Assert.False(package.TryGetValue("first.second"u8, out var _));
+            Assert.False(package.TryGetValue("first.second"u8, out var value2, true));
         }
         {
             var result = package.TryGetValue("key", out var value);
@@ -110,6 +117,21 @@ number2 = 123456
             Assert.Equal("value", value3?.GetString());
         }
         {
+            Assert.False(package.TryGetValue("inlineTable.key"u8, out var _));
+            Assert.True(package.TryGetValue("inlineTable.key"u8, out var value, true));
+            Assert.Equal(1, value!.GetInt64());
+            Assert.False(package.TryGetValue("inlineTable.key2"u8, out var _));
+            Assert.True(package.TryGetValue("inlineTable.key2"u8, out var value2, true));
+            Assert.Equal("value", value2?.GetString());
+            Assert.False(package.TryGetValue("inlineTable.key4.key"u8, out var _));
+            Assert.True(package.TryGetValue("inlineTable.key4.key"u8, out var value3, true));
+            Assert.Equal("inlinetable", value3?.GetString());
+
+            Assert.True(package.TryGetValue("inlineTable"u8, out var value4));
+            Assert.True(value4!.TryGetValue("key"u8, out var value5));
+            Assert.Equal(1, value5!.GetInt64());
+        }
+        {
             var result = package.TryGetValue("failed"u8, out var value);
             Assert.False(result);
             Assert.Null(value);
@@ -163,6 +185,16 @@ number2 = 123456
             Assert.Equal("value", package.Find(["arrayOfTables"u8, "test"u8], 0, ["first"u8, "second"u8, "third"u8])?.GetString());
         }
         {
+            Assert.Null(package.Find("inlineTable.key"u8));
+            Assert.Equal(1, (package.Find("inlineTable.key"u8,true)!.GetInt64()));
+            Assert.Null(package.Find("inlineTable.key2"u8));
+            Assert.Equal("value", package.Find("inlineTable.key2"u8, true)?.GetString());
+            Assert.Null(package.Find("inlineTable.key4.key"u8));
+            Assert.Equal("inlinetable", package.Find("inlineTable.key4.key"u8, true)?.GetString());
+
+            Assert.Equal(1, package!.Find("inlineTable"u8)!.Find("key"u8)!.GetInt64());
+        }
+        {
             var value = package.Find("failed"u8);
             Assert.Null(value);
         }
@@ -179,6 +211,7 @@ number2 = 123456
         Assert.Equal(123456, package!.RootNode["number"u8].GetInt64());
         Assert.Equal("value", package!.RootNode["Table"u8]["test"u8]["key"u8].GetString());
         Assert.Equal("value", package!.RootNode["arrayOfTables"u8]["test"u8][0]["key"u8].GetString());
+        Assert.Equal("inlinetable", package!.RootNode["inlineTable"u8]["key4"u8]["key"u8].GetString());
 
         Assert.False(package!.RootNode["failed"u8].HasValue);
     }

@@ -98,6 +98,9 @@ public partial class CsTomlValue
         }
     }
 
+    public virtual CsTomlValue? Find(ReadOnlySpan<ByteArray> dottedKeys)
+        => default;
+
     public bool TryGetArray(out ReadOnlyCollection<CsTomlValue> value)
     {
         if (CanGetValue(CsTomlValueFeature.Array))

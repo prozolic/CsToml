@@ -37,5 +37,7 @@ internal sealed class CsTomlTableNodeDebugView(CsTomlTableNode csTomlTableNode)
 
     public bool IsArrayOfTablesHeaderDefinitionPosition => node.IsArrayOfTablesHeaderDefinitionPosition;
 
+    public int NodeCount => node.NodeCount;
+
 
 }

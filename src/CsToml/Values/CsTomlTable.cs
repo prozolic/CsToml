@@ -13,6 +13,8 @@ internal partial class CsTomlTable : CsTomlValue
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private readonly CsTomlTableNode node = CsTomlTableNode.CreateGroupingPropertyNode();
 
+    public override bool HasValue => true;
+
     [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
     internal CsTomlTableNode RootNode => node;
 
@@ -194,9 +196,6 @@ internal partial class CsTomlTable : CsTomlValue
     internal CsTomlValue FindAsDottedKey(ReadOnlySpan<byte> dottedKeySpan)
         => FindNodeAsDottedKey(RootNode, dottedKeySpan).Value!;
 
-    internal CsTomlValue Find(ReadOnlySpan<ByteArray> dottedKeys)
-        => FindNode(RootNode, dottedKeys).Value!;
-
     internal CsTomlValue FindAsKey(ReadOnlySpan<byte> keySpan)
     {
         var node = FindNode(RootNode, keySpan);
@@ -247,7 +246,9 @@ internal partial class CsTomlTable : CsTomlValue
             {
                 hit = true;
                 currentNode = childNode;
+                continue;
             }
+            return CsTomlTableNode.Empty;
         }
         
         return hit ? currentNode! : CsTomlTableNode.Empty;
@@ -267,7 +268,9 @@ internal partial class CsTomlTable : CsTomlValue
             {
                 hit = true;
                 currentNode = childNode;
+                continue;
             }
+            return CsTomlTableNode.Empty;
         }
 
         return hit ? currentNode! : CsTomlTableNode.Empty;
