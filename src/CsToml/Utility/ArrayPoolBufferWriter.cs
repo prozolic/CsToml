@@ -86,9 +86,9 @@ internal sealed class ArrayPoolBufferWriter<T> : IBufferWriter<T>, IDisposable
     private void ReserveCore(int sizeHint)
     {
         var newSize = buffer.Length * 2;
-        if (sizeHint > newSize)
+        if (sizeHint > newSize - index)
         {
-            newSize = CalculateBufferSize(sizeHint);
+            newSize = CalculateBufferSize(sizeHint + index);
         }
 
         newSize = Math.Min(newSize, Array.MaxLength);
