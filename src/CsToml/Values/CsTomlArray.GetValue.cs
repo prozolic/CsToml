@@ -7,7 +7,7 @@ namespace CsToml.Values;
 internal partial class CsTomlArray 
 {
     public override bool CanGetValue(CsTomlValueFeature feature)
-        => (CsTomlValueFeature.Array & feature) == feature;
+        => ((CsTomlValueFeature.Array | CsTomlValueFeature.Object) & feature) == feature;
 
     public override ReadOnlyCollection<CsTomlValue> GetArray()
         => values.AsReadOnly();
@@ -20,4 +20,7 @@ internal partial class CsTomlArray
         }
         return this[index];
     }
+
+    public override object GetObject()
+        => GetArray();
 }

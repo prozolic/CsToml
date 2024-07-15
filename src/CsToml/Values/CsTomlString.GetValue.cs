@@ -1,11 +1,13 @@
 ﻿
+using System.Reflection;
+
 namespace CsToml.Values;
 
 internal partial class CsTomlString
 {
     public override bool CanGetValue(CsTomlValueFeature feature)
         => ((CsTomlValueFeature.String | CsTomlValueFeature.Int64 | CsTomlValueFeature.Double | CsTomlValueFeature.Bool | 
-            CsTomlValueFeature.DateTime | CsTomlValueFeature.DateTimeOffset | CsTomlValueFeature.DateOnly | CsTomlValueFeature.TimeOnly) & feature) == feature;
+            CsTomlValueFeature.DateTime | CsTomlValueFeature.DateTimeOffset | CsTomlValueFeature.DateOnly | CsTomlValueFeature.TimeOnly | CsTomlValueFeature.Object) & feature) == feature;
 
     public override string GetString() => Utf16String;
 
@@ -71,6 +73,8 @@ internal partial class CsTomlString
         }
         return base.GetTimeOnly();
     }
+
+    public override object GetObject() => Value;
 
 }
 

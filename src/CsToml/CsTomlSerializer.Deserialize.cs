@@ -21,6 +21,14 @@ public partial class CsTomlSerializer
         return package;
     }
 
+    public static TPackagePart DeserializeToPackagePart<TPackagePart>(ReadOnlySpan<byte> tomlText, CsTomlSerializerOptions? options = null)
+        where TPackagePart : ICsTomlPackagePart<TPackagePart>, new()
+    {
+        options ??= CsTomlSerializerOptions.Default;
+
+        return TPackagePart.Deserialize<CsTomlSerializer>(tomlText, options);
+    }
+
     private static void DeserializeCore<TPackage>(ReadOnlySpan<byte> tomlText, TPackage package, CsTomlSerializerOptions? options)
         where TPackage : CsTomlPackage
     {

@@ -95,4 +95,6 @@ public interface ICsTomlValueSerializer
     static abstract void Serialize<TBufferWriter>(ref TBufferWriter writer, IEnumerable<string> value)
         where TBufferWriter : IBufferWriter<byte>;
 
+    static abstract void SerializeAnyByte<TBufferWriter>(ref TBufferWriter writer, ReadOnlySpan<byte> value)
+        where TBufferWriter : IBufferWriter<byte>;
 }

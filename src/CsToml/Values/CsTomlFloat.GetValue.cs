@@ -4,7 +4,7 @@ namespace CsToml.Values;
 internal partial class CsTomlFloat
 {
     public override bool CanGetValue(CsTomlValueFeature feature)
-        => ((CsTomlValueFeature.String | CsTomlValueFeature.Int64 | CsTomlValueFeature.Double | CsTomlValueFeature.Bool | CsTomlValueFeature.Number) & feature) == feature;
+        => ((CsTomlValueFeature.String | CsTomlValueFeature.Int64 | CsTomlValueFeature.Double | CsTomlValueFeature.Bool | CsTomlValueFeature.Number | CsTomlValueFeature.Object) & feature) == feature;
 
     public override string GetString()
     {
@@ -18,5 +18,7 @@ internal partial class CsTomlFloat
     public override double GetDouble() => Value;
 
     public override bool GetBool() => Value != 0d;
+
+    public override object GetObject() => Value;
 }
 

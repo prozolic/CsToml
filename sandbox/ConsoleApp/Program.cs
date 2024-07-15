@@ -7,6 +7,7 @@ using CsToml.Values;
 using System.Buffers;
 using System.Buffers.Text;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.IO.Pipelines;
 using System.Text;
@@ -83,7 +84,7 @@ var package2 = CsTomlSerializer.Deserialize<CsTomlPackage>(serializedPackageToml
 }
 {
     var value = package!.Find("fruit.apple.texture"u8, "smooth"u8, isTableHeaderAsDottedKeys:true, isDottedKeys: true);
-    var value2 = package!.Find(["fruit"u8, "apple"u8, "texture"u8], "smooth"u8);
+    var value2 = package!.Find(["fruit"u8, "apple"u8, "texture"u8], "name"u8);
     var value3 = package!.TryGetValue("fruit.apple.texture"u8, "smooth"u8, out var ____, isDottedKeys:true);
     var value4 = package!.TryGetValue(["fruit"u8, "apple"u8, "texture"u8], "smooth"u8, out var _____);
 }
@@ -94,6 +95,10 @@ var package2 = CsTomlSerializer.Deserialize<CsTomlPackage>(serializedPackageToml
     var value4 = package!.Find("array.of.tables"u8, 2, "name.array"u8, true, true);
     var arr = value4!.GetArrayValue(1);
     var a = arr.Find("z"u8)!.GetArrayValue(0).GetInt64();
+    var value5 = package!.Find("array.of.tables"u8, 2, "name.last2"u8, true, true);
+    var value6 = value5!.Find("key"u8)!.GetString();
+    var value7 = value5!.Find("key"u8)!.GetObject();
+    var value8 = value5!.Find("key"u8)!.GetValue<string>();
 }
 
 var tomlText = @"
@@ -150,6 +155,15 @@ CsTomlSerializer.Serialize(ref buffer, package);
 var part = new TestPackagePart();
 using var partBytes = CsTomlSerializer.Serialize(ref part);
 var partPackage = CsTomlSerializer.Deserialize<CsTomlPackage>(partBytes.ByteSpan);
+
+var tomlText2 = @"
+IntValue = 123
+LongValue = 456
+intVo = ""2381""
+
+"u8.ToArray();
+
+var part2 = CsTomlSerializer.DeserializeToPackagePart<TestPackagePart>(tomlText2);
 
 Console.WriteLine("END");
 

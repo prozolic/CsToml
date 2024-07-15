@@ -1,11 +1,12 @@
 ﻿
 namespace CsToml.Generator;
 
-internal enum CsTomlValueType : byte
+internal enum CsTomlValueType
 {
+    None = -1,
     KeyValue = 0,
     Array = 1,
-    Table = 2,
-    ArrayOfTables = 3,
-    InlineTable = 4
+    InlineTable = 2,
+    Table = 3,
+    ArrayOfTables = 4,
 }

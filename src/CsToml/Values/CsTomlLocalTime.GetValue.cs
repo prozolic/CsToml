@@ -4,7 +4,7 @@ namespace CsToml.Values;
 internal partial class CsTomlLocalTime
 {
     public override bool CanGetValue(CsTomlValueFeature feature)
-        => ((CsTomlValueFeature.String | CsTomlValueFeature.TimeOnly) & feature) == feature;
+        => ((CsTomlValueFeature.String | CsTomlValueFeature.TimeOnly | CsTomlValueFeature.Object) & feature) == feature;
 
     public override string GetString()
     {
@@ -15,4 +15,5 @@ internal partial class CsTomlLocalTime
 
     public override TimeOnly GetTimeOnly() => Value;
 
+    public override object GetObject() => Value;
 }

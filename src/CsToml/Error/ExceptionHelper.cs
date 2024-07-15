@@ -141,6 +141,13 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowNoValue()
+    {
+        ThrowException($@"There is no value.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ThrowIncorrectTomlFormat()
     {
         ThrowException($@"Failed due to incorrect formatting.");

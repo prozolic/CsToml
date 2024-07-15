@@ -4,23 +4,27 @@ namespace CsToml.Generator;
 
 internal static class SymbolUtility
 {
-    public static IEnumerable<(IPropertySymbol, CsTomlValueType)> FilterCsTomlPackageValueMembers(
+    public static IEnumerable<AttributeData> GetAttribute(this IPropertySymbol property, string namespaceName, string attributeName)
+        => property.GetAttributes().Where(a =>
+            a.AttributeClass!.ContainingNamespace.Name == namespaceName &&
+            a.AttributeClass!.Name == attributeName);
+
+    public static IEnumerable<AttributeData> GetCsTomlArrayOfTablesKeyAttribute(this IPropertySymbol property)
+        => property.GetAttribute("CsToml", "CsTomlArrayOfTablesKeyAttribute");
+
+    public static (IPropertySymbol, CsTomlValueType)[] FilterCsTomlPackageValueMembers(
         IEnumerable<IPropertySymbol> symbols,
         string attribute)
     {
-        return symbols.Where(m => m.GetAttributes()
-            .Where(a =>
-                a.AttributeClass!.ContainingNamespace.Name == "CsToml" &&
-                a.AttributeClass!.Name == attribute)
-                .Any())
-            .Select(m =>
-            {
-                var attr = m.GetAttributes().Where(a =>
-                        a.AttributeClass!.ContainingNamespace.Name == "CsToml" &&
-                        a.AttributeClass!.Name == attribute)
-                    .FirstOrDefault();
-                return (m, (CsTomlValueType)attr.ConstructorArguments[0].Value!);
-            });
+        var members = new List<(IPropertySymbol, CsTomlValueType)>();
+        foreach (var symbol in symbols)
+        {
+            var attr = symbol.GetAttribute("CsToml", attribute).FirstOrDefault();
+            if (attr == null) continue;
+            members.Add((symbol, (CsTomlValueType)attr.ConstructorArguments[0].Value!));
+        }
+        members.Sort(static (x, y) => x.Item2 - y.Item2);
+        return members.ToArray();
     }
 
     public static IEnumerable<IPropertySymbol> GetPropertyAllMembers(ITypeSymbol namedTypeSymbol)

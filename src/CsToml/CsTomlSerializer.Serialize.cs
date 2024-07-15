@@ -102,10 +102,14 @@ public partial class CsTomlSerializer : ICsTomlValueSerializer
 
     static void ICsTomlValueSerializer.SerializeDynamic<TBufferWriter>(ref TBufferWriter writer, dynamic value)
     {
-        if (value == null) return;
-
         var utf8Writer = new Utf8Writer<TBufferWriter>(ref writer);
-        switch (value.GetType())
+        if (value == null)
+        {
+            ValueFormatter.Serialize(ref utf8Writer, 0);
+            return;
+        }
+
+        switch (value!.GetType())
         {
             case var t when t == typeof(bool):
                 ValueFormatter.Serialize(ref utf8Writer, (int)(value));
@@ -152,6 +156,9 @@ public partial class CsTomlSerializer : ICsTomlValueSerializer
             case var t when t == typeof(string):
                 var cstomlStr = CsTomlString.Parse((string)value);
                 cstomlStr.ToTomlString(ref utf8Writer);
+                return;
+            default:
+                ValueFormatter.Serialize(ref utf8Writer, 0);
                 return;
         }
     }
@@ -287,6 +294,12 @@ public partial class CsTomlSerializer : ICsTomlValueSerializer
     {
         var utf8Writer = new Utf8Writer<TBufferWriter>(ref writer);
         CsTomlArray.Parse(value).ToTomlString(ref utf8Writer);
+    }
+
+    static void ICsTomlValueSerializer.SerializeAnyByte<TBufferWriter>(ref TBufferWriter writer, ReadOnlySpan<byte> value)
+    {
+        var utf8Writer = new Utf8Writer<TBufferWriter>(ref writer);
+        utf8Writer.Write(value);
     }
 
     #endregion

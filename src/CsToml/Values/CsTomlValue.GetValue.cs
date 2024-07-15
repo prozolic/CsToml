@@ -60,6 +60,12 @@ public partial class CsTomlValue
         }
     }
 
+    public virtual object GetObject()
+        => ExceptionHelper.NotReturnThrow<TimeOnly>(ExceptionHelper.ThrowNoValue);
+
+    public T GetValue<T>()
+        => GetValueInvoker<T>.invoker(this);
+
     public virtual CsTomlValue? Find(ReadOnlySpan<byte> keys, bool isDottedKeys = false)
         => default;
 
@@ -306,6 +312,87 @@ public partial class CsTomlValue
         }
         value = default;
         return false;
+    }
+
+    public bool TryGetObject(out object value)
+    {
+        if (CanGetValue(CsTomlValueFeature.Object))
+        {
+            try
+            {
+                value = GetObject();
+                return true;
+            }
+            catch (CsTomlException)
+            {
+                value = default!;
+                return false;
+            }
+        }
+        value = default!;
+        return false;
+    }
+
+    public bool TryGetValue<T>(out T value)
+    {
+        if (CanGetValue(CsTomlValueFeature.Object))
+        {
+            try
+            {
+                value = GetValue<T>();
+                return true;
+            }
+            catch (CsTomlException)
+            {
+                value = default!;
+                return false;
+            }
+        }
+        value = default!;
+        return false;
+    }
+
+    private sealed class GetValueInvoker<TValue>
+    {
+        public static Func<CsTomlValue, TValue> invoker = 
+            static (value) => ExceptionHelper.NotReturnThrow<TValue>(ExceptionHelper.ThrowInvalidCasting);
+
+        static GetValueInvoker()
+        {
+            GetValueInvoker<bool>.invoker = (value) => value.GetBool();
+            GetValueInvoker<byte>.invoker = (value) => (byte)value.GetInt64();
+            GetValueInvoker<sbyte>.invoker = (value) => (sbyte)value.GetInt64();
+            GetValueInvoker<int>.invoker = (value) => (int)value.GetInt64();
+            GetValueInvoker<uint>.invoker = (value) => (uint)value.GetInt64();
+            GetValueInvoker<long>.invoker = (value) => value.GetInt64();
+            GetValueInvoker<ulong>.invoker = (value) =>
+            {
+                try
+                {
+                    return ulong.CreateChecked(value.GetInt64());
+                }
+                catch (OverflowException)
+                {
+                    return ExceptionHelper.NotReturnThrow<ulong, Type>(ExceptionHelper.ThrowOverflow, typeof(ulong));
+                }
+                catch (NotSupportedException)
+                {
+                    return ExceptionHelper.NotReturnThrow<ulong, string>(ExceptionHelper.ThrowNotSupported, nameof(ulong.CreateChecked));
+                }
+            };
+            GetValueInvoker<double>.invoker = (value) => value.GetDouble();
+            GetValueInvoker<DateTime>.invoker = (value) => value.GetDateTime();
+            GetValueInvoker<DateTimeOffset>.invoker = (value) => value.GetDateTimeOffset();
+            GetValueInvoker<DateOnly>.invoker = (value) => value.GetDateOnly();
+            GetValueInvoker<TimeOnly>.invoker = (value) => value.GetTimeOnly();
+            GetValueInvoker<string>.invoker = (value) => value.GetString();
+            GetValueInvoker<ReadOnlyCollection<CsTomlValue>>.invoker = (value) => value.GetArray();
+            GetValueInvoker<IEnumerable<CsTomlValue>>.invoker = (value) => value.GetArray();
+            GetValueInvoker<IReadOnlyCollection<CsTomlValue>>.invoker = (value) => value.GetArray();
+            GetValueInvoker<IReadOnlyList<CsTomlValue>>.invoker = (value) => value.GetArray();
+            GetValueInvoker<object>.invoker = (value) => value.GetObject();
+
+        }
     }
 }
 

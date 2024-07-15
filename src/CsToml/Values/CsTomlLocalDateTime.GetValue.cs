@@ -4,7 +4,7 @@ namespace CsToml.Values;
 internal partial class CsTomlLocalDateTime
 {
     public override bool CanGetValue(CsTomlValueFeature feature)
-        => ((CsTomlValueFeature.String | CsTomlValueFeature.DateTime | CsTomlValueFeature.DateTimeOffset | CsTomlValueFeature.DateOnly | CsTomlValueFeature.TimeOnly) & feature) == feature;
+        => ((CsTomlValueFeature.String | CsTomlValueFeature.DateTime | CsTomlValueFeature.DateTimeOffset | CsTomlValueFeature.DateOnly | CsTomlValueFeature.TimeOnly | CsTomlValueFeature.Object) & feature) == feature;
 
     public override string GetString()
     {
@@ -21,5 +21,6 @@ internal partial class CsTomlLocalDateTime
 
     public override TimeOnly GetTimeOnly() => TimeOnly.FromDateTime(Value);
 
+    public override object GetObject() => Value;
 }
 
