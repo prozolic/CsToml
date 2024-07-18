@@ -26,7 +26,6 @@ public class ParseBenchmark
     public void CsTomlDeserialize()
     {
         var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText);
-        var r = package.Find("key"u8)!.GetValue<string>();
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]
