@@ -366,7 +366,7 @@ internal sealed class CsTomlValueSerializeGenerator
             switch (property.Type.SpecialType)
             {
                 case SpecialType.System_Boolean:
-                    deserializerBuilder.AppendLine($"        if (package.TryGetValue(nameof(target.{propertyName}), out var _{valueName}))");
+                    deserializerBuilder.AppendLine($"        if (package.TryFind(nameof(target.{propertyName}), out var _{valueName}))");
                     deserializerBuilder.AppendLine($"            target.{propertyName} = ({property.Type.Name})_{valueName}!.GetBool();");
                     break;
                 case SpecialType.System_Byte:
@@ -377,19 +377,19 @@ internal sealed class CsTomlValueSerializeGenerator
                 case SpecialType.System_UInt16:
                 case SpecialType.System_UInt32:
                 case SpecialType.System_UInt64:
-                    deserializerBuilder.AppendLine($"        if (package.TryGetValue(nameof(target.{propertyName}), out var _{valueName}))");
+                    deserializerBuilder.AppendLine($"        if (package.TryFind(nameof(target.{propertyName}), out var _{valueName}))");
                     deserializerBuilder.AppendLine($"            target.{propertyName} = ({property.Type.Name})_{valueName}!.GetInt64();");
                     break;
                 case SpecialType.System_String:
-                    deserializerBuilder.AppendLine($"        if (package.TryGetValue(nameof(target.{propertyName}), out var _{valueName}))");
+                    deserializerBuilder.AppendLine($"        if (package.TryFind(nameof(target.{propertyName}), out var _{valueName}))");
                     deserializerBuilder.AppendLine($"            target.{propertyName} = ({property.Type.Name})_{valueName}!.GetString();");
                     break;
                 case SpecialType.System_Double:
-                    deserializerBuilder.AppendLine($"        if (package.TryGetValue(nameof(target.{propertyName}), out var _{valueName}))");
+                    deserializerBuilder.AppendLine($"        if (package.TryFind(nameof(target.{propertyName}), out var _{valueName}))");
                     deserializerBuilder.AppendLine($"            target.{propertyName} = ({property.Type.Name})_{valueName}!.GetDouble();");
                     break;
                 case SpecialType.System_DateTime:
-                    deserializerBuilder.AppendLine($"        if (package.TryGetValue(nameof(target.{propertyName}), out var _{valueName}))");
+                    deserializerBuilder.AppendLine($"        if (package.TryFind(nameof(target.{propertyName}), out var _{valueName}))");
                     deserializerBuilder.AppendLine($"            target.{propertyName} = ({property.Type.Name})_{valueName}!.GetDateTime();");
                     break;
                 default:
@@ -398,15 +398,15 @@ internal sealed class CsTomlValueSerializeGenerator
                         switch (property.Type.Name)
                         {
                             case "DateTimeOffset":
-                                deserializerBuilder.AppendLine($"        if (package.TryGetValue(nameof(target.{propertyName}), out var _{valueName}))");
+                                deserializerBuilder.AppendLine($"        if (package.TryFind(nameof(target.{propertyName}), out var _{valueName}))");
                                 deserializerBuilder.AppendLine($"            target.{propertyName} = ({property.Type.Name})_{valueName}!.GetDateTimeOffset();");
                                 break;
                             case "DateOnly":
-                                deserializerBuilder.AppendLine($"        if (package.TryGetValue(nameof(target.{propertyName}), out var _{valueName}))");
+                                deserializerBuilder.AppendLine($"        if (package.TryFind(nameof(target.{propertyName}), out var _{valueName}))");
                                 deserializerBuilder.AppendLine($"            target.{propertyName} = ({property.Type.Name})_{valueName}!.GetDateOnly();");
                                 break;
                             case "TimeOnly":
-                                deserializerBuilder.AppendLine($"        if (package.TryGetValue(nameof(target.{propertyName}), out var _{valueName}))");
+                                deserializerBuilder.AppendLine($"        if (package.TryFind(nameof(target.{propertyName}), out var _{valueName}))");
                                 deserializerBuilder.AppendLine($"            target.{propertyName} = ({property.Type.Name})_{valueName}!.GetTimeOnly();");
                                 break;
                         }
@@ -419,7 +419,7 @@ internal sealed class CsTomlValueSerializeGenerator
             var propertyName = string.IsNullOrEmpty(accessName) ? property.Name : $"{accessName}.{property.Name}";
             var valueName = string.IsNullOrEmpty(accessName) ? property.Name : $"{accessName}_{property.Name}";
 
-            deserializerBuilder.AppendLine($"        if (package.TryGetValue(nameof(target.{propertyName}), out var _{valueName}))");
+            deserializerBuilder.AppendLine($"        if (package.TryFind(nameof(target.{propertyName}), out var _{valueName}))");
             deserializerBuilder.AppendLine($"            target.{propertyName} = _{valueName}!.GetObject();");
         }
         else
@@ -447,11 +447,7 @@ internal sealed class CsTomlValueSerializeGenerator
                 }
                 else if (type == CsTomlValueType.Array)
                 {
-                    if (kind != CsTomlTypeKind.Collection)
-                    {
-                        context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.ArrayError, property.Locations[0], typeSymbol.Name, property.Name));
-                        continue;
-                    }
+
                 }
             }
             else if (kind == CsTomlTypeKind.Unknown)

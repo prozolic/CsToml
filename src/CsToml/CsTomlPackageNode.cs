@@ -100,70 +100,107 @@ public struct CsTomlPackageNode
     public readonly bool CanGetValue(CsTomlValueFeature feature)
         => Value.CanGetValue(feature);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly ReadOnlyCollection<CsTomlValue> GetArray()
         => Value.GetArray();
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly CsTomlValue GetArrayValue(int index)
         => Value.GetArrayValue(index);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly string GetString()
         => Value.GetString();
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly long GetInt64()
         => Value.GetInt64();
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly double GetDouble()
         => Value.GetDouble();
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool GetBool()
         => Value.GetBool();
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly DateTime GetDateTime()
         => Value.GetDateTime();
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly DateTimeOffset GetDateTimeOffset()
         => Value.GetDateTimeOffset();
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly DateOnly GetDateOnly()
         => Value.GetDateOnly();
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly TimeOnly GetTimeOnly()
         => Value.GetTimeOnly();
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly object GetObject()
+        => Value.GetObject();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly T GetNumber<T>() where T : struct, INumberBase<T>
         => Value.GetNumber<T>();
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly T GetValue<T>()
+        => Value.GetValue<T>();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool TryGetArray(out ReadOnlyCollection<CsTomlValue> value)
         => Value.TryGetArray(out value);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool TryGetArrayValue(int index, out CsTomlValue value)
         => Value.TryGetArrayValue(index, out value);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool TryGetString(out string value)
         => Value.TryGetString(out value);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool TryGetInt64(out long value)
         => Value.TryGetInt64(out value);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool TryGetDouble(out double value)
         => Value.TryGetDouble(out value);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool TryGetBool(out bool value)
         => Value.TryGetBool(out value);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool TryGetDateTime(out DateTime value)
         => Value.TryGetDateTime(out value);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool TryGetDateTimeOffset(out DateTimeOffset value)
         => Value.TryGetDateTimeOffset(out value);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool TryGetDateOnly(out DateOnly value)
         => Value.TryGetDateOnly(out value);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool TryGetTimeOnly(out TimeOnly value)
         => Value.TryGetTimeOnly(out value);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool TryGetObject(out object value)
+        => Value.TryGetObject(out value);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool TryGetNumber<T>(out T value) where T : struct, INumberBase<T>
         => Value.TryGetNumber<T>(out value);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool TryGetValue<T>(out T value)
+        => Value.TryGetValue(out value);
 }

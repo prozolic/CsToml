@@ -80,13 +80,13 @@ var package2 = CsTomlSerializer.Deserialize<CsTomlPackage>(serializedPackageToml
 }
 {
     var value = package!.Find("table-1"u8, "key1"u8);
-    var value2 = package!.TryGetValue("table-1", "key1", out var ___);
+    var value2 = package!.TryFind("table-1", "key1", out var ___);
 }
 {
     var value = package!.Find("fruit.apple.texture"u8, "smooth"u8, isTableHeaderAsDottedKeys:true, isDottedKeys: true);
     var value2 = package!.Find(["fruit"u8, "apple"u8, "texture"u8], "name"u8);
-    var value3 = package!.TryGetValue("fruit.apple.texture"u8, "smooth"u8, out var ____, isDottedKeys:true);
-    var value4 = package!.TryGetValue(["fruit"u8, "apple"u8, "texture"u8], "smooth"u8, out var _____);
+    var value3 = package!.TryFind("fruit.apple.texture"u8, "smooth"u8, out var ____, isDottedKeys:true);
+    var value4 = package!.TryFind(["fruit"u8, "apple"u8, "texture"u8], "smooth"u8, out var _____);
 }
 {
     var value = package!.Find("products"u8, 0, "name"u8);
@@ -99,6 +99,10 @@ var package2 = CsTomlSerializer.Deserialize<CsTomlPackage>(serializedPackageToml
     var value6 = value5!.Find("key"u8)!.GetString();
     var value7 = value5!.Find("key"u8)!.GetObject();
     var value8 = value5!.Find("key"u8)!.GetValue<string>();
+    var value9 = package!.Find("integers"u8)!;
+    var arr2 = value9.GetValue<IEnumerable<string>>();
+    var value10 = package!.Find("int1"u8);
+    var intValue = value10!.GetValue<int>();
 }
 
 var tomlText = @"

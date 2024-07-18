@@ -2,9 +2,7 @@
 
 using BenchmarkDotNet.Attributes;
 using CsToml;
-using CsToml.Values;
 using System.Text;
-using Tomlet.Models;
 
 namespace Benchmark;
 
@@ -28,6 +26,7 @@ public class ParseBenchmark
     public void CsTomlDeserialize()
     {
         var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText);
+        var r = package.Find("key"u8)!.GetValue<string>();
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]

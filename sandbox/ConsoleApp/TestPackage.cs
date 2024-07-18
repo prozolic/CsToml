@@ -16,7 +16,7 @@ public class TestPackage : CsTomlPackage, ICsTomlPackageCreator<TestPackage>
     { 
         get
         {
-            if (TryGetValue("key"u8, out var value))
+            if (TryFind("key"u8, out var value))
                 return value!.GetString();
             return string.Empty;
         } 
@@ -26,7 +26,7 @@ public class TestPackage : CsTomlPackage, ICsTomlPackageCreator<TestPackage>
     {
         get
         {
-            if (TryGetValue("number"u8, out var value))
+            if (TryFind("number"u8, out var value))
                 return value!.GetInt64();
             return default;
         }

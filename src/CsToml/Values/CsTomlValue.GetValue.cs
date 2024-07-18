@@ -43,12 +43,14 @@ public partial class CsTomlValue
     public virtual TimeOnly GetTimeOnly()
         => ExceptionHelper.NotReturnThrow<TimeOnly>(ExceptionHelper.ThrowInvalidCasting);
 
+    public virtual object GetObject()
+        => ExceptionHelper.NotReturnThrow<TimeOnly>(ExceptionHelper.ThrowNoValue);
+
     public T GetNumber<T>() where T : struct, INumberBase<T>
     {
-        var value = GetDouble();
         try
         {
-            return T.CreateChecked(value);
+            return T.CreateChecked(GetDouble());
         }
         catch(OverflowException)
         {
@@ -60,11 +62,11 @@ public partial class CsTomlValue
         }
     }
 
-    public virtual object GetObject()
-        => ExceptionHelper.NotReturnThrow<TimeOnly>(ExceptionHelper.ThrowNoValue);
-
     public T GetValue<T>()
-        => GetValueInvoker<T>.invoker(this);
+    {
+        var invoker = GetValueInvokerCache.Get<T>() ?? ExceptionHelper.NotReturnThrow<Func<CsTomlValue, T>>(ExceptionHelper.ThrowInvalidCasting);
+        return invoker(this);
+    }
 
     public virtual CsTomlValue? Find(ReadOnlySpan<byte> keys, bool isDottedKeys = false)
         => default;
@@ -284,13 +286,13 @@ public partial class CsTomlValue
         return false;
     }
 
-    public bool TryGetNumber<T>(out T value) where T : struct, INumberBase<T>
+    public bool TryGetObject(out object value)
     {
-        if (CanGetValue(CsTomlValueFeature.Number))
+        if (CanGetValue(CsTomlValueFeature.Object))
         {
             try
             {
-                value = GetNumber<T>();
+                value = GetObject();
                 return true;
             }
             catch (CsTomlException)
@@ -303,24 +305,13 @@ public partial class CsTomlValue
         return false;
     }
 
-    public bool TryGetValue(ReadOnlySpan<byte> key, out CsTomlValue? value, bool isDotKey = false)
+    public bool TryGetNumber<T>(out T value) where T : struct, INumberBase<T>
     {
-        if (CanGetValue(CsTomlValueFeature.Table) || CanGetValue(CsTomlValueFeature.InlineTable))
-        {
-            value = Find(key, isDotKey);
-            return value != default;
-        }
-        value = default;
-        return false;
-    }
-
-    public bool TryGetObject(out object value)
-    {
-        if (CanGetValue(CsTomlValueFeature.Object))
+        if (CanGetValue(CsTomlValueFeature.Number))
         {
             try
             {
-                value = GetObject();
+                value = GetNumber<T>();
                 return true;
             }
             catch (CsTomlException)
@@ -352,47 +343,38 @@ public partial class CsTomlValue
         return false;
     }
 
-    private sealed class GetValueInvoker<TValue>
+    public bool TryFind(ReadOnlySpan<byte> key, out CsTomlValue? value, bool isDottedKeys = false)
     {
-        public static Func<CsTomlValue, TValue> invoker = 
-            static (value) => ExceptionHelper.NotReturnThrow<TValue>(ExceptionHelper.ThrowInvalidCasting);
-
-        static GetValueInvoker()
+        if (CanGetValue(CsTomlValueFeature.Table) || CanGetValue(CsTomlValueFeature.InlineTable))
         {
-            GetValueInvoker<bool>.invoker = (value) => value.GetBool();
-            GetValueInvoker<byte>.invoker = (value) => (byte)value.GetInt64();
-            GetValueInvoker<sbyte>.invoker = (value) => (sbyte)value.GetInt64();
-            GetValueInvoker<int>.invoker = (value) => (int)value.GetInt64();
-            GetValueInvoker<uint>.invoker = (value) => (uint)value.GetInt64();
-            GetValueInvoker<long>.invoker = (value) => value.GetInt64();
-            GetValueInvoker<ulong>.invoker = (value) =>
-            {
-                try
-                {
-                    return ulong.CreateChecked(value.GetInt64());
-                }
-                catch (OverflowException)
-                {
-                    return ExceptionHelper.NotReturnThrow<ulong, Type>(ExceptionHelper.ThrowOverflow, typeof(ulong));
-                }
-                catch (NotSupportedException)
-                {
-                    return ExceptionHelper.NotReturnThrow<ulong, string>(ExceptionHelper.ThrowNotSupported, nameof(ulong.CreateChecked));
-                }
-            };
-            GetValueInvoker<double>.invoker = (value) => value.GetDouble();
-            GetValueInvoker<DateTime>.invoker = (value) => value.GetDateTime();
-            GetValueInvoker<DateTimeOffset>.invoker = (value) => value.GetDateTimeOffset();
-            GetValueInvoker<DateOnly>.invoker = (value) => value.GetDateOnly();
-            GetValueInvoker<TimeOnly>.invoker = (value) => value.GetTimeOnly();
-            GetValueInvoker<string>.invoker = (value) => value.GetString();
-            GetValueInvoker<ReadOnlyCollection<CsTomlValue>>.invoker = (value) => value.GetArray();
-            GetValueInvoker<IEnumerable<CsTomlValue>>.invoker = (value) => value.GetArray();
-            GetValueInvoker<IReadOnlyCollection<CsTomlValue>>.invoker = (value) => value.GetArray();
-            GetValueInvoker<IReadOnlyList<CsTomlValue>>.invoker = (value) => value.GetArray();
-            GetValueInvoker<object>.invoker = (value) => value.GetObject();
-
+            value = Find(key, isDottedKeys);
+            return value != default;
         }
+        value = default;
+        return false;
     }
+
+    public bool TryFind(ReadOnlySpan<char> key, out CsTomlValue? value, bool isDottedKeys = false)
+    {
+        if (CanGetValue(CsTomlValueFeature.Table) || CanGetValue(CsTomlValueFeature.InlineTable))
+        {
+            value = Find(key, isDottedKeys);
+            return value != default;
+        }
+        value = default;
+        return false;
+    }
+
+    public bool TryFind(ReadOnlySpan<ByteArray> dottedKeys, out CsTomlValue? value)
+    {
+        if (CanGetValue(CsTomlValueFeature.Table) || CanGetValue(CsTomlValueFeature.InlineTable))
+        {
+            value = Find(dottedKeys);
+            return value != default;
+        }
+        value = default;
+        return false;
+    }
+
 }
 
