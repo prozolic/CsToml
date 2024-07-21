@@ -1,11 +1,9 @@
-﻿using CsToml.Utility;
-using CsToml.Values;
+﻿using CsToml.Values;
 using System.Diagnostics;
-using System.Xml.Linq;
 
 namespace CsToml.Debugger;
 
-[DebuggerDisplay("Key={Key}, Value={Value}")]
+[DebuggerDisplay("Key='{Key}', Value='{Value}'")]
 internal sealed class CsTomlTableNodeKeyValuePairDebugView(KeyValuePair<CsTomlDotKey, CsTomlTableNode> pair)
 {
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]

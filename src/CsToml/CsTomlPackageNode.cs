@@ -15,7 +15,6 @@ namespace CsToml;
 [DebuggerDisplay("{Value}")]
 public struct CsTomlPackageNode
 {
-    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private CsTomlTableNode node;
 
     public readonly CsTomlValue Value => node.Value!;
@@ -68,13 +67,13 @@ public struct CsTomlPackageNode
     {
         get
         {
-            if (Value is CsTomlArray arrayValue)
+            if (Value.TryGetArrayValue(index, out var value))
             {
-                if (arrayValue[index] is CsTomlTable table)
+                if (value is CsTomlTable table)
                 {
                     node = table!.RootNode;
                 }
-                else if (arrayValue[index] is CsTomlInlineTable inlineTable)
+                else if (value is CsTomlInlineTable inlineTable)
                 {
                     node = inlineTable!.RootNode;
                 }
