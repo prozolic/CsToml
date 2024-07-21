@@ -69,20 +69,14 @@ public partial class TestPackagePart
     public Table TableValue { get; set; } = new Table();
 
     [CsTomlValueOnSerialized(CsTomlValueType.InlineTable)]
-    public Table TableValu2 { get; set; } = new Table();
-
-    [CsTomlValueOnSerialized(CsTomlValueType.ArrayOfTables)]
-    [CsTomlArrayOfTablesKey("ArrayOfTablesValue")]
-    public ArrayOfTables1 ArrayOfTablesValue { get; set; } = new ArrayOfTables1();
-
-    [CsTomlValueOnSerialized(CsTomlValueType.ArrayOfTables)]
-    [CsTomlArrayOfTablesKey("ArrayOfTablesValue")]
-    public ArrayOfTables2 ArrayOfTablesValue2 { get; set; } = new ArrayOfTables2();
+    public Table TableValue2 { get; set; } = new Table();
 
     public class Table
     {
         [CsTomlValueOnSerialized(CsTomlValueType.KeyValue)]
         public long IntValue { get; set; } = 2;
+        [CsTomlValueOnSerialized(CsTomlValueType.Array)]
+        public List<long> IntArray { get; set; } = new List<long>();
         [CsTomlValueOnSerialized(CsTomlValueType.Array)]
         public object[] oArr { get; set; } = new object[] { 2, "test", 4.02d, DateTime.Now };
 
@@ -106,7 +100,7 @@ public partial class TestPackagePart
         public char As { get; set; } = 'a';
 
         [CsTomlValueOnSerialized(CsTomlValueType.KeyValue)]
-        public object UnknwonObject { get; set; } = new Test();
+        public object UnknownValue { get; set; } = new Test();
 
         [CsTomlValueOnSerialized(CsTomlValueType.InlineTable)]
         public Test Test123 { get; set; } = new Test();

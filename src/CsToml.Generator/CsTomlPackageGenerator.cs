@@ -31,7 +31,7 @@ internal enum CsTomlValueType
     Array = 1,
     InlineTable = 2,
     Table = 3,
-    ArrayOfTables = 4,
+///    ArrayOfTables = 4,
 }
 
 /// <summary>
@@ -49,13 +49,15 @@ internal sealed class CsTomlValueOnSerializedAttribute : Attribute
 /// <summary>
 /// 
 /// </summary>
-[AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
-internal sealed class CsTomlArrayOfTablesKeyAttribute : Attribute
-{
-    public string KeyName { get; }
+///[AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
+///internal sealed class CsTomlArrayOfTablesKeyAttribute : Attribute
+///{
+///    public string KeyName { get; }
 
-    public CsTomlArrayOfTablesKeyAttribute(string keyName) { this.KeyName = keyName; }
-}
+///    public int Index { get;}
+
+///    public CsTomlArrayOfTablesKeyAttribute(string keyName, int index) { this.KeyName = keyName; this.Index = index;}
+///}
 
 """);
         });

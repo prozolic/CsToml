@@ -50,12 +50,12 @@ public partial class TestPackagePart2
     [CsTomlValueOnSerialized(CsTomlValueType.Table)]
     public Table TableValue { get; set; } = new Table();
 
-    [CsTomlValueOnSerialized(CsTomlValueType.ArrayOfTables)]
-    [CsTomlArrayOfTablesKey("ArrayOfTablesValue")]
+    //[CsTomlValueOnSerialized(CsTomlValueType.ArrayOfTables)]
+    //[CsTomlArrayOfTablesKey("ArrayOfTablesValue",0)]
     public ArrayOfTables1 ArrayOfTablesValue { get; set; } = new ArrayOfTables1();
 
-    [CsTomlValueOnSerialized(CsTomlValueType.ArrayOfTables)]
-    [CsTomlArrayOfTablesKey("ArrayOfTablesValue")]
+    //[CsTomlValueOnSerialized(CsTomlValueType.ArrayOfTables)]
+    //[CsTomlArrayOfTablesKey("ArrayOfTablesValue",1)]
     public ArrayOfTables2 ArrayOfTablesValue2 { get; set; } = new ArrayOfTables2();
 
     public class Table

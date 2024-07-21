@@ -1,7 +1,8 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using CsToml.Generator.Internal;
+using Microsoft.CodeAnalysis;
+using System.Text;
 
 namespace CsToml.Generator;
-
 internal static class SymbolUtility
 {
     public static IEnumerable<AttributeData> GetAttribute(this IPropertySymbol property, string namespaceName, string attributeName)
@@ -9,8 +10,45 @@ internal static class SymbolUtility
             a.AttributeClass!.ContainingNamespace.Name == namespaceName &&
             a.AttributeClass!.Name == attributeName);
 
-    public static IEnumerable<AttributeData> GetCsTomlArrayOfTablesKeyAttribute(this IPropertySymbol property)
-        => property.GetAttribute("CsToml", "CsTomlArrayOfTablesKeyAttribute");
+    public static string GetFindKey(IEnumerable<string> keys)
+    {
+        var builder = new StringBuilder();
+        if (keys is List<string> keyList)
+        {
+            var keyListSpan = CollectionsMarshal.AsSpan(keyList);
+            if (keyListSpan.Length == 0) return "[]";
+
+            var lastKey = keyListSpan[keyListSpan.Length - 1];
+            if (keyListSpan.Length == 1) return $"\"{lastKey}\"u8";
+
+            builder.Append("[");
+            for ( var i = 0; i < keyListSpan.Length - 1; i++)
+            {
+                builder.Append($"\"{keyListSpan[i]}\"u8, ");
+            }
+            builder.Append($"\"{lastKey}\"u8");
+            builder.Append("]");
+        }
+        return builder.ToString();
+    }
+
+    public static string GetPropertyAccessName(IEnumerable<string> accessName, string separateChar)
+    {
+        var builder = new StringBuilder();
+        if (accessName is List<string> accessNameList)
+        {
+            var keyListSpan = CollectionsMarshal.AsSpan(accessNameList);
+            if (keyListSpan.Length == 1) return keyListSpan[0];
+
+            var lastKey = keyListSpan[keyListSpan.Length - 1];
+            for (var i = 0; i < keyListSpan.Length - 1; i++)
+            {
+                builder.Append($"{keyListSpan[i]}{separateChar}");
+            }
+            builder.Append($"{lastKey}");
+        }
+        return builder.ToString();
+    }
 
     public static (IPropertySymbol, CsTomlValueType)[] FilterCsTomlPackageValueMembers(
         IEnumerable<IPropertySymbol> symbols,
@@ -27,10 +65,9 @@ internal static class SymbolUtility
         return members.ToArray();
     }
 
-    public static IEnumerable<IPropertySymbol> GetPropertyAllMembers(ITypeSymbol namedTypeSymbol)
+    public static IEnumerable<IPropertySymbol> GetProperties(ITypeSymbol namedTypeSymbol)
     {
-        return namedTypeSymbol.GetMembers().Where(m => m is IPropertySymbol
-                and
+        return namedTypeSymbol.GetMembers().Where(m => m is IPropertySymbol and
         {
             IsStatic: false,
             DeclaredAccessibility: Accessibility.Public,
@@ -77,7 +114,13 @@ internal static class SymbolUtility
                     case TypeKind.Error:
                         return CsTomlTypeKind.Error;
                     case TypeKind.Class:
-                        if (CollectionMetaData.IsGenericCollection(type))
+                        if (CollectionMetaData.IsCollection(type))
+                        {
+                            return CsTomlTypeKind.Collection;
+                        }
+                        return CsTomlTypeKind.TableOrArrayOfTables;
+                    case TypeKind.Interface:
+                        if (CollectionMetaData.IsCollection(type))
                         {
                             return CsTomlTypeKind.Collection;
                         }
