@@ -4,22 +4,35 @@
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-
-		<LangVersion>11</LangVersion>
+		<LangVersion>12</LangVersion>
+    
 		<IsRoslynComponent>true</IsRoslynComponent>
 		<AnalyzerLanguage>cs</AnalyzerLanguage>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <DevelopmentDependency>true</DevelopmentDependency>
     <IncludeSymbols>false</IncludeSymbols>
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <Authors>prozolic</Authors>
+    <Description>Code generator for CsToml.</Description>
+    <Copyright>prozolic</Copyright>
+    <PackageProjectUrl>https://github.com/prozolic/CsToml</PackageProjectUrl>
+    <RepositoryUrl>$(PackageProjectUrl)</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>TOML,serializer</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <VersionPrefix>1.0.1</VersionPrefix>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.3.1" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.3.1" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
 	</ItemGroup>
+
+  <ItemGroup>
+    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+  </ItemGroup>
 
 </Project>
