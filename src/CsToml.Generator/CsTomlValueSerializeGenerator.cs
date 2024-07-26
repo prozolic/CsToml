@@ -25,13 +25,14 @@ internal sealed class CsTomlValueSerializeGenerator
 
     public string GenerateSerializeProcessCode(SourceProductionContext context)
     {
+        serializerBuilder.Clear();
         GenerateSerializerCore(context, typeSymbol, valueMembers);
-
         return serializerBuilder.ToString();
     }
 
     private void GenerateSerializerCore(SourceProductionContext context, INamedTypeSymbol typeSymbol, (IPropertySymbol, CsTomlValueType)[] properties)
     {
+        var accessNames = new List<string>();
         foreach (var (property, type) in properties)
         {
             var kind = SymbolUtility.GetCsTomlTypeKind(property.Type);
@@ -39,8 +40,9 @@ internal sealed class CsTomlValueSerializeGenerator
             {
                 continue;
             }
+            accessNames.Clear();
+            accessNames.Add(property.Name);
 
-            var accessNames = new List<string> { property.Name };
             switch (type)
             {
                 case CsTomlValueType.KeyValue:

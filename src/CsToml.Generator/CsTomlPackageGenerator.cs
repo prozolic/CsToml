@@ -1,6 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-
 namespace CsToml.Generator;
 
 internal class CsTomlPackageGenerator
@@ -80,8 +79,6 @@ internal sealed class CsTomlValueOnSerializedAttribute : Attribute
             $"{typeSymbol.ContainingNamespace}";
 
         var generator = new CsTomlValueSerializeGenerator(typeSymbol, typeNode!);
-        var serializerProcessCode = generator.GenerateSerializeProcessCode(context);
-        var deserializerProcessCode = generator.GenerateDeserializeProcessCode(context);
 
         var code = $$"""
 #nullable enable
@@ -100,12 +97,12 @@ partial class {{typeSymbol.Name}} : ICsTomlPackagePart<{{typeSymbol.Name}}>
 {
     static void ICsTomlPackagePart<{{typeSymbol.Name}}>.Serialize<TBufferWriter, ICsTomlValueSerializer>(ref TBufferWriter writer, ref {{typeSymbol.Name}} target, CsTomlSerializerOptions? options)
     {
-{{serializerProcessCode}}
+{{generator.GenerateSerializeProcessCode(context)}}
     }
 
     static {{typeSymbol.Name}} ICsTomlPackagePart<{{typeSymbol.Name}}>.Deserialize<ICsTomlValueSerializer>(ReadOnlySpan<byte> tomlText, CsTomlSerializerOptions? options)
     {
-{{deserializerProcessCode}}
+{{generator.GenerateDeserializeProcessCode(context)}}
     }
 }
 
