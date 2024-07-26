@@ -166,14 +166,10 @@ internal class CsTomlTableNodeDictionary
     private void Reserve(int capacity)
     {
         var newEntries = new Entry[capacity];
-        var byteCount = Unsafe.SizeOf<Entry>() * entries.Length;
-        ref var source = ref Unsafe.As<Entry, byte>(ref MemoryMarshal.GetArrayDataReference(entries)!);
-        ref var dest = ref Unsafe.As<Entry, byte>(ref MemoryMarshal.GetArrayDataReference(newEntries)!);
-        Unsafe.CopyBlockUnaligned(ref dest, ref source, (uint)byteCount);
+        int count = this.count;
+        Array.Copy(this.entries, newEntries, count);
 
-        entries = newEntries;
-
-        buckets = new int[capacity];
+        this.buckets = new int[capacity];
         for (int i = 0; i < count; i++)
         {
             if (newEntries[i].next >= -1)
@@ -183,6 +179,8 @@ internal class CsTomlTableNodeDictionary
                 bucket = i + 1;
             }
         }
+
+        this.entries = newEntries;
     }
 
     private struct Entry
