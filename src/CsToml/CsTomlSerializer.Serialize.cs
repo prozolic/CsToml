@@ -8,16 +8,16 @@ namespace CsToml;
 
 public partial class CsTomlSerializer : ICsTomlValueSerializer
 {
-    public static ByteMemoryResult Serialize<TPackagePart>(ref TPackagePart target, CsTomlSerializerOptions? options = null)
+    public static ByteMemoryResult SerializeFromPackagePart<TPackagePart>(ref TPackagePart target, CsTomlSerializerOptions? options = null)
         where TPackagePart : ICsTomlPackagePart<TPackagePart>
     {
-        var writer = new ArrayPoolBufferWriter<byte>();
-        using var _ = writer;
-        Serialize(ref writer, ref target, options);
+        using var writer = new ArrayPoolBufferWriter<byte>();
+        var tempWriter = writer;
+        SerializeFromPackagePart(ref tempWriter, ref target, options);
         return ByteMemoryResult.Create(writer);
     }
 
-    public static void Serialize<TBufferWriter, TPackagePart>(ref TBufferWriter bufferWriter, ref TPackagePart target, CsTomlSerializerOptions? options = null)
+    public static void SerializeFromPackagePart<TBufferWriter, TPackagePart>(ref TBufferWriter bufferWriter, ref TPackagePart target, CsTomlSerializerOptions? options = null)
         where TBufferWriter : IBufferWriter<byte>
         where TPackagePart : ICsTomlPackagePart<TPackagePart>
     {

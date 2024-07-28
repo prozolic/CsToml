@@ -11,7 +11,7 @@ public class DefaultTest
     public void SerializeTest()
     {
         var part = new TestPackagePart();
-        using var tomlBytes = CsTomlSerializer.Serialize(ref part);
+        using var tomlBytes = CsTomlSerializer.SerializeFromPackagePart(ref part);
 
         var text = """
 IntValue = 123
@@ -35,7 +35,7 @@ StringValue = "TestPackagePart"
     public void SerializeTest2()
     {
         var part = new TestPackagePart2();
-        using var tomlBytes = CsTomlSerializer.Serialize(ref part);
+        using var tomlBytes = CsTomlSerializer.SerializeFromPackagePart(ref part);
 
         var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlBytes.ByteSpan);
         Assert.Equal(part.IntValue, package!.Find("IntValue"u8)!.GetNumber<uint>());

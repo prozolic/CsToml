@@ -15,7 +15,6 @@ using System.Diagnostics;
 using System.IO.Pipelines;
 using System.Text;
 
-
 Console.WriteLine("Hello, World!");
 
 var testPackage = await CsTomlFileSerializer.DeserializeAsync<TestPackage>("./../../../Toml/test.toml");
@@ -159,7 +158,7 @@ var buffer = new ArrayBufferWriter<byte>();
 CsTomlSerializer.Serialize(ref buffer, package);
 
 var part = new TestPackagePart();
-using var partBytes = CsTomlSerializer.Serialize(ref part);
+using var partBytes = CsTomlSerializer.SerializeFromPackagePart(ref part);
 var partPackage = CsTomlSerializer.Deserialize<CsTomlPackage>(partBytes.ByteSpan);
 
 if (partPackage.TryFind(["TableValue"u8, "あいうえお"u8], out var vvvvv))
