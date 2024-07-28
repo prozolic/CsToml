@@ -28,15 +28,6 @@ public class ParseFromFileBenchmark
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]
-    public async ValueTask CsTomlDeserializeFromStreamAsync()
-    {
-        using (var stream = new FileStream(TestTomlFilePath, FileMode.Open))
-        {
-            var package = await CsTomlStreamingSerializer.DeserializeAsync<CsTomlPackage>(stream);
-        }
-    }
-
-    [BenchmarkCategory("Benchmark"), Benchmark]
     public void TommyParseFromFile()
     {
         using var reader = File.OpenText(TestTomlFilePath);
