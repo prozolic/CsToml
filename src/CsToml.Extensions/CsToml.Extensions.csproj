@@ -25,7 +25,7 @@
 
   <ItemGroup>
     <PackageReference Include="NativeMemoryArray" Version="1.2.0" />
-    <PackageReference Include="System.IO.Pipelines" Version="8.0.0" />
+    <PackageReference Include="System.Threading.Channels" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>
