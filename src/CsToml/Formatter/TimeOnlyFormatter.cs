@@ -50,7 +50,7 @@ internal class TimeOnlyFormatter : ICsTomlFormatter<TimeOnly>
     private static void SerializeCore<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, TimeOnly value, ReadOnlySpan<char> format)
         where TBufferWriter : IBufferWriter<byte>
     {
-        value.TryFormat(writer.GetWriteSpan(format.Length), out var bytesWritten, format);
+        value.TryFormat(writer.GetWrittenSpan(format.Length), out var bytesWritten, format);
     }
 
     public static TimeOnly Deserialize(ref Utf8Reader reader, int length)

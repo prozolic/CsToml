@@ -1,9 +1,8 @@
 ﻿using CsToml.Debugger;
 using CsToml.Utility;
-using System.Buffers;
 using System.Collections;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace CsToml.Values;
 
@@ -44,6 +43,75 @@ internal partial class CsTomlArray(int capacity) :
         }
         writer.Write(CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET);
         return true;
+    }
+
+    public override bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
+    {
+        var written = 0;
+
+        if (destination.Length == 0)
+        {
+            charsWritten = 0;
+            return false;
+        }
+        destination[written++] = '[';
+
+        var arraySpan = CollectionsMarshal.AsSpan(values);
+        for (int i = 0; i < arraySpan.Length - 1; i++)
+        {
+            if (arraySpan[i].TryFormat(destination.Slice(written), out var charsWritten2, format, provider))
+            {
+                written += charsWritten2;
+                
+                if (destination.Length - written >= 3)
+                {
+                    destination[written++] = ',';
+                    destination[written++] = ' ';
+                }
+                continue;
+            }
+
+            charsWritten = 0;
+            return false;
+        }
+
+        if (arraySpan[arraySpan.Length - 1].TryFormat(destination.Slice(written), out var charsWritten3, format, provider))
+        {
+            written += charsWritten3;
+            if (destination.Length - written == 0)
+            {
+                charsWritten = 0;
+                return false;
+            }
+            destination[written++] = ']';
+            charsWritten = written;
+            return true;
+        }
+        charsWritten = 0;
+        return false;
+    }
+
+    public override string ToString(string? format, IFormatProvider? formatProvider)
+        => ToString();
+
+    public override string ToString()
+    {
+        var length = 1024;
+        using var bufferWriter = new ArrayPoolBufferWriter<char>(length);
+
+        var conflictCount = 0;
+        var charsWritten = 0;
+        while (!TryFormat(bufferWriter.GetSpan(length), out charsWritten))
+        {
+            if (++conflictCount >= 20)
+            {
+                break;
+            }
+            length *= 2;
+        }
+
+        bufferWriter.Advance(charsWritten);
+        return new string(bufferWriter.WrittenSpan);
     }
 
     public void Add(CsTomlValue tomlValue)

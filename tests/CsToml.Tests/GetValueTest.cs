@@ -19,7 +19,7 @@ odt = 1979-05-27T07:32:00Z
 ldt = 1979-05-27T07:32:00
 ld1 = 1979-05-27
 lt1 = 07:32:30
-array = [ 1, 2, 3 ]
+array = [ 1, 2, 3]
 
 [[ArrayOfTables]]
 value = 1
@@ -509,7 +509,7 @@ value3 = 3
         var arrayIndexValue = value!.GetArrayValue(0);
         Assert.Equal(1, arrayIndexValue.GetInt64());
 
-        Assert.Throws<CsTomlException>(() => value!.GetString());
+        Assert.Equal("[1, 2, 3]", value!.GetString());
         Assert.Throws<CsTomlException>(() => value!.GetInt64());
         Assert.Throws<CsTomlException>(() => value!.GetDouble());
         Assert.Throws<CsTomlException>(() => value!.GetBool());
@@ -534,11 +534,13 @@ value3 = 3
         }
         {
             var result = value!.TryGetArrayValue(0, out var arrayIndexValue);
+            Assert.True(result);
             Assert.Equal(1, arrayIndexValue.GetInt64());
         }
         {
             var result = value!.TryGetString(out var v);
-            Assert.False(result);
+            Assert.True(result);
+            Assert.Equal("[1, 2, 3]", v);
         }
         {
             var result = value!.TryGetInt64(out var v);

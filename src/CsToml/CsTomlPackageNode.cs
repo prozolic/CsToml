@@ -44,7 +44,7 @@ public struct CsTomlPackageNode
                 var keyrWriter = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
 
                 ValueFormatter.Serialize(ref keyrWriter, key);
-                return this[writer.WrittenSpan[..keyrWriter.WrittingCount]];
+                return this[writer.WrittenSpan[..keyrWriter.WrittenSize]];
             }
         }
     }

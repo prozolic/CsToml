@@ -9,7 +9,7 @@ internal class DateOnlyFormatter : ICsTomlFormatter<DateOnly>
     public static void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, DateOnly value)
         where TBufferWriter : IBufferWriter<byte>
     {
-        value.TryFormat(writer.GetWriteSpan(CsTomlSyntax.DateTime.LocalDateFormatLength), out int bytesWritten, "yyyy-MM-dd");
+        value.TryFormat(writer.GetWrittenSpan(CsTomlSyntax.DateTime.LocalDateFormatLength), out int bytesWritten, "yyyy-MM-dd");
     }
 
     public static DateOnly Deserialize(ref Utf8Reader reader, int length)

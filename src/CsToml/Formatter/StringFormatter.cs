@@ -34,9 +34,9 @@ internal class StringFormatter : ICsTomlFormatter<string>, ICsTomlSpanFormatter<
 
     public static string Deserialize(ref Utf8Reader reader, int length)
     {
-        var bytes = reader.ReadBytes(length);
+        if (length == 0) return string.Empty;
 
-        return bytes.Length > 0 ? DeserializeCore(bytes) : string.Empty;
+        return DeserializeCore(reader.ReadBytes(length));
     }
 
     private static string DeserializeCore(ReadOnlySpan<byte> utf8Bytes)

@@ -391,4 +391,66 @@ internal partial class CsTomlTable : CsTomlValue
         keys.Clear(); // clear subkey
     }
 
+    public override bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
+    {
+        var tableFormat = $"TOML Table[{node.NodeCount}]";
+        if (tableFormat.TryCopyTo(destination))
+        {
+            charsWritten = tableFormat.Length;
+            return true;
+        }
+        charsWritten = 0;
+        return false;
+    }
+
+    public override string ToString(string? format, IFormatProvider? formatProvider)
+        => ToString();
+
+    public override bool TryFormat(Span<byte> utf8Destination, out int bytesWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
+    {
+        if (!"TOML Table["u8.TryCopyTo(utf8Destination))
+        {
+            bytesWritten = 0;
+            return false;
+        }
+        var written = 11;
+
+        if (!node.NodeCount.TryFormat(utf8Destination.Slice(written), out var byteWritten2, format, provider))
+        {
+            bytesWritten = 0;
+            return false;
+        }
+        written += byteWritten2;
+
+        if (utf8Destination.Length - written <= 0)
+        {
+            bytesWritten = 0;
+            return false;
+        }
+
+        utf8Destination[written++] = CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET;
+        bytesWritten = written;
+        return true;
+    }
+
+    public override string ToString()
+    {
+        var length = 65536; // 64K;
+        using var bufferWriter = new ArrayPoolBufferWriter<char>(length);
+
+        var conflictCount = 0;
+        var charsWritten = 0;
+        while (!TryFormat(bufferWriter.GetSpan(length), out charsWritten))
+        {
+            if (++conflictCount >= 15)
+            {
+                break;
+            }
+            length *= 2;
+        }
+
+        bufferWriter.Advance(charsWritten);
+        return new string(bufferWriter.WrittenSpan);
+    }
+
 }

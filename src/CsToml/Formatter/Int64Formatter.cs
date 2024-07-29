@@ -15,7 +15,7 @@ internal class Int64Formatter : ICsTomlFormatter<long>
         var length = CsTomlSyntax.Number.DigitsDecimalUnroll4(value);
         if (value < 0) length++;
 
-        value.TryFormat(writer.GetWriteSpan(length), out int bytesWritten);
+        value.TryFormat(writer.GetWrittenSpan(length), out int bytesWritten);
         return;
     }
 

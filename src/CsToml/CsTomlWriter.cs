@@ -12,7 +12,7 @@ internal ref struct CsTomlWriter<TBufferWriter>
     private Utf8Writer<TBufferWriter> writer;
     private readonly ReadOnlySpan<byte> newLineCh;
 
-    public readonly int WrittingCount => writer.WrittingCount;
+    public readonly int WrittingCount => writer.WrittenSize;
 
     [DebuggerStepThrough]
     public CsTomlWriter(ref Utf8Writer<TBufferWriter> bufferWriter)
@@ -56,9 +56,17 @@ internal ref struct CsTomlWriter<TBufferWriter>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteInlineTable()
+        => writer.Write(CsTomlSyntax.Symbol.LEFTBRACES);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteInlineTableEnd()
+        => writer.Write(CsTomlSyntax.Symbol.RIGHTBRACES);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteEquals()
     {
-        var span = writer.GetWriteSpan(3);
+        var span = writer.GetWrittenSpan(3);
         span[2] = CsTomlSyntax.Symbol.SPACE;
         span[1] = CsTomlSyntax.Symbol.EQUAL;
         span[0] = CsTomlSyntax.Symbol.SPACE;

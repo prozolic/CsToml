@@ -138,8 +138,8 @@ public partial class CsTomlPackage
             }
 
             return Find(
-                writer.WrittenSpan.Slice(0, tableHeaderWriter.WrittingCount),
-                writer.WrittenSpan.Slice(tableHeaderWriter.WrittingCount, keyrWriter.WrittingCount),
+                writer.WrittenSpan.Slice(0, tableHeaderWriter.WrittenSize),
+                writer.WrittenSpan.Slice(tableHeaderWriter.WrittenSize, keyrWriter.WrittenSize),
                 isDottedKeys);
         }
     }
@@ -269,9 +269,9 @@ public partial class CsTomlPackage
                 return default;
             }
             return Find(
-                writer.WrittenSpan.Slice(0, arrayOfTableHeaderWriter.WrittingCount),
+                writer.WrittenSpan.Slice(0, arrayOfTableHeaderWriter.WrittenSize),
                 arrayIndex,
-                writer.WrittenSpan.Slice(arrayOfTableHeaderWriter.WrittingCount, keyWriter.WrittingCount),
+                writer.WrittenSpan.Slice(arrayOfTableHeaderWriter.WrittenSize, keyWriter.WrittenSize),
                 isDottedKeys);
         }
     }
@@ -439,8 +439,8 @@ public partial class CsTomlPackage
                 return false;
             }
             return TryFind(
-                    writer.WrittenSpan.Slice(0, tableHeaderWriter.WrittingCount),
-                    writer.WrittenSpan.Slice(tableHeaderWriter.WrittingCount, keyrWriter.WrittingCount),
+                    writer.WrittenSpan.Slice(0, tableHeaderWriter.WrittenSize),
+                    writer.WrittenSpan.Slice(tableHeaderWriter.WrittenSize, keyrWriter.WrittenSize),
                     out value,
                     isTableHeaderAsDottedKeys, isDottedKeys);
         }

@@ -5,19 +5,19 @@ using System.Runtime.CompilerServices;
 
 namespace CsToml.Utility;
 
-internal ref struct Utf8Writer<TBufferWriter>(ref TBufferWriter writer)
+internal ref struct Utf8Writer<TBufferWriter>(ref TBufferWriter bufferWriter)
     where TBufferWriter : IBufferWriter<byte>
 {
-    private ref TBufferWriter bufferWriter = ref writer;
-    private int writtingCount = 0;
+    private ref TBufferWriter bufferWriter = ref bufferWriter;
+    private int written = 0;
 
-    public readonly int WrittingCount => writtingCount;
+    public readonly int WrittenSize => written;
 
     [DebuggerStepThrough]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Write(byte buffer)
+    public void Write(byte @byte)
     {
-        GetSpan(1)[0] = buffer;
+        GetSpan(1)[0] = @byte;
         Advance(1);
     }
 
@@ -27,7 +27,7 @@ internal ref struct Utf8Writer<TBufferWriter>(ref TBufferWriter writer)
     {
         if (bytes.Length == 0) return;
 
-        bytes.CopyTo(GetSpan(bytes.Length));
+        bytes.CopyTo(GetSpan(bytes.Length)[..bytes.Length]);
         Advance(bytes.Length);
     }
 
@@ -35,14 +35,14 @@ internal ref struct Utf8Writer<TBufferWriter>(ref TBufferWriter writer)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Span<byte> GetSpan(int writtingLength)
     {
-        return bufferWriter.GetSpan(writtingLength)[..writtingLength];
+        return bufferWriter.GetSpan(writtingLength);
     }
 
     [DebuggerStepThrough]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Span<byte> GetWriteSpan(int writtingLength)
+    public Span<byte> GetWrittenSpan(int writtingLength)
     {
-        var span = GetSpan(writtingLength);
+        var span = GetSpan(writtingLength)[..writtingLength];
         Advance(writtingLength);
         return span;
     }
@@ -52,7 +52,7 @@ internal ref struct Utf8Writer<TBufferWriter>(ref TBufferWriter writer)
     public void Advance(int count)
     {
         bufferWriter.Advance(count);
-        writtingCount += count;
+        written += count;
     }
 }
 
