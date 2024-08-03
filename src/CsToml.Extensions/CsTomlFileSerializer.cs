@@ -62,7 +62,7 @@ public partial class CsTomlFileSerializer
         }
     }
 
-    public static ValueTask<TPackage> DeserializeAsync<TPackage>(string tomlFilePath, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
+    public static async ValueTask<TPackage> DeserializeAsync<TPackage>(string tomlFilePath, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
         where TPackage : CsTomlPackage, ICsTomlPackageCreator<TPackage>
     {
         if (Path.GetExtension(tomlFilePath) != TomlExtension)
@@ -74,32 +74,20 @@ public partial class CsTomlFileSerializer
 
         if (length == 0)
         {
-            return TPackage.CreatePackage()?.FromResult() ?? throw new NullReferenceException($"{typeof(TPackage)} was not created."); ;
+            return TPackage.CreatePackage() ?? throw new NullReferenceException($"{typeof(TPackage)} was not created."); ;
         }
         else if (length <= Array.MaxLength)
         {
-            return ReadAsync(handle, (int)length, options, configureAwait, cancellationToken);
-        }
-        else
-        {
-            return ReadSequenceAsync(handle, length, options, configureAwait, cancellationToken);
-        }
-
-        [AsyncMethodBuilder(typeof(PoolingAsyncValueTaskMethodBuilder<>))]
-        async ValueTask<TPackage> ReadAsync(SafeFileHandle handle, int arrayLength, CsTomlSerializerOptions? options, bool configureAwait, CancellationToken cancellationToken)
-        {
-            using var bytes = new NativeMemoryArray<byte>(arrayLength);
+            using var bytes = new NativeMemoryArray<byte>(length);
             var byteMemories = bytes.AsMemory();
             var readCount = await RandomAccess.ReadAsync(handle, byteMemories, 0, cancellationToken).ConfigureAwait(configureAwait);
 
             var startIndex = Utf8Helper.ContainBOM(byteMemories.Span) ? 3 : 0;
             return CsTomlSerializer.Deserialize<TPackage>(byteMemories.Span.Slice(startIndex, readCount - startIndex), options);
         }
-
-        [AsyncMethodBuilder(typeof(PoolingAsyncValueTaskMethodBuilder<>))]
-        async ValueTask<TPackage> ReadSequenceAsync(SafeFileHandle handle, long sequenceLength, CsTomlSerializerOptions? options, bool configureAwait, CancellationToken cancellationToken)
+        else
         {
-            using var bytes = new NativeMemoryArray<byte>(sequenceLength);
+            using var bytes = new NativeMemoryArray<byte>(length);
             var tomlMemories = bytes.AsMemoryList();
             await RandomAccess.ReadAsync(handle, tomlMemories, 0, cancellationToken).ConfigureAwait(configureAwait);
 
