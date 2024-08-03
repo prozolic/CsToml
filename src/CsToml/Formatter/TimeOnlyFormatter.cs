@@ -76,7 +76,7 @@ internal class TimeOnlyFormatter : ICsTomlFormatter<TimeOnly>
         // https://learn.microsoft.com/en-us/dotnet/api/system.datetime.-ctor?view=net-8.0#system-datetime-ctor(system-int32-system-int32-system-int32-system-int32-system-int32-system-int32-system-int32-system-int32)
         var millisecond = 0;
         var microsecond = 0;
-        if (bytes.Length > 8 && CsTomlSyntax.IsPeriod(bytes[8]))
+        if (bytes.Length > 8 && CsTomlSyntax.IsDot(bytes[8]))
         {
             if (bytes.Length == 10)
             {

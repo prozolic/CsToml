@@ -87,7 +87,7 @@ internal class DoubleFormatter : ICsTomlFormatter<double>
                 integerValue += CsTomlSyntax.Number.ParseDecimal(utf8Bytes[index++]);
                 continue;
             }
-            else if (CsTomlSyntax.IsPeriod(utf8Bytes[index]))
+            else if (CsTomlSyntax.IsDot(utf8Bytes[index]))
             {
                 break;
             }
@@ -100,7 +100,7 @@ internal class DoubleFormatter : ICsTomlFormatter<double>
 
         // decimal part
         double decimalValue = 0d;
-        if (index < utf8Bytes.Length && CsTomlSyntax.IsPeriod(utf8Bytes[index]))
+        if (index < utf8Bytes.Length && CsTomlSyntax.IsDot(utf8Bytes[index]))
         {
             index++;
             var nIndex = 1;

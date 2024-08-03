@@ -50,18 +50,6 @@ internal sealed class ArrayPoolBufferWriter<T> : IBufferWriter<T>, IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Memory<T> GetFullMemory()
-        => buffer.AsMemory();
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Span<T> GetFullSpan()
-        => buffer.AsSpan();
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Clear()
-        => index = 0;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Reserve(int sizeHint)
     {
         if (sizeHint > buffer.Length - index)
@@ -75,7 +63,9 @@ internal sealed class ArrayPoolBufferWriter<T> : IBufferWriter<T>, IDisposable
         if (isRent)
         {
             isRent = false;
+            index = 0;
             ArrayPool<T>.Shared.Return(buffer);
+            buffer = [];
         }
     }
 
@@ -85,32 +75,28 @@ internal sealed class ArrayPoolBufferWriter<T> : IBufferWriter<T>, IDisposable
     [MethodImpl(MethodImplOptions.NoInlining)]
     private void ReserveCore(int sizeHint)
     {
-        var newSize = buffer.Length * 2;
+        var newSize = Math.Max(buffer.Length, 1) * 2;
         if (sizeHint > newSize - index)
         {
-            newSize = CalculateBufferSize(sizeHint + index);
+            newSize = ArrayPoolBufferWriter<T>.CalculateBufferSize(sizeHint + index);
         }
 
-        newSize = Math.Min(newSize, Array.MaxLength);
-
-        var newBuffer = ArrayPool<T>.Shared.Rent(newSize);
-        try
+        var newBuffer = ArrayPool<T>.Shared.Rent(Math.Min(newSize, Array.MaxLength));
+        if (isRent)
         {
             var byteCount = Unsafe.SizeOf<T>() * index;
             ref var source = ref Unsafe.As<T, byte>(ref MemoryMarshal.GetArrayDataReference(buffer)!);
             ref var dest = ref Unsafe.As<T, byte>(ref MemoryMarshal.GetArrayDataReference(newBuffer)!);
             Unsafe.CopyBlockUnaligned(ref dest, ref source, (uint)byteCount);
+
+            ArrayPool<T>.Shared.Return(buffer);
         }
-        finally
-        {
-            Return();
-            buffer = newBuffer;
-            isRent = true;
-        }
+
+        buffer = newBuffer;
+        isRent = true;
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private int CalculateBufferSize(int capacity)
+    private static int CalculateBufferSize(int capacity)
     {
         capacity -= 1;
         capacity |= capacity >> 1;

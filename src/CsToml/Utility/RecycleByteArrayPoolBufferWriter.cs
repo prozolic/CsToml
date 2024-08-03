@@ -9,7 +9,7 @@ internal sealed class RecycleByteArrayPoolBufferWriter
 
     private RecycleByteArrayPoolBufferWriter() { }
 
-    public static ArrayPoolBufferWriter<byte> Rent(int initialCapacity = 256)
+    public static ArrayPoolBufferWriter<byte> Rent(int initialCapacity = 1024)
     {
         if (writerQueue.TryDequeue(out var buffer))
         {
@@ -21,14 +21,8 @@ internal sealed class RecycleByteArrayPoolBufferWriter
 
     public static void Return(ArrayPoolBufferWriter<byte> buffer)
     {
-        buffer.Clear();
+        buffer.Return();
         writerQueue.Enqueue(buffer);
-    }
-
-    public static void Release()
-    {
-        while (writerQueue.TryDequeue(out var buffer))
-            buffer.Return();
     }
 }
 

@@ -321,11 +321,11 @@ internal partial class CsTomlString
         }
         else
         {
-            var rent = RecycleByteArrayPoolBufferWriter.Rent();
+            var tempBufferWriter = RecycleByteArrayPoolBufferWriter.Rent();
             try
             {
-                reader.TryGetbytes(length, rent);
-                Utf8Helper.ParseFrom16bitCodePointToUtf8(destination, rent.WrittenSpan, out int writtenCount);
+                reader.TryGetbytes(length, tempBufferWriter);
+                Utf8Helper.ParseFrom16bitCodePointToUtf8(destination, tempBufferWriter.WrittenSpan, out int writtenCount);
                 for (int i = 0; i < writtenCount; i++)
                 {
                     utf8Writer.Write(destination[i]);
@@ -333,7 +333,7 @@ internal partial class CsTomlString
             }
             finally
             {
-                RecycleByteArrayPoolBufferWriter.Return(rent);
+                RecycleByteArrayPoolBufferWriter.Return(tempBufferWriter);
             }
         }
     }
@@ -358,11 +358,11 @@ internal partial class CsTomlString
         }
         else
         {
-            var rent = RecycleByteArrayPoolBufferWriter.Rent();
+            var tempBufferWriter = RecycleByteArrayPoolBufferWriter.Rent();
             try
             {
-                reader.TryGetbytes(length, rent);
-                Utf8Helper.ParseFrom32bitCodePointToUtf8(destination, rent.WrittenSpan, out int writtenCount);
+                reader.TryGetbytes(length, tempBufferWriter);
+                Utf8Helper.ParseFrom32bitCodePointToUtf8(destination, tempBufferWriter.WrittenSpan, out int writtenCount);
                 for (int i = 0; i < writtenCount; i++)
                 {
                     utf8Writer.Write(destination[i]);
@@ -370,7 +370,7 @@ internal partial class CsTomlString
             }
             finally
             {
-                RecycleByteArrayPoolBufferWriter.Return(rent);
+                RecycleByteArrayPoolBufferWriter.Return(tempBufferWriter);
             }
         }
     }

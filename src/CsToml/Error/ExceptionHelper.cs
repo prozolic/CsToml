@@ -303,9 +303,9 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void ThrowPeriodUsedMoreThanOnce()
+    internal static void ThrowDotsAreUsedMoreThanOnce()
     {
-        ThrowException($@"Periods are used more than once.");
+        ThrowException($@"Dots are used more than once.");
     }
 
     [DoesNotReturn]
@@ -338,9 +338,16 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void ThrowPeriodIsUsedAtTheEnd()
+    internal static void ThrowDotIsUsedAtTheEnd()
     {
-        ThrowException($@"A period is used at the end.");
+        ThrowException($@"Dot is used at the end.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowDottedKeysAreNotJoinedByDots()
+    {
+        ThrowException($@"Dotted keys are not joined by dots.");
     }
 
     [DoesNotReturn]
@@ -366,9 +373,9 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void ThrowPeriodUsedWhereNotSurroundedByNumbers()
+    internal static void ThrowDotIsUsedWhereNotSurroundedByNumbers()
     {
-        ThrowException($@"Perid are used where they are not surrounded by numbers.");
+        ThrowException($@"Dot is used where they are not surrounded by numbers.");
     }
 
     [DoesNotReturn]
@@ -380,9 +387,16 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void ThrowPeriodUsedFirst()
+    internal static void ThrowDotIsUsedFirst()
     {
-        ThrowException($@"Period are used first.");
+        ThrowException($@"Dot is used first.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowIncorrectTomlBooleanFormat()
+    {
+        ThrowException($@"Failed due to incorrect Boolean formatting.");
     }
 
     [DoesNotReturn]

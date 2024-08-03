@@ -172,6 +172,7 @@ internal ref struct Utf8SequenceReader
         {
             UnreadSpan[..(int)length].CopyTo(writer.GetSpan((int)length));
             writer.Advance((int)length);
+            Advance((int)length);
             return true;
         }
 

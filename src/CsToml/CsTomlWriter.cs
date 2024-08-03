@@ -92,7 +92,7 @@ internal ref struct CsTomlWriter<TBufferWriter>
         key.ToTomlString(ref writer);
         if (isGroupingProperty)
         {
-            writer.Write(CsTomlSyntax.Symbol.PERIOD);
+            writer.Write(CsTomlSyntax.Symbol.DOT);
         }
     }
 

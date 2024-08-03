@@ -25,7 +25,7 @@ internal sealed class CsTomlTableNodeDebugView(CsTomlTableNode csTomlTableNode)
     public CsTomlValue Value => node.Value!;
 
     [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
-    public CsTomlString[] Comments => node.Comments.ToArray();
+    public CsTomlString[] Comments => node.Comments?.ToArray() ?? [];
 
     public bool IsGroupingProperty => node.IsGroupingProperty;
 

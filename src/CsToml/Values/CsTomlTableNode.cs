@@ -8,27 +8,34 @@ using System.Runtime.InteropServices;
 
 namespace CsToml.Values;
 
+internal enum NodeStatus : byte
+{
+    Empty,
+    NewAdd,
+    Existed,
+}
+
 [DebuggerTypeProxy(typeof(CsTomlTableNodeDebugView))]
 [DebuggerDisplay("{Value}")]
 internal class CsTomlTableNode
 {
     internal static readonly CsTomlTableNode Empty = new() { Value = CsTomlValue.Empty};
 
-    private readonly CsTomlTableNodeDictionary nodes = new();
-    private readonly List<CsTomlString> comments = [];
+    private readonly CsTomlTableNodeDictionary? nodes;
+    private List<CsTomlString>? comments;
     private CsTomlTableNodeType nodeType = CsTomlTableNodeType.None;
 
     public CsTomlValue? Value { get; set; }
 
     internal int NodeCount => nodes?.Count ?? 0;
 
-    internal IReadOnlyList<CsTomlString> Comments => comments; // Debug
+    internal IReadOnlyList<CsTomlString>? Comments => comments; // Debug
 
-    internal int CommentCount => comments.Count;
+    internal int CommentCount => comments?.Count ?? 0;
 
-    internal ReadOnlySpan<CsTomlString> CommentSpan => CollectionsMarshal.AsSpan(comments);
+    internal ReadOnlySpan<CsTomlString> CommentSpan => comments != null ? CollectionsMarshal.AsSpan(comments) : ReadOnlySpan<CsTomlString>.Empty;
 
-    internal CsTomlTableNodeDictionary.KeyValuePairEnumerator KeyValuePairs => new(nodes);
+    internal CsTomlTableNodeDictionary.KeyValuePairEnumerator KeyValuePairs => new(nodes ?? Empty.nodes!);
 
     internal bool IsGroupingProperty 
     {
@@ -122,38 +129,59 @@ internal class CsTomlTableNode
         return node;
     }
 
-    internal CsTomlTableNode() {}
+    private CsTomlTableNode()
+    {
+        nodes = new();
+    }
+
+    private CsTomlTableNode(CsTomlValue value)
+    {
+        Value = value;
+    }
 
     internal void AddComment(IReadOnlyCollection<CsTomlString> comments)
-        => this.comments.AddRange(comments);
-
-    internal void AddKeyValue(CsTomlDotKey key, CsTomlValue value, IReadOnlyCollection<CsTomlString> comments)
     {
-        var newNode = new CsTomlTableNode() { Value = value };
+        if (this.comments == null)
+        {
+            this.comments = new List<CsTomlString>(comments.Count);
+        }
+        this.comments.AddRange(comments);
+    }
+
+    internal CsTomlTableNode AddKeyValue(CsTomlDotKey key, CsTomlValue value, IReadOnlyCollection<CsTomlString> comments)
+    {
+        var newNode = new CsTomlTableNode(value);
         if (comments.Count > 0)
         {
             newNode.AddComment(comments);
         }
-
-        if (!IsGroupingProperty || !nodes.TryAdd(key, newNode))
+        
+        if (!IsGroupingProperty || !(nodes?.TryAdd(key, newNode) ?? false))
         {
             ExceptionHelper.ThrowKeyIsDefined(key);
         }
+
+        return newNode;
     }
 
-    internal bool TryAddGroupingPropertyNode(CsTomlDotKey key, out CsTomlTableNode childNode)
+    internal NodeStatus TryGetOrAddChildNode(CsTomlDotKey key, out CsTomlTableNode getOrAddChildNode)
     {
+        if (nodes == null)
+        {
+            getOrAddChildNode = Empty;
+            return NodeStatus.Empty;
+        }
         if (nodes.TryGetValueOrAdd(key, CreateGroupingPropertyNode, out var existingNode, out var newNode))
         {
-            childNode = existingNode!;
-            return false;
+            getOrAddChildNode = existingNode!;
+            return NodeStatus.Existed;
         }
 
-        childNode = newNode!;
-        return true;
+        getOrAddChildNode = newNode!;
+        return NodeStatus.NewAdd;
     }
 
-    internal bool TryGetChildNode(ReadOnlySpan<byte> key, out CsTomlTableNode? value)
+    internal bool TryGetChildNode(ReadOnlySpan<byte> key, out CsTomlTableNode? childNode)
     {
         var nodes = this.nodes;
         if (Value is CsTomlInlineTable t)
@@ -161,7 +189,13 @@ internal class CsTomlTableNode
             nodes = t.RootNode.nodes;
         }
 
-        if (nodes.TryGetValue(key, out value))
+        if (nodes == null)
+        {
+            childNode = null;
+            return false;
+        }
+
+        if (nodes.TryGetValue(key, out childNode))
         {
             return true;
         }
@@ -179,7 +213,7 @@ internal class CsTomlTableNode
                 reader.Advance(1);
                 if (CsTomlString.TryFormatEscapeSequence(ref reader, ref bufferWriter, false, false) == CsTomlString.EscapeSequenceResult.Failure)
                 {
-                    value = default;
+                    childNode = default;
                     return false;
                 }
                 utf8BufferWriter.Flush();
@@ -191,28 +225,7 @@ internal class CsTomlTableNode
         }
 
         // search Quoted keys
-        return nodes.TryGetValue(bufferWriter.WrittenSpan, out value);
-    }
-
-    private bool TryGetChildNode(ReadOnlySpan<char> keySpan, out CsTomlTableNode? value)
-    {
-        unsafe
-        {
-            ref var keySpanRef = ref MemoryMarshal.GetReference(keySpan);
-            fixed (char* p = &keySpanRef)
-            {
-                var key = string.Create(keySpan.Length, ((IntPtr)p, keySpan.Length), static (chars, args) =>
-                {
-                    var keySpanRef = MemoryMarshal.CreateSpan(ref Unsafe.AsRef<char>((char*)args.Item1), args.Length);
-                    for (var i = 0; i < chars.Length; i++)
-                    {
-                        chars[i] = keySpanRef[i];
-                    }
-                });
-
-                return TryGetChildNode(key, out value);
-            }
-        };
+        return nodes.TryGetValue(bufferWriter.WrittenSpan, out childNode);
     }
 
     [DebuggerDisplay("NodeCount = {currentNode.NodeCount}")]

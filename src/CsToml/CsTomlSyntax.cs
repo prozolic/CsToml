@@ -115,7 +115,7 @@ internal static class CsTomlSyntax
         internal const byte MINUS = 0x2d;
         internal const byte BACKSLASH = 0x5c;
         internal const byte COLON = 0x3a;
-        internal const byte PERIOD = 0x2e;
+        internal const byte DOT = 0x2e;
         internal const byte COMMA = 0x2c;
     }
 
@@ -332,8 +332,8 @@ internal static class CsTomlSyntax
         => rawByte == Symbol.COLON;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static bool IsPeriod(byte rawByte)
-        => rawByte == Symbol.PERIOD;
+    internal static bool IsDot(byte rawByte)
+        => rawByte == Symbol.DOT;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsExpSymbol(byte rawByte)

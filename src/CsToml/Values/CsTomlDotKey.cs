@@ -130,7 +130,7 @@ internal static class CsTomlDotKeyExtensions
         {
             key[i].ToTomlString(ref writer);
             if (i < key.Length - 1)
-                writer.Write(CsTomlSyntax.Symbol.PERIOD);
+                writer.Write(CsTomlSyntax.Symbol.DOT);
         }
 
         var tempReader = new Utf8Reader(bufferWriter.WrittenSpan);

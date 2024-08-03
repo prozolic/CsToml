@@ -32,16 +32,15 @@ internal partial class CsTomlTable : CsTomlValue
 
     internal CsTomlTable() : base() { }
 
-    internal void AddKeyValue(ArrayPoolList<CsTomlDotKey> csTomlKey, CsTomlValue value, CsTomlTableNode? searchRootNode, IReadOnlyCollection<CsTomlString> comments)
+    internal CsTomlTableNode AddKeyValue(ReadOnlySpan<CsTomlDotKey> dotKeys, CsTomlValue value, CsTomlTableNode? searchRootNode, IReadOnlyCollection<CsTomlString> comments)
     {
         var currentNode = searchRootNode ?? RootNode;
-        var dotKeys = csTomlKey.WrittenSpan;
         var lastKey = dotKeys[^1];
 
         for (var i = 0; i < dotKeys.Length - 1; i++)
         {
             var sectionKey = dotKeys[i];
-            if (currentNode!.TryAddGroupingPropertyNode(sectionKey, out var childNode))
+            if (currentNode!.TryGetOrAddChildNode(sectionKey, out var childNode) == NodeStatus.NewAdd)
             {
                 currentNode = childNode;
                 continue;
@@ -60,25 +59,24 @@ internal partial class CsTomlTable : CsTomlValue
                 continue;
             }
 
-            ExceptionHelper.ThrowNotTurnIntoTable(csTomlKey.WrittenSpan.GetJoinName());
+            ExceptionHelper.ThrowNotTurnIntoTable(dotKeys.GetJoinName());
         }
 
-        currentNode.AddKeyValue(lastKey, value, comments);
+        return currentNode.AddKeyValue(lastKey, value, comments);
     }
 
-    internal void AddTableHeader(ArrayPoolList<CsTomlDotKey> csTomlKey, IReadOnlyCollection<CsTomlString> comments, out CsTomlTableNode? newNode)
+    internal void AddTableHeader(ReadOnlySpan<CsTomlDotKey> dotKeys, IReadOnlyCollection<CsTomlString> comments, out CsTomlTableNode? newNode)
     {
         var node = RootNode;
-        var dotKeys = csTomlKey.WrittenSpan;
-
         var addedNewNode = false;
+
         for (var i = 0; i < dotKeys.Length; i++)
         {
             var sectionKey = dotKeys[i];
-            if (node!.TryAddGroupingPropertyNode(sectionKey, out var childNode))
+            if (node!.TryGetOrAddChildNode(sectionKey, out var childNode) == NodeStatus.NewAdd)
             {
                 addedNewNode = true;
-                node = childNode;
+                node = childNode!;
                 node.IsTableHeader = true;
                 continue;
             }
@@ -104,15 +102,15 @@ internal partial class CsTomlTable : CsTomlValue
         {
             if (node!.IsTableHeaderDefinitionPosition)
             {
-                ExceptionHelper.ThrowTableHeaderIsDefined(csTomlKey.WrittenSpan.GetJoinName());
+                ExceptionHelper.ThrowTableHeaderIsDefined(dotKeys.GetJoinName());
             }
             if (node!.IsArrayOfTablesHeaderDefinitionPosition)
             {
-                ExceptionHelper.ThrowTableHeaderIsDefinedAsArrayOfTables(csTomlKey.WrittenSpan.GetJoinName());
+                ExceptionHelper.ThrowTableHeaderIsDefinedAsArrayOfTables(dotKeys.GetJoinName());
             }
             if (!node!.IsTableHeader)
             {
-                ExceptionHelper.ThrowTableHeaderIsDefined(csTomlKey.WrittenSpan.GetJoinName());
+                ExceptionHelper.ThrowTableHeaderIsDefined(dotKeys.GetJoinName());
             }
         }
 
@@ -124,19 +122,18 @@ internal partial class CsTomlTable : CsTomlValue
         newNode = node;
     }
 
-    internal void AddArrayOfTablesHeader(ArrayPoolList<CsTomlDotKey> csTomlKey, IReadOnlyCollection<CsTomlString> comments, out CsTomlTableNode? newNode)
+    internal void AddArrayOfTablesHeader(ReadOnlySpan<CsTomlDotKey> dotKeys, IReadOnlyCollection<CsTomlString> comments, out CsTomlTableNode? newNode)
     {
         var currentNode = RootNode;
-        var dotKeys = csTomlKey.WrittenSpan;
-
         var addedNewNode = false;
+
         for (var i = 0; i < dotKeys.Length; i++)
         {
             var sectionKey = dotKeys[i];
-            if (currentNode!.TryAddGroupingPropertyNode(sectionKey, out var childNode))
+            if (currentNode!.TryGetOrAddChildNode(sectionKey, out var childNode) == NodeStatus.NewAdd)
             {
                 addedNewNode = true;
-                currentNode = childNode;
+                currentNode = childNode!;
                 currentNode.IsArrayOfTablesHeader = true;
                 currentNode.IsTableHeader = i < dotKeys.Length - 1;
                 continue;
@@ -168,7 +165,7 @@ internal partial class CsTomlTable : CsTomlValue
 
         if (currentNode!.IsTableHeader)
         {
-            ExceptionHelper.ThrowTheArrayOfTablesIsDefinedAsTable(csTomlKey.WrittenSpan.GetJoinName());
+            ExceptionHelper.ThrowTheArrayOfTablesIsDefinedAsTable(dotKeys.GetJoinName());
         }
 
         if (addedNewNode)
@@ -181,7 +178,7 @@ internal partial class CsTomlTable : CsTomlValue
         {
             if (!currentNode!.IsArrayOfTablesHeaderDefinitionPosition)
             {
-                ExceptionHelper.ThrowTheArrayOfTablesIsDefinedAsTable(csTomlKey.WrittenSpan.GetJoinName());
+                ExceptionHelper.ThrowTheArrayOfTablesIsDefinedAsTable(dotKeys.GetJoinName());
             }
         }
         var table = new CsTomlTable();

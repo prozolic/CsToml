@@ -42,7 +42,7 @@ internal partial class CsTomlString :
         ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out utf16String);
     }
 
-    private CsTomlString(string value, CsTomlStringType type = CsTomlStringType.Basic) : base()
+    internal CsTomlString(string value, CsTomlStringType type = CsTomlStringType.Basic) : base()
     {
         TomlStringType = type;
         utf16String = value;
