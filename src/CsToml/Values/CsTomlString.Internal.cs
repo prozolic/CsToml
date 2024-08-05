@@ -113,7 +113,7 @@ internal partial class CsTomlString
 
     internal static CsTomlString Parse(ReadOnlySpan<char> utf16String)
     {
-        if (utf16String.Length == 0) return CreateEmpty(CsTomlStringType.Basic);
+        if (utf16String.Length == 0) return new CsTomlString(string.Empty, CsTomlStringType.Basic);
 
         var writer = new ArrayPoolBufferWriter<byte>(128);
         using var _ = writer;

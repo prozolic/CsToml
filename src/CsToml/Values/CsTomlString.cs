@@ -30,11 +30,6 @@ internal partial class CsTomlString :
         return new CsTomlString(value, type);
     }
 
-    public static CsTomlString CreateEmpty(CsTomlStringType type = CsTomlStringType.Basic)
-    {
-        return new CsTomlString(string.Empty, type);
-    }
-
     public CsTomlString(ReadOnlySpan<byte> value, CsTomlStringType type = CsTomlStringType.Basic) : base()
     {
         TomlStringType = type;
@@ -42,7 +37,7 @@ internal partial class CsTomlString :
         ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out utf16String);
     }
 
-    internal CsTomlString(string value, CsTomlStringType type = CsTomlStringType.Basic) : base()
+    public CsTomlString(string value, CsTomlStringType type = CsTomlStringType.Basic) : base()
     {
         TomlStringType = type;
         utf16String = value;

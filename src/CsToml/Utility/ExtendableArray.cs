@@ -53,8 +53,6 @@ internal ref struct ExtendableArray<T>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Return()
     {
-        if (count == 0) return;
-
         count = 0;
         ArrayPool<T>.Shared.Return(array, RuntimeHelpers.IsReferenceOrContainsReferences<T>());
         array = [];
