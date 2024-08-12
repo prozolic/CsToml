@@ -37,8 +37,7 @@ public partial class TestTomlSerializedObject
     public int[] intArr { get; set; } = new int[] { 2, 3, 4, 5 };
     [TomlValueOnSerialized(TomlValueType.Array)]
     public object[] oArr { get; set; } = new object[] { 2, "test", 4.02d, DateTime.Now };
-    [TomlValueOnSerialized(TomlValueType.Array)]
-    public IEnumerable<object> oArr2 => oArr;
+
     [TomlValueOnSerialized(TomlValueType.Array)]
     public List<object> oArr3 { get; set; } = new List<object>(new object[] { new long[] { 1, 2, 3 }, 2, new object[] { 2, "test", 4.02d, DateTime.Now }, });
 
