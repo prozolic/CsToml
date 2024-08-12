@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.13.12" />
-    <PackageReference Include="Samboy063.Tomlet" Version="5.3.1" />
+    <PackageReference Include="BenchmarkDotNet" Version="0.14.0" />
+    <PackageReference Include="Samboy063.Tomlet" Version="5.4.0" />
     <PackageReference Include="Tomlyn" Version="0.17.0" />
     <PackageReference Include="Tommy" Version="3.1.2" />
   </ItemGroup>
@@ -17,6 +17,10 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\CsToml.Extensions\CsToml.Extensions.csproj" />
     <ProjectReference Include="..\..\src\CsToml\CsToml.csproj" />
+    <ProjectReference Include="..\..\src\CsToml.Generator\CsToml.Generator.csproj">
+      <OutputItemType>Analyzer</OutputItemType>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
   </ItemGroup>
 
 </Project>

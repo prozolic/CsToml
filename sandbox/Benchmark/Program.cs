@@ -5,6 +5,7 @@ using BenchmarkDotNet.Running;
 Console.WriteLine("Hello, World!");
 
 var switcher = new BenchmarkSwitcher(new[] {
+    typeof(ClassDeserializationBenchmark),
     typeof(StringOnlyParseBenchmark),
     typeof(IntOnlyParseBenchmark),
     typeof(FloatOnlyParseBenchmark),
