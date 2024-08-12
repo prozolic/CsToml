@@ -441,8 +441,6 @@ internal ref struct CsTomlReader
 
     private TomlString ReadDoubleQuoteString()
     {
-        var firstPosition = sequenceReader.Consumed;
-        var currentSpan = sequenceReader.UnreadSpan;
         var doubleQuoteCount = 0;
         var index = 0;
         while(TryPeek(index++, out var ch))
@@ -782,8 +780,6 @@ internal ref struct CsTomlReader
 
     private TomlString ReadSingleQuoteString()
     {
-        var firstPosition = sequenceReader.Consumed;
-        var currentSpan = sequenceReader.UnreadSpan;
         var singleQuoteCount = 0;
         var index = 0;
         while (TryPeek(index++, out var ch))

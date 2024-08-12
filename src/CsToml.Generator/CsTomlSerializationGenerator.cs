@@ -298,8 +298,8 @@ internal sealed class CsTomlSerializationGenerator
 
     public string GenerateDeserializeProcessCode(SourceProductionContext context)
     {
+        deserializerBuilder.Clear();
         GenerateDeserializeCore(context, string.Empty, typeSymbol, valueMembers);
-
         return deserializerBuilder.ToString();
     }
 
@@ -466,6 +466,7 @@ internal sealed class CsTomlSerializationGenerator
             case SpecialType.System_String:
             case SpecialType.System_Double:
             case SpecialType.System_DateTime:
+            case SpecialType.System_Object:
                 deserializerBuilder.AppendLine($"        if (document.TryFind({findName}, out var _{valueName}))");
 
                 if (CollectionMetaData.FromArray(property.Type))

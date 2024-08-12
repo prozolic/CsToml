@@ -108,10 +108,10 @@ partial class {{typeSymbol.Name}} : ITomlSerializedObject<{{typeSymbol.Name}}>
 {{generator.GenerateDeserializeProcessCode(context)}}
     }
 
-    static {{typeSymbol.Name}} ITomlSerializedObject<{{typeSymbol.Name}}>.Deserialize<ITomlValueSerializer>(in ReadOnlySequence<byte> tomlTextSequence, CsTomlSerializerOptions? options)
+    static {{typeSymbol.Name}} ITomlSerializedObject<{{typeSymbol.Name}}>.Deserialize<ITomlValueSerializer>(in ReadOnlySequence<byte> tomlText, CsTomlSerializerOptions? options)
     {
-        // TODO: implemented
-        return default!;
+        // TODO: implemented...
+{{generator.GenerateDeserializeProcessCode(context)}}
     }
 }
 

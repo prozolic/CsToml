@@ -1,6 +1,7 @@
 ﻿using CsToml.Utility;
 using System.Buffers;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace CsToml.Values;
@@ -18,6 +19,7 @@ internal sealed partial class TomlInlineTable : TomlValue
     public TomlInlineTable() : base() 
     {}
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal TomlTableNode AddKeyValue(ReadOnlySpan<TomlDotKey> keyArray, TomlValue value, TomlTableNode? searchRootNode)
         => inlineTable.AddKeyValue(keyArray, value, searchRootNode, []);
 
