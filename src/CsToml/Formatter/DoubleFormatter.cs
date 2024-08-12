@@ -36,37 +36,37 @@ internal class DoubleFormatter : ICsTomlFormatter<double>
         if (bytes.Length < 3) ExceptionHelper.ThrowIncorrectTomlFloatFormat();
 
         // sign check
-        if (CsTomlSyntax.IsPlusOrMinusSign(bytes[0]))
+        if (TomlCodes.IsPlusOrMinusSign(bytes[0]))
         {
-            var plusOrMinus = CsTomlSyntax.IsPlusSign(bytes[0]) ? 1 : -1;
-            if (bytes[1] == CsTomlSyntax.Alphabet.i &&
-                bytes[2] == CsTomlSyntax.Alphabet.n &&
-                bytes[3] == CsTomlSyntax.Alphabet.f)
+            var plusOrMinus = TomlCodes.IsPlusSign(bytes[0]) ? 1 : -1;
+            if (bytes[1] == TomlCodes.Alphabet.i &&
+                bytes[2] == TomlCodes.Alphabet.n &&
+                bytes[3] == TomlCodes.Alphabet.f)
             {
-                return plusOrMinus * CsTomlSyntax.Float.Inf;
+                return plusOrMinus * TomlCodes.Float.Inf;
             }
-            if (bytes[1] == CsTomlSyntax.Alphabet.n &&
-                bytes[2] == CsTomlSyntax.Alphabet.a &&
-                bytes[3] == CsTomlSyntax.Alphabet.n)
+            if (bytes[1] == TomlCodes.Alphabet.n &&
+                bytes[2] == TomlCodes.Alphabet.a &&
+                bytes[3] == TomlCodes.Alphabet.n)
             {
-                return plusOrMinus * CsTomlSyntax.Float.Nan;
+                return plusOrMinus * TomlCodes.Float.Nan;
             }
 
             return plusOrMinus * DeserializeDouble(bytes[1..]);
         }
         else
         {
-            if (bytes[0] == CsTomlSyntax.Alphabet.i &&
-                bytes[1] == CsTomlSyntax.Alphabet.n &&
-                bytes[2] == CsTomlSyntax.Alphabet.f)
+            if (bytes[0] == TomlCodes.Alphabet.i &&
+                bytes[1] == TomlCodes.Alphabet.n &&
+                bytes[2] == TomlCodes.Alphabet.f)
             {
-                return CsTomlSyntax.Float.Inf;
+                return TomlCodes.Float.Inf;
             }
-            if (bytes[0] == CsTomlSyntax.Alphabet.n &&
-                bytes[1] == CsTomlSyntax.Alphabet.a &&
-                bytes[2] == CsTomlSyntax.Alphabet.n)
+            if (bytes[0] == TomlCodes.Alphabet.n &&
+                bytes[1] == TomlCodes.Alphabet.a &&
+                bytes[2] == TomlCodes.Alphabet.n)
             {
-                return CsTomlSyntax.Float.Nan;
+                return TomlCodes.Float.Nan;
             }
 
             return DeserializeDouble(bytes);
@@ -81,17 +81,17 @@ internal class DoubleFormatter : ICsTomlFormatter<double>
         // integer part
         while (true)
         {
-            if (CsTomlSyntax.IsNumber(utf8Bytes[index]))
+            if (TomlCodes.IsNumber(utf8Bytes[index]))
             {
                 integerValue *= 10d;
-                integerValue += CsTomlSyntax.Number.ParseDecimal(utf8Bytes[index++]);
+                integerValue += TomlCodes.Number.ParseDecimal(utf8Bytes[index++]);
                 continue;
             }
-            else if (CsTomlSyntax.IsDot(utf8Bytes[index]))
+            else if (TomlCodes.IsDot(utf8Bytes[index]))
             {
                 break;
             }
-            else if (CsTomlSyntax.IsExpSymbol(utf8Bytes[index]))
+            else if (TomlCodes.IsExpSymbol(utf8Bytes[index]))
             {
                 break;
             }
@@ -100,34 +100,34 @@ internal class DoubleFormatter : ICsTomlFormatter<double>
 
         // decimal part
         double decimalValue = 0d;
-        if (index < utf8Bytes.Length && CsTomlSyntax.IsDot(utf8Bytes[index]))
+        if (index < utf8Bytes.Length && TomlCodes.IsDot(utf8Bytes[index]))
         {
             index++;
             var nIndex = 1;
-            while (index < utf8Bytes.Length && CsTomlSyntax.IsNumber(utf8Bytes[index]))
+            while (index < utf8Bytes.Length && TomlCodes.IsNumber(utf8Bytes[index]))
             {
-                decimalValue += CsTomlSyntax.Number.ParseDecimal(utf8Bytes[index++]) / GetPositiveExponent(nIndex++);
+                decimalValue += TomlCodes.Number.ParseDecimal(utf8Bytes[index++]) / GetPositiveExponent(nIndex++);
             }
         }
 
         // exponent part
         long exponentValue = 0;
         var plusSign = true;
-        if (index < utf8Bytes.Length && CsTomlSyntax.IsExpSymbol(utf8Bytes[index]))
+        if (index < utf8Bytes.Length && TomlCodes.IsExpSymbol(utf8Bytes[index]))
         {
             index++;
-            if (CsTomlSyntax.IsPlusOrMinusSign(utf8Bytes[index]))
+            if (TomlCodes.IsPlusOrMinusSign(utf8Bytes[index]))
             {
-                if (CsTomlSyntax.IsMinusSign(utf8Bytes[index]))
+                if (TomlCodes.IsMinusSign(utf8Bytes[index]))
                 {
                     plusSign = false;
                 }
                 index++;
             }
-            while (index < utf8Bytes.Length && CsTomlSyntax.IsNumber(utf8Bytes[index]))
+            while (index < utf8Bytes.Length && TomlCodes.IsNumber(utf8Bytes[index]))
             {
                 exponentValue *= 10;
-                exponentValue += CsTomlSyntax.Number.ParseDecimal(utf8Bytes[index++]);
+                exponentValue += TomlCodes.Number.ParseDecimal(utf8Bytes[index++]);
             }
         }
 
@@ -142,7 +142,7 @@ internal class DoubleFormatter : ICsTomlFormatter<double>
     {
         if (exponentValue <= 15)
         {
-            return CsTomlSyntax.Float.PositivePosExps15[exponentValue];
+            return TomlCodes.Float.PositivePosExps15[exponentValue];
         }
 
         return Math.Pow(10d, exponentValue);

@@ -19,7 +19,7 @@ internal class DateTimeOffsetFormatter : ICsTomlFormatter<DateTimeOffset>
         }
         else if (totalMicrosecond > 0 && totalMinutes != 0)
         {
-            var length = CsTomlSyntax.Number.DigitsDecimalUnroll4(totalMicrosecond);
+            var length = TomlCodes.Number.DigitsDecimalUnroll4(totalMicrosecond);
 
             switch (length)
             {
@@ -48,7 +48,7 @@ internal class DateTimeOffsetFormatter : ICsTomlFormatter<DateTimeOffset>
         }
         else if (totalMicrosecond > 0)
         {
-            var length = CsTomlSyntax.Number.DigitsDecimalUnroll4(totalMicrosecond);
+            var length = TomlCodes.Number.DigitsDecimalUnroll4(totalMicrosecond);
 
             switch (length)
             {
@@ -97,11 +97,11 @@ internal class DateTimeOffsetFormatter : ICsTomlFormatter<DateTimeOffset>
     public static DateTimeOffset Deserialize(ref Utf8Reader reader, int length)
     {
         var bytes = reader.ReadBytes(length);
-        if (bytes.Length < CsTomlSyntax.DateTime.OffsetDateTimeZFormatLength) throw new ArgumentException();
+        if (bytes.Length < TomlCodes.DateTime.OffsetDateTimeZFormatLength) throw new ArgumentException();
 
-        if (CsTomlSyntax.IsHyphen(bytes[4]) && CsTomlSyntax.IsHyphen(bytes[7]) && (bytes[10] == CsTomlSyntax.Alphabet.T || bytes[10] == CsTomlSyntax.Alphabet.t || CsTomlSyntax.IsTabOrWhiteSpace(bytes[10])))
+        if (TomlCodes.IsHyphen(bytes[4]) && TomlCodes.IsHyphen(bytes[7]) && (bytes[10] == TomlCodes.Alphabet.T || bytes[10] == TomlCodes.Alphabet.t || TomlCodes.IsTabOrWhiteSpace(bytes[10])))
         {
-            if (bytes[bytes.Length - 1] ==  CsTomlSyntax.Alphabet.Z || bytes[bytes.Length - 1] == CsTomlSyntax.Alphabet.z)
+            if (bytes[bytes.Length - 1] ==  TomlCodes.Alphabet.Z || bytes[bytes.Length - 1] == TomlCodes.Alphabet.z)
                 return DeserializeDateTimeOffset(bytes[..^1], bytes.Slice(bytes.Length - 1, 1));
 
             return DeserializeDateTimeOffset(bytes[..^6], bytes.Slice(bytes.Length - 6, 6));
@@ -172,7 +172,7 @@ internal class DateTimeOffsetFormatter : ICsTomlFormatter<DateTimeOffset>
             microsecond += DeserializeDecimal(bytes[25]);
         }
 
-        if (offsetBytes.Length == 1 && offsetBytes[0] == CsTomlSyntax.Alphabet.Z || offsetBytes[0] == CsTomlSyntax.Alphabet.z)
+        if (offsetBytes.Length == 1 && offsetBytes[0] == TomlCodes.Alphabet.Z || offsetBytes[0] == TomlCodes.Alphabet.z)
         {
             try
             {
@@ -187,7 +187,7 @@ internal class DateTimeOffsetFormatter : ICsTomlFormatter<DateTimeOffset>
 
         if (offsetBytes.Length == 6)
         {
-            var plusOrMinus = CsTomlSyntax.IsPlusSign(offsetBytes[0]) ? 1 : -1;
+            var plusOrMinus = TomlCodes.IsPlusSign(offsetBytes[0]) ? 1 : -1;
             var offsetHour = DeserializeDecimal(offsetBytes[1]) * 10 + DeserializeDecimal(offsetBytes[2]);
             var offsetMinute = DeserializeDecimal(offsetBytes[4]) * 10 + DeserializeDecimal(offsetBytes[5]);
             try
@@ -213,11 +213,11 @@ internal class DateTimeOffsetFormatter : ICsTomlFormatter<DateTimeOffset>
 
     internal static int DeserializeDecimal(byte utf8Byte)
     {
-        if (!CsTomlSyntax.IsNumber(utf8Byte))
+        if (!TomlCodes.IsNumber(utf8Byte))
         {
             ExceptionHelper.ThrowNumericConversionFailed(utf8Byte);
         }
-        return CsTomlSyntax.Number.ParseDecimal(utf8Byte);
+        return TomlCodes.Number.ParseDecimal(utf8Byte);
     }
 }
 

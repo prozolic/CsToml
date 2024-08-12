@@ -1,10 +1,7 @@
 ﻿
 using System.Buffers;
-using System.Runtime.CompilerServices;
-using CsToml.Extensions.Extension;
 using CsToml.Extensions.Utility;
 using Cysharp.Collections;
-using Microsoft.Win32.SafeHandles;
 
 namespace CsToml.Extensions;
 
@@ -13,7 +10,7 @@ public partial class CsTomlFileSerializer
     private static readonly string TomlExtension = ".toml";
 
     public static TPackage Deserialize<TPackage>(string tomlFilePath, CsTomlSerializerOptions? options = null)
-        where TPackage : CsTomlPackage, ICsTomlPackageCreator<TPackage>
+        where TPackage : ITomlSerializedObject<TPackage>
     {
         if (Path.GetExtension(tomlFilePath) != TomlExtension)
             throw new FormatException($"TOML files should use the extension .toml");
@@ -23,10 +20,9 @@ public partial class CsTomlFileSerializer
 
         if (length == 0)
         {
-            return TPackage.CreatePackage() ?? throw new NullReferenceException($"{typeof(TPackage)} was not created.");
+            return CsTomlSerializer.Deserialize<TPackage>(ReadOnlySpan<byte>.Empty, options);
         }
-
-        if (length < Array.MaxLength)
+        else if (length < Array.MaxLength)
         {
             using var bytes = new NativeMemoryArray<byte>(length);
             var bytesSpan = bytes.AsSpan();
@@ -63,7 +59,7 @@ public partial class CsTomlFileSerializer
     }
 
     public static async ValueTask<TPackage> DeserializeAsync<TPackage>(string tomlFilePath, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
-        where TPackage : CsTomlPackage, ICsTomlPackageCreator<TPackage>
+        where TPackage : ITomlSerializedObject<TPackage>
     {
         if (Path.GetExtension(tomlFilePath) != TomlExtension)
             throw new FormatException($"TOML files should use the extension .toml");
@@ -74,7 +70,7 @@ public partial class CsTomlFileSerializer
 
         if (length == 0)
         {
-            return TPackage.CreatePackage() ?? throw new NullReferenceException($"{typeof(TPackage)} was not created."); ;
+            return CsTomlSerializer.Deserialize<TPackage>(ReadOnlySpan<byte>.Empty, options);
         }
         else if (length <= Array.MaxLength)
         {
@@ -111,10 +107,13 @@ public partial class CsTomlFileSerializer
     }
 
     public static void Serialize<TPackage>(string tomlFilePath, TPackage? package, CsTomlSerializerOptions? options = null)
-        where TPackage : CsTomlPackage
+        where TPackage : ITomlSerializedObject<TPackage>
     {
         if (Path.GetExtension(tomlFilePath) != TomlExtension)
             throw new FormatException($"TOML files should use the extension .toml");
+
+        if (package == null)
+            return;
 
         var directory = new FileInfo(tomlFilePath).Directory;
         if (!directory!.Exists)
@@ -122,7 +121,7 @@ public partial class CsTomlFileSerializer
 
         using var bufferWriter = new ByteBufferSegmentWriter();
         var tempWriter = bufferWriter;
-        CsTomlSerializer.Serialize(ref tempWriter, package);
+        CsTomlSerializer.Serialize<ByteBufferSegmentWriter, TPackage>(ref tempWriter, package, options);
 
         using var tomlFileHandle = File.OpenHandle(tomlFilePath, FileMode.Create, FileAccess.ReadWrite, options: FileOptions.Asynchronous);
         var fileWriter = new RandomAccessFileWriter(tomlFileHandle);
@@ -130,10 +129,13 @@ public partial class CsTomlFileSerializer
     }
 
     public static async ValueTask SerializeAsync<TPackage>(string tomlFilePath, TPackage? package, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
-    where TPackage : CsTomlPackage, ICsTomlPackageCreator<TPackage>
+    where TPackage : ITomlSerializedObject<TPackage>
     {
         if (Path.GetExtension(tomlFilePath) != TomlExtension)
             throw new FormatException($"TOML files should use the extension .toml");
+
+        if (package == null)
+            return;
 
         var directory = new FileInfo(tomlFilePath).Directory;
         if (!directory!.Exists)
@@ -143,7 +145,7 @@ public partial class CsTomlFileSerializer
 
         using var bufferWriter = new ByteBufferSegmentWriter();
         var tempWriter = bufferWriter;
-        CsTomlSerializer.Serialize(ref tempWriter, package);
+        CsTomlSerializer.Serialize<ByteBufferSegmentWriter, TPackage>(ref tempWriter, package, options);
 
         using var tomlFileHandle = File.OpenHandle(tomlFilePath, FileMode.Create, FileAccess.ReadWrite, options: FileOptions.Asynchronous);
         var fileWriter = new RandomAccessFileWriter(tomlFileHandle);

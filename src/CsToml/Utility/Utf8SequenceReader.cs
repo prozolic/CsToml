@@ -1,5 +1,4 @@
-﻿using CsToml.Error;
-using System.Buffers;
+﻿using System.Buffers;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
@@ -30,6 +29,9 @@ internal ref struct Utf8SequenceReader
 
     public ReadOnlySequence<byte> Sequence { get; }
 
+    public readonly SequencePosition Position
+        => Sequence.GetPosition(CurrentSpanIndex, currentPosition);
+
     public int CurrentSpanIndex { get; private set; }
 
     public long Consumed { get; private set; }
@@ -37,6 +39,8 @@ internal ref struct Utf8SequenceReader
     public readonly long Remaining => Length - Consumed;
 
     public readonly long Length { get; }
+
+    public readonly bool End => !moreData;
 
     public readonly bool IsFullSpan { get; init; }
 
@@ -53,7 +57,7 @@ internal ref struct Utf8SequenceReader
         IsFullSpan = true;
     }
 
-    public Utf8SequenceReader(in ReadOnlySequence<byte> sequence)
+    public Utf8SequenceReader(ReadOnlySequence<byte> sequence)
     {
         CurrentSpanIndex = 0;
         Consumed = 0;
@@ -89,19 +93,9 @@ internal ref struct Utf8SequenceReader
         }
     }
 
-    [DebuggerStepThrough]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly bool Peek()
-        => Remaining > 0;
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool TryPeek(out byte value)
     {
-        if (!Peek())
-        {
-            value = default;
-            return false;
-        }
         if (moreData)
         {
             value = CurrentSpan[CurrentSpanIndex];
@@ -112,6 +106,39 @@ internal ref struct Utf8SequenceReader
             value = default;
             return false;
         }
+    }
+
+    public readonly bool TryPeek(long offset, out byte value)
+    {
+        if (Remaining <= offset)
+        {
+            value = default;
+            return false;
+        }
+
+        if (CurrentSpanIndex + offset <= CurrentSpan.Length - 1)
+        {
+            value = CurrentSpan[CurrentSpanIndex + (int)offset];
+            return true;
+        }
+
+        var remainingOffset = offset;
+        var nextPosition = Position;
+        ReadOnlyMemory<byte> currentMemory;
+
+        while (Sequence.TryGet(ref nextPosition, out currentMemory, true))
+        {
+            if (currentMemory.Length == 0)
+                continue;
+
+            if (remainingOffset >= currentMemory.Length)
+                remainingOffset -= currentMemory.Length;
+            else
+                break;
+        }
+
+        value = currentMemory.Span[(int)remainingOffset];
+        return true;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -137,6 +164,17 @@ internal ref struct Utf8SequenceReader
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void AdvanceCurrentSpan(long count)
+    {
+        Debug.Assert(count >= 0);
+
+        Consumed += count;
+        CurrentSpanIndex += (int)count;
+        if (CurrentSpanIndex >= CurrentSpan.Length)
+            GetNextSpan();
+    }
+
     public bool TryFullSpan(long length, out ReadOnlySpan<byte> values)
     {
         if (IsFullSpan)
@@ -144,8 +182,7 @@ internal ref struct Utf8SequenceReader
             if (length <= Remaining)
             {
                 values = CurrentSpan.Slice(CurrentSpanIndex, (int)length);
-                CurrentSpanIndex += (int)length;
-                Consumed += length;
+                Advance(length);
                 return true;
             }
         }
@@ -204,6 +241,50 @@ internal ref struct Utf8SequenceReader
 
         return true;
     }
+
+    public bool TryGetbytes(long length, scoped Span<byte> span)
+    {
+        if (length != span.Length)
+            return false;
+        if (Length < Consumed + length)
+            return false;
+
+        if (length <= UnreadSpan.Length)
+        {
+            UnreadSpan[..(int)length].CopyTo(span);
+            Advance((int)length);
+            return true;
+        }
+
+        var copiedSize = UnreadSpan.Length;
+        UnreadSpan.CopyTo(span.Slice(0, copiedSize));
+        Advance(copiedSize);
+
+        var startIndex = copiedSize;
+        var unreadSize = length - copiedSize;
+        while (unreadSize > 0)
+        {
+            var unreadSpan = UnreadSpan;
+            if (unreadSize > unreadSpan.Length)
+            {
+                UnreadSpan.CopyTo(span.Slice(startIndex, unreadSpan.Length));
+                Advance(unreadSpan.Length);
+                unreadSize -= unreadSpan.Length;
+                startIndex += unreadSpan.Length;
+            }
+            else
+            {
+                var size = (int)unreadSize;
+                UnreadSpan[..size].CopyTo(span.Slice(startIndex, size));
+                Advance(size);
+                unreadSize = 0;
+                startIndex += size;
+            }
+        }
+
+        return true;
+    }
+
 
     private void ResetReader()
     {
@@ -287,6 +368,50 @@ internal ref struct Utf8SequenceReader
             Consumed -= count;
             throw new Exception();
         }
+    }
+
+    private bool IsNextSlow(scoped ReadOnlySpan<byte> next, bool advancePast)
+    {
+        ReadOnlySpan<byte> currentSpan = UnreadSpan;
+
+        int fullLength = next.Length;
+        SequencePosition nextPosition = this.nextPosition;
+
+        while (next.StartsWith(currentSpan))
+        {
+            if (next.Length == currentSpan.Length)
+            {
+                // Fully matched
+                if (advancePast)
+                {
+                    Advance(fullLength);
+                }
+                return true;
+            }
+
+            // Need to check the next segment
+            while (true)
+            {
+                if (!Sequence.TryGet(ref nextPosition, out ReadOnlyMemory<byte> nextSegment, advance: true))
+                {
+                    // Nothing left
+                    return false;
+                }
+
+                if (nextSegment.Length > 0)
+                {
+                    next = next.Slice(currentSpan.Length);
+                    currentSpan = nextSegment.Span;
+                    if (currentSpan.Length > next.Length)
+                    {
+                        currentSpan = currentSpan.Slice(0, next.Length);
+                    }
+                    break;
+                }
+            }
+        }
+
+        return false;
     }
 
 }

@@ -42,7 +42,6 @@ internal class StringFormatter : ICsTomlFormatter<string>, ICsTomlSpanFormatter<
     private static string DeserializeCore(ReadOnlySpan<byte> utf8Bytes)
     {
         var maxBufferSize = utf8Bytes.Length * 2;
-
         if (maxBufferSize <= 1024)
         {
             Span<char> bufferBytesSpan = stackalloc char[maxBufferSize];
@@ -58,19 +57,25 @@ internal class StringFormatter : ICsTomlFormatter<string>, ICsTomlSpanFormatter<
         }
         else
         {
-            using var bufferWriter = new ArrayPoolBufferWriter<char>();
+            var bufferWriter = RecycleArrayPoolBufferWriter<char>.Rent();
             var bufferBytesSpan = bufferWriter.GetSpan(maxBufferSize);
-
-            var status = Utf8.ToUtf16(utf8Bytes, bufferBytesSpan, out var bytesRead, out var charsWritten, replaceInvalidSequences: false);
-            if (status != OperationStatus.Done)
+            try
             {
-                if (status == OperationStatus.InvalidData)
-                    ExceptionHelper.ThrowInvalidByteIncluded();
-                ExceptionHelper.ThrowBufferTooSmallFailed();
-            }
+                var status = Utf8.ToUtf16(utf8Bytes, bufferBytesSpan, out var bytesRead, out var charsWritten, replaceInvalidSequences: false);
+                if (status != OperationStatus.Done)
+                {
+                    if (status == OperationStatus.InvalidData)
+                        ExceptionHelper.ThrowInvalidByteIncluded();
+                    ExceptionHelper.ThrowBufferTooSmallFailed();
+                }
 
-            bufferWriter.Advance(charsWritten);
-            return new string(bufferWriter.WrittenSpan);
+                bufferWriter.Advance(charsWritten);
+                return new string(bufferWriter.WrittenSpan);
+            }
+            finally
+            {
+                RecycleArrayPoolBufferWriter<char>.Return(bufferWriter);
+            }
         }
     }
 

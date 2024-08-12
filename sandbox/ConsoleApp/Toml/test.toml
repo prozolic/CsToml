@@ -1,5 +1,15 @@
 ﻿# This is a full-line comment
 
+"Name\tJos\u00E9" = 123
+s = ''''''
+ss = '''''''
+sss = ''''''''
+s2 = '''' '''
+s3 = ''''' '''
+s4 = ''' ''''
+s5 = ''' '''''
+s6 = ''' ' ' '' ' ' '' ' '' ' ''   '     a ' '''
+i = {j = 12, a = 12}
 key = "value"
 bare_key = "value"
 bare-key = "value"
@@ -38,8 +48,13 @@ str6 = """Here are fifteen quotation marks: ""\"""\"""\"""\"""\"."""
 
 # "This," she said, "is just a pointless statement."
 str7 = """"This," she said, "is just a pointless statement.""""
-
-"Name\tJos\u00E9" = 123
+str8 = """Here are fifteen quotation marks: ""\"""\"""\"""\"""\"."""
+str9 = """"""""
+str10 = """""""
+str11 = """"""
+str12 = """ """""
+str13 = """"" """
+str14 = """"" """""
 
 # What you see is what you get.
 winpath  = 'C:\Users\nodejs\templates'
@@ -109,8 +124,14 @@ odt1 = 1979-05-27T07:32:00Z
 odt2 = 1979-05-27T00:32:00-07:00
 odt3 = 1979-05-27T00:32:00.999999-07:00
 odt4 = 1979-05-27T07:32:00Z
+odt5 = 1979-05-27 07:32:00Z
+odt6 = 1979-05-27 00:32:00-07:00
+odt7 = 1979-05-27 00:32:00.999999-07:00
+odt8 = 1979-05-27 07:32:00Z
 ldt1 = 1979-05-27T07:32:00
 ldt2 = 1979-05-27T00:32:00.999999
+ldt3 = 1979-05-27 07:32:00
+ldt4 = 1979-05-27 00:32:00.999999
 ld1 = 1979-05-27
 lt1 = 07:32:00
 lt2 = 00:32:00.999999
@@ -181,4 +202,4 @@ test = 2
 arr = [2, "tes2", 8]
 
 [[array.of.tables]]
-name = { first = "Tom", last = "Preston-Werner", array = [0,  { x = 1, y = 2, z = [999] }], last2 = { key = "Preston-Werner"}}
+name = { type.name.x.y = { first.name = "Tom", last.name = "Preston-Werner" }, last = "Preston-Werner", array = [0,  { x = 1, y = 2, z = [999] }], last2 = { key = "Preston-Werner"}}

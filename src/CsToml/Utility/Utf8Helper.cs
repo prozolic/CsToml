@@ -111,7 +111,7 @@ internal static class Utf8Helper
 
         for (var i = 0; i < source.Length; i++)
         {
-            if (!CsTomlSyntax.IsHex(source[i]))
+            if (!TomlCodes.IsHex(source[i]))
             {
                 writtenCount = 0;
                 ExceptionHelper.ThrowIncorrectCompactEscapeCharacters(source[i]);
@@ -119,10 +119,10 @@ internal static class Utf8Helper
         }
 
         var codePoint = 0;
-        codePoint += (CsTomlSyntax.Number.ParseHex(source[0]) << 12);
-        codePoint += (CsTomlSyntax.Number.ParseHex(source[1]) << 8);
-        codePoint += (CsTomlSyntax.Number.ParseHex(source[2]) << 4);
-        codePoint +=  CsTomlSyntax.Number.ParseHex(source[3]);
+        codePoint += (TomlCodes.Number.ParseHex(source[0]) << 12);
+        codePoint += (TomlCodes.Number.ParseHex(source[1]) << 8);
+        codePoint += (TomlCodes.Number.ParseHex(source[2]) << 4);
+        codePoint +=  TomlCodes.Number.ParseHex(source[3]);
 
         Utf8Helper.ParseFromCodePointToUtf8(codePoint, destination, out writtenCount);
     }
@@ -142,7 +142,7 @@ internal static class Utf8Helper
 
         for (var i = 0; i < source.Length - 1; i++)
         {
-            if (!CsTomlSyntax.IsHex(source[i]))
+            if (!TomlCodes.IsHex(source[i]))
             {
                 writtenCount = 0;
                 ExceptionHelper.ThrowIncorrectCompactEscapeCharacters(source[i]);
@@ -150,14 +150,14 @@ internal static class Utf8Helper
         }
 
         var codePoint = 0;
-        codePoint += (CsTomlSyntax.Number.ParseHex(source[0]) << 28);
-        codePoint += (CsTomlSyntax.Number.ParseHex(source[1]) << 24);
-        codePoint += (CsTomlSyntax.Number.ParseHex(source[2]) << 20);
-        codePoint += (CsTomlSyntax.Number.ParseHex(source[3]) << 16);
-        codePoint += (CsTomlSyntax.Number.ParseHex(source[4]) << 12);
-        codePoint += (CsTomlSyntax.Number.ParseHex(source[5]) << 8);
-        codePoint += (CsTomlSyntax.Number.ParseHex(source[6]) << 4);
-        codePoint += CsTomlSyntax.Number.ParseHex(source[7]);
+        codePoint += (TomlCodes.Number.ParseHex(source[0]) << 28);
+        codePoint += (TomlCodes.Number.ParseHex(source[1]) << 24);
+        codePoint += (TomlCodes.Number.ParseHex(source[2]) << 20);
+        codePoint += (TomlCodes.Number.ParseHex(source[3]) << 16);
+        codePoint += (TomlCodes.Number.ParseHex(source[4]) << 12);
+        codePoint += (TomlCodes.Number.ParseHex(source[5]) << 8);
+        codePoint += (TomlCodes.Number.ParseHex(source[6]) << 4);
+        codePoint += TomlCodes.Number.ParseHex(source[7]);
 
         Utf8Helper.ParseFromCodePointToUtf8(codePoint, destination, out writtenCount);
     }

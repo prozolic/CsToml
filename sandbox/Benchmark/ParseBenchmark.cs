@@ -26,7 +26,7 @@ public class DefaultParseBenchmark
     [BenchmarkCategory("Benchmark"), Benchmark(Baseline = true)]
     public void CsTomlDeserialize()
     {
-        var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText);
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]
@@ -74,7 +74,7 @@ public class BoolOnlyParseBenchmark
     [BenchmarkCategory("Benchmark"), Benchmark(Baseline = true)]
     public void CsTomlDeserialize()
     {
-        var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText);
+        var package = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]
@@ -122,7 +122,7 @@ public class StringOnlyParseBenchmark
     [BenchmarkCategory("Benchmark"), Benchmark(Baseline = true)]
     public void CsTomlDeserialize()
     {
-        var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText);
+        var package = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]
@@ -174,7 +174,7 @@ public class IntOnlyParseBenchmark
     [BenchmarkCategory("Benchmark"), Benchmark(Baseline = true)]
     public void CsTomlDeserialize()
     {
-        var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText);
+        var package = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]
@@ -225,7 +225,7 @@ public class FloatOnlyParseBenchmark
     [BenchmarkCategory("Benchmark"), Benchmark(Baseline = true)]
     public void CsTomlDeserialize()
     {
-        var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText);
+        var package = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]
@@ -276,7 +276,7 @@ public class OffsetDateTimeOnlyParseBenchmark
     [BenchmarkCategory("Benchmark"), Benchmark(Baseline = true)]
     public void CsTomlDeserialize()
     {
-        var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText);
+        var package = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]
@@ -324,7 +324,7 @@ public class LocalDateTimeOnlyParseBenchmark
     [BenchmarkCategory("Benchmark"), Benchmark(Baseline = true)]
     public void CsTomlDeserialize()
     {
-        var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText);
+        var package = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]
@@ -372,7 +372,7 @@ public class LocalDateOnlyParseBenchmark
     [BenchmarkCategory("Benchmark"), Benchmark(Baseline = true)]
     public void CsTomlDeserialize()
     {
-        var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText);
+        var package = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]
@@ -420,7 +420,7 @@ public class LocalTimeOnlyParseBenchmark
     [BenchmarkCategory("Benchmark"), Benchmark(Baseline = true)]
     public void CsTomlDeserialize()
     {
-        var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText);
+        var package = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]
@@ -471,7 +471,7 @@ public class ArrayOnlyParseBenchmark
     [BenchmarkCategory("Benchmark"), Benchmark(Baseline = true)]
     public void CsTomlDeserialize()
     {
-        var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText);
+        var package = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]
@@ -524,7 +524,7 @@ public class TableOnlyParseBenchmark
     [BenchmarkCategory("Benchmark"), Benchmark(Baseline = true)]
     public void CsTomlDeserialize()
     {
-        var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText);
+        var package = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]
@@ -574,7 +574,7 @@ public class InlineTableOnlyParseBenchmark
     [BenchmarkCategory("Benchmark"), Benchmark(Baseline = true)]
     public void CsTomlDeserialize()
     {
-        var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText);
+        var package = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]
@@ -623,7 +623,7 @@ public class ArrayOfTableOnlyParseBenchmark
     [BenchmarkCategory("Benchmark"), Benchmark(Baseline = true)]
     public void CsTomlDeserialize()
     {
-        var package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText);
+        var package = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]

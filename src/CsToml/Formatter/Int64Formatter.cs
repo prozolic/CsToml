@@ -12,7 +12,7 @@ internal class Int64Formatter : ICsTomlFormatter<long>
     public static void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, long value)
         where TBufferWriter : IBufferWriter<byte>
     {
-        var length = CsTomlSyntax.Number.DigitsDecimalUnroll4(value);
+        var length = TomlCodes.Number.DigitsDecimalUnroll4(value);
         if (value < 0) length++;
 
         value.TryFormat(writer.GetWrittenSpan(length), out int bytesWritten);
@@ -143,46 +143,46 @@ internal class Int64Formatter : ICsTomlFormatter<long>
 
     internal static long DeserializeDecimal(byte utf8Byte)
     {
-        if (!CsTomlSyntax.IsNumber(utf8Byte))
+        if (!TomlCodes.IsNumber(utf8Byte))
         {
             ExceptionHelper.ThrowNumericConversionFailed(utf8Byte);
         }
-        return CsTomlSyntax.Number.ParseDecimal(utf8Byte);
+        return TomlCodes.Number.ParseDecimal(utf8Byte);
     }
 
     private static long DeserializeBinary(byte utf8Byte)
     {
-        if (!CsTomlSyntax.IsBinary(utf8Byte))
+        if (!TomlCodes.IsBinary(utf8Byte))
         {
             ExceptionHelper.ThrowNumericConversionFailed(utf8Byte);
         }
-        return CsTomlSyntax.Number.ParseDecimal(utf8Byte);
+        return TomlCodes.Number.ParseDecimal(utf8Byte);
     }
 
     private static long DeserializeOctal(byte utf8Byte)
     {
-        if (!CsTomlSyntax.IsOctal(utf8Byte))
+        if (!TomlCodes.IsOctal(utf8Byte))
         {
             ExceptionHelper.ThrowNumericConversionFailed(utf8Byte);
         }
-        return CsTomlSyntax.Number.ParseDecimal(utf8Byte);
+        return TomlCodes.Number.ParseDecimal(utf8Byte);
     }
 
     private static long DeserializeHex(byte utf8Byte)
     {
-        if (CsTomlSyntax.IsUpperHexAlphabet(utf8Byte))
+        if (TomlCodes.IsUpperHexAlphabet(utf8Byte))
         {
             return utf8Byte - 0x37;
         }
-        if (CsTomlSyntax.IsLowerHexAlphabet(utf8Byte))
+        if (TomlCodes.IsLowerHexAlphabet(utf8Byte))
         {
             return utf8Byte - 0x57;
         }
-        if (!CsTomlSyntax.IsNumber(utf8Byte))
+        if (!TomlCodes.IsNumber(utf8Byte))
         {
             ExceptionHelper.ThrowNumericConversionFailed(utf8Byte);
         }
-        return CsTomlSyntax.Number.ParseDecimal(utf8Byte);
+        return TomlCodes.Number.ParseDecimal(utf8Byte);
     }
 
 }

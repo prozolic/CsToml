@@ -260,7 +260,14 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void ThrowKeyIsDefined(CsTomlDotKey keyName)
+    internal static void ThrowTheEndIsNotClosedInThreeSingleQuotationMarks()
+    {
+        ThrowException("The end is not enclosed in three single quotation marks");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowKeyIsDefined(TomlDotKey keyName)
     {
         ThrowException($@"Key '{keyName.Utf16String}' is already defined.");
     }
@@ -509,13 +516,6 @@ internal static class ExceptionHelper
     internal static void ThrowLiteralStringsIsNotClosedWithClosingQuoted()
     {
         ThrowException($@"Literal strings is not closed with closing single quotes.");
-    }
-
-    [DoesNotReturn]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void ThrowMultilineLiteralStringsIsNotClosedWithThreeClosingQuoted()
-    {
-        ThrowException($@"Multi-line Literal strings is not closed with closing three single quotes.");
     }
 
     [DoesNotReturn]

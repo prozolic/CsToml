@@ -7,7 +7,7 @@ internal sealed class GetValueInvokerCache
 {
     private class CacheCore<T>
     {
-        public static Func<CsTomlValue, T>? invoker;
+        public static Func<TomlValue, T>? invoker;
         public static bool isDefault;
     }
 
@@ -30,14 +30,14 @@ internal sealed class GetValueInvokerCache
         CacheCore<TimeOnly>.invoker = (value) => value.GetTimeOnly();
         CacheCore<string>.isDefault = true;
         CacheCore<string>.invoker = (value) => value.GetString();
-        CacheCore<ReadOnlyCollection<CsTomlValue>>.isDefault = true;
-        CacheCore<ReadOnlyCollection<CsTomlValue>>.invoker = (value) => value.GetArray();
-        CacheCore<IEnumerable<CsTomlValue>>.isDefault = true;
-        CacheCore<IEnumerable<CsTomlValue>>.invoker = (value) => value.GetArray();
-        CacheCore<IReadOnlyCollection<CsTomlValue>>.isDefault = true;
-        CacheCore<IReadOnlyCollection<CsTomlValue>>.invoker = (value) => value.GetArray();
-        CacheCore<IReadOnlyList<CsTomlValue>>.isDefault = true;
-        CacheCore<IReadOnlyList<CsTomlValue>>.invoker = (value) => value.GetArray();
+        CacheCore<ReadOnlyCollection<TomlValue>>.isDefault = true;
+        CacheCore<ReadOnlyCollection<TomlValue>>.invoker = (value) => value.GetArray();
+        CacheCore<IEnumerable<TomlValue>>.isDefault = true;
+        CacheCore<IEnumerable<TomlValue>>.invoker = (value) => value.GetArray();
+        CacheCore<IReadOnlyCollection<TomlValue>>.isDefault = true;
+        CacheCore<IReadOnlyCollection<TomlValue>>.invoker = (value) => value.GetArray();
+        CacheCore<IReadOnlyList<TomlValue>>.isDefault = true;
+        CacheCore<IReadOnlyList<TomlValue>>.invoker = (value) => value.GetArray();
         CacheCore<object>.isDefault = true;
         CacheCore<object>.invoker = (value) => value.GetObject();
 
@@ -61,7 +61,7 @@ internal sealed class GetValueInvokerCache
         CacheCore<bool[]>.isDefault = true;
         CacheCore<bool[]>.invoker = (value) =>
         {
-            if (value is CsTomlArray array)
+            if (value is TomlArray array)
             {
                 var values = new bool[array.Count];
                 for (int i = 0; i < array.Count; i++)
@@ -79,7 +79,7 @@ internal sealed class GetValueInvokerCache
         CacheCore<byte[]>.isDefault = true;
         CacheCore<byte[]>.invoker = (value) =>
         {
-            if (value is CsTomlArray array)
+            if (value is TomlArray array)
             {
                 var values = new byte[array.Count];
                 for (int i = 0; i < array.Count; i++)
@@ -97,7 +97,7 @@ internal sealed class GetValueInvokerCache
         CacheCore<sbyte[]>.isDefault = true;
         CacheCore<sbyte[]>.invoker = (value) =>
         {
-            if (value is CsTomlArray array)
+            if (value is TomlArray array)
             {
                 var values = new sbyte[array.Count];
                 for (int i = 0; i < array.Count; i++)
@@ -115,7 +115,7 @@ internal sealed class GetValueInvokerCache
         CacheCore<short[]>.isDefault = true;
         CacheCore<short[]>.invoker = (value) =>
         {
-            if (value is CsTomlArray array)
+            if (value is TomlArray array)
             {
                 var values = new short[array.Count];
                 for (int i = 0; i < array.Count; i++)
@@ -133,7 +133,7 @@ internal sealed class GetValueInvokerCache
         CacheCore<ushort[]>.isDefault = true;
         CacheCore<ushort[]>.invoker = (value) =>
         {
-            if (value is CsTomlArray array)
+            if (value is TomlArray array)
             {
                 var values = new ushort[array.Count];
                 for (int i = 0; i < array.Count; i++)
@@ -151,7 +151,7 @@ internal sealed class GetValueInvokerCache
         CacheCore<int[]>.isDefault = true;
         CacheCore<int[]>.invoker = (value) =>
         {
-            if (value is CsTomlArray array)
+            if (value is TomlArray array)
             {
                 var values = new int[array.Count];
                 for (int i = 0; i < array.Count; i++)
@@ -169,7 +169,7 @@ internal sealed class GetValueInvokerCache
         CacheCore<uint[]>.isDefault = true;
         CacheCore<uint[]>.invoker = (value) =>
         {
-            if (value is CsTomlArray array)
+            if (value is TomlArray array)
             {
                 var values = new uint[array.Count];
                 for (int i = 0; i < array.Count; i++)
@@ -187,7 +187,7 @@ internal sealed class GetValueInvokerCache
         CacheCore<long[]>.isDefault = true;
         CacheCore<long[]>.invoker = (value) =>
         {
-            if (value is CsTomlArray array)
+            if (value is TomlArray array)
             {
                 var values = new long[array.Count];
                 for (int i = 0; i < array.Count; i++)
@@ -205,7 +205,7 @@ internal sealed class GetValueInvokerCache
         CacheCore<ulong[]>.isDefault = true;
         CacheCore<ulong[]>.invoker = (value) =>
         {
-            if (value is CsTomlArray array)
+            if (value is TomlArray array)
             {
                 var values = new ulong[array.Count];
                 for (int i = 0; i < array.Count; i++)
@@ -223,7 +223,7 @@ internal sealed class GetValueInvokerCache
         CacheCore<double[]>.isDefault = true;
         CacheCore<double[]>.invoker = (value) =>
         {
-            if (value is CsTomlArray array)
+            if (value is TomlArray array)
             {
                 var values = new double[array.Count];
                 for (int i = 0; i < array.Count; i++)
@@ -241,7 +241,7 @@ internal sealed class GetValueInvokerCache
         CacheCore<DateTime[]>.isDefault = true;
         CacheCore<DateTime[]>.invoker = (value) =>
         {
-            if (value is CsTomlArray array)
+            if (value is TomlArray array)
             {
                 var values = new DateTime[array.Count];
                 for (int i = 0; i < array.Count; i++)
@@ -259,7 +259,7 @@ internal sealed class GetValueInvokerCache
         CacheCore<DateTimeOffset[]>.isDefault = true;
         CacheCore<DateTimeOffset[]>.invoker = (value) =>
         {
-            if (value is CsTomlArray array)
+            if (value is TomlArray array)
             {
                 var values = new DateTimeOffset[array.Count];
                 for (int i = 0; i < array.Count; i++)
@@ -277,7 +277,7 @@ internal sealed class GetValueInvokerCache
         CacheCore<DateOnly[]>.isDefault = true;
         CacheCore<DateOnly[]>.invoker = (value) =>
         {
-            if (value is CsTomlArray array)
+            if (value is TomlArray array)
             {
                 var values = new DateOnly[array.Count];
                 for (int i = 0; i < array.Count; i++)
@@ -295,7 +295,7 @@ internal sealed class GetValueInvokerCache
         CacheCore<TimeOnly[]>.isDefault = true;
         CacheCore<TimeOnly[]>.invoker = (value) =>
         {
-            if (value is CsTomlArray array)
+            if (value is TomlArray array)
             {
                 var values = new TimeOnly[array.Count];
                 for (int i = 0; i < array.Count; i++)
@@ -313,7 +313,7 @@ internal sealed class GetValueInvokerCache
         CacheCore<string[]>.isDefault = true;
         CacheCore<string[]>.invoker = (value) =>
         {
-            if (value is CsTomlArray array)
+            if (value is TomlArray array)
             {
                 var values = new string[array.Count];
                 for (int i = 0; i < array.Count; i++)
@@ -331,7 +331,7 @@ internal sealed class GetValueInvokerCache
         CacheCore<object[]>.isDefault = true;
         CacheCore<object[]>.invoker = (value) =>
         {
-            if (value is CsTomlArray array)
+            if (value is TomlArray array)
             {
                 var values = new object[array.Count];
                 for (int i = 0; i < array.Count; i++)
@@ -348,12 +348,12 @@ internal sealed class GetValueInvokerCache
         CacheCore<IReadOnlyList<object>>.invoker = CacheCore<object[]>.invoker;
     }
 
-    public static Func<CsTomlValue, TValue>? Get<TValue>()
+    public static Func<TomlValue, TValue>? Get<TValue>()
     {
         return CacheCore<TValue>.invoker;
     }
 
-    public static void AddInvoker<TValue>(Func<CsTomlValue, TValue>? invoker)
+    public static void AddInvoker<TValue>(Func<TomlValue, TValue>? invoker)
     {
         if (CacheCore<TValue>.isDefault) return;
 

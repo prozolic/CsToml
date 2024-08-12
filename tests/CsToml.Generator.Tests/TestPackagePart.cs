@@ -2,85 +2,85 @@
 
 namespace CsToml.Generator.Tests;
 
-[CsTomlPackagePart]
+[TomlSerializedObject]
 public partial class TestPackagePart
 {
-    [CsTomlValueOnSerialized(CsTomlValueType.KeyValue)]
+    [TomlValueOnSerialized(TomlValueType.KeyValue)]
     public int IntValue { get; set; } = 123;
 
-    [CsTomlValueOnSerialized(CsTomlValueType.KeyValue)]
+    [TomlValueOnSerialized(TomlValueType.KeyValue)]
     public string StringValue { get; set; } = nameof(TestPackagePart);
 
     public string IgnoreValue { get; set; } = nameof(TestPackagePart);
 }
 
-[CsTomlPackagePart]
+[TomlSerializedObject]
 public partial class TestPackagePart2
 {
     public ushort Ignore { get; set; } = 2;
-    [CsTomlValueOnSerialized(CsTomlValueType.Array)]
+    [TomlValueOnSerialized(TomlValueType.Array)]
     public int[] intArr { get; set; } = [2, 3, 4, 5];
-    [CsTomlValueOnSerialized(CsTomlValueType.Array)]
+    [TomlValueOnSerialized(TomlValueType.Array)]
     public object[] oArr { get; set; } = [2, "test", 4.02d, DateTime.Now];
-    [CsTomlValueOnSerialized(CsTomlValueType.Array)]
+    [TomlValueOnSerialized(TomlValueType.Array)]
     public IEnumerable<object> oArr2 => oArr;
-    [CsTomlValueOnSerialized(CsTomlValueType.Array)]
+    [TomlValueOnSerialized(TomlValueType.Array)]
     public List<object> oArr3 { get; set; } = new List<object>(new object[] { 2, "test", 4.02d, DateTime.Now });
-    [CsTomlValueOnSerialized(CsTomlValueType.Array)]
+    [TomlValueOnSerialized(TomlValueType.Array)]
     public ICollection<object> oArr4 => oArr;
-    [CsTomlValueOnSerialized(CsTomlValueType.KeyValue)]
+    [TomlValueOnSerialized(TomlValueType.KeyValue)]
     public uint IntValue { get; set; } = 2;
-    [CsTomlValueOnSerialized(CsTomlValueType.KeyValue)]
+    [TomlValueOnSerialized(TomlValueType.KeyValue)]
     public long LongValue { get; set; } = 100;
-    [CsTomlValueOnSerialized(CsTomlValueType.KeyValue)]
+    [TomlValueOnSerialized(TomlValueType.KeyValue)]
     public bool boolValue { get; set; } = true;
-    [CsTomlValueOnSerialized(CsTomlValueType.KeyValue)]
+    [TomlValueOnSerialized(TomlValueType.KeyValue)]
     public DateTime DateTimeValue { get; set; } = DateTime.Now;
-    [CsTomlValueOnSerialized(CsTomlValueType.KeyValue)]
+    [TomlValueOnSerialized(TomlValueType.KeyValue)]
     public DateOnly DateOnlyValue { get; set; } = DateOnly.MinValue;
-    [CsTomlValueOnSerialized(CsTomlValueType.KeyValue)]
+    [TomlValueOnSerialized(TomlValueType.KeyValue)]
     public TimeOnly TImeOnlyValue { get; set; } = TimeOnly.MaxValue;
-    [CsTomlValueOnSerialized(CsTomlValueType.KeyValue)]
+    [TomlValueOnSerialized(TomlValueType.KeyValue)]
     public DateTimeOffset DateTimeOffsetValue { get; set; } = DateTimeOffset.UtcNow;
-    [CsTomlValueOnSerialized(CsTomlValueType.KeyValue)]
+    [TomlValueOnSerialized(TomlValueType.KeyValue)]
     public double DoubleValue { get; set; } = 0.5d;
-    [CsTomlValueOnSerialized(CsTomlValueType.KeyValue)]
+    [TomlValueOnSerialized(TomlValueType.KeyValue)]
     public string StringValue { get; set; } = "";
 
-    [CsTomlValueOnSerialized(CsTomlValueType.Table)]
+    [TomlValueOnSerialized(TomlValueType.Table)]
     public Table TableValue { get; set; } = new Table();
 
-    //[CsTomlValueOnSerialized(CsTomlValueType.ArrayOfTables)]
+    //[TomlValueOnSerialized(TomlValueType.ArrayOfTables)]
     //[CsTomlArrayOfTablesKey("ArrayOfTablesValue",0)]
     public ArrayOfTables1 ArrayOfTablesValue { get; set; } = new ArrayOfTables1();
 
-    //[CsTomlValueOnSerialized(CsTomlValueType.ArrayOfTables)]
+    //[TomlValueOnSerialized(TomlValueType.ArrayOfTables)]
     //[CsTomlArrayOfTablesKey("ArrayOfTablesValue",1)]
     public ArrayOfTables2 ArrayOfTablesValue2 { get; set; } = new ArrayOfTables2();
 
     public class Table
     {
-        [CsTomlValueOnSerialized(CsTomlValueType.KeyValue)]
+        [TomlValueOnSerialized(TomlValueType.KeyValue)]
         public int IntValue { get; set; } = 2;
-        [CsTomlValueOnSerialized(CsTomlValueType.KeyValue)]
+        [TomlValueOnSerialized(TomlValueType.KeyValue)]
         public long LongValue { get; set; } = 100;
-        [CsTomlValueOnSerialized(CsTomlValueType.KeyValue)]
+        [TomlValueOnSerialized(TomlValueType.KeyValue)]
         public bool boolValue { get; set; } = true;
-        [CsTomlValueOnSerialized(CsTomlValueType.KeyValue)]
+        [TomlValueOnSerialized(TomlValueType.KeyValue)]
         public DateTime DateTimeValue { get; set; } = DateTime.Now;
-        [CsTomlValueOnSerialized(CsTomlValueType.KeyValue)]
+        [TomlValueOnSerialized(TomlValueType.KeyValue)]
         public DateOnly DateOnlyValue { get; set; } = DateOnly.MinValue;
-        [CsTomlValueOnSerialized(CsTomlValueType.KeyValue)]
+        [TomlValueOnSerialized(TomlValueType.KeyValue)]
         public TimeOnly TImeOnlyValue { get; set; } = TimeOnly.MaxValue;
-        [CsTomlValueOnSerialized(CsTomlValueType.KeyValue)]
+        [TomlValueOnSerialized(TomlValueType.KeyValue)]
         public DateTimeOffset DateTimeOffsetValue { get; set; } = DateTimeOffset.UtcNow;
-        [CsTomlValueOnSerialized(CsTomlValueType.KeyValue)]
+        [TomlValueOnSerialized(TomlValueType.KeyValue)]
         public double DoubleValue { get; set; } = 0.5d;
-        [CsTomlValueOnSerialized(CsTomlValueType.KeyValue)]
+        [TomlValueOnSerialized(TomlValueType.KeyValue)]
         public string あいうえお { get; set; } = "string";
-        [CsTomlValueOnSerialized(CsTomlValueType.KeyValue)]
+        [TomlValueOnSerialized(TomlValueType.KeyValue)]
         public char As { get; set; } = 'a';
-        [CsTomlValueOnSerialized(CsTomlValueType.KeyValue)]
+        [TomlValueOnSerialized(TomlValueType.KeyValue)]
         public object intVo { get; set; } = 12345;
     }
 
@@ -89,16 +89,16 @@ public partial class TestPackagePart2
     }
     public class ArrayOfTables1 : ArrayOfTables
     {
-        [CsTomlValueOnSerialized(CsTomlValueType.KeyValue)]
+        [TomlValueOnSerialized(TomlValueType.KeyValue)]
         public int IntValue { get; set; } = 42342;
 
     }
     public class ArrayOfTables2 : ArrayOfTables
     {
-        [CsTomlValueOnSerialized(CsTomlValueType.KeyValue)]
+        [TomlValueOnSerialized(TomlValueType.KeyValue)]
         public string StringValue { get; set; } = "test";
 
-        [CsTomlValueOnSerialized(CsTomlValueType.KeyValue)]
+        [TomlValueOnSerialized(TomlValueType.KeyValue)]
         public string StringValue2 { get; set; } = "test";
 
     }

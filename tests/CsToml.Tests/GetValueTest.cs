@@ -4,7 +4,7 @@ namespace CsToml.Tests;
 
 public class GetValueTest
 {
-    private readonly CsTomlPackage package;
+    private readonly TomlDocument document;
 
     public GetValueTest()
     {
@@ -31,13 +31,13 @@ value2 = 2
 value3 = 3
 
 "u8;
-        package = CsTomlSerializer.Deserialize<CsTomlPackage>(tomlText);
+        document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
     }
 
     [Fact]
     public void StringTest()
     {
-        var value = package.Find("str"u8);
+        var value = document.Find("str"u8);
         Assert.Equal("string", value!.GetString());
         Assert.Throws<CsTomlException>(() => value!.GetInt64());
         Assert.Throws<CsTomlException>(() => value!.GetDouble());
@@ -52,7 +52,7 @@ value3 = 3
     [Fact]
     public void StringTest2()
     {
-        var value = package.Find("str2"u8);
+        var value = document.Find("str2"u8);
         Assert.Equal("123", value!.GetString());
         Assert.Equal(123, value!.GetInt64());
         Assert.Equal(123d, value!.GetDouble());
@@ -67,7 +67,7 @@ value3 = 3
     [Fact]
     public void StringTest3()
     {
-        var value = package.Find("str3"u8);
+        var value = document.Find("str3"u8);
         Assert.Equal(" true ", value!.GetString());
         Assert.Throws<CsTomlException>(() => value!.GetInt64());
         Assert.Throws<CsTomlException>(() => value!.GetDouble());
@@ -82,7 +82,7 @@ value3 = 3
     [Fact]
     public void IntTest()
     {
-        var value = package.Find("int"u8);
+        var value = document.Find("int"u8);
         Assert.Equal("99", value!.GetString());
         Assert.Equal(99, value!.GetInt64());
         Assert.Equal(99d, value!.GetDouble());
@@ -97,7 +97,7 @@ value3 = 3
     [Fact]
     public void TryIntTest()
     {
-        var value = package.Find("int"u8);
+        var value = document.Find("int"u8);
         {
             var result = value!.TryGetString(out var v);
             Assert.Equal("99", v);
@@ -139,7 +139,7 @@ value3 = 3
     [Fact]
     public void FloatTest()
     {
-        var value = package.Find("flt"u8);
+        var value = document.Find("flt"u8);
         Assert.Equal("1", value!.GetString());
         Assert.Equal(1, value!.GetInt64());
         Assert.Equal(1.0d, value!.GetDouble());
@@ -154,7 +154,7 @@ value3 = 3
     [Fact]
     public void TryFloatTest()
     {
-        var value = package.Find("flt"u8);
+        var value = document.Find("flt"u8);
         {
             var result = value!.TryGetString(out var v);
             Assert.Equal("1", v);
@@ -196,7 +196,7 @@ value3 = 3
     [Fact]
     public void BoolTest()
     {
-        var value = package.Find("bool"u8);
+        var value = document.Find("bool"u8);
         Assert.Equal("True", value!.GetString());
         Assert.Equal(1, value!.GetInt64());
         Assert.Equal(1d, value!.GetDouble());
@@ -211,7 +211,7 @@ value3 = 3
     [Fact]
     public void TryBoolTest()
     {
-        var value = package.Find("bool"u8);
+        var value = document.Find("bool"u8);
         {
             var result = value!.TryGetString(out var v);
             Assert.Equal("True", v);
@@ -253,7 +253,7 @@ value3 = 3
     [Fact]
     public void OffsetDateTimeTest()
     {
-        var value = package.Find("odt"u8);
+        var value = document.Find("odt"u8);
         Assert.Equal(new DateTimeOffset(1979, 5, 27, 7, 32, 0, TimeSpan.Zero).ToString(), value!.GetString());
         Assert.Throws<CsTomlException>(() => value!.GetInt64());
         Assert.Throws<CsTomlException>(() => value!.GetDouble());
@@ -271,7 +271,7 @@ value3 = 3
     [Fact]
     public void TryOffsetDateTimeTest()
     {
-        var value = package.Find("odt"u8);
+        var value = document.Find("odt"u8);
         {
             var result = value!.TryGetString(out var v);
             Assert.Equal(new DateTimeOffset(1979, 5, 27, 7, 32, 0, TimeSpan.Zero).ToString(), v);
@@ -316,7 +316,7 @@ value3 = 3
     [Fact]
     public void LocalDateTimeTest()
     {
-        var value = package.Find("ldt"u8);
+        var value = document.Find("ldt"u8);
         Assert.Equal(new DateTime(1979, 5, 27, 7, 32, 0).ToString(), value!.GetString());
         Assert.Throws<CsTomlException>(() => value!.GetInt64());
         Assert.Throws<CsTomlException>(() => value!.GetDouble());
@@ -334,7 +334,7 @@ value3 = 3
     [Fact]
     public void TryLocalDateTimeTest()
     {
-        var value = package.Find("ldt"u8);
+        var value = document.Find("ldt"u8);
         {
             var result = value!.TryGetString(out var v);
             Assert.Equal(new DateTime(1979, 5, 27, 7, 32, 0).ToString(), v);
@@ -379,7 +379,7 @@ value3 = 3
     [Fact]
     public void LocalDateTest()
     {
-        var value = package.Find("ld1"u8);
+        var value = document.Find("ld1"u8);
         Assert.Equal(new DateOnly(1979, 5, 27).ToString(), value!.GetString());
         Assert.Throws<CsTomlException>(() => value!.GetInt64());
         Assert.Throws<CsTomlException>(() => value!.GetDouble());
@@ -397,7 +397,7 @@ value3 = 3
     [Fact]
     public void TryLocalDateTest()
     {
-        var value = package.Find("ld1"u8);
+        var value = document.Find("ld1"u8);
         {
             var result = value!.TryGetString(out var v);
             Assert.Equal(new DateOnly(1979, 5, 27).ToString(), v);
@@ -442,7 +442,7 @@ value3 = 3
     [Fact]
     public void LocalTimeTest()
     {
-        var value = package.Find("lt1"u8);
+        var value = document.Find("lt1"u8);
         Assert.Equal(new TimeOnly(7,32,30).ToString(), value!.GetString());
         Assert.Throws<CsTomlException>(() => value!.GetInt64());
         Assert.Throws<CsTomlException>(() => value!.GetDouble());
@@ -458,7 +458,7 @@ value3 = 3
     [Fact]
     public void TryLocalTimeTest()
     {
-        var value = package.Find("lt1"u8);
+        var value = document.Find("lt1"u8);
         {
             var result = value!.TryGetString(out var v);
             Assert.Equal(new TimeOnly(7,32,30).ToString(), v);
@@ -500,7 +500,7 @@ value3 = 3
     [Fact]
     public void ArrayTest()
     {
-        var value = package.Find("array"u8);
+        var value = document.Find("array"u8);
         var arrayValue = value!.GetArray();
         Assert.Equal(3, arrayValue.Count);
         Assert.Equal(1, arrayValue[0].GetInt64());
@@ -523,7 +523,7 @@ value3 = 3
     [Fact]
     public void TryArrayTest()
     {
-        var value = package.Find("array"u8);
+        var value = document.Find("array"u8);
 
         {
             var result = value!.TryGetArray(out var arrayValue);

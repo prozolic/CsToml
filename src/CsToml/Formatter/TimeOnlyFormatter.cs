@@ -16,7 +16,7 @@ internal class TimeOnlyFormatter : ICsTomlFormatter<TimeOnly>
         }
         else
         {
-            var length = CsTomlSyntax.Number.DigitsDecimalUnroll4(totalMicrosecond);
+            var length = TomlCodes.Number.DigitsDecimalUnroll4(totalMicrosecond);
 
             switch (length)
             {
@@ -56,11 +56,11 @@ internal class TimeOnlyFormatter : ICsTomlFormatter<TimeOnly>
     public static TimeOnly Deserialize(ref Utf8Reader reader, int length)
     {
         var bytes = reader.ReadBytes(length);
-        if (bytes.Length < CsTomlSyntax.DateTime.LocalTimeFormatLength)
+        if (bytes.Length < TomlCodes.DateTime.LocalTimeFormatLength)
             ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
 
         // local time
-        if (!(CsTomlSyntax.IsColon(bytes[2]) && CsTomlSyntax.IsColon(bytes[5])))
+        if (!(TomlCodes.IsColon(bytes[2]) && TomlCodes.IsColon(bytes[5])))
             ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
 
         return DeserializeTimeOnly(bytes);
@@ -76,7 +76,7 @@ internal class TimeOnlyFormatter : ICsTomlFormatter<TimeOnly>
         // https://learn.microsoft.com/en-us/dotnet/api/system.datetime.-ctor?view=net-8.0#system-datetime-ctor(system-int32-system-int32-system-int32-system-int32-system-int32-system-int32-system-int32-system-int32)
         var millisecond = 0;
         var microsecond = 0;
-        if (bytes.Length > 8 && CsTomlSyntax.IsDot(bytes[8]))
+        if (bytes.Length > 8 && TomlCodes.IsDot(bytes[8]))
         {
             if (bytes.Length == 10)
             {
@@ -132,11 +132,11 @@ internal class TimeOnlyFormatter : ICsTomlFormatter<TimeOnly>
 
     internal static int DeserializeDecimal(byte utf8Byte)
     {
-        if (!CsTomlSyntax.IsNumber(utf8Byte))
+        if (!TomlCodes.IsNumber(utf8Byte))
         {
             ExceptionHelper.ThrowNumericConversionFailed(utf8Byte);
         }
-        return CsTomlSyntax.Number.ParseDecimal(utf8Byte);
+        return TomlCodes.Number.ParseDecimal(utf8Byte);
     }
 
 }

@@ -18,7 +18,7 @@ internal ref struct CsTomlWriter<TBufferWriter>
     public CsTomlWriter(ref Utf8Writer<TBufferWriter> bufferWriter)
     {
         writer = bufferWriter;
-        newLineCh = CsTomlSyntax.Environment.NewLine;
+        newLineCh = TomlCodes.Environment.NewLine;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -27,19 +27,19 @@ internal ref struct CsTomlWriter<TBufferWriter>
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteComma()
-        => writer.Write(CsTomlSyntax.Symbol.COMMA);
+        => writer.Write(TomlCodes.Symbol.COMMA);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteSpace()
-        => writer.Write(CsTomlSyntax.Symbol.SPACE);
+        => writer.Write(TomlCodes.Symbol.SPACE);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteTable()
-        => writer.Write(CsTomlSyntax.Symbol.LEFTSQUAREBRACKET);
+        => writer.Write(TomlCodes.Symbol.LEFTSQUAREBRACKET);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteTableEnd()
-        => writer.Write(CsTomlSyntax.Symbol.RIGHTSQUAREBRACKET);
+        => writer.Write(TomlCodes.Symbol.RIGHTSQUAREBRACKET);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteArrayOfTables()
@@ -57,29 +57,29 @@ internal ref struct CsTomlWriter<TBufferWriter>
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteInlineTable()
-        => writer.Write(CsTomlSyntax.Symbol.LEFTBRACES);
+        => writer.Write(TomlCodes.Symbol.LEFTBRACES);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteInlineTableEnd()
-        => writer.Write(CsTomlSyntax.Symbol.RIGHTBRACES);
+        => writer.Write(TomlCodes.Symbol.RIGHTBRACES);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteEquals()
     {
         var span = writer.GetWrittenSpan(3);
-        span[2] = CsTomlSyntax.Symbol.SPACE;
-        span[1] = CsTomlSyntax.Symbol.EQUAL;
-        span[0] = CsTomlSyntax.Symbol.SPACE;
+        span[2] = TomlCodes.Symbol.SPACE;
+        span[1] = TomlCodes.Symbol.EQUAL;
+        span[0] = TomlCodes.Symbol.SPACE;
     }
 
-    public void WriteKeyValue(CsTomlDotKey key, CsTomlValue value)
+    public void WriteKeyValue(TomlDotKey key, TomlValue value)
     {
         WriterKey(key, false);
         WriteEquals();
         value.ToTomlString(ref writer);
     }
 
-    public void WriteKeyValueAndNewLine(CsTomlDotKey key, CsTomlValue value)
+    public void WriteKeyValueAndNewLine(TomlDotKey key, TomlValue value)
     {
         WriterKey(key, false);
         WriteEquals();
@@ -87,16 +87,16 @@ internal ref struct CsTomlWriter<TBufferWriter>
         WriteNewLine();
     }
 
-    public void WriterKey(CsTomlDotKey key, bool isGroupingProperty)
+    public void WriterKey(TomlDotKey key, bool isGroupingProperty)
     {
         key.ToTomlString(ref writer);
         if (isGroupingProperty)
         {
-            writer.Write(CsTomlSyntax.Symbol.DOT);
+            writer.Write(TomlCodes.Symbol.DOT);
         }
     }
 
-    public void WriteTableHeader(ReadOnlySpan<CsTomlDotKey> keysSpan)
+    public void WriteTableHeader(ReadOnlySpan<TomlDotKey> keysSpan)
     {
         WriteTable();
         if (keysSpan.Length > 0)
@@ -110,7 +110,7 @@ internal ref struct CsTomlWriter<TBufferWriter>
         WriteNewLine();
     }
 
-    public void WriteArrayOfTablesHeader(ReadOnlySpan<CsTomlDotKey> keysSpan)
+    public void WriteArrayOfTablesHeader(ReadOnlySpan<TomlDotKey> keysSpan)
     {
         WriteArrayOfTables();
         if (keysSpan.Length > 0)
@@ -124,13 +124,13 @@ internal ref struct CsTomlWriter<TBufferWriter>
         WriteNewLine();
     }
 
-    public void WriteComments(ReadOnlySpan<CsTomlString> comments)
+    public void WriteComments(ReadOnlySpan<TomlString> comments)
     {
         if (comments.Length == 0) return;
 
         for (var i = 0; i < comments.Length; i++)
         {
-            writer.Write(CsTomlSyntax.Symbol.NUMBERSIGN);
+            writer.Write(TomlCodes.Symbol.NUMBERSIGN);
             comments[i].ToTomlString(ref writer);
             WriteNewLine();
         }

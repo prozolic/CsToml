@@ -16,7 +16,7 @@ internal class DateTimeFormatter : ICsTomlFormatter<DateTime>
         }
         else
         {
-            var length = CsTomlSyntax.Number.DigitsDecimalUnroll4(totalMicrosecond);
+            var length = TomlCodes.Number.DigitsDecimalUnroll4(totalMicrosecond);
 
             switch(length)
             {
@@ -62,11 +62,11 @@ internal class DateTimeFormatter : ICsTomlFormatter<DateTime>
     public static DateTime Deserialize(ref Utf8Reader reader, int length)
     {
         var bytes = reader.ReadBytes(length);
-        if (bytes.Length < CsTomlSyntax.DateTime.LocalDateTimeFormatLength)
+        if (bytes.Length < TomlCodes.DateTime.LocalDateTimeFormatLength)
             ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
 
-        if (CsTomlSyntax.IsHyphen(bytes[4]) && CsTomlSyntax.IsHyphen(bytes[7]) &&
-            (CsTomlSyntax.IsTabOrWhiteSpace(bytes[10]) || bytes[10] == CsTomlSyntax.Alphabet.T || bytes[10] == CsTomlSyntax.Alphabet.t))
+        if (TomlCodes.IsHyphen(bytes[4]) && TomlCodes.IsHyphen(bytes[7]) &&
+            (TomlCodes.IsTabOrWhiteSpace(bytes[10]) || bytes[10] == TomlCodes.Alphabet.T || bytes[10] == TomlCodes.Alphabet.t))
         {
             return DeserializeLocalDateTime(bytes);
         }

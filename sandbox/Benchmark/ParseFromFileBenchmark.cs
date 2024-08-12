@@ -18,13 +18,13 @@ public class ParseFromFileBenchmark
     [BenchmarkCategory("Benchmark"), Benchmark(Baseline = true)]
     public void CsTomlDeserializeFromFile()
     {
-        var package = CsTomlFileSerializer.Deserialize<CsTomlPackage>(TestTomlFilePath);
+        var document = CsTomlFileSerializer.Deserialize<TomlDocument>(TestTomlFilePath);
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]
     public async ValueTask CsTomlDeserializeFromFileAsync()
     {
-        var package = await CsTomlFileSerializer.DeserializeAsync<CsTomlPackage>(TestTomlFilePath);
+        var document = await CsTomlFileSerializer.DeserializeAsync<TomlDocument>(TestTomlFilePath);
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]

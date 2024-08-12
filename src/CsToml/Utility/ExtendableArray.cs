@@ -11,9 +11,9 @@ internal ref struct ExtendableArray<T>
 
     public readonly int Count => count;
 
-    public ExtendableArray()
+    public ExtendableArray(int capacity)
     {
-        array = ArrayPool<T>.Shared.Rent(16);
+        array = ArrayPool<T>.Shared.Rent(capacity);
         count = 0;
     }
 
@@ -36,18 +36,10 @@ internal ref struct ExtendableArray<T>
         }
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private void AddAndEnsureCapacity(T value)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Clear()
     {
-        var count = this.count;
-        var oldArray = array;
-        var newArray = ArrayPool<T>.Shared.Rent(Math.Min(oldArray.Length * 2, Array.MaxLength));
-        Array.Copy(oldArray, newArray, count);
-
-        ArrayPool<T>.Shared.Return(oldArray, RuntimeHelpers.IsReferenceOrContainsReferences<T>());
-        newArray[count] = value;
-        this.count = count + 1;
-        this.array = newArray;
+        count = 0;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -56,6 +48,21 @@ internal ref struct ExtendableArray<T>
         count = 0;
         ArrayPool<T>.Shared.Return(array, RuntimeHelpers.IsReferenceOrContainsReferences<T>());
         array = [];
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void AddAndEnsureCapacity(T value)
+    {
+        var count = this.count;
+        var oldArray = array;
+
+        var newArray = ArrayPool<T>.Shared.Rent(Math.Min(oldArray.Length * 2, Array.MaxLength));
+        Array.Copy(oldArray, newArray, count);
+        ArrayPool<T>.Shared.Return(oldArray, RuntimeHelpers.IsReferenceOrContainsReferences<T>());
+
+        newArray[count] = value;
+        this.count = count + 1;
+        this.array = newArray;
     }
 
 }

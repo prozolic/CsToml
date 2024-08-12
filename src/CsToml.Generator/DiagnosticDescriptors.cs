@@ -9,7 +9,7 @@ internal static class DiagnosticDescriptors
     public static readonly DiagnosticDescriptor KeyValueError = new(
         id: "CsTomlError_K1",
         title: "type", 
-        messageFormat: "'{0}.{1}' uses a type that cannot be specified with CsTomlValueType.KeyValue.",
+        messageFormat: "'{0}.{1}' uses a type that cannot be specified with TomlValueType.KeyValue.",
         category: Category,
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -17,7 +17,7 @@ internal static class DiagnosticDescriptors
     public static readonly DiagnosticDescriptor TableError = new(
         id: "CsTomlError_T1",
         title: "type",
-        messageFormat: "'{0}.{1}' uses a type that cannot be specified with CsTomlValueType.Table.",
+        messageFormat: "'{0}.{1}' uses a type that cannot be specified with TomlValueType.Table.",
         category: Category,
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -25,7 +25,7 @@ internal static class DiagnosticDescriptors
     public static readonly DiagnosticDescriptor ArrayError = new(
         id: "CsTomlError_A1",
         title: "type",
-        messageFormat: "'{0}.{1}' uses a type that is not a collection type with CsTomlValueType.Array.",
+        messageFormat: "'{0}.{1}' uses a type that is not a collection type with TomlValueType.Array.",
         category: Category,
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -33,7 +33,7 @@ internal static class DiagnosticDescriptors
     public static readonly DiagnosticDescriptor ArrayOfTablesError = new(
         id: "CsTomlError_AT1",
         title: "type",
-        messageFormat: "'{0}.{1}' uses a type that cannot be specified with CsTomlValueType.ArrayOfTables.",
+        messageFormat: "'{0}.{1}' uses a type that cannot be specified with TomlValueType.ArrayOfTables.",
         category: Category,
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -41,7 +41,7 @@ internal static class DiagnosticDescriptors
     public static readonly DiagnosticDescriptor ArrayOfTablesError2 = new(
         id: "CsTomlError_AT2",
         title: "type",
-        messageFormat: "If CsTomlValueType.ArrayOfTables is specified, the CsTomlArrayOfTablesKeyAttribute must also be added.",
+        messageFormat: "If TomlValueType.ArrayOfTables is specified, the CsTomlArrayOfTablesKeyAttribute must also be added.",
         category: Category,
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -57,7 +57,7 @@ internal static class DiagnosticDescriptors
     public static readonly DiagnosticDescriptor InlineTableError = new(
         id: "CsTomlError_I1",
         title: "type",
-        messageFormat: "'{0}.{1}' uses a type that cannot be specified with CsTomlValueType.InlineTable",
+        messageFormat: "'{0}.{1}' uses a type that cannot be specified with TomlValueType.InlineTable",
         category: Category,
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -65,7 +65,7 @@ internal static class DiagnosticDescriptors
     public static readonly DiagnosticDescriptor InlineTableError2 = new(
         id: "CsTomlError_I2",
         title: "type",
-        messageFormat: "CsTomlValueType.Table cannot be specified as a property ('{0}.{1}') of a class that specifies CsTomlValueType.InlineTable.",
+        messageFormat: "TomlValueType.Table cannot be specified as a property ('{0}.{1}') of a class that specifies TomlValueType.InlineTable.",
         category: Category,
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);

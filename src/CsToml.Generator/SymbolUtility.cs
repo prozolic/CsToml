@@ -50,16 +50,16 @@ internal static class SymbolUtility
         return builder.ToString();
     }
 
-    public static (IPropertySymbol, CsTomlValueType)[] FilterCsTomlPackageValueMembers(
+    public static (IPropertySymbol, TomlValueType)[] FilterTomlDocumentValueMembers(
         IEnumerable<IPropertySymbol> symbols,
         string attribute)
     {
-        var members = new List<(IPropertySymbol, CsTomlValueType)>();
+        var members = new List<(IPropertySymbol, TomlValueType)>();
         foreach (var symbol in symbols)
         {
             var attr = symbol.GetAttribute("CsToml", attribute).FirstOrDefault();
             if (attr == null) continue;
-            members.Add((symbol, (CsTomlValueType)attr.ConstructorArguments[0].Value!));
+            members.Add((symbol, (TomlValueType)attr.ConstructorArguments[0].Value!));
         }
         members.Sort(static (x, y) => x.Item2 - y.Item2);
         return members.ToArray();
@@ -76,7 +76,7 @@ internal static class SymbolUtility
         }).Select(i => (IPropertySymbol)i);
     }
 
-    public static CsTomlTypeKind GetCsTomlTypeKind(ITypeSymbol type)
+    public static TomlTypeKind GetCsTomlTypeKind(ITypeSymbol type)
     {
         switch (type.SpecialType)
         {
@@ -93,50 +93,50 @@ internal static class SymbolUtility
             case SpecialType.System_String:
             case SpecialType.System_Char:
             case SpecialType.System_DateTime:
-                return CsTomlTypeKind.Primitive;
+                return TomlTypeKind.Primitive;
             case SpecialType.System_Object: // Unknown
-                return CsTomlTypeKind.Unknown;
+                return TomlTypeKind.Unknown;
             case SpecialType.System_Single: // float is not supported
-                return CsTomlTypeKind.Error;
+                return TomlTypeKind.Error;
             case SpecialType.System_Collections_Generic_IEnumerable_T:
             case SpecialType.System_Collections_Generic_ICollection_T:
             case SpecialType.System_Collections_Generic_IList_T:
             case SpecialType.System_Collections_Generic_IReadOnlyCollection_T:
             case SpecialType.System_Collections_Generic_IReadOnlyList_T:
-                return CsTomlTypeKind.Collection;
+                return TomlTypeKind.Collection;
             default:
                 switch (type.TypeKind)
                 {
                     case TypeKind.Array:
-                        return CsTomlTypeKind.Collection;
+                        return TomlTypeKind.Collection;
                     case TypeKind.Enum:
-                        return CsTomlTypeKind.Primitive;
+                        return TomlTypeKind.Primitive;
                     case TypeKind.Error:
-                        return CsTomlTypeKind.Error;
+                        return TomlTypeKind.Error;
                     case TypeKind.Class:
                         if (CollectionMetaData.IsCollection(type))
                         {
-                            return CsTomlTypeKind.Collection;
+                            return TomlTypeKind.Collection;
                         }
-                        return CsTomlTypeKind.TableOrArrayOfTables;
+                        return TomlTypeKind.TableOrArrayOfTables;
                     case TypeKind.Interface:
                         if (CollectionMetaData.IsCollection(type))
                         {
-                            return CsTomlTypeKind.Collection;
+                            return TomlTypeKind.Collection;
                         }
-                        return CsTomlTypeKind.TableOrArrayOfTables;
+                        return TomlTypeKind.TableOrArrayOfTables;
                     case TypeKind.Struct:
                         switch (type.Name)
                         {
                             case "DateOnly":
                             case "TimeOnly":
                             case "DateTimeOffset":
-                                return CsTomlTypeKind.Primitive;
+                                return TomlTypeKind.Primitive;
                         }
-                        return CsTomlTypeKind.TableOrArrayOfTables;
+                        return TomlTypeKind.TableOrArrayOfTables;
                 }
 
-                return CsTomlTypeKind.Error;
+                return TomlTypeKind.Error;
         }
     }
 

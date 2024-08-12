@@ -9,18 +9,18 @@ internal class DateOnlyFormatter : ICsTomlFormatter<DateOnly>
     public static void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, DateOnly value)
         where TBufferWriter : IBufferWriter<byte>
     {
-        value.TryFormat(writer.GetWrittenSpan(CsTomlSyntax.DateTime.LocalDateFormatLength), out int bytesWritten, "yyyy-MM-dd");
+        value.TryFormat(writer.GetWrittenSpan(TomlCodes.DateTime.LocalDateFormatLength), out int bytesWritten, "yyyy-MM-dd");
     }
 
     public static DateOnly Deserialize(ref Utf8Reader reader, int length)
     {
         var bytes = reader.ReadBytes(length);
 
-        if (bytes.Length != CsTomlSyntax.DateTime.LocalDateFormatLength)
+        if (bytes.Length != TomlCodes.DateTime.LocalDateFormatLength)
             ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
 
         // local date
-        if (!(CsTomlSyntax.IsHyphen(bytes[4]) && CsTomlSyntax.IsHyphen(bytes[7])))
+        if (!(TomlCodes.IsHyphen(bytes[4]) && TomlCodes.IsHyphen(bytes[7])))
         {
             ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
         }
@@ -54,11 +54,11 @@ internal class DateOnlyFormatter : ICsTomlFormatter<DateOnly>
 
     internal static int DeserializeDecimal(byte utf8Byte)
     {
-        if (!CsTomlSyntax.IsNumber(utf8Byte))
+        if (!TomlCodes.IsNumber(utf8Byte))
         {
             ExceptionHelper.ThrowNumericConversionFailed(utf8Byte);
         }
-        return CsTomlSyntax.Number.ParseDecimal(utf8Byte);
+        return TomlCodes.Number.ParseDecimal(utf8Byte);
     }
 
 }

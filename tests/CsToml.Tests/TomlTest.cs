@@ -20,7 +20,7 @@ public class TomlTest
     {
         try
         {
-            var package = CsTomlFileSerializer.Deserialize<CsTomlPackage>(tomlFile);
+            var document = CsTomlFileSerializer.Deserialize<TomlDocument>(tomlFile);
         }
         catch(Exception e)
         {
@@ -33,7 +33,7 @@ public class TomlTest
     {
         try
         {
-            var package = CsTomlFileSerializer.Deserialize<CsTomlPackage>(tomlFile);
+            var document = CsTomlFileSerializer.Deserialize<TomlDocument>(tomlFile);
         }
         catch (Exception)
         {

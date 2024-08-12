@@ -13,18 +13,18 @@ internal class BoolFormatter : ICsTomlFormatter<bool>
     {
         if (value)
         {
-            writer.Write(CsTomlSyntax.Alphabet.t);
-            writer.Write(CsTomlSyntax.Alphabet.r);
-            writer.Write(CsTomlSyntax.Alphabet.u);
-            writer.Write(CsTomlSyntax.Alphabet.e);
+            writer.Write(TomlCodes.Alphabet.t);
+            writer.Write(TomlCodes.Alphabet.r);
+            writer.Write(TomlCodes.Alphabet.u);
+            writer.Write(TomlCodes.Alphabet.e);
         }
         else
         {
-            writer.Write(CsTomlSyntax.Alphabet.f);
-            writer.Write(CsTomlSyntax.Alphabet.a);
-            writer.Write(CsTomlSyntax.Alphabet.l);
-            writer.Write(CsTomlSyntax.Alphabet.s);
-            writer.Write(CsTomlSyntax.Alphabet.e);
+            writer.Write(TomlCodes.Alphabet.f);
+            writer.Write(TomlCodes.Alphabet.a);
+            writer.Write(TomlCodes.Alphabet.l);
+            writer.Write(TomlCodes.Alphabet.s);
+            writer.Write(TomlCodes.Alphabet.e);
         }
     }
 
@@ -44,7 +44,7 @@ internal class BoolFormatter : ICsTomlFormatter<bool>
         {
             var falseValue = Unsafe.ReadUnaligned<int>(ref MemoryMarshal.GetReference<byte>(bytes));
             if (falseValue == 1936482662 // fals
-                && bytes[4] == CsTomlSyntax.Alphabet.e) // e
+                && bytes[4] == TomlCodes.Alphabet.e) // e
             {
                 return false;
             }

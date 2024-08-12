@@ -1,0 +1,29 @@
+﻿
+using CsToml.Error;
+using System.Collections.ObjectModel;
+
+namespace CsToml.Values;
+
+internal partial class TomlArray 
+{
+    public override bool CanGetValue(TomlValueFeature feature)
+        => ((TomlValueFeature.String | TomlValueFeature.Array | TomlValueFeature.Object) & feature) == feature;
+
+    public override ReadOnlyCollection<TomlValue> GetArray()
+        => values.AsReadOnly();
+
+    public override TomlValue GetArrayValue(int index)
+    {
+        if ((uint)index >= (uint)Count)
+        {
+            ExceptionHelper.ThrowArgumentOutOfRangeWhenOutsideTheBoundsOfTheArray();
+        }
+        return this[index];
+    }
+
+    public override string GetString()
+        => ToString();
+
+    public override object GetObject()
+        => GetArray();
+}
