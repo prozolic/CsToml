@@ -8,7 +8,11 @@ internal partial class TomlArray
 {
     internal static TomlArray Parse<TArrayItem>(IEnumerable<TArrayItem> value)
     {
-        if (value is List<TArrayItem> list)
+        if (value == null)
+        {
+            return new TomlArray();
+        }
+        else if (value is List<TArrayItem> list)
         {
             var listSpan = CollectionsMarshal.AsSpan(list);
             var array = new TomlArray(listSpan.Length);

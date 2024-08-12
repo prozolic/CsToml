@@ -22,11 +22,10 @@ public partial class TestPackagePart2
     public int[] intArr { get; set; } = [2, 3, 4, 5];
     [TomlValueOnSerialized(TomlValueType.Array)]
     public object[] oArr { get; set; } = [2, "test", 4.02d, DateTime.Now];
-    [TomlValueOnSerialized(TomlValueType.Array)]
     public IEnumerable<object> oArr2 => oArr;
     [TomlValueOnSerialized(TomlValueType.Array)]
     public List<object> oArr3 { get; set; } = new List<object>(new object[] { 2, "test", 4.02d, DateTime.Now });
-    [TomlValueOnSerialized(TomlValueType.Array)]
+
     public ICollection<object> oArr4 => oArr;
     [TomlValueOnSerialized(TomlValueType.KeyValue)]
     public uint IntValue { get; set; } = 2;

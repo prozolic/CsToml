@@ -6,7 +6,7 @@ using System.Diagnostics;
 
 namespace CsToml;
 
-public enum ParserState : byte
+internal enum ParserState : byte
 {
     ParseStart = 0,
     Comment = 1,
@@ -17,7 +17,7 @@ public enum ParserState : byte
     ParseEnd = 6,
 }
 
-public ref struct DottedKeyEnumerator
+internal ref struct DottedKeyEnumerator
 {
     private ReadOnlySpan<TomlDotKey> keys;
     private int index;
@@ -43,7 +43,7 @@ public ref struct DottedKeyEnumerator
 
 }
 
-public ref struct CsTomlParser
+internal ref struct CsTomlParser
 {
     private CsTomlReader reader;
     private TomlValue? comment;
