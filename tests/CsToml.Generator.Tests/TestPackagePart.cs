@@ -26,7 +26,6 @@ public partial class TestPackagePart2
     [TomlValueOnSerialized(TomlValueType.Array)]
     public List<object> oArr3 { get; set; } = new List<object>(new object[] { 2, "test", 4.02d, DateTime.Now });
 
-    public ICollection<object> oArr4 => oArr;
     [TomlValueOnSerialized(TomlValueType.KeyValue)]
     public uint IntValue { get; set; } = 2;
     [TomlValueOnSerialized(TomlValueType.KeyValue)]
