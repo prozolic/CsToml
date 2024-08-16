@@ -4,9 +4,11 @@ using System.Buffers;
 
 namespace CsToml.Formatter;
 
-internal class DateTimeFormatter : ICsTomlFormatter<DateTime>
+internal class DateTimeFormatter : ITomlValueFormatter<DateTime>
 {
-    public static void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, DateTime value)
+    public static readonly DateTimeFormatter Default = new DateTimeFormatter();
+
+    public void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, DateTime value)
         where TBufferWriter : IBufferWriter<byte>
     {
         var totalMicrosecond = value.Millisecond * 1000 + value.Microsecond;
@@ -46,7 +48,7 @@ internal class DateTimeFormatter : ICsTomlFormatter<DateTime>
         }
     }
 
-    private static void SerializeCore<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, DateTime value, ReadOnlySpan<char> format)
+    private void SerializeCore<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, DateTime value, ReadOnlySpan<char> format)
         where TBufferWriter : IBufferWriter<byte>
     {
         var length = 32;
@@ -59,34 +61,35 @@ internal class DateTimeFormatter : ICsTomlFormatter<DateTime>
         writer.Advance(bytesWritten);
     }
 
-    public static DateTime Deserialize(ref Utf8Reader reader, int length)
+    public void Deserialize(ReadOnlySpan<byte> bytes, ref DateTime value)
     {
-        var bytes = reader.ReadBytes(length);
         if (bytes.Length < TomlCodes.DateTime.LocalDateTimeFormatLength)
             ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
 
         if (TomlCodes.IsHyphen(bytes[4]) && TomlCodes.IsHyphen(bytes[7]) &&
             (TomlCodes.IsTabOrWhiteSpace(bytes[10]) || bytes[10] == TomlCodes.Alphabet.T || bytes[10] == TomlCodes.Alphabet.t))
         {
-            return DeserializeLocalDateTime(bytes);
+            DeserializeLocalDateTime(bytes, ref value);
+            return;
         }
 
-        return ExceptionHelper.NotReturnThrow<DateTime>(ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat);
+        ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
     }
 
-    private static DateTime DeserializeLocalDateTime(ReadOnlySpan<byte> bytes)
+    private void DeserializeLocalDateTime(ReadOnlySpan<byte> bytes, ref DateTime value)
     {
-        var localDate = DateOnlyFormatter.DeserializeDateOnly(bytes[..10]);
-        var localtime = TimeOnlyFormatter.DeserializeTimeOnly(bytes[11..]);
+        DateOnly localDate = default;
+        TimeOnly localTime = default;
+        DateOnlyFormatter.Default.DeserializeUnsafe(bytes[..10], ref localDate);
+        TimeOnlyFormatter.Default.DeserializeUnsafe(bytes[11..], ref localTime);
 
         try
         {
-            return new DateTime(localDate, localtime, DateTimeKind.Local);
+            value = new DateTime(localDate, localTime, DateTimeKind.Local);
         }
         catch (ArgumentOutOfRangeException e)
         {
-            return ExceptionHelper.NotReturnThrow<DateTime, ArgumentOutOfRangeException>(
-                ExceptionHelper.ThrowArgumentOutOfRangeExceptionWhenCreating<DateTime>, e);
+            ExceptionHelper.ThrowArgumentOutOfRangeExceptionWhenCreating<DateTime>(e);
         }
     }
 }

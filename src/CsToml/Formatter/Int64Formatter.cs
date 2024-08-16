@@ -7,9 +7,11 @@ using System.Runtime.InteropServices;
 
 namespace CsToml.Formatter;
 
-internal class Int64Formatter : ICsTomlFormatter<long>
+internal class Int64Formatter : ITomlValueFormatter<long>
 {
-    public static void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, long value)
+    public static readonly Int64Formatter Default = new Int64Formatter();
+
+    public void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, long value)
         where TBufferWriter : IBufferWriter<byte>
     {
         var length = TomlCodes.Number.DigitsDecimalUnroll4(value);
@@ -19,10 +21,8 @@ internal class Int64Formatter : ICsTomlFormatter<long>
         return;
     }
 
-    public static long Deserialize(ref Utf8Reader reader, int length)
+    public void Deserialize(ReadOnlySpan<byte> bytes, ref long value)
     {
-        var bytes = reader.ReadBytes(length);
-
         // hexadecimal, octal, or binary
         if (bytes.Length > 2)
         {
@@ -30,22 +30,25 @@ internal class Int64Formatter : ICsTomlFormatter<long>
             switch (prefix)
             {
                 case 25136: //0b:binary
-                    return DeserializeBinary(bytes[2..]);
+                    value = DeserializeBinary(bytes[2..]);
+                    return;
                 case 28464: //0o:octal
-                    return DeserializeOctal(bytes[2..]);
+                    value = DeserializeOctal(bytes[2..]);
+                    return;
                 case 30768: //0x:hexadecimal
-                    return DeserializeHex(bytes[2..]);
+                    value = DeserializeHex(bytes[2..]);
+                    return;
             }
         }
 
-        if (Utf8Parser.TryParse(bytes, out long value, out int bytesConsumed2))
+        if (Utf8Parser.TryParse(bytes, out value, out int bytesConsumed2))
         {
-            return value;
+            return;
         }
-        return ExceptionHelper.NotReturnThrow<int>(ExceptionHelper.ThrowFailedToParseToNumeric);
+        ExceptionHelper.ThrowFailedToParseToNumeric();
     }
 
-    public static long DeserializeBinary(ReadOnlySpan<byte> utf8Bytes)
+    private long DeserializeBinary(ReadOnlySpan<byte> utf8Bytes)
     {
         var digits = utf8Bytes.Length;
         if (digits > 64) ExceptionHelper.ThrowOverflowCount();
@@ -77,7 +80,7 @@ internal class Int64Formatter : ICsTomlFormatter<long>
         }
     }
 
-    public static long DeserializeOctal(ReadOnlySpan<byte> utf8Bytes)
+    private long DeserializeOctal(ReadOnlySpan<byte> utf8Bytes)
     {
         var digits = utf8Bytes.Length;
         if (digits > 21) ExceptionHelper.ThrowOverflowCount();
@@ -109,7 +112,7 @@ internal class Int64Formatter : ICsTomlFormatter<long>
         }
     }
 
-    private static long DeserializeHex(ReadOnlySpan<byte> utf8Bytes)
+    private long DeserializeHex(ReadOnlySpan<byte> utf8Bytes)
     {
         var digits = utf8Bytes.Length;
         if (digits > 16) ExceptionHelper.ThrowOverflowCount();
@@ -141,16 +144,7 @@ internal class Int64Formatter : ICsTomlFormatter<long>
         }
     }
 
-    internal static long DeserializeDecimal(byte utf8Byte)
-    {
-        if (!TomlCodes.IsNumber(utf8Byte))
-        {
-            ExceptionHelper.ThrowNumericConversionFailed(utf8Byte);
-        }
-        return TomlCodes.Number.ParseDecimal(utf8Byte);
-    }
-
-    private static long DeserializeBinary(byte utf8Byte)
+    private long DeserializeBinary(byte utf8Byte)
     {
         if (!TomlCodes.IsBinary(utf8Byte))
         {
@@ -159,7 +153,7 @@ internal class Int64Formatter : ICsTomlFormatter<long>
         return TomlCodes.Number.ParseDecimal(utf8Byte);
     }
 
-    private static long DeserializeOctal(byte utf8Byte)
+    private long DeserializeOctal(byte utf8Byte)
     {
         if (!TomlCodes.IsOctal(utf8Byte))
         {
@@ -168,7 +162,7 @@ internal class Int64Formatter : ICsTomlFormatter<long>
         return TomlCodes.Number.ParseDecimal(utf8Byte);
     }
 
-    private static long DeserializeHex(byte utf8Byte)
+    private long DeserializeHex(byte utf8Byte)
     {
         if (TomlCodes.IsUpperHexAlphabet(utf8Byte))
         {
@@ -184,7 +178,6 @@ internal class Int64Formatter : ICsTomlFormatter<long>
         }
         return TomlCodes.Number.ParseDecimal(utf8Byte);
     }
-
 }
 
 

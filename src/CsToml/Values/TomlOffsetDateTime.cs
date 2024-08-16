@@ -13,7 +13,7 @@ internal sealed partial class TomlOffsetDateTime(DateTimeOffset value) : TomlVal
 
     internal override bool ToTomlString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
     {
-        ValueFormatter.Serialize(ref writer, Value);
+        FormatterCache.GetTomlValueFormatter<DateTimeOffset>()?.Serialize(ref writer, Value);
         return true;
     }
 

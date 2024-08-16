@@ -4,17 +4,21 @@ using System.Runtime.CompilerServices;
 
 namespace CsToml.Utility;
 
-internal ref struct ExtendableArray<T>
+internal struct ExtendableArray<T>
 {
     private T[] array;
     private int count;
+    private bool isRent;
 
     public readonly int Count => count;
+
+    public readonly bool IsRent => isRent;
 
     public ExtendableArray(int capacity)
     {
         array = ArrayPool<T>.Shared.Rent(capacity);
         count = 0;
+        isRent = true;
     }
 
     public readonly ReadOnlySpan<T> AsSpan()
@@ -48,6 +52,7 @@ internal ref struct ExtendableArray<T>
         count = 0;
         ArrayPool<T>.Shared.Return(array, RuntimeHelpers.IsReferenceOrContainsReferences<T>());
         array = [];
+        isRent = false;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

@@ -60,7 +60,7 @@ internal partial class TomlString
         var writer = new ArrayPoolBufferWriter<byte>(128);
         using var _ = writer;
         var utf8Writer = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
-        ValueFormatter.Serialize(ref utf8Writer, utf16String);
+        FormatterCache.GetTomlValueSpanFormatter<char>()?.Serialize(ref utf8Writer, utf16String);
 
         return ParseKey(writer.WrittenSpan);
     }
@@ -110,7 +110,7 @@ internal partial class TomlString
         var writer = new ArrayPoolBufferWriter<byte>(128);
         using var _ = writer;
         var utf8Writer = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
-        ValueFormatter.Serialize(ref utf8Writer, utf16String);
+        FormatterCache.GetTomlValueSpanFormatter<char>()?.Serialize(ref utf8Writer, utf16String);
 
         return Parse(writer.WrittenSpan);
     }

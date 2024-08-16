@@ -439,7 +439,7 @@ internal ref struct CsTomlReader
     public readonly bool Peek()
         => !sequenceReader.End;
 
-    private TomlString ReadDoubleQuoteString()
+    internal TomlString ReadDoubleQuoteString()
     {
         var doubleQuoteCount = 0;
         var index = 0;
@@ -479,7 +479,7 @@ internal ref struct CsTomlReader
         return ExceptionHelper.NotReturnThrow<TomlString>(ExceptionHelper.ThrowThreeOrMoreQuotationMarks);
     }
 
-    private T ReadDoubleQuoteSingleLineString<T>()
+    internal T ReadDoubleQuoteSingleLineString<T>()
         where T : TomlValue, ITomlStringCreator<T>
     {
         Advance(1); // "
@@ -672,113 +672,7 @@ internal ref struct CsTomlReader
         }
     }
 
-    internal EscapeSequenceResult TryParseEscapeSequence(ref Utf8SequenceReader sequenceReader, ArrayPoolBufferWriter<byte> bufferWriter, bool multiLine, bool throwError)
-    {
-        if (!TryPeek(out var ch)) ExceptionHelper.ThrowEndOfFileReached();
-
-        if (TomlCodes.IsEscapeSequence(ch))
-        {
-            switch (ch)
-            {
-                case TomlCodes.Symbol.DOUBLEQUOTED:
-                    Advance(1);
-                    bufferWriter.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                    return EscapeSequenceResult.Success;
-                case TomlCodes.Symbol.SINGLEQUOTED:
-                    Advance(1);
-                    bufferWriter.Write(TomlCodes.Symbol.SINGLEQUOTED);
-                    return EscapeSequenceResult.Success;
-                case TomlCodes.Symbol.BACKSLASH:
-                    Advance(1);
-                    bufferWriter.Write(TomlCodes.Symbol.BACKSLASH);
-                    return EscapeSequenceResult.Success;
-                case TomlCodes.Alphabet.b:
-                    Advance(1);
-                    bufferWriter.Write(TomlCodes.Symbol.BACKSPACE);
-                    return EscapeSequenceResult.Success;
-                case TomlCodes.Alphabet.t:
-                    Advance(1);
-                    bufferWriter.Write(TomlCodes.Symbol.TAB);
-                    return EscapeSequenceResult.Success;
-                case TomlCodes.Alphabet.n:
-                    Advance(1);
-                    bufferWriter.Write(TomlCodes.Symbol.LINEFEED);
-                    return EscapeSequenceResult.Success;
-                case TomlCodes.Alphabet.f:
-                    Advance(1);
-                    bufferWriter.Write(TomlCodes.Symbol.FORMFEED);
-                    return EscapeSequenceResult.Success;
-                case TomlCodes.Alphabet.r:
-                    Advance(1);
-                    bufferWriter.Write(TomlCodes.Symbol.CARRIAGE);
-                    return EscapeSequenceResult.Success;
-                case TomlCodes.Alphabet.u:
-                    Advance(1);
-                    try
-                    {
-                        if (sequenceReader.TryFullSpan(4, out var source))
-                        {
-                            Span<byte> destination = stackalloc byte[4];
-                            Utf8Helper.ParseFrom16bitCodePointToUtf8(destination, source, out int writtenCount);
-                            bufferWriter.Write(destination.Slice(0, writtenCount));
-                            return EscapeSequenceResult.Success;
-                        }
-
-                        Span<byte> sourceSpan = stackalloc byte[4];
-                        if (sequenceReader.TryGetbytes(4, sourceSpan))
-                        {
-                            Span<byte> destination = stackalloc byte[4];
-                            Utf8Helper.ParseFrom16bitCodePointToUtf8(destination, sourceSpan, out int writtenCount);
-                            bufferWriter.Write(destination.Slice(0, writtenCount));
-                            return EscapeSequenceResult.Success;
-                        }
-                        ExceptionHelper.ThrowIncorrect16bitCodePoint();
-                    }
-                    catch (CsTomlException)
-                    {
-                        if (throwError) throw;
-                        return EscapeSequenceResult.Failure;
-                    }
-                    return EscapeSequenceResult.Success;
-                case TomlCodes.Alphabet.U:
-                    Advance(1);
-                    try
-                    {
-                        if (sequenceReader.TryFullSpan(8, out var source))
-                        {
-                            Span<byte> destination = stackalloc byte[8];
-                            Utf8Helper.ParseFrom32bitCodePointToUtf8(destination, source, out int writtenCount);
-                            bufferWriter.Write(destination.Slice(0, writtenCount));
-                            return EscapeSequenceResult.Success;
-                        }
-
-                        Span<byte> sourceSpan = stackalloc byte[8];
-                        if (sequenceReader.TryGetbytes(8, sourceSpan))
-                        {
-                            Span<byte> destination = stackalloc byte[8];
-                            Utf8Helper.ParseFrom32bitCodePointToUtf8(destination, sourceSpan, out int writtenCount);
-                            bufferWriter.Write(destination.Slice(0, writtenCount));
-                            return EscapeSequenceResult.Success;
-                        }
-                        ExceptionHelper.ThrowIncorrect32bitCodePoint();
-                    }
-                    catch (CsTomlException)
-                    {
-                        if (throwError) throw;
-                        return EscapeSequenceResult.Failure;
-                    }
-                    return EscapeSequenceResult.Success;
-                default:
-                    return EscapeSequenceResult.Failure;
-            }
-        }
-        else
-        {
-            return multiLine ? EscapeSequenceResult.Unescaped : EscapeSequenceResult.Failure;
-        }
-    }
-
-    private TomlString ReadSingleQuoteString()
+    internal TomlString ReadSingleQuoteString()
     {
         var singleQuoteCount = 0;
         var index = 0;
@@ -818,7 +712,7 @@ internal ref struct CsTomlReader
         return ExceptionHelper.NotReturnThrow<TomlString>(ExceptionHelper.ThrowConsecutiveSingleQuotationMarksOf3);
     }
 
-    private T ReadSingleQuoteSingleLineString<T>()
+    internal T ReadSingleQuoteSingleLineString<T>()
         where T : TomlValue, ITomlStringCreator<T>
     {
         Advance(1); // '
@@ -1014,7 +908,7 @@ internal ref struct CsTomlReader
         }
     }
 
-    private TomlDotKey ReadUnquotedString(bool isTableHeader = false)
+    internal TomlDotKey ReadUnquotedString(bool isTableHeader = false)
     {
         var currentSpan = sequenceReader.UnreadSpan;
         var fullSpan = true;
@@ -1081,7 +975,7 @@ internal ref struct CsTomlReader
         }
     }
 
-    private TomlArray ReadArray()
+    internal TomlArray ReadArray()
     {
         Advance(1); // [
 
@@ -1194,14 +1088,13 @@ internal ref struct CsTomlReader
         return inlineTable;
     }
 
-    private TomlBoolean ReadBool(bool predictedValue)
+    internal TomlBoolean ReadBool(bool predictedValue)
     {
         var length = predictedValue ? 4 : 5;
         var boolValue = false;
         if (sequenceReader.TryFullSpan(length, out var bytes))
         {
-            var tempReader = new Utf8Reader(bytes);
-            ValueFormatter.Deserialize(ref tempReader, (int)length, out boolValue);
+            FormatterCache.GetTomlValueFormatter<bool>()?.Deserialize(bytes, ref boolValue);
         }
         else
         {
@@ -1210,8 +1103,7 @@ internal ref struct CsTomlReader
             {
                 if (sequenceReader.TryGetbytes(length, bufferWriter))
                 {
-                    var tempReader = new Utf8Reader(bufferWriter.WrittenSpan);
-                    ValueFormatter.Deserialize(ref tempReader, (int)length, out boolValue);
+                    FormatterCache.GetTomlValueFormatter<bool>()?.Deserialize(bufferWriter.WrittenSpan, ref boolValue);
                 }
                 else
                 {
@@ -1247,7 +1139,7 @@ internal ref struct CsTomlReader
         return boolValue ? TomlBoolean.True : TomlBoolean.False;
     }
 
-    private TomlValue ReadNumericValueOrDate()
+    internal TomlValue ReadNumericValueOrDate()
     {
         // check localtime or localdatetime
         if (sequenceReader.Length >= sequenceReader.Consumed + TomlCodes.DateTime.LocalTimeFormatLength)
@@ -1322,7 +1214,7 @@ internal ref struct CsTomlReader
         return ReadDecimalNumeric();
     }
 
-    private TomlValue ReadNumericValueOrDateIfLeadingZero()
+    internal TomlValue ReadNumericValueOrDateIfLeadingZero()
     {
         // check hexadecimal, octal, or binary
         if (TryPeek(1, out var prefix))
@@ -1418,7 +1310,7 @@ internal ref struct CsTomlReader
         return default;
     }
 
-    private TomlValue ReadNumbericValueIfLeadingSign()
+    internal TomlValue ReadNumbericValueIfLeadingSign()
     {
         if (TryPeek(1, out var ch))
         {
@@ -1586,8 +1478,8 @@ internal ref struct CsTomlReader
             }
         }
 
-        var tempReader = new Utf8Reader(writingSpan);
-        ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out long value);
+        long value = default!;
+        FormatterCache.GetTomlValueFormatter<long>()?.Deserialize(writingSpan, ref value);
         return TomlInteger.Create(value);
     }
 
@@ -1650,8 +1542,8 @@ internal ref struct CsTomlReader
         if (underscore)
             ExceptionHelper.ThrowUnderscoreIsUsedAtTheEnd();
 
-        var tempReader = new Utf8Reader(writer.WrittenSpan);
-        ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out long value);
+        long value = default!;
+        FormatterCache.GetTomlValueFormatter<long>()?.Deserialize(writer.WrittenSpan, ref value);
         return TomlInteger.Create(value);
     }
 
@@ -1714,8 +1606,8 @@ internal ref struct CsTomlReader
         if (underscore)
             ExceptionHelper.ThrowUnderscoreIsUsedAtTheEnd();
 
-        var tempReader = new Utf8Reader(writer.WrittenSpan);
-        ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out long value);
+        long value = default!;
+        FormatterCache.GetTomlValueFormatter<long>()?.Deserialize(writer.WrittenSpan, ref value);
         return TomlInteger.Create(value);
     }
 
@@ -1778,8 +1670,8 @@ internal ref struct CsTomlReader
         if (underscore)
             ExceptionHelper.ThrowUnderscoreIsUsedAtTheEnd();
 
-        var tempReader = new Utf8Reader(writer.WrittenSpan);
-        ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out long value);
+        long value = default;
+        FormatterCache.GetTomlValueFormatter<long>()?.Deserialize(writer.WrittenSpan, ref value);
         return TomlInteger.Create(value);
     }
 
@@ -1911,12 +1803,13 @@ internal ref struct CsTomlReader
                 break;
         }
 
-        var tempReader = new Utf8Reader(writingSpan);
-        ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out double value);
+
+        double value = default;
+        FormatterCache.GetTomlValueFormatter<double>()?.Deserialize(writingSpan, ref value);
         return new TomlFloat(value);
     }
 
-    private TomlFloat ReadDoubleInf(bool prefixedWithPlusOrMinus)
+    internal TomlFloat ReadDoubleInf(bool prefixedWithPlusOrMinus)
     {
         if (prefixedWithPlusOrMinus)
         {
@@ -1985,7 +1878,7 @@ internal ref struct CsTomlReader
         return default!;
     }
 
-    private TomlFloat ReadDoubleNan(bool prefixedWithPlusOrMinus)
+    internal TomlFloat ReadDoubleNan(bool prefixedWithPlusOrMinus)
     {
         if (prefixedWithPlusOrMinus)
         {
@@ -2135,8 +2028,8 @@ internal ref struct CsTomlReader
                 if (!TomlCodes.IsNumber(bytes[index++])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
             }
         }
-        var tempReader = new Utf8Reader(bytes);
-        ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out DateTime value);
+        DateTime value = default;
+        FormatterCache.GetTomlValueFormatter<DateTime>()?.Deserialize(bytes, ref value);
         return new TomlLocalDateTime(value);
     }
 
@@ -2154,8 +2047,8 @@ internal ref struct CsTomlReader
         if (!TomlCodes.IsNumber(bytes[8])) ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
         if (!TomlCodes.IsNumber(bytes[9])) ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
 
-        var tempReader = new Utf8Reader(bytes);
-        ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out DateOnly value);
+        DateOnly value = default;
+        FormatterCache.GetTomlValueFormatter<DateOnly>()?.Deserialize(bytes, ref value);
         return new TomlLocalDate(value);
     }
 
@@ -2181,8 +2074,8 @@ internal ref struct CsTomlReader
             }
         }
 
-        var tempReader = new Utf8Reader(bytes);
-        ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out TimeOnly value);
+        TimeOnly value = default;
+        FormatterCache.GetTomlValueFormatter<TimeOnly>()?.Deserialize(bytes, ref value);
         return new TomlLocalTime(value);
     }
 
@@ -2215,8 +2108,8 @@ internal ref struct CsTomlReader
         if (!TomlCodes.IsNumber(bytes[17])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
         if (!TomlCodes.IsNumber(bytes[18])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
 
-        var tempReader = new Utf8Reader(bytes);
-        ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out DateTimeOffset value);
+        DateTimeOffset value = default;
+        FormatterCache.GetTomlValueFormatter<DateTimeOffset>()?.Deserialize(bytes, ref value);
         return new TomlOffsetDateTime(value);
     }
 
@@ -2273,8 +2166,8 @@ internal ref struct CsTomlReader
             if (!TomlCodes.IsNumber(bytes[index++])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
         }
 
-        var tempReader = new Utf8Reader(bytes);
-        ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out DateTimeOffset value);
+        DateTimeOffset value = default;
+        FormatterCache.GetTomlValueFormatter<DateTimeOffset>()?.Deserialize(bytes, ref value);
         return new TomlOffsetDateTime(value);
     }
 

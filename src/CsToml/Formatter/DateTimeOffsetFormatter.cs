@@ -5,9 +5,11 @@ using System.Buffers;
 
 namespace CsToml.Formatter;
 
-internal class DateTimeOffsetFormatter : ICsTomlFormatter<DateTimeOffset>
+internal class DateTimeOffsetFormatter : ITomlValueFormatter<DateTimeOffset>
 {
-    public static void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, DateTimeOffset value)
+    public static readonly DateTimeOffsetFormatter Default = new DateTimeOffsetFormatter();
+
+    public void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, DateTimeOffset value)
         where TBufferWriter : IBufferWriter<byte>
     {
         var totalMicrosecond =  value.Millisecond * 1000 + value.Microsecond;
@@ -81,7 +83,7 @@ internal class DateTimeOffsetFormatter : ICsTomlFormatter<DateTimeOffset>
         }
     }
 
-    private static void SerializeCore<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, DateTimeOffset value, ReadOnlySpan<char> format)
+    private void SerializeCore<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, DateTimeOffset value, ReadOnlySpan<char> format)
         where TBufferWriter : IBufferWriter<byte>
     {
         var length = 32;
@@ -102,23 +104,26 @@ internal class DateTimeOffsetFormatter : ICsTomlFormatter<DateTimeOffset>
         writer.Advance(bytesWritten);
     }
 
-    public static DateTimeOffset Deserialize(ref Utf8Reader reader, int length)
+    public void Deserialize(ReadOnlySpan<byte> bytes, ref DateTimeOffset value)
     {
-        var bytes = reader.ReadBytes(length);
         if (bytes.Length < TomlCodes.DateTime.OffsetDateTimeZFormatLength) throw new ArgumentException();
 
         if (TomlCodes.IsHyphen(bytes[4]) && TomlCodes.IsHyphen(bytes[7]) && (bytes[10] == TomlCodes.Alphabet.T || bytes[10] == TomlCodes.Alphabet.t || TomlCodes.IsTabOrWhiteSpace(bytes[10])))
         {
             if (bytes[bytes.Length - 1] ==  TomlCodes.Alphabet.Z || bytes[bytes.Length - 1] == TomlCodes.Alphabet.z)
-                return DeserializeDateTimeOffset(bytes[..^1], bytes.Slice(bytes.Length - 1, 1));
+            {
+                value = DeserializeDateTimeOffset(bytes[..^1], bytes.Slice(bytes.Length - 1, 1));
+                return;
+            }
 
-            return DeserializeDateTimeOffset(bytes[..^6], bytes.Slice(bytes.Length - 6, 6));
+            value = DeserializeDateTimeOffset(bytes[..^6], bytes.Slice(bytes.Length - 6, 6));
+            return;
         }
 
         throw new Exception();
     }
 
-    private static DateTimeOffset DeserializeDateTimeOffset(ReadOnlySpan<byte> bytes, ReadOnlySpan<byte> offsetBytes)
+    private DateTimeOffset DeserializeDateTimeOffset(ReadOnlySpan<byte> bytes, ReadOnlySpan<byte> offsetBytes)
     {
         var year = DeserializeDecimal(bytes[0]) * 1000;
         year += DeserializeDecimal(bytes[1]) * 100;
@@ -219,7 +224,7 @@ internal class DateTimeOffsetFormatter : ICsTomlFormatter<DateTimeOffset>
         }
     }
 
-    internal static int DeserializeDecimal(byte utf8Byte)
+    private int DeserializeDecimal(byte utf8Byte)
     {
         if (!TomlCodes.IsNumber(utf8Byte))
         {

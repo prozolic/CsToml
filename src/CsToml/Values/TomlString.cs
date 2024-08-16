@@ -31,8 +31,7 @@ internal sealed partial class TomlString : TomlValue, ITomlStringCreator<TomlStr
     public TomlString(ReadOnlySpan<byte> value, CsTomlStringType type = CsTomlStringType.Basic) : base()
     {
         TomlStringType = type;
-        var tempReader = new Utf8Reader(value);
-        ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out utf16String);
+        FormatterCache.GetTomlValueFormatter<string>()?.Deserialize(value, ref utf16String!);
     }
 
     public TomlString(string value, CsTomlStringType type = CsTomlStringType.Basic) : base()
@@ -68,7 +67,7 @@ internal sealed partial class TomlString : TomlValue, ITomlStringCreator<TomlStr
         try
         {
             var utf8Writer = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref bufferWriter);
-            ValueFormatter.Serialize(ref utf8Writer, Utf16String.AsSpan());
+            FormatterCache.GetTomlValueSpanFormatter<char>()?.Serialize(ref utf8Writer, Utf16String.AsSpan());
 
             try
             {

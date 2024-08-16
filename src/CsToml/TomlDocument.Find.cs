@@ -39,7 +39,7 @@ public partial class TomlDocument
             var utf8Writer = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
             try
             {
-                ValueFormatter.Serialize(ref utf8Writer, keys);
+                FormatterCache.GetTomlValueSpanFormatter<char>()?.Serialize(ref utf8Writer, keys);
             }
             catch (CsTomlException)
             {
@@ -129,8 +129,9 @@ public partial class TomlDocument
             var keyrWriter = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
             try
             {
-                ValueFormatter.Serialize(ref tableHeaderWriter, tableHeader);
-                ValueFormatter.Serialize(ref keyrWriter, key);
+                var spanFormatter = FormatterCache.GetTomlValueSpanFormatter<char>();
+                spanFormatter?.Serialize(ref tableHeaderWriter, tableHeader);
+                spanFormatter?.Serialize(ref keyrWriter, key);
             }
             catch (CsTomlException)
             {
@@ -261,8 +262,9 @@ public partial class TomlDocument
             var keyWriter = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
             try
             {
-                ValueFormatter.Serialize(ref arrayOfTableHeaderWriter, arrayOfTableHeader);
-                ValueFormatter.Serialize(ref keyWriter, key);
+                var spanFormatter = FormatterCache.GetTomlValueSpanFormatter<char>();
+                spanFormatter?.Serialize(ref arrayOfTableHeaderWriter, arrayOfTableHeader);
+                spanFormatter?.Serialize(ref keyWriter, key);
             }
             catch (CsTomlException)
             {
@@ -382,7 +384,7 @@ public partial class TomlDocument
             var utf8Writer = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
             try
             {
-                ValueFormatter.Serialize(ref utf8Writer, key);
+                FormatterCache.GetTomlValueSpanFormatter<char>()?.Serialize(ref utf8Writer, key);
             }
             catch (CsTomlException)
             {
@@ -430,8 +432,9 @@ public partial class TomlDocument
             var keyrWriter = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
             try
             {
-                ValueFormatter.Serialize(ref tableHeaderWriter, tableHeader);
-                ValueFormatter.Serialize(ref keyrWriter, key);
+                var spanFormatter = FormatterCache.GetTomlValueSpanFormatter<char>();
+                spanFormatter?.Serialize(ref tableHeaderWriter, tableHeader);
+                spanFormatter?.Serialize(ref keyrWriter, key);
             }
             catch (CsTomlException)
             {

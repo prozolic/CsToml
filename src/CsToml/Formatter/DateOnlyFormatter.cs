@@ -4,18 +4,18 @@ using System.Buffers;
 
 namespace CsToml.Formatter;
 
-internal class DateOnlyFormatter : ICsTomlFormatter<DateOnly>
+internal class DateOnlyFormatter : ITomlValueFormatter<DateOnly>
 {
-    public static void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, DateOnly value)
+    public static readonly DateOnlyFormatter Default = new DateOnlyFormatter();
+
+    public void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, DateOnly value)
         where TBufferWriter : IBufferWriter<byte>
     {
         value.TryFormat(writer.GetWrittenSpan(TomlCodes.DateTime.LocalDateFormatLength), out int bytesWritten, "yyyy-MM-dd");
     }
 
-    public static DateOnly Deserialize(ref Utf8Reader reader, int length)
+    public void Deserialize(ReadOnlySpan<byte> bytes, ref DateOnly value)
     {
-        var bytes = reader.ReadBytes(length);
-
         if (bytes.Length != TomlCodes.DateTime.LocalDateFormatLength)
             ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
 
@@ -25,10 +25,10 @@ internal class DateOnlyFormatter : ICsTomlFormatter<DateOnly>
             ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
         }
 
-        return DeserializeDateOnly(bytes);
+        DeserializeUnsafe(bytes, ref value);
     }
 
-    internal static DateOnly DeserializeDateOnly(ReadOnlySpan<byte> bytes)
+    internal void DeserializeUnsafe(ReadOnlySpan<byte> bytes, ref DateOnly value)
     {
         var year = DeserializeDecimal(bytes[0]) * 1000;
         year += DeserializeDecimal(bytes[1]) * 100;
@@ -43,16 +43,15 @@ internal class DateOnlyFormatter : ICsTomlFormatter<DateOnly>
 
         try
         {
-            return new DateOnly(year, month, day);
+            value = new DateOnly(year, month, day);
         }
         catch (ArgumentOutOfRangeException e)
         {
-            return ExceptionHelper.NotReturnThrow<DateOnly, ArgumentOutOfRangeException>(
-                ExceptionHelper.ThrowArgumentOutOfRangeExceptionWhenCreating<DateOnly>, e);
+            ExceptionHelper.ThrowArgumentOutOfRangeExceptionWhenCreating<DateOnly>(e);
         }
     }
 
-    internal static int DeserializeDecimal(byte utf8Byte)
+    private int DeserializeDecimal(byte utf8Byte)
     {
         if (!TomlCodes.IsNumber(utf8Byte))
         {

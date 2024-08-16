@@ -33,7 +33,7 @@ internal sealed partial class TomlInteger : TomlValue
 
     internal override bool ToTomlString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
     {
-        ValueFormatter.Serialize(ref writer, Value);
+        FormatterCache.GetTomlValueFormatter<long>()?.Serialize(ref writer, Value);
         return true;
     }
 

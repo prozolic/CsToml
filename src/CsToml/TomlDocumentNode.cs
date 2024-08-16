@@ -43,7 +43,7 @@ public struct TomlDocumentNode
                 using var _ = writer;
                 var keyrWriter = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
 
-                ValueFormatter.Serialize(ref keyrWriter, key);
+                FormatterCache.GetTomlValueSpanFormatter<char>()?.Serialize(ref keyrWriter, key);
                 return this[writer.WrittenSpan[..keyrWriter.WrittenSize]];
             }
         }

@@ -4,9 +4,11 @@ using System.Buffers;
 
 namespace CsToml.Formatter;
 
-internal class TimeOnlyFormatter : ICsTomlFormatter<TimeOnly>
+internal class TimeOnlyFormatter : ITomlValueFormatter<TimeOnly>
 {
-    public static void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, TimeOnly value)
+    public static readonly TimeOnlyFormatter Default = new TimeOnlyFormatter();
+
+    public void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, TimeOnly value)
         where TBufferWriter : IBufferWriter<byte>
     {
         var totalMicrosecond = value.Millisecond * 100 + value.Microsecond;
@@ -47,15 +49,8 @@ internal class TimeOnlyFormatter : ICsTomlFormatter<TimeOnly>
         }
     }
 
-    private static void SerializeCore<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, TimeOnly value, ReadOnlySpan<char> format)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Deserialize(ReadOnlySpan<byte> bytes, ref TimeOnly value)
     {
-        value.TryFormat(writer.GetWrittenSpan(format.Length), out var bytesWritten, format);
-    }
-
-    public static TimeOnly Deserialize(ref Utf8Reader reader, int length)
-    {
-        var bytes = reader.ReadBytes(length);
         if (bytes.Length < TomlCodes.DateTime.LocalTimeFormatLength)
             ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
 
@@ -63,10 +58,16 @@ internal class TimeOnlyFormatter : ICsTomlFormatter<TimeOnly>
         if (!(TomlCodes.IsColon(bytes[2]) && TomlCodes.IsColon(bytes[5])))
             ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
 
-        return DeserializeTimeOnly(bytes);
+        DeserializeUnsafe(bytes, ref value);
     }
 
-    internal static TimeOnly DeserializeTimeOnly(ReadOnlySpan<byte> bytes)
+    private void SerializeCore<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, TimeOnly value, ReadOnlySpan<char> format)
+        where TBufferWriter : IBufferWriter<byte>
+    {
+        value.TryFormat(writer.GetWrittenSpan(format.Length), out var bytesWritten, format);
+    }
+
+    internal void DeserializeUnsafe(ReadOnlySpan<byte> bytes, ref TimeOnly value)
     {
         var hour = DeserializeDecimal(bytes[0]) * 10 + DeserializeDecimal(bytes[1]);
         var minute = DeserializeDecimal(bytes[3]) * 10 + DeserializeDecimal(bytes[4]);
@@ -121,16 +122,15 @@ internal class TimeOnlyFormatter : ICsTomlFormatter<TimeOnly>
 
         try
         {
-            return new TimeOnly(hour, minute, second, millisecond, microsecond);
+            value =  new TimeOnly(hour, minute, second, millisecond, microsecond);
         }
         catch (ArgumentOutOfRangeException e)
         {
-            return ExceptionHelper.NotReturnThrow<TimeOnly, ArgumentOutOfRangeException>(
-                ExceptionHelper.ThrowArgumentOutOfRangeExceptionWhenCreating<TimeOnly>, e);
+            ExceptionHelper.ThrowArgumentOutOfRangeExceptionWhenCreating<TimeOnly>(e);
         }
     }
 
-    internal static int DeserializeDecimal(byte utf8Byte)
+    private int DeserializeDecimal(byte utf8Byte)
     {
         if (!TomlCodes.IsNumber(utf8Byte))
         {
@@ -138,6 +138,5 @@ internal class TimeOnlyFormatter : ICsTomlFormatter<TimeOnly>
         }
         return TomlCodes.Number.ParseDecimal(utf8Byte);
     }
-
 }
 

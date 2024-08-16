@@ -6,15 +6,17 @@ using CsToml.Utility;
 
 namespace CsToml.Formatter;
 
-internal class StringFormatter : ICsTomlFormatter<string>, ICsTomlSpanFormatter<char>
+internal class StringFormatter : ITomlValueFormatter<string>, ITomlValueSpanFormatter<char>
 {
-    public static void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, string value)
+    public static readonly StringFormatter Default = new StringFormatter();
+
+    public void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, string value)
         where TBufferWriter : IBufferWriter<byte>
     {
         Serialize(ref writer, value.AsSpan());
     }
 
-    public static void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, ReadOnlySpan<char> value)
+    public void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, ReadOnlySpan<char> value)
         where TBufferWriter : IBufferWriter<byte>
     {
         // buffer size to 3 times worst-case (UTF16 -> UTF8)
@@ -32,14 +34,18 @@ internal class StringFormatter : ICsTomlFormatter<string>, ICsTomlSpanFormatter<
         writer.Advance(bytesWritten);
     }
 
-    public static string Deserialize(ref Utf8Reader reader, int length)
+    public void Deserialize(ReadOnlySpan<byte> bytes, ref string value)
     {
-        if (length == 0) return string.Empty;
+        if (bytes.Length == 0)
+        {
+            value = string.Empty;
+            return;
+        }
 
-        return DeserializeCore(reader.ReadBytes(length));
+        DeserializeCore(bytes, ref value);
     }
 
-    private static string DeserializeCore(ReadOnlySpan<byte> utf8Bytes)
+    private void DeserializeCore(ReadOnlySpan<byte> utf8Bytes, ref string value)
     {
         var maxBufferSize = utf8Bytes.Length * 2;
         if (maxBufferSize <= 1024)
@@ -53,7 +59,7 @@ internal class StringFormatter : ICsTomlFormatter<string>, ICsTomlSpanFormatter<
                 ExceptionHelper.ThrowBufferTooSmallFailed();
             }
 
-            return new string(bufferBytesSpan[..charsWritten]);
+            value =  new string(bufferBytesSpan[..charsWritten]);
         }
         else
         {
@@ -70,7 +76,7 @@ internal class StringFormatter : ICsTomlFormatter<string>, ICsTomlSpanFormatter<
                 }
 
                 bufferWriter.Advance(charsWritten);
-                return new string(bufferWriter.WrittenSpan);
+                value = new string(bufferWriter.WrittenSpan);
             }
             finally
             {

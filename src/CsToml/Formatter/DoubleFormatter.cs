@@ -6,33 +6,24 @@ using System.Runtime.CompilerServices;
 
 namespace CsToml.Formatter;
 
-internal class DoubleFormatter : ICsTomlFormatter<double>
+internal class DoubleFormatter : ITomlValueFormatter<double>
 {
-    public static void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, double value)
+    public static readonly DoubleFormatter Default = new DoubleFormatter();
+
+    public void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, double value)
         where TBufferWriter : IBufferWriter<byte>
     {
         var length = 32;
         int bytesWritten;
-        if (value - System.Math.Floor(value) != 0)
+        while (!value.TryFormat(writer.GetSpan(length), out bytesWritten, "G"))
         {
-            while (!value.TryFormat(writer.GetSpan(length), out bytesWritten))
-            {
-                length *= 2;
-            }
-        }
-        else
-        {
-            while (!value.TryFormat(writer.GetSpan(length), out bytesWritten, "G"))
-            {
-                length *= 2;
-            }
+            length *= 2;
         }
         writer.Advance(bytesWritten);
     }
 
-    public static double Deserialize(ref Utf8Reader reader, int length)
+    public void Deserialize(ReadOnlySpan<byte> bytes, ref double value)
     {
-        var bytes = reader.ReadBytes(length);
         if (bytes.Length < 3) ExceptionHelper.ThrowIncorrectTomlFloatFormat();
 
         // sign check
@@ -43,16 +34,19 @@ internal class DoubleFormatter : ICsTomlFormatter<double>
                 bytes[2] == TomlCodes.Alphabet.n &&
                 bytes[3] == TomlCodes.Alphabet.f)
             {
-                return plusOrMinus * TomlCodes.Float.Inf;
+                value = plusOrMinus * TomlCodes.Float.Inf;
+                return;
             }
             if (bytes[1] == TomlCodes.Alphabet.n &&
                 bytes[2] == TomlCodes.Alphabet.a &&
                 bytes[3] == TomlCodes.Alphabet.n)
             {
-                return plusOrMinus * TomlCodes.Float.Nan;
+                value =  plusOrMinus * TomlCodes.Float.Nan;
+                return;
             }
 
-            return plusOrMinus * DeserializeDouble(bytes[1..]);
+            value = plusOrMinus * DeserializeUnsafe(bytes[1..]);
+            return;
         }
         else
         {
@@ -60,21 +54,28 @@ internal class DoubleFormatter : ICsTomlFormatter<double>
                 bytes[1] == TomlCodes.Alphabet.n &&
                 bytes[2] == TomlCodes.Alphabet.f)
             {
-                return TomlCodes.Float.Inf;
+                value =  TomlCodes.Float.Inf;
+                return;
             }
             if (bytes[0] == TomlCodes.Alphabet.n &&
                 bytes[1] == TomlCodes.Alphabet.a &&
                 bytes[2] == TomlCodes.Alphabet.n)
             {
-                return TomlCodes.Float.Nan;
+                value =  TomlCodes.Float.Nan;
+                return;
             }
 
-            return DeserializeDouble(bytes);
+            value = DeserializeUnsafe(bytes);
         }
     }
 
-    private static double DeserializeDouble(ReadOnlySpan<byte> utf8Bytes)
+    private double DeserializeUnsafe(ReadOnlySpan<byte> utf8Bytes)
     {
+        if(double.TryParse(utf8Bytes, out var value))
+        {
+            return value;
+        }
+
         double integerValue = 0d;
         var index = 0;
 
@@ -135,7 +136,6 @@ internal class DoubleFormatter : ICsTomlFormatter<double>
             (integerValue + decimalValue) * GetPositiveExponent(exponentValue) :
             (integerValue + decimalValue) / GetPositiveExponent(exponentValue);
     }
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static double GetPositiveExponent(long exponentValue)

@@ -22,8 +22,8 @@ public sealed class ByteMemoryResult : IDisposable
     {
         get
         {
-            var tempReader = new Utf8Reader(ByteSpan);
-            ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out string value);
+            string value = string.Empty;
+            FormatterCache.GetTomlValueFormatter<string>()?.Deserialize(ByteSpan, ref value);
             return value;
         }
     }

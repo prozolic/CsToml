@@ -25,7 +25,6 @@ public sealed class CsTomlSerializer : ITomlValueSerializer
         return T.Deserialize<CsTomlSerializer>(tomlTextSequence, options);
     }
 
-
     public static ByteMemoryResult Serialize<T>(T? target, CsTomlSerializerOptions? options = null)
         where T : ITomlSerializedObject<T>
     {
@@ -61,43 +60,43 @@ public sealed class CsTomlSerializer : ITomlValueSerializer
     static void ITomlValueSerializer.Serialize<TBufferWriter>(ref TBufferWriter writer, long value)
     {
         var utf8Writer = new Utf8Writer<TBufferWriter>(ref writer);
-        ValueFormatter.Serialize(ref utf8Writer, value);
+        FormatterCache.GetTomlValueFormatter<long>()?.Serialize(ref utf8Writer, value);
     }
 
     static void ITomlValueSerializer.Serialize<TBufferWriter>(ref TBufferWriter writer, bool value)
     {
         var utf8Writer = new Utf8Writer<TBufferWriter>(ref writer);
-        ValueFormatter.Serialize(ref utf8Writer, value);
+        FormatterCache.GetTomlValueFormatter<bool>()?.Serialize(ref utf8Writer, value);
     }
 
     static void ITomlValueSerializer.Serialize<TBufferWriter>(ref TBufferWriter writer, double value)
     {
         var utf8Writer = new Utf8Writer<TBufferWriter>(ref writer);
-        ValueFormatter.Serialize(ref utf8Writer, value);
+        FormatterCache.GetTomlValueFormatter<double>()?.Serialize(ref utf8Writer, value);
     }
 
     static void ITomlValueSerializer.Serialize<TBufferWriter>(ref TBufferWriter writer, DateTime value)
     {
         var utf8Writer = new Utf8Writer<TBufferWriter>(ref writer);
-        ValueFormatter.Serialize(ref utf8Writer, value);
+        FormatterCache.GetTomlValueFormatter<DateTime>()?.Serialize(ref utf8Writer, value);
     }
 
     static void ITomlValueSerializer.Serialize<TBufferWriter>(ref TBufferWriter writer, DateTimeOffset value)
     {
         var utf8Writer = new Utf8Writer<TBufferWriter>(ref writer);
-        ValueFormatter.Serialize(ref utf8Writer, value);
+        FormatterCache.GetTomlValueFormatter<DateTimeOffset>()?.Serialize(ref utf8Writer, value);
     }
 
     static void ITomlValueSerializer.Serialize<TBufferWriter>(ref TBufferWriter writer, DateOnly value)
     {
         var utf8Writer = new Utf8Writer<TBufferWriter>(ref writer);
-        ValueFormatter.Serialize(ref utf8Writer, value);
+        FormatterCache.GetTomlValueFormatter<DateOnly>()?.Serialize(ref utf8Writer, value);
     }
 
     static void ITomlValueSerializer.Serialize<TBufferWriter>(ref TBufferWriter writer, TimeOnly value)
     {
         var utf8Writer = new Utf8Writer<TBufferWriter>(ref writer);
-        ValueFormatter.Serialize(ref utf8Writer, value);
+        FormatterCache.GetTomlValueFormatter<TimeOnly>()?.Serialize(ref utf8Writer, value);
     }
 
     static void ITomlValueSerializer.Serialize<TBufferWriter>(ref TBufferWriter writer, ReadOnlySpan<char> value)
@@ -112,60 +111,60 @@ public sealed class CsTomlSerializer : ITomlValueSerializer
         var utf8Writer = new Utf8Writer<TBufferWriter>(ref writer);
         if (value == null)
         {
-            ValueFormatter.Serialize(ref utf8Writer, 0);
+            FormatterCache.GetTomlValueFormatter<long>()?.Serialize(ref utf8Writer, 0);
             return;
         }
 
         switch (value!.GetType())
         {
             case var t when t == typeof(bool):
-                ValueFormatter.Serialize(ref utf8Writer, (int)(value));
+                FormatterCache.GetTomlValueFormatter<bool>()?.Serialize(ref utf8Writer, (bool)(value));
                 return;
             case var t when t == typeof(byte):
-                ValueFormatter.Serialize(ref utf8Writer, (byte)(value));
+                FormatterCache.GetTomlValueFormatter<long>()?.Serialize(ref utf8Writer, (byte)(value));
                 return;
             case var t2 when t2 == typeof(sbyte):
-                ValueFormatter.Serialize(ref utf8Writer, (sbyte)(value));
+                FormatterCache.GetTomlValueFormatter<long>()?.Serialize(ref utf8Writer, (sbyte)(value));
                 return;
             case var t3 when t3 == typeof(int):
-                ValueFormatter.Serialize(ref utf8Writer, (int)(value));
+                FormatterCache.GetTomlValueFormatter<long>()?.Serialize(ref utf8Writer, (int)(value));
                 return;
             case var t4 when t4 == typeof(uint):
-                ValueFormatter.Serialize(ref utf8Writer, (uint)(value));
+                FormatterCache.GetTomlValueFormatter<long>()?.Serialize(ref utf8Writer, (uint)(value));
                 return;
             case var t5 when t5 == typeof(long):
-                ValueFormatter.Serialize(ref utf8Writer, (long)(value));
+                FormatterCache.GetTomlValueFormatter<long>()?.Serialize(ref utf8Writer, (long)(value));
                 return;
             case var t6 when t6 == typeof(ulong):
-                ValueFormatter.Serialize(ref utf8Writer, (ulong)(value));
+                FormatterCache.GetTomlValueFormatter<double>()?.Serialize(ref utf8Writer, (ulong)(value));
                 return;
             case var t7 when t7 == typeof(short):
-                ValueFormatter.Serialize(ref utf8Writer, (short)(value));
+                FormatterCache.GetTomlValueFormatter<long>()?.Serialize(ref utf8Writer, (short)(value));
                 return;
             case var t8 when t8 == typeof(ushort):
-                ValueFormatter.Serialize(ref utf8Writer, (ushort)(value));
+                FormatterCache.GetTomlValueFormatter<long>()?.Serialize(ref utf8Writer, (ushort)(value));
                 return;
             case var t when t == typeof(double):
-                ValueFormatter.Serialize(ref utf8Writer, (double)(value));
+                FormatterCache.GetTomlValueFormatter<double>()?.Serialize(ref utf8Writer, (double)(value));
                 return;
             case var t when t == typeof(DateTime):
-                ValueFormatter.Serialize(ref utf8Writer, (DateTime)(value));
+                FormatterCache.GetTomlValueFormatter<DateTime>()?.Serialize(ref utf8Writer, (DateTime)(value));
                 return;
             case var t when t == typeof(DateTimeOffset):
-                ValueFormatter.Serialize(ref utf8Writer, (DateTimeOffset)(value));
+                FormatterCache.GetTomlValueFormatter<DateTimeOffset>()?.Serialize(ref utf8Writer, (DateTimeOffset)(value));
                 return;
             case var t when t == typeof(DateOnly):
-                ValueFormatter.Serialize(ref utf8Writer, (DateOnly)(value));
+                FormatterCache.GetTomlValueFormatter<DateOnly>()?.Serialize(ref utf8Writer, (DateOnly)(value));
                 return;
             case var t when t == typeof(TimeOnly):
-                ValueFormatter.Serialize(ref utf8Writer, (TimeOnly)(value));
+                FormatterCache.GetTomlValueFormatter<TimeOnly>()?.Serialize(ref utf8Writer, (TimeOnly)(value));
                 return;
             case var t when t == typeof(string):
                 var cstomlStr = TomlString.Parse((string)value);
                 cstomlStr.ToTomlString(ref utf8Writer);
                 return;
             default:
-                ValueFormatter.Serialize(ref utf8Writer, 0);
+                FormatterCache.GetTomlValueFormatter<long>()?.Serialize(ref utf8Writer, 0);
                 return;
         }
     }

@@ -6,9 +6,11 @@ using System.Runtime.InteropServices;
 
 namespace CsToml.Formatter;
 
-internal class BoolFormatter : ICsTomlFormatter<bool>
+internal class BoolFormatter : ITomlValueFormatter<bool>
 {
-    public static void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, bool value)
+    public static readonly BoolFormatter Default = new BoolFormatter();
+
+    public void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, bool value)
         where TBufferWriter : IBufferWriter<byte>
     {
         if (value)
@@ -28,16 +30,15 @@ internal class BoolFormatter : ICsTomlFormatter<bool>
         }
     }
 
-    public static bool Deserialize(ref Utf8Reader reader, int length)
+    public void Deserialize(ReadOnlySpan<byte> bytes, ref bool value)
     {
-        var bytes = reader.ReadBytes(length);
-
         if (bytes.Length == 4)
         {
             var trueValue = Unsafe.ReadUnaligned<int>(ref MemoryMarshal.GetReference<byte>(bytes));
             if (trueValue == 1702195828) // true
             {
-                return true;
+                value = true;
+                return;
             }
         }
         if (bytes.Length == 5)
@@ -46,11 +47,12 @@ internal class BoolFormatter : ICsTomlFormatter<bool>
             if (falseValue == 1936482662 // fals
                 && bytes[4] == TomlCodes.Alphabet.e) // e
             {
-                return false;
+                value =  false;
+                return;
             }
         }
 
-        return ExceptionHelper.NotReturnThrow<bool, string>(ExceptionHelper.ThrowDeserializationFailed, "A value that cannot be deserialized into a boolean is set.");
+        ExceptionHelper.ThrowDeserializationFailed("A value that cannot be deserialized into a boolean is set.");
     }
 }
 

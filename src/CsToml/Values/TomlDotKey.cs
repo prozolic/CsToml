@@ -28,8 +28,8 @@ internal sealed class TomlDotKey :
     {
         get
         {
-            var tempReader = new Utf8Reader(Value);
-            ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out string value);
+            string value = string.Empty;
+            FormatterCache.GetTomlValueFormatter<string>()?.Deserialize(Value, ref value);
             return value;
         }
     }
@@ -135,8 +135,8 @@ internal static class CsTomlDotKeyExtensions
                     writer.Write(TomlCodes.Symbol.DOT);
             }
 
-            var tempReader = new Utf8Reader(bufferWriter.WrittenSpan);
-            ValueFormatter.Deserialize(ref tempReader, tempReader.Length, out string value);
+            string value = string.Empty;
+            FormatterCache.GetTomlValueFormatter<string>()?.Deserialize(bufferWriter.WrittenSpan, ref value);
             return value;
         }
         finally

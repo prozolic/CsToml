@@ -22,7 +22,7 @@ internal sealed partial class TomlBoolean : TomlValue
 
     internal override bool ToTomlString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
     {
-        ValueFormatter.Serialize(ref writer, Value);
+        FormatterCache.GetTomlValueFormatter<bool>()?.Serialize(ref writer, Value);
         return true;
     }
 

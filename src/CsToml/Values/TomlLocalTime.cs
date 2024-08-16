@@ -13,7 +13,7 @@ internal sealed partial class TomlLocalTime(TimeOnly value) : TomlValue()
 
     internal override bool ToTomlString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
     {
-        ValueFormatter.Serialize(ref writer, Value);
+        FormatterCache.GetTomlValueFormatter<TimeOnly>()?.Serialize(ref writer, Value);
         return true;
     }
 

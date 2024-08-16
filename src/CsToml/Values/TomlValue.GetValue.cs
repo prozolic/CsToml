@@ -95,7 +95,7 @@ public partial class TomlValue
                 var utf8Writer = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref bufferWriter);
                 try
                 {
-                    ValueFormatter.Serialize(ref utf8Writer, keys);
+                    FormatterCache.GetTomlValueSpanFormatter<char>()?.Serialize(ref utf8Writer, keys);
                 }
                 catch (CsTomlException)
                 {

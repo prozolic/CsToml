@@ -31,7 +31,7 @@ internal sealed partial class TomlFloat(double value, TomlFloat.FloatKind kind =
     {
         if (Kind == FloatKind.Normal)
         {
-            ValueFormatter.Serialize(ref writer, Value);
+            FormatterCache.GetTomlValueFormatter<double>()?.Serialize(ref writer, Value);
             return true;
         }
 
