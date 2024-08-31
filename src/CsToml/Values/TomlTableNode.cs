@@ -5,6 +5,9 @@ using CsToml.Utility;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Xml.Linq;
+using System.Reflection.Metadata;
+using System.Collections.Generic;
 
 namespace CsToml.Values;
 
@@ -227,6 +230,57 @@ internal class TomlTableNode
         finally
         {
             RecycleArrayPoolBufferWriter<byte>.Return(bufferWriter);
+        }
+    }
+
+    public IDictionary<string, object?> GetDictionary()
+    {
+        if (this.NodeCount == 0)
+        {
+            if (Value is TomlTable table)
+            {
+                return table.GetDictionary();
+            }
+            else if (Value is TomlInlineTable inlineTable)
+            {
+                return inlineTable.GetDictionary();
+            }
+            return new Dictionary<string, object?>();
+        }
+        else
+        {
+            var dictionary = new Dictionary<string, object?>(this.NodeCount);
+
+            foreach ((var key, var node) in KeyValuePairs)
+            {
+                if (node.Value!.HasValue)
+                {
+                    dictionary.Add(key.Utf16String, node.Value!.GetObject());
+                }
+                else
+                {
+                    if (TryGetChildNode(key.Value, out var value))
+                    {
+                        dictionary.Add(key.Utf16String, value!.GetDictionary());
+                    }
+                }
+            }
+
+            return dictionary;
+        }
+    }
+
+    public bool TryGetDictionary(out IDictionary<string, object?> value)
+    {
+        try
+        {
+            value = GetDictionary();
+            return true;
+        }
+        catch (CsTomlException)
+        {
+            value = default!;
+            return false;
         }
     }
 

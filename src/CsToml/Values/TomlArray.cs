@@ -27,21 +27,31 @@ internal sealed partial class TomlArray(int capacity) :
     public TomlArray() : this(4)
     {}
 
-    internal override bool ToTomlString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
+    internal override bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
-        writer.Write(TomlCodes.Symbol.LEFTSQUAREBRACKET);
-        writer.Write(TomlCodes.Symbol.SPACE);
-
-        for (int i = 0; i < Count; i++)
+        writer.BeginArray();
+        if (Count == 0)
         {
-            values[i].ToTomlString(ref writer);
-            if (i != Count - 1)
-            {
-                writer.Write(TomlCodes.Symbol.COMMA);
-            }
-            writer.Write(TomlCodes.Symbol.SPACE);
+            writer.EndArray();
+            return true;
         }
-        writer.Write(TomlCodes.Symbol.RIGHTSQUAREBRACKET);
+
+        values[0].ToTomlString(ref writer);
+        if (Count == 1)
+        {
+            writer.WriteSpace();
+            writer.EndArray();
+            return true;
+        }
+
+        for (int i = 1; i < Count; i++)
+        {
+            writer.Write(TomlCodes.Symbol.COMMA);
+            writer.WriteSpace();
+            values[i].ToTomlString(ref writer);
+        }
+        writer.WriteSpace();
+        writer.EndArray();
         return true;
     }
 

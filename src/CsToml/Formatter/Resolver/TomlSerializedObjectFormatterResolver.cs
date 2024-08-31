@@ -1,0 +1,41 @@
+﻿using CsToml.Error;
+using System.Reflection;
+
+namespace CsToml.Formatter.Resolver;
+
+public sealed class TomlSerializedObjectFormatterResolver
+{
+    private sealed class Cache<T>
+    {
+        public static bool Registered;
+        public static ITomlValueFormatter<T>? Formatter;
+
+        static Cache()
+        {
+            if (typeof(ITomlSerializedObjectRegister).IsAssignableFrom(typeof(T)))
+            {
+                var m = typeof(T).GetMethod("CsToml.ITomlSerializedObjectRegister.Register",
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+                if (m == null)
+                {
+                    ExceptionHelper.ThrowException($"{typeof(T).FullName} implements ITomlSerializedObjectRegister, but Register is not found.");
+                }
+                m.Invoke(null, null);
+            }
+        }
+    }
+
+    public static ITomlValueFormatter<T>? GetFormatter<T>()
+    {
+        return Cache<T>.Formatter;
+    }
+
+    public static void Register<T>(TomlSerializedObjectFormatter<T> fomatter)
+        where T : ITomlSerializedObject<T>
+    {
+        if (Cache<T>.Registered) return;
+
+        Cache<T>.Registered = true;
+        Cache<T>.Formatter = fomatter;
+    }
+}

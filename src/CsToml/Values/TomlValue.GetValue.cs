@@ -1,5 +1,5 @@
 ﻿using CsToml.Error;
-using CsToml.Formatter;
+using CsToml.Formatter.Resolver;
 using CsToml.Utility;
 using System.Buffers;
 using System.Collections.ObjectModel;
@@ -64,55 +64,10 @@ public partial class TomlValue
 
     public T GetValue<T>()
     {
-        var invoker = GetValueInvokerCache.Get<T>() ?? ExceptionHelper.NotReturnThrow<Func<TomlValue, T>>(ExceptionHelper.ThrowInvalidCasting);
-        return invoker(this);
+        var fomatter = TomlValueFormatterResolver.GetFormatter<T>();
+        var tempDocumentNode = new TomlDocumentNode(default!, this);
+        return fomatter.Deserialize(ref tempDocumentNode, CsTomlSerializerOptions.Default);
     }
-
-    public virtual TomlValue? Find(ReadOnlySpan<byte> keys, bool isDottedKeys = false)
-        => default;
-
-    public TomlValue? Find(ReadOnlySpan<char> keys, bool isDottedKeys = false)
-    {
-        var maxBufferSize = (keys.Length + 1) * 3;
-        if (maxBufferSize < 1024)
-        {
-            Span<byte> utf8Span = stackalloc byte[maxBufferSize];
-            var status = Utf8.FromUtf16(keys, utf8Span, out int _, out int bytesWritten, replaceInvalidSequences: false);
-            if (status != System.Buffers.OperationStatus.Done)
-            {
-                if (status == OperationStatus.InvalidData)
-                    ExceptionHelper.ThrowInvalidByteIncluded();
-                ExceptionHelper.ThrowBufferTooSmallFailed();
-            }
-
-            return Find(utf8Span[..bytesWritten], isDottedKeys);
-        }
-        else
-        {
-            var bufferWriter = RecycleArrayPoolBufferWriter<byte>.Rent();
-            try
-            {
-                var utf8Writer = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref bufferWriter);
-                try
-                {
-                    FormatterCache.GetTomlValueSpanFormatter<char>()?.Serialize(ref utf8Writer, keys);
-                }
-                catch (CsTomlException)
-                {
-                    return default;
-                }
-
-                return Find(bufferWriter.WrittenSpan, isDottedKeys);
-            }
-            finally
-            {
-                RecycleArrayPoolBufferWriter<byte>.Return(bufferWriter);
-            }
-        }
-    }
-
-    public virtual TomlValue? Find(ReadOnlySpan<ByteArray> dottedKeys)
-        => default;
 
     public bool TryGetArray(out ReadOnlyCollection<TomlValue> value)
     {
@@ -345,39 +300,6 @@ public partial class TomlValue
             }
         }
         value = default!;
-        return false;
-    }
-
-    public bool TryFind(ReadOnlySpan<byte> key, out TomlValue? value, bool isDottedKeys = false)
-    {
-        if (CanGetValue(TomlValueFeature.Table) || CanGetValue(TomlValueFeature.InlineTable))
-        {
-            value = Find(key, isDottedKeys);
-            return value != default;
-        }
-        value = default;
-        return false;
-    }
-
-    public bool TryFind(ReadOnlySpan<char> key, out TomlValue? value, bool isDottedKeys = false)
-    {
-        if (CanGetValue(TomlValueFeature.Table) || CanGetValue(TomlValueFeature.InlineTable))
-        {
-            value = Find(key, isDottedKeys);
-            return value != default;
-        }
-        value = default;
-        return false;
-    }
-
-    public bool TryFind(ReadOnlySpan<ByteArray> dottedKeys, out TomlValue? value)
-    {
-        if (CanGetValue(TomlValueFeature.Table) || CanGetValue(TomlValueFeature.InlineTable))
-        {
-            value = Find(dottedKeys);
-            return value != default;
-        }
-        value = default;
         return false;
     }
 

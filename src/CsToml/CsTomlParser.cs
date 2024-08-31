@@ -77,14 +77,16 @@ internal ref struct CsTomlParser
         CurrentState = ParserState.ParseStart;
     }
 
+    public void Return()
+    {
+        dottedKeys.Return();
+    }
+
     public readonly CsTomlException? GetException()
         => exception;
 
     public readonly TomlValue? GetComment()
         => comment;
-
-    public DottedKeyEnumerator GetKeys()
-        => new(dottedKeys.AsSpan());
 
     internal readonly ReadOnlySpan<TomlDotKey> GetDottedKeySpan()
         => dottedKeys.AsSpan();

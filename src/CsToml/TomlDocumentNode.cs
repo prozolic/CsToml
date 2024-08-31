@@ -1,8 +1,9 @@
 ﻿
 using CsToml.Error;
-using CsToml.Formatter;
+using CsToml.Formatter.Resolver;
 using CsToml.Utility;
 using CsToml.Values;
+using CsToml.Values.Internal;
 using System.Buffers;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -15,9 +16,16 @@ namespace CsToml;
 [DebuggerDisplay("{Value}")]
 public struct TomlDocumentNode
 {
-    private TomlTableNode node;
+    private readonly TomlDocument document;
+    private readonly TomlTableNode node;
+    private readonly TomlValue value;
+    internal TomlDocument Document => document;
 
-    public readonly TomlValue Value => node.Value!;
+    internal TomlTableNodeDictionary.KeyValuePairEnumerator KeyValuePairs => node.KeyValuePairs;
+
+    internal readonly int NodeCount => node?.NodeCount ?? 0;
+
+    public readonly TomlValue Value => value;
 
     public TomlDocumentNode this[ReadOnlySpan<char> key]
     {
@@ -39,12 +47,16 @@ public struct TomlDocumentNode
             }
             else
             {
-                var writer = new ArrayPoolBufferWriter<byte>(128);
-                using var _ = writer;
-                var keyrWriter = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref writer);
-
-                FormatterCache.GetTomlValueSpanFormatter<char>()?.Serialize(ref keyrWriter, key);
-                return this[writer.WrittenSpan[..keyrWriter.WrittenSize]];
+                var writer = RecycleArrayPoolBufferWriter<byte>.Rent();
+                try
+                {
+                    Utf8Helper.FromUtf16(writer, key);
+                    return this[writer.WrittenSpan];
+                }
+                finally
+                {
+                    RecycleArrayPoolBufferWriter<byte>.Return(writer);
+                }
             }
         }
     }
@@ -53,13 +65,11 @@ public struct TomlDocumentNode
     {
         get
         {
-            if (node.TryGetChildNode(key, out var value))
+            if (node?.TryGetChildNode(key, out var value) ?? false)
             {
-                node = value!;
-                return this;
+                return new TomlDocumentNode(document, value!);
             }
-            node = TomlTableNode.Empty;
-            return this;
+            return new TomlDocumentNode(document, TomlTableNode.Empty);
         }
     }
 
@@ -71,28 +81,45 @@ public struct TomlDocumentNode
             {
                 if (value is TomlTable table)
                 {
-                    node = table!.RootNode;
+                    return new TomlDocumentNode(document, table!.RootNode!);
                 }
                 else if (value is TomlInlineTable inlineTable)
                 {
-                    node = inlineTable!.RootNode;
+                    return new TomlDocumentNode(document, inlineTable!.RootNode);
                 }
-                else
-                {
-                    node = TomlTableNode.Empty;
-                }
-                return this;
+                return new TomlDocumentNode(document, value);
             }
-            node = TomlTableNode.Empty;
-            return this;
+            return new TomlDocumentNode(document, TomlTableNode.Empty);
         }
     }
 
-    public readonly bool HasValue => Value.HasValue;
+    public readonly bool HasValue => Value.HasValue || NodeCount > 0;
 
-    internal TomlDocumentNode(TomlTableNode node)
+    internal TomlDocumentNode(TomlDocument document, TomlTableNode node)
     {
+        this.document = document;
         this.node = node;
+        this.value = node.Value!;
+    }
+
+    internal TomlDocumentNode(TomlDocument document, TomlValue value)
+    {
+        this.document = document;
+        if (value is TomlTable table)
+        {
+            this.value = TomlValue.Empty;
+            this.node = table!.RootNode!;
+        }
+        else if (value is TomlInlineTable inlineTable)
+        {
+            this.value = TomlValue.Empty;
+            this.node = inlineTable!.RootNode!;
+        }
+        else
+        {
+            this.value = value;
+            this.node = TomlTableNode.Empty;
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -148,8 +175,11 @@ public struct TomlDocumentNode
         => Value.GetNumber<T>();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly T GetValue<T>()
-        => Value.GetValue<T>();
+    public T GetValue<T>()
+    {
+        var fomatter = TomlValueFormatterResolver.GetFormatter<T>();
+        return fomatter.Deserialize(ref this, CsTomlSerializerOptions.Default);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool TryGetArray(out ReadOnlyCollection<TomlValue> value)
@@ -201,5 +231,35 @@ public struct TomlDocumentNode
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGetValue<T>(out T value)
-        => Value.TryGetValue(out value);
+    {
+        try
+        {
+            value = GetValue<T>();
+            return true;
+        }
+        catch (CsTomlException)
+        {
+            value = default!;
+            return false;
+        }
+    }
+
+    internal IDictionary<string, object?> GetDictionary()
+    {
+        return node?.GetDictionary() ?? new Dictionary<string,object?>();
+    }
+
+    internal bool TryGetDictionary(out IDictionary<string, object?> value)
+    {
+        try
+        {
+            value = GetDictionary();
+            return true;
+        }
+        catch(CsTomlException)
+        {
+            value = default!;
+            return false;
+        }
+    }
 }

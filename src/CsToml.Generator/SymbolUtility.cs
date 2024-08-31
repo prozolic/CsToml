@@ -1,5 +1,6 @@
 ﻿using CsToml.Generator.Internal;
 using Microsoft.CodeAnalysis;
+using System.Linq.Expressions;
 using System.Text;
 
 namespace CsToml.Generator;
@@ -10,7 +11,7 @@ internal static class SymbolUtility
             a.AttributeClass!.ContainingNamespace.Name == namespaceName &&
             a.AttributeClass!.Name == attributeName);
 
-    public static string GetFindKey(IEnumerable<string> keys)
+    public static string FormatUtf8PropertyName(IEnumerable<string> keys)
     {
         var builder = new StringBuilder();
         if (keys is List<string> keyList)
@@ -76,7 +77,7 @@ internal static class SymbolUtility
         }).Select(i => (IPropertySymbol)i);
     }
 
-    public static TomlTypeKind GetCsTomlTypeKind(ITypeSymbol type)
+    public static TomlSerializationKind GetTomlSerializationKind(ITypeSymbol type)
     {
         switch (type.SpecialType)
         {
@@ -89,55 +90,85 @@ internal static class SymbolUtility
             case SpecialType.System_UInt16:
             case SpecialType.System_UInt32:
             case SpecialType.System_UInt64:
+            case SpecialType.System_Single:
             case SpecialType.System_Double:
             case SpecialType.System_String:
             case SpecialType.System_Char:
             case SpecialType.System_DateTime:
-                return TomlTypeKind.Primitive;
+                return TomlSerializationKind.Primitive;
             case SpecialType.System_Object: // Unknown
-                return TomlTypeKind.Unknown;
-            case SpecialType.System_Single: // float is not supported
-                return TomlTypeKind.Error;
+                return TomlSerializationKind.Object;
             case SpecialType.System_Collections_Generic_IEnumerable_T:
             case SpecialType.System_Collections_Generic_ICollection_T:
             case SpecialType.System_Collections_Generic_IList_T:
             case SpecialType.System_Collections_Generic_IReadOnlyCollection_T:
             case SpecialType.System_Collections_Generic_IReadOnlyList_T:
-                return TomlTypeKind.Collection;
+                if (IsElementType(type, TomlSerializationKind.Primitive))
+                {
+                    return TomlSerializationKind.Collection;
+                }
+                return TomlSerializationKind.ArrayOfITomlSerializedObject;
             default:
                 switch (type.TypeKind)
                 {
                     case TypeKind.Array:
-                        return TomlTypeKind.Collection;
+                        if (IsElementType(type, TomlSerializationKind.Primitive))
+                        {
+                            return TomlSerializationKind.Array;
+                        }
+                        return TomlSerializationKind.ArrayOfITomlSerializedObject;
                     case TypeKind.Enum:
-                        return TomlTypeKind.Primitive;
+                        return TomlSerializationKind.Enum;
                     case TypeKind.Error:
-                        return TomlTypeKind.Error;
+                        return TomlSerializationKind.NotAvailable;
                     case TypeKind.Class:
-                        if (CollectionMetaData.IsCollection(type))
+                        if (CollectionMetaData.IsSystemCollections(type))
                         {
-                            return TomlTypeKind.Collection;
+                            if (IsElementType(type, TomlSerializationKind.Primitive))
+                            {
+                                return TomlSerializationKind.Collection;
+                            }
+                            return TomlSerializationKind.ArrayOfITomlSerializedObject;
                         }
-                        return TomlTypeKind.TableOrArrayOfTables;
+                        if (DictionaryMetaData.IsDictionary(type))
+                        {
+                            return TomlSerializationKind.Dictionary;
+                        }
+                        if (TomlSerializedObjectMetaData.IsTomlSerializedObject(type))
+                        {
+                            return TomlSerializationKind.TomlSerializedObject;
+                        }
+                        return TomlSerializationKind.Class;
                     case TypeKind.Interface:
-                        if (CollectionMetaData.IsCollection(type))
+                        if (CollectionMetaData.IsSystemCollections(type))
                         {
-                            return TomlTypeKind.Collection;
+                            if (IsElementType(type, TomlSerializationKind.Primitive))
+                            {
+                                return TomlSerializationKind.Collection;
+                            }
+                            return TomlSerializationKind.ArrayOfITomlSerializedObject;
                         }
-                        return TomlTypeKind.TableOrArrayOfTables;
+                        if (DictionaryMetaData.IsDictionary(type))
+                        {
+                            return TomlSerializationKind.Dictionary;
+                        }
+                        return TomlSerializationKind.Interface;
                     case TypeKind.Struct:
-                        switch (type.Name)
-                        {
-                            case "DateOnly":
-                            case "TimeOnly":
-                            case "DateTimeOffset":
-                                return TomlTypeKind.Primitive;
-                        }
-                        return TomlTypeKind.TableOrArrayOfTables;
+                        return TomlSerializationKind.Struct;
                 }
 
-                return TomlTypeKind.Error;
+                return TomlSerializationKind.NotAvailable;
         }
     }
 
+    public static bool IsElementType(ITypeSymbol typeSymbol, TomlSerializationKind kind)
+    {
+        if (typeSymbol is IArrayTypeSymbol arrayTypeSymbol)
+        {
+            var symbolKind = GetTomlSerializationKind(arrayTypeSymbol.ElementType);
+            return symbolKind == kind;
+        }
+
+        return false;
+    }
 }

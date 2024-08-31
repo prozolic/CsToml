@@ -25,8 +25,8 @@ StringValue = "TestPackagePart"
             Assert.Equal(text.Replace("\r\n", "\n"), Encoding.UTF8.GetString(tomlBytes.ByteSpan).Replace("\r\n", "\n"));
         }
         var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlBytes.ByteSpan);
-        Assert.Equal(part.IntValue, document!.Find("IntValue"u8)!.GetInt64());
-        Assert.Equal(part.StringValue, document!.Find("StringValue"u8)!.GetString());
+        Assert.Equal(part.IntValue, document!.RootNode["IntValue"u8]!.GetInt64());
+        Assert.Equal(part.StringValue, document!.RootNode["StringValue"u8]!.GetString());
     }
 
     [Fact]
@@ -36,10 +36,10 @@ StringValue = "TestPackagePart"
         using var tomlBytes = CsTomlSerializer.Serialize(part);
 
         var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlBytes.ByteSpan);
-        Assert.Equal(part.IntValue, document!.Find("IntValue"u8)!.GetNumber<uint>());
-        Assert.Equal(part.LongValue, document!.Find("LongValue"u8)!.GetInt64());
-        Assert.Equal(part.boolValue, document!.Find("boolValue"u8)!.GetBool());
-        Assert.Equal(part.DoubleValue, document!.Find("DoubleValue"u8)!.GetDouble());
-        Assert.Equal(part.StringValue, document!.Find("StringValue"u8)!.GetString());
+        Assert.Equal(part.IntValue, document!.RootNode["IntValue"u8]!.GetNumber<uint>());
+        Assert.Equal(part.LongValue, document!.RootNode["LongValue"u8]!.GetInt64());
+        Assert.Equal(part.boolValue, document!.RootNode["boolValue"u8]!.GetBool());
+        Assert.Equal(part.DoubleValue, document!.RootNode["DoubleValue"u8]!.GetDouble());
+        Assert.Equal(part.StringValue, document!.RootNode["StringValue"u8]!.GetString());
     }
 }

@@ -23,21 +23,23 @@ internal sealed partial class TomlInlineTable : TomlValue
     internal TomlTableNode AddKeyValue(ReadOnlySpan<TomlDotKey> keyArray, TomlValue value, TomlTableNode? searchRootNode)
         => inlineTable.AddKeyValue(keyArray, value, searchRootNode, []);
 
-    internal override bool ToTomlString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
+    internal IDictionary<string, object?> GetDictionary()
+        => inlineTable.GetDictionary();
+
+    internal override bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
-        writer.Write(TomlCodes.Symbol.LEFTBRACES);
-        var csTomlWriter = new CsTomlWriter<TBufferWriter>(ref writer);
-        csTomlWriter.WriteSpace();
+        writer.BeginInlineTable();
+        writer.WriteSpace();
 
         var keys = new List<TomlDotKey>();
-        ToTomlStringCore(ref csTomlWriter, RootNode, keys);
+        ToTomlStringCore(ref writer, RootNode, keys);
 
-        csTomlWriter.WriteSpace();
-        writer.Write(TomlCodes.Symbol.RIGHTBRACES);
+        writer.WriteSpace();
+        writer.EndInlineTable();
         return false;
     }
 
-    private void ToTomlStringCore<TBufferWriter>(ref CsTomlWriter<TBufferWriter> writer, TomlTableNode parentNode, List<TomlDotKey> keys)
+    private void ToTomlStringCore<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlTableNode parentNode, List<TomlDotKey> keys)
         where TBufferWriter : IBufferWriter<byte>
     {
         var count = 0;
@@ -52,7 +54,7 @@ internal sealed partial class TomlInlineTable : TomlValue
 
                 if (count != parentNode.NodeCount)
                 {
-                    writer.WriteComma();
+                    writer.Write(TomlCodes.Symbol.COMMA);
                     writer.WriteSpace();
                 }
                 continue;
@@ -64,15 +66,18 @@ internal sealed partial class TomlInlineTable : TomlValue
                 {
                     for (var i = 0; i < keysSpan.Length; i++)
                     {
-                        writer.WriterKey(keysSpan[i], true);
+                        keysSpan[i].ToTomlString(ref writer);
+                        writer.Write(TomlCodes.Symbol.DOT);
                     }
                 }
-                writer.WriteKeyValue(key, childNode.Value!);
+                key.ToTomlString(ref writer);
+                writer.WriteEqual();
+                childNode.Value!.ToTomlString(ref writer);
                 count++;
 
                 if (count != parentNode.NodeCount)
                 {
-                    writer.WriteComma();
+                    writer.Write(TomlCodes.Symbol.COMMA);
                     writer.WriteSpace();
                 }
             }

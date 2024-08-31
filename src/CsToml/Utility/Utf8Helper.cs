@@ -1,5 +1,7 @@
 ﻿using CsToml.Error;
+using System.Buffers;
 using System.Runtime.InteropServices;
+using System.Text.Unicode;
 
 namespace CsToml.Utility;
 
@@ -178,5 +180,67 @@ internal static class Utf8Helper
             return true;
 
         return false;
+    }
+
+    public static void FromUtf16(IBufferWriter<byte> writer, ReadOnlySpan<char> value)
+    {
+        // buffer size to 3 times worst-case (UTF16 -> UTF8)
+        var maxBufferSize = (value.Length + 1) * 3;
+
+        var status = Utf8.FromUtf16(value, writer.GetSpan(maxBufferSize),
+            out int charsRead, out int bytesWritten, replaceInvalidSequences: false);
+
+        if (status != OperationStatus.Done)
+        {
+            if (status == OperationStatus.InvalidData)
+                ExceptionHelper.ThrowInvalidByteIncluded();
+            ExceptionHelper.ThrowBufferTooSmallFailed();
+        }
+        writer.Advance(bytesWritten);
+    }
+
+    public static string ToUtf16(ReadOnlySpan<byte> utf8Bytes)
+    {
+        if (utf8Bytes.Length == 0)
+        {
+            return string.Empty;
+        }
+
+        var maxBufferSize = utf8Bytes.Length * 2;
+        if (maxBufferSize <= 1024)
+        {
+            Span<char> bufferBytesSpan = stackalloc char[maxBufferSize];
+            var status = Utf8.ToUtf16(utf8Bytes, bufferBytesSpan, out var bytesRead, out var charsWritten, replaceInvalidSequences: false);
+            if (status != OperationStatus.Done)
+            {
+                if (status == OperationStatus.InvalidData)
+                    ExceptionHelper.ThrowInvalidByteIncluded();
+                ExceptionHelper.ThrowBufferTooSmallFailed();
+            }
+
+            return new string(bufferBytesSpan[..charsWritten]);
+        }
+        else
+        {
+            var bufferWriter = RecycleArrayPoolBufferWriter<char>.Rent();
+            var bufferBytesSpan = bufferWriter.GetSpan(maxBufferSize);
+            try
+            {
+                var status = Utf8.ToUtf16(utf8Bytes, bufferBytesSpan, out var bytesRead, out var charsWritten, replaceInvalidSequences: false);
+                if (status != OperationStatus.Done)
+                {
+                    if (status == OperationStatus.InvalidData)
+                        ExceptionHelper.ThrowInvalidByteIncluded();
+                    ExceptionHelper.ThrowBufferTooSmallFailed();
+                }
+
+                bufferWriter.Advance(charsWritten);
+                return new string(bufferWriter.WrittenSpan);
+            }
+            finally
+            {
+                RecycleArrayPoolBufferWriter<char>.Return(bufferWriter);
+            }
+        }
     }
 }

@@ -2,6 +2,7 @@
 using CsToml.Utility;
 using System.Buffers;
 using System.Diagnostics;
+using System.Text;
 
 namespace CsToml;
 
@@ -19,14 +20,7 @@ public sealed class ByteMemoryResult : IDisposable
     public Memory<byte> ByteMemory => Owner.Memory[..Length];
 
     internal string DebugValue
-    {
-        get
-        {
-            string value = string.Empty;
-            FormatterCache.GetTomlValueFormatter<string>()?.Deserialize(ByteSpan, ref value);
-            return value;
-        }
-    }
+        => Utf8Helper.ToUtf16(ByteSpan);
 
     internal ByteMemoryResult(IMemoryOwner<byte> owner, int length)
     {

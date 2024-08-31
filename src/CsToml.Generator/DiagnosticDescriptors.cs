@@ -6,6 +6,14 @@ internal static class DiagnosticDescriptors
 {
     const string Category = "CsTomlError";
 
+    public static readonly DiagnosticDescriptor NoPartial = new(
+        id: "CsTomlError001",
+        title: "Serializable type declarations in CsToml must be 'partial'",
+        messageFormat: "Serializable type declarations in CsToml must be 'partial': {0}",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
     public static readonly DiagnosticDescriptor KeyValueError = new(
         id: "CsTomlError_K1",
         title: "type", 
@@ -77,6 +85,7 @@ internal static class DiagnosticDescriptors
         category: Category,
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
 
 }
 

@@ -25,5 +25,12 @@ internal partial class TomlArray
         => ToString();
 
     public override object GetObject()
-        => GetArray();
+    {
+        var array = new object[Count];
+        for (int i = 0; i < Count; i++)
+        {
+            array[i] = values[i].GetObject();
+        }
+        return array;
+    }
 }

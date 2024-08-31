@@ -10,10 +10,8 @@ internal partial class TomlInlineTable
     public override string GetString()
         => ToString();
 
-    public override TomlValue? Find(ReadOnlySpan<byte> keys, bool isDotKey = false)
-        => inlineTable.Find(keys, isDotKey);
+    public override object GetObject()
+        => GetDictionary();
 
-    public override TomlValue? Find(ReadOnlySpan<ByteArray> dottedKeys)
-        => inlineTable.Find(dottedKeys);
 }
 

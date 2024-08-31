@@ -531,5 +531,31 @@ internal static class ExceptionHelper
     {
         ThrowException($@"A bare key is empty.");
     }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowNotRegisteredInResolver<T>()
+    {
+        ThrowNotRegisteredInResolver(typeof(T));
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowNotRegisteredInResolver(Type type)
+    {
+        ThrowException($@"{type.FullName} is not registered in Resolver.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowSerializationFailed(Type type)
+    {
+        ThrowException($@"Serialization failed because the value ({type.Name}) is null.");
+    }
+
+    internal static void ThrowDeserializationFailed(Type type)
+    {
+        ThrowException($@"Cannot deserialize to {type.Name}.");
+    }
 }
 

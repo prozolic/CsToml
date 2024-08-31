@@ -22,6 +22,7 @@ bare-key = "value"
 '' = 'blank'     # VALID but discouraged
 name = "Orange"
 physical.color = "orange"
+physical2.color.color = "orange2"
 physical.shape = "round"
 site."google.com" = true
 
@@ -157,6 +158,10 @@ integers3 = [
   1,
   2, # this is ok
 ]
+
+[Dict]
+key.a.b.v = "value"
+#ab = [1, {key = [1, [1, {test = 123, TEST2 = [67,90]} ] , 5], key2 = {key3 = 0.1, key4 = 123}}, 23]
 
 # table
 [table-1]

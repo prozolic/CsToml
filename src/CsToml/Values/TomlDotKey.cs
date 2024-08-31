@@ -1,4 +1,5 @@
-﻿using CsToml.Formatter;
+﻿using CsToml.Error;
+using CsToml.Formatter;
 using CsToml.Utility;
 using System.Buffers;
 using System.Diagnostics;
@@ -9,7 +10,7 @@ namespace CsToml.Values;
 [DebuggerDisplay("{Utf16String}")]
 internal sealed class TomlDotKey :
     TomlValue,
-    ITomlStringCreator<TomlDotKey>,
+    ITomlStringParser<TomlDotKey>,
     IEquatable<TomlDotKey?>
 {
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -24,19 +25,74 @@ internal sealed class TomlDotKey :
     public ReadOnlySpan<byte> Value => bytes.AsSpan();
 
     [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
-    public string Utf16String
-    {
-        get
-        {
-            string value = string.Empty;
-            FormatterCache.GetTomlValueFormatter<string>()?.Deserialize(Value, ref value);
-            return value;
-        }
-    }
+    public string Utf16String => Utf8Helper.ToUtf16(Value);
 
-    public static TomlDotKey CreateString(ReadOnlySpan<byte> value, CsTomlStringType type = CsTomlStringType.Basic)
+    public static TomlDotKey Parse(ReadOnlySpan<byte> value, CsTomlStringType type)
     {
         return new TomlDotKey(value, type);
+    }
+
+    public static TomlDotKey ParseKey(ReadOnlySpan<byte> utf16String)
+    {
+        if (Utf8Helper.ContainInvalidSequences(utf16String))
+            ExceptionHelper.ThrowInvalidCodePoints();
+
+        var barekey = false;
+        var backslash = false;
+        var singleQuoted = false;
+        var doubleQuoted = false;
+        for (int i = 0; i < utf16String.Length; i++)
+        {
+            switch (utf16String[i])
+            {
+                case TomlCodes.Symbol.BACKSLASH:
+                    backslash = true;
+                    break;
+                case TomlCodes.Symbol.SINGLEQUOTED:
+                    singleQuoted = true;
+                    break;
+                case TomlCodes.Symbol.DOUBLEQUOTED:
+                    doubleQuoted = true;
+                    break;
+                default:
+                    barekey = TomlCodes.IsBareKey(utf16String[i]);
+                    break;
+            }
+        }
+        if (barekey)
+        {
+            return new TomlDotKey(utf16String, CsTomlStringType.Unquoted);
+        }
+
+        if (backslash && !singleQuoted)
+        {
+            return new TomlDotKey(utf16String, CsTomlStringType.Basic);
+        }
+
+        if (doubleQuoted && !singleQuoted)
+        {
+            return new TomlDotKey(utf16String, CsTomlStringType.Literal);
+        }
+
+        if (Utf8Helper.ContainsEscapeChar(utf16String, true))
+        {
+            return new TomlDotKey(utf16String, CsTomlStringType.Literal);
+        }
+        return new TomlDotKey(utf16String, CsTomlStringType.Basic);
+    }
+
+    public static TomlDotKey ParseKey(ReadOnlySpan<char> utf16String)
+    {
+        var writer = RecycleArrayPoolBufferWriter<byte>.Rent();
+        try
+        {
+            Utf8Helper.FromUtf16(writer, utf16String);
+            return ParseKey(writer.WrittenSpan);
+        }
+        finally
+        {
+            RecycleArrayPoolBufferWriter<byte>.Return(writer);
+        }
     }
 
     public TomlDotKey(ReadOnlySpan<byte> value, CsTomlStringType type = CsTomlStringType.Basic) : base()
@@ -70,7 +126,7 @@ internal sealed class TomlDotKey :
         return true;
     }
 
-    internal override bool ToTomlString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
+    internal override bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
         switch (TomlStringType)
         {
@@ -86,7 +142,7 @@ internal sealed class TomlDotKey :
                 {
                     if (Value.Length > 0)
                     {
-                        writer.Write(Value);
+                        writer.WriteBytes(Value);
                         return true;
                     }
                     break;
@@ -125,8 +181,7 @@ internal static class CsTomlDotKeyExtensions
         var bufferWriter = RecycleArrayPoolBufferWriter<byte>.Rent();
         try
         {
-            using var _ = bufferWriter;
-            var writer = new Utf8Writer<ArrayPoolBufferWriter<byte>>(ref bufferWriter);
+            var writer = new Utf8TomlDocumentWriter<ArrayPoolBufferWriter<byte>>(ref bufferWriter);
 
             for (int i = 0; i < key.Length; i++)
             {
@@ -135,9 +190,7 @@ internal static class CsTomlDotKeyExtensions
                     writer.Write(TomlCodes.Symbol.DOT);
             }
 
-            string value = string.Empty;
-            FormatterCache.GetTomlValueFormatter<string>()?.Deserialize(bufferWriter.WrittenSpan, ref value);
-            return value;
+            return Utf8Helper.ToUtf16(bufferWriter.WrittenSpan); ;
         }
         finally
         {

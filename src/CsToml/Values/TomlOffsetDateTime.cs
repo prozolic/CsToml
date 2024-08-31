@@ -1,4 +1,5 @@
-﻿using CsToml.Formatter;
+﻿using CsToml.Error;
+using CsToml.Formatter;
 using CsToml.Utility;
 using System.Diagnostics;
 
@@ -11,9 +12,9 @@ internal sealed partial class TomlOffsetDateTime(DateTimeOffset value) : TomlVal
 
     public override bool HasValue => true;
 
-    internal override bool ToTomlString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
+    internal override bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
-        FormatterCache.GetTomlValueFormatter<DateTimeOffset>()?.Serialize(ref writer, Value);
+        writer.WriteDateTimeOffset(Value);
         return true;
     }
 
@@ -29,4 +30,131 @@ internal sealed partial class TomlOffsetDateTime(DateTimeOffset value) : TomlVal
     public override bool TryFormat(Span<byte> utf8Destination, out int bytesWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
         => Value.TryFormat(utf8Destination, out bytesWritten, format, provider);
 
+    public static TomlOffsetDateTime Parse(ReadOnlySpan<byte> bytes)
+    {
+        if (bytes.Length < TomlCodes.DateTime.OffsetDateTimeZFormatLength) throw new ArgumentException();
+
+        if (TomlCodes.IsHyphen(bytes[4]) && TomlCodes.IsHyphen(bytes[7]) && (bytes[10] == TomlCodes.Alphabet.T || bytes[10] == TomlCodes.Alphabet.t || TomlCodes.IsTabOrWhiteSpace(bytes[10])))
+        {
+            if (bytes[bytes.Length - 1] == TomlCodes.Alphabet.Z || bytes[bytes.Length - 1] == TomlCodes.Alphabet.z)
+            {
+                return new TomlOffsetDateTime(ParseDateTimeOffset(bytes[..^1], bytes.Slice(bytes.Length - 1, 1)));
+            }
+
+            return new TomlOffsetDateTime(ParseDateTimeOffset(bytes[..^6], bytes.Slice(bytes.Length - 6, 6)));
+        }
+
+        ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        return default;
+    }
+
+    private static DateTimeOffset ParseDateTimeOffset(ReadOnlySpan<byte> bytes, ReadOnlySpan<byte> offsetBytes)
+    {
+        var year = ParseDecimalByte(bytes[0]) * 1000;
+        year += ParseDecimalByte(bytes[1]) * 100;
+        year += ParseDecimalByte(bytes[2]) * 10;
+        year += ParseDecimalByte(bytes[3]);
+
+        var month = ParseDecimalByte(bytes[5]) * 10;
+        month += ParseDecimalByte(bytes[6]);
+
+        var day = ParseDecimalByte(bytes[8]) * 10;
+        day += ParseDecimalByte(bytes[9]);
+
+        var hour = ParseDecimalByte(bytes[11]) * 10 + ParseDecimalByte(bytes[12]);
+        var minute = ParseDecimalByte(bytes[14]) * 10 + ParseDecimalByte(bytes[15]);
+        var second = ParseDecimalByte(bytes[17]) * 10 + ParseDecimalByte(bytes[18]);
+
+        // millisecond and microsecond is 0 ~ 999
+        // https://learn.microsoft.com/en-us/dotnet/api/system.datetime.-ctor?view=net-8.0#system-datetime-ctor(system-int32-system-int32-system-int32-system-int32-system-int32-system-int32-system-int32-system-int32)
+        var millisecond = 0;
+        var microsecond = 0;
+
+        if (bytes.Length == 21)
+        {
+            millisecond = ParseDecimalByte(bytes[20]) * 100;
+        }
+        else if (bytes.Length == 22)
+        {
+            millisecond += ParseDecimalByte(bytes[20]) * 100;
+            millisecond += ParseDecimalByte(bytes[21]) * 10;
+        }
+        else if (bytes.Length == 23)
+        {
+            millisecond += ParseDecimalByte(bytes[20]) * 100;
+            millisecond += ParseDecimalByte(bytes[21]) * 10;
+            millisecond += ParseDecimalByte(bytes[22]);
+        }
+        else if (bytes.Length == 24)
+        {
+            millisecond += ParseDecimalByte(bytes[20]) * 100;
+            millisecond += ParseDecimalByte(bytes[21]) * 10;
+            millisecond += ParseDecimalByte(bytes[22]);
+            microsecond += ParseDecimalByte(bytes[23]) * 100;
+        }
+        else if (bytes.Length == 25)
+        {
+            millisecond += ParseDecimalByte(bytes[20]) * 100;
+            millisecond += ParseDecimalByte(bytes[21]) * 10;
+            millisecond += ParseDecimalByte(bytes[22]);
+            microsecond += ParseDecimalByte(bytes[23]) * 100;
+            microsecond += ParseDecimalByte(bytes[24]) * 10;
+        }
+        else if (bytes.Length >= 26)
+        {
+            millisecond += ParseDecimalByte(bytes[20]) * 100;
+            millisecond += ParseDecimalByte(bytes[21]) * 10;
+            millisecond += ParseDecimalByte(bytes[22]);
+            microsecond += ParseDecimalByte(bytes[23]) * 100;
+            microsecond += ParseDecimalByte(bytes[24]) * 10;
+            microsecond += ParseDecimalByte(bytes[25]);
+        }
+
+        if (offsetBytes.Length == 1 && offsetBytes[0] == TomlCodes.Alphabet.Z || offsetBytes[0] == TomlCodes.Alphabet.z)
+        {
+            try
+            {
+                return new DateTimeOffset(year, month, day, hour, minute, second, millisecond, microsecond, TimeSpan.Zero);
+            }
+            catch (ArgumentOutOfRangeException e)
+            {
+                return ExceptionHelper.NotReturnThrow<DateTimeOffset, ArgumentOutOfRangeException>(
+                    ExceptionHelper.ThrowArgumentOutOfRangeExceptionWhenCreating<DateTimeOffset>, e);
+            }
+        }
+
+        if (offsetBytes.Length == 6)
+        {
+            var plusOrMinus = TomlCodes.IsPlusSign(offsetBytes[0]) ? 1 : -1;
+            var offsetHour = ParseDecimalByte(offsetBytes[1]) * 10 + ParseDecimalByte(offsetBytes[2]);
+            var offsetMinute = ParseDecimalByte(offsetBytes[4]) * 10 + ParseDecimalByte(offsetBytes[5]);
+            try
+            {
+                return new DateTimeOffset(year, month, day, hour, minute, second, millisecond, microsecond, new TimeSpan(offsetHour * plusOrMinus, offsetMinute * plusOrMinus, 0));
+            }
+            catch (ArgumentOutOfRangeException e)
+            {
+                return ExceptionHelper.NotReturnThrow<DateTimeOffset, ArgumentOutOfRangeException>(
+                    ExceptionHelper.ThrowArgumentOutOfRangeExceptionWhenCreating<DateTimeOffset>, e);
+            }
+        }
+        try
+        {
+            return new DateTimeOffset(year, month, day, hour, minute, second, millisecond, microsecond, TimeSpan.Zero);
+        }
+        catch (ArgumentOutOfRangeException e)
+        {
+            return ExceptionHelper.NotReturnThrow<DateTimeOffset, ArgumentOutOfRangeException>(
+                ExceptionHelper.ThrowArgumentOutOfRangeExceptionWhenCreating<DateTimeOffset>, e);
+        }
+    }
+
+    private static int ParseDecimalByte(byte utf8Byte)
+    {
+        if (!TomlCodes.IsNumber(utf8Byte))
+        {
+            ExceptionHelper.ThrowNumericConversionFailed(utf8Byte);
+        }
+        return TomlCodes.Number.ParseDecimal(utf8Byte);
+    }
 }

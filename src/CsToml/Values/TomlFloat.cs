@@ -1,4 +1,5 @@
-﻿using CsToml.Formatter;
+﻿using CsToml.Error;
+using CsToml.Formatter;
 using CsToml.Utility;
 using System.Diagnostics;
 
@@ -27,27 +28,27 @@ internal sealed partial class TomlFloat(double value, TomlFloat.FloatKind kind =
 
     internal FloatKind Kind { get; } = kind;
 
-    internal override bool ToTomlString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
+    internal override bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
         if (Kind == FloatKind.Normal)
         {
-            FormatterCache.GetTomlValueFormatter<double>()?.Serialize(ref writer, Value);
+            writer.WriteDouble(Value);
             return true;
         }
 
         switch(Kind)
         {
             case FloatKind.Inf:
-                writer.Write("inf"u8);
+                writer.WriteBytes("inf"u8);
                 break;
             case FloatKind.NInf:
-                writer.Write("-inf"u8);
+                writer.WriteBytes("-inf"u8);
                 break;
             case FloatKind.Nan:
-                writer.Write("nan"u8);
+                writer.WriteBytes("nan"u8);
                 break;
             case FloatKind.PNan:
-                writer.Write("-nan"u8);
+                writer.WriteBytes("-nan"u8);
                 break;
             default:
                 return false;
@@ -67,5 +68,18 @@ internal sealed partial class TomlFloat(double value, TomlFloat.FloatKind kind =
     public override bool TryFormat(Span<byte> utf8Destination, out int bytesWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
         => Value.TryFormat(utf8Destination, out bytesWritten, format, provider);
 
+
+    public static TomlFloat Parse(ReadOnlySpan<byte> bytes)
+    {
+        if (bytes.Length < 3) ExceptionHelper.ThrowIncorrectTomlFloatFormat();
+
+        if (double.TryParse(bytes, out var value))
+        {
+            return new TomlFloat(value);
+        }
+
+        ExceptionHelper.ThrowIncorrectTomlFloatFormat();
+        return default!;
+    }
 }
 

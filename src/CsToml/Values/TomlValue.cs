@@ -15,23 +15,35 @@ public abstract partial class TomlValue :
 
     protected TomlValue(){}
 
-    internal virtual bool ToTomlString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer) // Write TOML format.
+    public TomlDocumentNode AsNode()
+    {
+        return new TomlDocumentNode(default!, this);
+    }
+
+    internal virtual bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer) // Write TOML format.
         where TBufferWriter : IBufferWriter<byte>
-        => ExceptionHelper.NotReturnThrow<bool, string>(ExceptionHelper.ThrowNotSupported, nameof(ToTomlString));
+    {
+        ExceptionHelper.ThrowNotSupported(nameof(ToTomlString));
+        return false;
+    }
 
     public virtual bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
     {
         charsWritten = 0;
-        return ExceptionHelper.NotReturnThrow<bool, string>(ExceptionHelper.ThrowNotSupported, nameof(TryFormat));
+        ExceptionHelper.ThrowNotSupported(nameof(TryFormat));
+        return false;
     }
 
     public virtual string ToString(string? format, IFormatProvider? formatProvider)
-        => ExceptionHelper.NotReturnThrow<string, string>(ExceptionHelper.ThrowNotSupported, nameof(ToString));
+    {
+        return base.ToString()!;
+    }
 
     public virtual bool TryFormat(Span<byte> utf8Destination, out int bytesWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
     {
         bytesWritten = 0;
-        return ExceptionHelper.NotReturnThrow<bool, string>(ExceptionHelper.ThrowNotSupported, nameof(TryFormat));
+        ExceptionHelper.ThrowNotSupported(nameof(TryFormat));
+        return false;
     }
 
     [DebuggerDisplay("None")]

@@ -1,7 +1,9 @@
-﻿using CsToml.Formatter;
+﻿using CsToml.Error;
+using CsToml.Formatter;
 using CsToml.Utility;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace CsToml.Values;
 
@@ -20,9 +22,9 @@ internal sealed partial class TomlBoolean : TomlValue
         Value = value;
     }
 
-    internal override bool ToTomlString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
+    internal override bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
-        FormatterCache.GetTomlValueFormatter<bool>()?.Serialize(ref writer, Value);
+        writer.WriteBoolean(Value);
         return true;
     }
 
@@ -82,5 +84,29 @@ internal sealed partial class TomlBoolean : TomlValue
         return true;
     }
 
+
+    public static TomlBoolean Parse(ReadOnlySpan<byte> bytes)
+    {
+        if (bytes.Length == 4)
+        {
+            var trueValue = Unsafe.ReadUnaligned<int>(ref MemoryMarshal.GetReference<byte>(bytes));
+            if (trueValue == 1702195828) // true
+            {
+                return TomlBoolean.True;
+            }
+        }
+        if (bytes.Length == 5)
+        {
+            var falseValue = Unsafe.ReadUnaligned<int>(ref MemoryMarshal.GetReference<byte>(bytes));
+            if (falseValue == 1936482662 // fals
+                && bytes[4] == TomlCodes.Alphabet.e) // e
+            {
+                return TomlBoolean.False;
+            }
+        }
+
+        ExceptionHelper.ThrowDeserializationFailed("A value that cannot be deserialized into a boolean is set.");
+        return default;
+    }
 }
 

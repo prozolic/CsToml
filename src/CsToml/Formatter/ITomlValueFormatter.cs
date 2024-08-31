@@ -1,14 +1,11 @@
-﻿
-using CsToml.Utility;
-using System.Buffers;
+﻿using System.Buffers;
 
 namespace CsToml.Formatter;
 
-internal interface ITomlValueFormatter<T>
+public interface ITomlValueFormatter<T>
 {
-    void Serialize<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer, T value)
+    T Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options);
+
+    void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, T target, CsTomlSerializerOptions options)
         where TBufferWriter : IBufferWriter<byte>;
-
-    void Deserialize(ReadOnlySpan<byte> bytes, ref T value);
 }
-

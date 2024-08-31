@@ -1,4 +1,5 @@
-﻿using CsToml.Formatter;
+﻿using CsToml.Error;
+using CsToml.Formatter;
 using CsToml.Utility;
 using System.Diagnostics;
 
@@ -11,9 +12,9 @@ internal sealed partial class TomlLocalDateTime(DateTime value) : TomlValue()
 
     public override bool HasValue => true;
 
-    internal override bool ToTomlString<TBufferWriter>(ref Utf8Writer<TBufferWriter> writer)
+    internal override bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
-        FormatterCache.GetTomlValueFormatter<DateTime>()?.Serialize(ref writer, Value);
+        writer.WriteDateTime(Value);
         return true;
     }
 
@@ -29,4 +30,33 @@ internal sealed partial class TomlLocalDateTime(DateTime value) : TomlValue()
     public override bool TryFormat(Span<byte> utf8Destination, out int bytesWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
         => Value.TryFormat(utf8Destination, out bytesWritten, format, provider);
 
+    public static TomlLocalDateTime Parse(ReadOnlySpan<byte> bytes)
+    {
+        if (bytes.Length < TomlCodes.DateTime.LocalDateTimeFormatLength)
+            ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
+
+        if (TomlCodes.IsHyphen(bytes[4]) && TomlCodes.IsHyphen(bytes[7]) &&
+            (TomlCodes.IsTabOrWhiteSpace(bytes[10]) || bytes[10] == TomlCodes.Alphabet.T || bytes[10] == TomlCodes.Alphabet.t))
+        {
+            return new TomlLocalDateTime(DeserializeLocalDateTime(bytes));
+        }
+
+        ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
+        return default!;
+    }
+
+    private static DateTime DeserializeLocalDateTime(ReadOnlySpan<byte> bytes)
+    {
+        DateOnly localDate = TomlLocalDate.ParseUnsafe(bytes[..10]);
+        TimeOnly localTime = TomlLocalTime.ParseUnsafe(bytes[11..]);
+        try
+        {
+            return new DateTime(localDate, localTime, DateTimeKind.Local);
+        }
+        catch (ArgumentOutOfRangeException e)
+        {
+            ExceptionHelper.ThrowArgumentOutOfRangeExceptionWhenCreating<DateTime>(e);
+            return default!;
+        }
+    }
 }
