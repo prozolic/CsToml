@@ -45,6 +45,26 @@ internal sealed class BuildinFormatterResolver
         { typeof(IReadOnlyList<>),  typeof(IReadOnlyListFormatter<>) },
         { typeof(ISet<>),  typeof(ISetFormatter<>) },
         { typeof(IReadOnlySet<>),  typeof(IReadOnlySetFormatter<>) },
+
+        { typeof(KeyValuePair<,>),  typeof(KeyValuePairFormatter<,>) },
+        { typeof(Tuple<>),  typeof(TupleFormatter<>) },
+        { typeof(Tuple<,>),  typeof(TupleFormatter<,>) },
+        { typeof(Tuple<,,>),  typeof(TupleFormatter<,,>) },
+        { typeof(Tuple<,,,>),  typeof(TupleFormatter<,,,>) },
+        { typeof(Tuple<,,,,>),  typeof(TupleFormatter<,,,,>) },
+        { typeof(Tuple<,,,,,>),  typeof(TupleFormatter<,,,,,>) },
+        { typeof(Tuple<,,,,,,>),  typeof(TupleFormatter<,,,,,,>) },
+        { typeof(Tuple<,,,,,,,>),  typeof(TupleFormatter<,,,,,,,>) },
+        { typeof(ValueTuple<>),  typeof(ValueTupleFormatter<>) },
+        { typeof(ValueTuple<,>),  typeof(ValueTupleFormatter<,>) },
+        { typeof(ValueTuple<,,>),  typeof(ValueTupleFormatter<,,>) },
+        { typeof(ValueTuple<,,,>),  typeof(ValueTupleFormatter<,,,>) },
+        { typeof(ValueTuple<,,,,>),  typeof(ValueTupleFormatter<,,,,>) },
+        { typeof(ValueTuple<,,,,,>),  typeof(ValueTupleFormatter<,,,,,>) },
+        { typeof(ValueTuple<,,,,,,>),  typeof(ValueTupleFormatter<,,,,,,>) },
+        { typeof(ValueTuple<,,,,,,,>),  typeof(ValueTupleFormatter<,,,,,,,>) },
+
+        { typeof(Nullable<>), typeof(NullableStructFormatter<>) }
     };
 
     static BuildinFormatterResolver()

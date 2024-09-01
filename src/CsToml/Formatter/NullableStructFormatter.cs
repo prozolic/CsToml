@@ -9,6 +9,10 @@ internal sealed class NullableStructFormatter<T> : ITomlValueFormatter<T?>
 {
     public T? Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
+        if (!rootNode.HasValue)
+        {
+            return null;
+        }
         return TomlValueFormatterResolver.GetFormatter<T>().Deserialize(ref rootNode, options);
     }
 
