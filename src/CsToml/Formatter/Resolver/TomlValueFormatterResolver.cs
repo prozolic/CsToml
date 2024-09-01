@@ -36,6 +36,28 @@ public sealed class TomlValueFormatterResolver
         }
     }
 
+    private sealed class TomlDocumentFormatterCache
+    {
+        private static readonly TomlSerializedObjectFormatter<TomlDocument> tomlDocumentFormatter = new TomlSerializedObjectFormatter<TomlDocument>();
+
+        public static ITomlValueFormatter<T>? GetFormatter<T>()
+        {
+            return tomlDocumentFormatter as ITomlValueFormatter<T>;
+        }
+    }
+
+    internal static ITomlValueFormatter<T> GetFormatterForInternal<T>()
+    {
+        // get the TomlSerializedObjectFormatter<TomlDocument>
+        var formatter = TomlDocumentFormatterCache.GetFormatter<T>();
+        if (formatter != null)
+        {
+            return formatter;
+        }
+
+        return GetFormatter<T>();
+    }
+
     public static ITomlValueFormatter<T> GetFormatter<T>()
     {
         try

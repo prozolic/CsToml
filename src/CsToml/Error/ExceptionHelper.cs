@@ -557,5 +557,10 @@ internal static class ExceptionHelper
     {
         ThrowException($@"Cannot deserialize to {type.Name}.");
     }
+
+    internal static void ThrowInvalidTupleCount()
+    {
+        ThrowException($@"Invalid Tuple count.");
+    }
 }
 

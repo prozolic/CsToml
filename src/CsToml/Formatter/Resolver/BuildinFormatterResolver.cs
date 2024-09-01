@@ -24,6 +24,10 @@ internal sealed class BuildinFormatterResolver
 
     private static readonly Dictionary<Type, Type> formatterTypeTable = new()
     {
+        { typeof(Nullable<>), typeof(NullableStructFormatter<>) },
+        { typeof(Memory<>),  typeof(MemoryFormatter<>) },
+        { typeof(ReadOnlyMemory<>),  typeof(ReadOnlyMemoryFormatter<>) },
+
         { typeof(List<>), typeof(ListFormatter<>) },
         { typeof(Stack<>), typeof(StackFormatter<>) },
         { typeof(HashSet<>), typeof(HashSetFormatter<>) },
@@ -34,9 +38,6 @@ internal sealed class BuildinFormatterResolver
         { typeof(ConcurrentStack<>), typeof(ConcurrentStackFormatter<>) },
         { typeof(ConcurrentBag<>), typeof(ConcurrentBagFormatter<>) },
         { typeof(ReadOnlyCollection<>), typeof(ReadOnlyCollectionFormatter<>) },
-
-        { typeof(Memory<>),  typeof(MemoryFormatter<>) },
-        { typeof(ReadOnlyMemory<>),  typeof(ReadOnlyMemoryFormatter<>) },
 
         { typeof(IEnumerable<>), typeof(IEnumerableFormatter<>) },
         { typeof(ICollection<>),  typeof(ICollectionFormatter<>) },
@@ -63,8 +64,6 @@ internal sealed class BuildinFormatterResolver
         { typeof(ValueTuple<,,,,,>),  typeof(ValueTupleFormatter<,,,,,>) },
         { typeof(ValueTuple<,,,,,,>),  typeof(ValueTupleFormatter<,,,,,,>) },
         { typeof(ValueTuple<,,,,,,,>),  typeof(ValueTupleFormatter<,,,,,,,>) },
-
-        { typeof(Nullable<>), typeof(NullableStructFormatter<>) }
     };
 
     static BuildinFormatterResolver()

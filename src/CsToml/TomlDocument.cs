@@ -34,10 +34,8 @@ public partial class TomlDocument : ITomlSerializedObject<TomlDocument>
 
     static void ITomlSerializedObjectRegister.Register()
     {
-        TomlSerializedObjectFormatterResolver.Register(innerSerializer);
+        // No registration required
     }
-
-    private static readonly TomlSerializedObjectFormatter<TomlDocument> innerSerializer = new TomlSerializedObjectFormatter<TomlDocument>();
 
     #endregion
 

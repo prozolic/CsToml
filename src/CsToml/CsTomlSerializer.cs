@@ -18,9 +18,8 @@ public sealed class CsTomlSerializer
         var reader = new Utf8SequenceReader(tomlText);
         document.Deserialize(ref reader, options);
 
-        var formatter = TomlValueFormatterResolver.GetFormatter<T>();
         var rootNode = document.RootNode;
-        return formatter.Deserialize(ref rootNode, options);
+        return TomlValueFormatterResolver.GetFormatterForInternal<T>().Deserialize(ref rootNode, options);
     }
 
     public static T Deserialize<T>(ReadOnlySequence<byte> tomlSequence, CsTomlSerializerOptions? options = null)
@@ -32,9 +31,8 @@ public sealed class CsTomlSerializer
         var reader = new Utf8SequenceReader(tomlSequence);
         document.Deserialize(ref reader, options);
 
-        var formatter = TomlValueFormatterResolver.GetFormatter<T>();
         var rootNode = document.RootNode;
-        return formatter.Deserialize(ref rootNode, options);
+        return TomlValueFormatterResolver.GetFormatterForInternal<T>().Deserialize(ref rootNode, options);
     }
 
 
@@ -62,8 +60,7 @@ public sealed class CsTomlSerializer
         {
             var documentWriter = new Utf8TomlDocumentWriter<TBufferWriter>(ref bufferWriter);
 
-            var formatter = TomlValueFormatterResolver.GetFormatter<T>();
-            formatter?.Serialize(ref documentWriter, target, options);
+            TomlValueFormatterResolver.GetFormatterForInternal<T>().Serialize(ref documentWriter, target, options);
         }
         catch (CsTomlException cte)
         {
