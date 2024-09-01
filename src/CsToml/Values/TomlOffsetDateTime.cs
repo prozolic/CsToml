@@ -128,14 +128,24 @@ internal sealed partial class TomlOffsetDateTime(DateTimeOffset value) : TomlVal
             var plusOrMinus = TomlCodes.IsPlusSign(offsetBytes[0]) ? 1 : -1;
             var offsetHour = ParseDecimalByte(offsetBytes[1]) * 10 + ParseDecimalByte(offsetBytes[2]);
             var offsetMinute = ParseDecimalByte(offsetBytes[4]) * 10 + ParseDecimalByte(offsetBytes[5]);
+            
+            if (0 <= offsetHour && offsetHour <= 23)
+            {
+                ExceptionHelper.ThrowException($"Offset Date-Time time-numoffset(time-hour) is in an invalid format. time-hour:{offsetHour}");
+            }
+            else if (0 <= offsetMinute && offsetMinute <= 59)
+            {
+                ExceptionHelper.ThrowException($"Offset Date-Time time-numoffset(time-minute) is in an invalid format. time-minute:{offsetMinute}");
+            }
+
             try
             {
                 return new DateTimeOffset(year, month, day, hour, minute, second, millisecond, microsecond, new TimeSpan(offsetHour * plusOrMinus, offsetMinute * plusOrMinus, 0));
             }
             catch (ArgumentOutOfRangeException e)
             {
-                return ExceptionHelper.NotReturnThrow<DateTimeOffset, ArgumentOutOfRangeException>(
-                    ExceptionHelper.ThrowArgumentOutOfRangeExceptionWhenCreating<DateTimeOffset>, e);
+                ExceptionHelper.ThrowArgumentOutOfRangeExceptionWhenCreating<DateTimeOffset>(e);
+                return default;
             }
         }
         try
@@ -144,8 +154,8 @@ internal sealed partial class TomlOffsetDateTime(DateTimeOffset value) : TomlVal
         }
         catch (ArgumentOutOfRangeException e)
         {
-            return ExceptionHelper.NotReturnThrow<DateTimeOffset, ArgumentOutOfRangeException>(
-                ExceptionHelper.ThrowArgumentOutOfRangeExceptionWhenCreating<DateTimeOffset>, e);
+            ExceptionHelper.ThrowArgumentOutOfRangeExceptionWhenCreating<DateTimeOffset>(e);
+            return default;
         }
     }
 
