@@ -1,6 +1,4 @@
 ﻿using CsToml.Error;
-using CsToml.Formatter;
-using CsToml.Formatter.Resolver;
 using CsToml.Utility;
 using CsToml.Values;
 using System.Buffers;
@@ -23,7 +21,7 @@ public partial class TomlDocument : ITomlSerializedObject<TomlDocument>
         }
         catch (CsTomlException cte)
         {
-            throw new CsTomlSerializeException([cte]);
+            throw new CsTomlSerializeException("An error occurred when serializing the TOML file. Check InnerException for exception information.",cte);
         }
     }
 
@@ -98,7 +96,7 @@ public partial class TomlDocument : ITomlSerializedObject<TomlDocument>
 
                         case ParserState.ThrowException:
                             exceptions ??= new List<CsTomlException>();
-                            exceptions?.Add(new CsTomlLineNumberException(parser.GetException()!, parser.LineNumber));
+                            exceptions?.Add(parser.GetException()!);
                             comments?.Clear();
                             break;
 
@@ -121,6 +119,10 @@ public partial class TomlDocument : ITomlSerializedObject<TomlDocument>
 
         LineNumber = parser.LineNumber;
         if (exceptions?.Count > 0)
-            throw new CsTomlSerializeException(exceptions);
+        {
+            throw new CsTomlSerializeException(
+                "An error occurred while parsing the TOML file. Check Exceptions for information on exceptions raised during parsing.",
+                exceptions);
+        }
     }
 }

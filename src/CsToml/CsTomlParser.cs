@@ -49,7 +49,7 @@ internal ref struct CsTomlParser
     private TomlValue? comment;
     private ExtendableArray<TomlDotKey> dottedKeys;
     private TomlValue? value;
-    private CsTomlException? exception;
+    private CsTomlLineNumberException? exception;
 
     public readonly long LineNumber => reader.LineNumber;
 
@@ -82,7 +82,7 @@ internal ref struct CsTomlParser
         dottedKeys.Return();
     }
 
-    public readonly CsTomlException? GetException()
+    public readonly CsTomlLineNumberException? GetException()
         => exception;
 
     public readonly TomlValue? GetComment()
@@ -141,7 +141,7 @@ internal ref struct CsTomlParser
 
                 if (CurrentState == ParserState.Comment)
                 {
-                    throw new CsTomlLineNumberException("There is a non-newline (or EOF) character after comment.", LineNumber);
+                    ExceptionHelper.ThrowException("There is a non-newline (or EOF) character after comment.");
                 }
                 else if (CurrentState == ParserState.KeyValue ||
                     CurrentState == ParserState.TableHeader ||
@@ -150,7 +150,7 @@ internal ref struct CsTomlParser
                     // end comment
                     if (!TomlCodes.IsNumberSign(ch2))
                     {
-                        throw new CsTomlLineNumberException($"There is a non-newline (or EOF) character after {CurrentState}.", LineNumber);
+                        ExceptionHelper.ThrowException($"There is a non-newline (or EOF) character after {CurrentState}.");
                     }
                 }
             }
@@ -163,10 +163,11 @@ internal ref struct CsTomlParser
         catch (CsTomlException ce)
         {
             CurrentState = ParserState.ThrowException;
-            exception = ce;
+            exception = new CsTomlLineNumberException(ce, LineNumber);
             // Skip lines where an error is thrown.
             reader.SkipOneLine();
         }
+
 
         return true;
     }

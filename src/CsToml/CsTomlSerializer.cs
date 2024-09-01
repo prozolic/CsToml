@@ -18,8 +18,15 @@ public sealed class CsTomlSerializer
         var reader = new Utf8SequenceReader(tomlText);
         document.Deserialize(ref reader, options);
 
-        var rootNode = document.RootNode;
-        return TomlValueFormatterResolver.GetFormatterForInternal<T>().Deserialize(ref rootNode, options);
+        try
+        {
+            var rootNode = document.RootNode;
+            return TomlValueFormatterResolver.GetFormatterForInternal<T>().Deserialize(ref rootNode, options);
+        }
+        catch (CsTomlException cte)
+        {
+            throw new CsTomlSerializeException("An error occurred when serializing the TOML file. Check InnerException for exception information.", cte);
+        }
     }
 
     public static T Deserialize<T>(ReadOnlySequence<byte> tomlSequence, CsTomlSerializerOptions? options = null)
@@ -31,8 +38,15 @@ public sealed class CsTomlSerializer
         var reader = new Utf8SequenceReader(tomlSequence);
         document.Deserialize(ref reader, options);
 
-        var rootNode = document.RootNode;
-        return TomlValueFormatterResolver.GetFormatterForInternal<T>().Deserialize(ref rootNode, options);
+        try
+        {
+            var rootNode = document.RootNode;
+            return TomlValueFormatterResolver.GetFormatterForInternal<T>().Deserialize(ref rootNode, options);
+        }
+        catch (CsTomlException cte)
+        {
+            throw new CsTomlSerializeException("An error occurred when serializing the TOML file. Check InnerException for exception information.", cte);
+        }
     }
 
 
@@ -59,12 +73,11 @@ public sealed class CsTomlSerializer
         try
         {
             var documentWriter = new Utf8TomlDocumentWriter<TBufferWriter>(ref bufferWriter);
-
             TomlValueFormatterResolver.GetFormatterForInternal<T>().Serialize(ref documentWriter, target, options);
         }
         catch (CsTomlException cte)
         {
-            throw new CsTomlSerializeException([cte]);
+            throw new CsTomlSerializeException("An error occurred when serializing the TOML file. Check InnerException for exception information.", cte);
         }
     }
 }
