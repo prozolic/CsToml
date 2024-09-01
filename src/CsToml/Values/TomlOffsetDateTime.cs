@@ -129,11 +129,11 @@ internal sealed partial class TomlOffsetDateTime(DateTimeOffset value) : TomlVal
             var offsetHour = ParseDecimalByte(offsetBytes[1]) * 10 + ParseDecimalByte(offsetBytes[2]);
             var offsetMinute = ParseDecimalByte(offsetBytes[4]) * 10 + ParseDecimalByte(offsetBytes[5]);
             
-            if (0 <= offsetHour && offsetHour <= 23)
+            if (offsetHour < 0 && 23 < offsetHour)
             {
                 ExceptionHelper.ThrowException($"Offset Date-Time time-numoffset(time-hour) is in an invalid format. time-hour:{offsetHour}");
             }
-            else if (0 <= offsetMinute && offsetMinute <= 59)
+            else if (offsetMinute < 0 && 59 < offsetMinute)
             {
                 ExceptionHelper.ThrowException($"Offset Date-Time time-numoffset(time-minute) is in an invalid format. time-minute:{offsetMinute}");
             }
