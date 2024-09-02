@@ -73,7 +73,7 @@ internal sealed class PrimitiveObjectFormatter : ITomlValueFormatter<object>
         }
         else if (value is TomlArray arrayValue)
         {
-            ITomlValueFormatter<object> formatter = TomlValueFormatterResolver.GetFormatter<object>();
+            ITomlValueFormatter<object> formatter = options.Resolver.GetFormatter<object>()!;
 
             var array = new object[arrayValue.Count];
             var arraySpan = array.AsSpan();

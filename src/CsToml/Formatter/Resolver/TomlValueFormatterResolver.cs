@@ -3,7 +3,12 @@ using CsToml.Error;
 
 namespace CsToml.Formatter.Resolver;
 
-public sealed class TomlValueFormatterResolver
+public interface ITomlValueFormatterResolver
+{
+    ITomlValueFormatter<T>? GetFormatter<T>();
+}
+
+internal sealed class TomlValueFormatterResolver : ITomlValueFormatterResolver
 {
     private sealed class Cache<T>
     {
@@ -13,19 +18,19 @@ public sealed class TomlValueFormatterResolver
         {
             if (typeof(T) == typeof(object))
             {
-                Formatter = PrimitiveObjectFormatterResolver.GetFormatter<T>();
+                Formatter = PrimitiveObjectFormatterResolver.Instance.GetFormatter<T>();
                 return;
             }
             else
             {
-                var formatter = BuildinFormatterResolver.GetFormatter<T>();
+                var formatter = BuildinFormatterResolver.Instance.GetFormatter<T>();
                 if (formatter != null)
                 {
                     Formatter = formatter;
                     return;
                 }
 
-                var serializedObjectformatter = TomlSerializedObjectFormatterResolver.GetFormatter<T>();
+                var serializedObjectformatter = TomlSerializedObjectFormatterResolver.Instance.GetFormatter<T>();
                 if (serializedObjectformatter != null)
                 {
                     Formatter = serializedObjectformatter;
@@ -46,7 +51,9 @@ public sealed class TomlValueFormatterResolver
         }
     }
 
-    internal static ITomlValueFormatter<T> GetFormatterForInternal<T>()
+    public static readonly TomlValueFormatterResolver Instance = new TomlValueFormatterResolver();
+
+    internal ITomlValueFormatter<T> GetFormatterForInternal<T>()
     {
         // get the TomlSerializedObjectFormatter<TomlDocument>
         var formatter = TomlDocumentFormatterCache.GetFormatter<T>();
@@ -55,10 +62,10 @@ public sealed class TomlValueFormatterResolver
             return formatter;
         }
 
-        return GetFormatter<T>();
+        return GetFormatter<T>()!;
     }
 
-    public static ITomlValueFormatter<T> GetFormatter<T>()
+    public ITomlValueFormatter<T>? GetFormatter<T>()
     {
         try
         {

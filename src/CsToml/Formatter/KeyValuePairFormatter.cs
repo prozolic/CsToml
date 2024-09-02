@@ -1,6 +1,7 @@
 ﻿using CsToml.Error;
 using CsToml.Formatter.Resolver;
 using System.Buffers;
+using System.Xml.Linq;
 
 namespace CsToml.Formatter;
 
@@ -22,9 +23,9 @@ internal sealed class KeyValuePairFormatter<TKey, TValue> : ITomlValueFormatter<
             }
 
             var keyNode = rootNode[0];
-            var key = TomlValueFormatterResolver.GetFormatter<TKey>().Deserialize(ref keyNode, options);
+            var key = options.Resolver.GetFormatter<TKey>()!.Deserialize(ref keyNode, options);
             var valueNode = rootNode[1];
-            var value = TomlValueFormatterResolver.GetFormatter<TValue>().Deserialize(ref valueNode, options);
+            var value = options.Resolver.GetFormatter<TValue>()!.Deserialize(ref valueNode, options);
 
             return new KeyValuePair<TKey, TValue>(key, value);
         }
@@ -37,10 +38,10 @@ internal sealed class KeyValuePairFormatter<TKey, TValue> : ITomlValueFormatter<
         where TBufferWriter : IBufferWriter<byte>
     {
         writer.BeginArray();
-        TomlValueFormatterResolver.GetFormatter<TKey>().Serialize(ref writer, target.Key, options);
+        options.Resolver.GetFormatter<TKey>()!.Serialize(ref writer, target.Key, options);
         writer.Write(TomlCodes.Symbol.COMMA);
         writer.WriteSpace();
-        TomlValueFormatterResolver.GetFormatter<TValue>().Serialize(ref writer, target.Value, options);
+        options.Resolver.GetFormatter<TValue>()!.Serialize(ref writer, target.Value, options);
         writer.WriteSpace();
         writer.EndArray();
     }

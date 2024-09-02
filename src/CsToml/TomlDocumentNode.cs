@@ -177,8 +177,8 @@ public struct TomlDocumentNode
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public T GetValue<T>()
     {
-        var fomatter = TomlValueFormatterResolver.GetFormatter<T>();
-        return fomatter.Deserialize(ref this, CsTomlSerializerOptions.Default);
+        return TomlValueFormatterResolver.Instance.GetFormatter<T>()!.
+            Deserialize(ref this, CsTomlSerializerOptions.Default);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

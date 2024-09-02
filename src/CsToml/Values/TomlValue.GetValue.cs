@@ -65,7 +65,7 @@ public partial class TomlValue
     public T GetValue<T>()
     {
         var tempDocumentNode = new TomlDocumentNode(default!, this);
-        return TomlValueFormatterResolver.GetFormatter<T>().Deserialize(ref tempDocumentNode, CsTomlSerializerOptions.Default);
+        return TomlValueFormatterResolver.Instance.GetFormatter<T>()!.Deserialize(ref tempDocumentNode, CsTomlSerializerOptions.Default);
     }
 
     public bool TryGetArray(out ReadOnlyCollection<TomlValue> value)

@@ -3,16 +3,16 @@ namespace CsToml.Generator;
 
 internal enum TomlSerializationKind
 {
-    Object,
     Primitive,
+    PrimitiveArray,
+    PrimitiveCollection,
+    Enum,
     Struct,
     Class,
     Interface,
-    Enum,
-    Array,
-    Collection,
     Dictionary,
+    Object,
     TomlSerializedObject,
     ArrayOfITomlSerializedObject,
-    NotAvailable
+    Error
 }

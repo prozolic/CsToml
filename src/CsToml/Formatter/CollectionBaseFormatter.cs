@@ -16,7 +16,7 @@ internal abstract class CollectionBaseFormatter<TCollection, TElement, TMediator
 
         if (rootNode.TryGetArray(out var value))
         {
-            ITomlValueFormatter<TElement> formatter = TomlValueFormatterResolver.GetFormatter<TElement>();
+            var formatter = options.Resolver.GetFormatter<TElement>()!;
 
             var collection = CreateCollection(value.Count);
             for (int i = 0; i < value.Count; i++)
@@ -47,13 +47,12 @@ internal abstract class CollectionBaseFormatter<TCollection, TElement, TMediator
             {
                 AddValue(collection, i);
             }
-            var mediatorFormatter = TomlValueFormatterResolver.GetFormatter<TMediator>();
-            mediatorFormatter.Serialize(ref writer, collection, options);
+
+            options.Resolver.GetFormatter<TMediator>()!.Serialize(ref writer, collection, options);
             return;
         }
 
-        ITomlValueFormatter<TElement> formatter = TomlValueFormatterResolver.GetFormatter<TElement>();
-
+        var formatter = options.Resolver.GetFormatter<TElement>()!;
         writer.BeginArray();
         using (IEnumerator<TElement?> en = target.GetEnumerator())
         {

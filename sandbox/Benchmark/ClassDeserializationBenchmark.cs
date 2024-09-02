@@ -8,28 +8,28 @@ namespace Benchmark;
 [CsToml.TomlSerializedObject]
 public partial class TestTomlSerializedObject
 {
-    [TomlValueOnSerialized(TomlValueType.KeyValue)]
+    [TomlValueOnSerialized()]
     public uint intvalue { get; set; }
 
-    [TomlValueOnSerialized(TomlValueType.KeyValue)]
+    [TomlValueOnSerialized()]
     public long longvalue { get; set; }
 
-    [TomlValueOnSerialized(TomlValueType.KeyValue)]
+    [TomlValueOnSerialized()]
     public bool boolvalue { get; set; }
 
-    [TomlValueOnSerialized(TomlValueType.KeyValue)]
+    [TomlValueOnSerialized()]
     public DateTime datetimevalue { get; set; }
 
-    [TomlValueOnSerialized(TomlValueType.KeyValue)]
+    [TomlValueOnSerialized()]
     public DateTimeOffset datetimeoffsetvalue { get; set; }
 
-    [TomlValueOnSerialized(TomlValueType.KeyValue)]
+    [TomlValueOnSerialized()]
     public double doublevalue { get; set; }
 
-    [TomlValueOnSerialized(TomlValueType.KeyValue)]
+    [TomlValueOnSerialized()]
     public string stringvalue { get; set; }
 
-    [TomlValueOnSerialized(TomlValueType.Array)]
+    [TomlValueOnSerialized()]
     public string[] arrayvalue { get; set; }
 
 }

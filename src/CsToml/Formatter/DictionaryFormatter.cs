@@ -11,15 +11,14 @@ internal sealed class DictionaryFormatter : ITomlValueFormatter<Dictionary<strin
 
     public Dictionary<string, object?> Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
-        var dictFormatter = TomlValueFormatterResolver.GetFormatter<IDictionary<string, object?>>();
-        return dictFormatter.Deserialize(ref rootNode, options) as Dictionary<string, object?> ?? default!;
+        return options.Resolver.GetFormatter<IDictionary<string, object?>>()!.
+            Deserialize(ref rootNode, options) as Dictionary<string, object?> ?? default!;
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Dictionary<string, object?> target, CsTomlSerializerOptions options)
         where TBufferWriter : IBufferWriter<byte>
     {
-        var dictFormatter = TomlValueFormatterResolver.GetFormatter<IDictionary<string, object?>>();
-        dictFormatter.Serialize(ref writer, target, options);
+        options.Resolver.GetFormatter<IDictionary<string, object?>>()!.Serialize(ref writer, target, options);
     }
 }
 

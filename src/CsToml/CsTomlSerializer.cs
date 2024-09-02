@@ -21,7 +21,7 @@ public sealed class CsTomlSerializer
         try
         {
             var rootNode = document.RootNode;
-            return TomlValueFormatterResolver.GetFormatterForInternal<T>().Deserialize(ref rootNode, options);
+            return TomlValueFormatterResolver.Instance.GetFormatterForInternal<T>().Deserialize(ref rootNode, options);
         }
         catch (CsTomlException cte)
         {
@@ -41,7 +41,7 @@ public sealed class CsTomlSerializer
         try
         {
             var rootNode = document.RootNode;
-            return TomlValueFormatterResolver.GetFormatterForInternal<T>().Deserialize(ref rootNode, options);
+            return TomlValueFormatterResolver.Instance.GetFormatterForInternal<T>().Deserialize(ref rootNode, options);
         }
         catch (CsTomlException cte)
         {
@@ -73,7 +73,7 @@ public sealed class CsTomlSerializer
         try
         {
             var documentWriter = new Utf8TomlDocumentWriter<TBufferWriter>(ref bufferWriter);
-            TomlValueFormatterResolver.GetFormatterForInternal<T>().Serialize(ref documentWriter, target, options);
+            TomlValueFormatterResolver.Instance.GetFormatterForInternal<T>().Serialize(ref documentWriter, target, options);
         }
         catch (CsTomlException cte)
         {

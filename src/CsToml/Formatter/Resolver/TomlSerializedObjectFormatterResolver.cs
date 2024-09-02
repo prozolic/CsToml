@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace CsToml.Formatter.Resolver;
 
-public sealed class TomlSerializedObjectFormatterResolver
+public sealed class TomlSerializedObjectFormatterResolver : ITomlValueFormatterResolver
 {
     private sealed class Cache<T>
     {
@@ -25,7 +25,9 @@ public sealed class TomlSerializedObjectFormatterResolver
         }
     }
 
-    public static ITomlValueFormatter<T>? GetFormatter<T>()
+    public static readonly TomlSerializedObjectFormatterResolver Instance = new TomlSerializedObjectFormatterResolver();
+
+    public ITomlValueFormatter<T>? GetFormatter<T>()
     {
         return Cache<T>.Formatter;
     }

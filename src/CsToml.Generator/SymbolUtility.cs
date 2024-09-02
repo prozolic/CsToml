@@ -11,62 +11,29 @@ internal static class SymbolUtility
             a.AttributeClass!.ContainingNamespace.Name == namespaceName &&
             a.AttributeClass!.Name == attributeName);
 
-    public static string FormatUtf8PropertyName(IEnumerable<string> keys)
+    public static (IPropertySymbol, TomlSerializationKind, string?)[] FilterMembers(
+        this IEnumerable<IPropertySymbol> symbols)
     {
-        var builder = new StringBuilder();
-        if (keys is List<string> keyList)
-        {
-            var keyListSpan = CollectionsMarshal.AsSpan(keyList);
-            if (keyListSpan.Length == 0) return "[]";
-
-            var lastKey = keyListSpan[keyListSpan.Length - 1];
-            if (keyListSpan.Length == 1) return $"\"{lastKey}\"u8";
-
-            builder.Append("[");
-            for ( var i = 0; i < keyListSpan.Length - 1; i++)
-            {
-                builder.Append($"\"{keyListSpan[i]}\"u8, ");
-            }
-            builder.Append($"\"{lastKey}\"u8");
-            builder.Append("]");
-        }
-        return builder.ToString();
-    }
-
-    public static string GetPropertyAccessName(IEnumerable<string> accessName, string separateChar)
-    {
-        var builder = new StringBuilder();
-        if (accessName is List<string> accessNameList)
-        {
-            var keyListSpan = CollectionsMarshal.AsSpan(accessNameList);
-            if (keyListSpan.Length == 1) return keyListSpan[0];
-
-            var lastKey = keyListSpan[keyListSpan.Length - 1];
-            for (var i = 0; i < keyListSpan.Length - 1; i++)
-            {
-                builder.Append($"{keyListSpan[i]}{separateChar}");
-            }
-            builder.Append($"{lastKey}");
-        }
-        return builder.ToString();
-    }
-
-    public static (IPropertySymbol, TomlValueType)[] FilterTomlDocumentValueMembers(
-        IEnumerable<IPropertySymbol> symbols,
-        string attribute)
-    {
-        var members = new List<(IPropertySymbol, TomlValueType)>();
+        var members = new List<(IPropertySymbol, TomlSerializationKind, string?)>();
         foreach (var symbol in symbols)
         {
-            var attr = symbol.GetAttribute("CsToml", attribute).FirstOrDefault();
+            var attr = symbol.GetAttribute("CsToml", "TomlValueOnSerializedAttribute").FirstOrDefault();
             if (attr == null) continue;
-            members.Add((symbol, (TomlValueType)attr.ConstructorArguments[0].Value!));
+
+            var serializationKind = GetTomlSerializationKind(symbol.Type);
+            if (attr.ConstructorArguments.Length > 0)
+            {
+                members.Add((symbol, serializationKind, attr.ConstructorArguments[0].Value! as string));
+            }
+            else
+            {
+                members.Add((symbol, serializationKind, string.Empty));
+            }
         }
-        members.Sort(static (x, y) => x.Item2 - y.Item2);
         return members.ToArray();
     }
 
-    public static IEnumerable<IPropertySymbol> GetProperties(ITypeSymbol namedTypeSymbol)
+    public static IEnumerable<IPropertySymbol> GetProperties(this ITypeSymbol namedTypeSymbol)
     {
         return namedTypeSymbol.GetMembers().Where(m => m is IPropertySymbol and
         {
@@ -77,7 +44,7 @@ internal static class SymbolUtility
         }).Select(i => (IPropertySymbol)i);
     }
 
-    public static TomlSerializationKind GetTomlSerializationKind(ITypeSymbol type)
+    public static TomlSerializationKind GetTomlSerializationKind(this ITypeSymbol type)
     {
         switch (type.SpecialType)
         {
@@ -105,7 +72,7 @@ internal static class SymbolUtility
             case SpecialType.System_Collections_Generic_IReadOnlyList_T:
                 if (IsElementType(type, TomlSerializationKind.Primitive))
                 {
-                    return TomlSerializationKind.Collection;
+                    return TomlSerializationKind.PrimitiveCollection;
                 }
                 return TomlSerializationKind.ArrayOfITomlSerializedObject;
             default:
@@ -114,19 +81,19 @@ internal static class SymbolUtility
                     case TypeKind.Array:
                         if (IsElementType(type, TomlSerializationKind.Primitive))
                         {
-                            return TomlSerializationKind.Array;
+                            return TomlSerializationKind.PrimitiveArray;
                         }
                         return TomlSerializationKind.ArrayOfITomlSerializedObject;
                     case TypeKind.Enum:
                         return TomlSerializationKind.Enum;
                     case TypeKind.Error:
-                        return TomlSerializationKind.NotAvailable;
+                        return TomlSerializationKind.Error;
                     case TypeKind.Class:
                         if (CollectionMetaData.IsSystemCollections(type))
                         {
                             if (IsElementType(type, TomlSerializationKind.Primitive))
                             {
-                                return TomlSerializationKind.Collection;
+                                return TomlSerializationKind.PrimitiveCollection;
                             }
                             return TomlSerializationKind.ArrayOfITomlSerializedObject;
                         }
@@ -144,7 +111,7 @@ internal static class SymbolUtility
                         {
                             if (IsElementType(type, TomlSerializationKind.Primitive))
                             {
-                                return TomlSerializationKind.Collection;
+                                return TomlSerializationKind.PrimitiveCollection;
                             }
                             return TomlSerializationKind.ArrayOfITomlSerializedObject;
                         }
@@ -157,7 +124,7 @@ internal static class SymbolUtility
                         return TomlSerializationKind.Struct;
                 }
 
-                return TomlSerializationKind.NotAvailable;
+                return TomlSerializationKind.Error;
         }
     }
 

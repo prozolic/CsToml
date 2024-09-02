@@ -15,8 +15,7 @@ internal abstract class ArrayBaseFormatter<TArray, TElement> : ITomlValueFormatt
 
         if (rootNode.TryGetArray(out var value))
         {
-            ITomlValueFormatter<TElement> formatter = TomlValueFormatterResolver.GetFormatter<TElement>();
-
+            var formatter = options.Resolver.GetFormatter<TElement>()!;
             var array = new TElement[value.Count];
             var arraySpan = array.AsSpan();
             for (int i = 0; i < arraySpan.Length; i++)
@@ -46,7 +45,7 @@ internal abstract class ArrayBaseFormatter<TArray, TElement> : ITomlValueFormatt
             return;
         }
 
-        ITomlValueFormatter<TElement> formatter = TomlValueFormatterResolver.GetFormatter<TElement>();
+        var formatter = options.Resolver.GetFormatter<TElement>()!;
         formatter.Serialize(ref writer, targetSpan[0], options);
         if (targetSpan.Length == 1)
         {

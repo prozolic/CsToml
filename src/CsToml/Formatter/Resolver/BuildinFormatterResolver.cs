@@ -5,7 +5,7 @@ using System.Numerics;
 
 namespace CsToml.Formatter.Resolver;
 
-internal sealed class BuildinFormatterResolver
+internal sealed class BuildinFormatterResolver : ITomlValueFormatterResolver
 {
     private sealed class DefaultFormatterCache<T>
     {
@@ -162,7 +162,9 @@ internal sealed class BuildinFormatterResolver
         DefaultFormatterCache<IDictionary<string, object?>>.Formatter = new IDictionaryFormatter();
     }
 
-    public static ITomlValueFormatter<T>? GetFormatter<T>()
+    public static readonly BuildinFormatterResolver Instance = new BuildinFormatterResolver();
+
+    public ITomlValueFormatter<T>? GetFormatter<T>()
     {
         var formatter = DefaultFormatterCache<T>.Formatter;
         if (formatter != null)

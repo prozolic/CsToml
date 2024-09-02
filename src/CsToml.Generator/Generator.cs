@@ -1,8 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Collections.ObjectModel;
 using System.Text;
 
 namespace CsToml.Generator;
@@ -19,93 +16,50 @@ using System;
 
 namespace CsToml;
 
-/// <summary>
-/// 
-/// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = false)]
 internal sealed class TomlSerializedObjectAttribute : Attribute
 {}
 
-/// <summary>
-/// 
-/// </summary>
-internal enum TomlValueType
-{
-    None = -1,
-    KeyValue = 0,
-    Array = 1,
-    InlineTable = 2,
-    Table = 3,
-///    ArrayOfTables = 4,
-}
-
-/// <summary>
-/// 
-/// </summary>
 [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
 internal sealed class TomlValueOnSerializedAttribute : Attribute
 {
-    public TomlValueType Type { get; }
+    public string AliasName { get; }
 
-    public TomlValueOnSerializedAttribute(TomlValueType value) { this.Type = value; }
-
+    public TomlValueOnSerializedAttribute() {  }
+    public TomlValueOnSerializedAttribute(string aliasName) { this.AliasName = aliasName; }
 }
-
-/// <summary>
-/// 
-/// </summary>
-///[AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
-///internal sealed class TomlArrayOfTablesKeyAttribute : Attribute
-///{
-///    public string KeyName { get; }
-
-///    public int Index { get;}
-
-///    public CsTomlArrayOfTablesKeyAttribute(string keyName, int index) { this.KeyName = keyName; this.Index = index;}
-///}
 
 """);
         });
 
         var source = context.SyntaxProvider.ForAttributeWithMetadataName(
             "CsToml.TomlSerializedObjectAttribute",
-            static (node, token) => true,
-            static (context, token) => context);
+            static (node, token) =>
+            {
+                return node is ClassDeclarationSyntax or StructDeclarationSyntax or RecordDeclarationSyntax;
+            },
+            static (context, token) => context).
+            Combine(context.CompilationProvider).
+            WithComparer(Comparer.Instance);
 
         context.RegisterSourceOutput(source, Emit);
     }
 
-    private static void Emit(SourceProductionContext context, GeneratorAttributeSyntaxContext source)
+    private void Emit(SourceProductionContext context, (GeneratorAttributeSyntaxContext, Compilation) source)
     {
-        var typeSymbol = source.TargetSymbol as INamedTypeSymbol;
-        var typeNode = source.TargetNode as TypeDeclarationSyntax;
+        var syntaxContext = source.Item1;
+        var symbol = (INamedTypeSymbol)syntaxContext.TargetSymbol;
+        var typeNode = (TypeDeclarationSyntax)syntaxContext.TargetNode;
 
-        if (!typeNode!.IsPartial())
-        {
-            context.ReportDiagnostic(
-                Diagnostic.Create(
-                    DiagnosticDescriptors.NoPartial,
-                    typeNode.Identifier.GetLocation(),
-                    typeSymbol!.Name));
+        var typeMeta = new TypeMeta(symbol, typeNode);
+        if (!typeMeta.Validate(context))
             return;
-        }
-        if (typeNode!.IsNested())
-        {
-            context.ReportDiagnostic(
-                Diagnostic.Create(
-                    DiagnosticDescriptors.NoPartial,
-                    typeNode.Identifier.GetLocation(),
-                    typeSymbol!.Name));
-            return;
-        }
 
-        var ns = typeSymbol!.ContainingNamespace.IsGlobalNamespace ?
-            string.Empty :
-            $"{typeSymbol.ContainingNamespace}";
+        context.AddSource($"{typeMeta.TypeName}_generated.g.cs", Generate(typeMeta));
+    }
 
-        var generator2 = new DeserializeGenerator(typeSymbol, typeNode!);
-        var generator3 = new SerializeGenerator(typeSymbol, typeNode!);
-
+    private string Generate(TypeMeta typeMeta)
+    {
         var code = $$"""
 #nullable enable
 #pragma warning disable CS0219 // The variable 'variable' is assigned but its value is never used
@@ -119,196 +73,105 @@ internal sealed class TomlValueOnSerializedAttribute : Attribute
 using CsToml;
 using CsToml.Formatter;
 using CsToml.Formatter.Resolver;
-using System.Buffers;
 
-namespace {{ns}};
+namespace {{typeMeta.NameSpace}};
 
-partial class {{typeSymbol.Name}} : ITomlSerializedObject<{{typeSymbol.Name}}>
+partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{{typeMeta.TypeName}}>
 {
 
-    static void ITomlSerializedObject<{{typeSymbol.Name}}>.Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, {{typeSymbol.Name}} target, CsTomlSerializerOptions options)
-    {
-{{generator3.GenerateSerializeProcessCode(context)}}
-    }
-
-    static {{typeSymbol.Name}} ITomlSerializedObject<{{typeSymbol.Name}}>.Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
+    static {{typeMeta.TypeName}} ITomlSerializedObject<{{typeMeta.TypeName}}>.Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
         // TODO: implemented...
-{{generator2.GenerateDeserializeProcessCode(context)}}
+{{GenerateDeserializePart(typeMeta)}}
+    }
+
+    static void ITomlSerializedObject<{{typeMeta.TypeName}}>.Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, {{typeMeta.TypeName}} target, CsTomlSerializerOptions options)
+    {
+{{GenerateSerializePart(typeMeta)}}
     }
 
     static void ITomlSerializedObjectRegister.Register()
     {
-        TomlSerializedObjectFormatterResolver.Register(new TomlSerializedObjectFormatter<{{typeSymbol.Name}}>());
+        TomlSerializedObjectFormatterResolver.Register(new TomlSerializedObjectFormatter<{{typeMeta.TypeName}}>());
     }
 }
-
 """;
-        context.AddSource($"{typeSymbol.Name}_generated.g.cs", code);
+
+        return code;
     }
 
-    internal sealed class DeserializeGenerator
+    private string GenerateDeserializePart(TypeMeta typeMeta)
     {
-        private INamedTypeSymbol typeSymbol;
-        private TypeDeclarationSyntax typeNode;
-        private (IPropertySymbol, TomlValueType)[] valueMembers;
-        private StringBuilder serializerBuilder;
-        private StringBuilder deserializerBuilder;
+        var builder = new StringBuilder();
+        builder.AppendLine($"        var target = new {typeMeta.TypeName}();");
 
-        public DeserializeGenerator(INamedTypeSymbol typeSymbol, TypeDeclarationSyntax typeNode)
+        foreach (var (property, kind, aliasName) in typeMeta.Members)
         {
-            this.typeSymbol = typeSymbol;
-            this.typeNode = typeNode;
+            var accessName = string.IsNullOrWhiteSpace(aliasName) ? property.Name : aliasName;
+            var propertyName = property.Name;
 
-            var allmembers = SymbolUtility.GetProperties(typeSymbol);
-            valueMembers = SymbolUtility.FilterTomlDocumentValueMembers(allmembers, "TomlValueOnSerializedAttribute").ToArray();
-            serializerBuilder = new StringBuilder();
-            deserializerBuilder = new StringBuilder();
+            builder.AppendLine($"        var __{propertyName}__RootNode = rootNode[{$"\"{accessName}\"u8"}];");
+            builder.AppendLine($"        target.{propertyName} = options.Resolver.GetFormatter<{property.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>()!.Deserialize(ref __{propertyName}__RootNode, options);");
         }
 
-        public string GenerateDeserializeProcessCode(SourceProductionContext context)
-        {
-            deserializerBuilder.Clear();
-            GenerateDeserializeCore(context, string.Empty, typeSymbol, valueMembers);
-            return deserializerBuilder.ToString();
-        }
-
-        private void GenerateDeserializeCore(SourceProductionContext context, string accessName, INamedTypeSymbol typeSymbol, (IPropertySymbol, TomlValueType)[] properties)
-        {
-            deserializerBuilder.AppendLine($"        var target = new {this.typeSymbol}();");
-
-            var arrayOftableProperties = new List<(IPropertySymbol, TomlValueType, AttributeData)>();
-            foreach (var (property, type) in properties)
-            {
-                var propertyType = property.Type;
-                var attribute = propertyType.GetAttributes();
-
-                var kind = SymbolUtility.GetTomlSerializationKind(property.Type);
-                if (kind == TomlSerializationKind.NotAvailable)
-                {
-                    continue;
-                }
-
-                var accessNames = new List<string> { property.Name };
-                GenerateDeserializeForKeyValue(context, accessNames, typeSymbol, property, type, kind);
-            }
-
-            deserializerBuilder.AppendLine($"        return target;");
-        }
-
-        private void GenerateDeserializeForKeyValue(SourceProductionContext context, List<string> accessName, INamedTypeSymbol typeSymbol, IPropertySymbol property, TomlValueType type, TomlSerializationKind kind)
-        {
-            var findName = SymbolUtility.FormatUtf8PropertyName(accessName);
-            var propertyName = SymbolUtility.GetPropertyAccessName(accessName, ".");
-            var valueName = SymbolUtility.GetPropertyAccessName(accessName, "_");
-
-            if (kind == TomlSerializationKind.Dictionary)
-            {
-                ImmutableArray<ITypeSymbol> elementType;
-                if (property.Type is INamedTypeSymbol namedTypeSymbol) // collection interface
-                {
-                    elementType = namedTypeSymbol.TypeArguments;
-                }
-
-                if (!DictionaryMetaData.VerifyKeyValueType(elementType))
-                {
-                    return;
-                }
-            }
-
-            deserializerBuilder.AppendLine($"        var __{propertyName}__formatter = TomlValueFormatterResolver.GetFormatter<{property.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>();");
-            deserializerBuilder.AppendLine($"        var __{propertyName}__RootNode = rootNode[{findName}];");
-            deserializerBuilder.AppendLine($"        target.{propertyName} = __{propertyName}__formatter?.Deserialize(ref __{propertyName}__RootNode, options) ?? default!;");
-        }
-
+        builder.AppendLine($"        return target;");
+        return builder.ToString();
     }
 
-    internal sealed class SerializeGenerator
+    private string GenerateSerializePart(TypeMeta typeMeta)
     {
-        private INamedTypeSymbol typeSymbol;
-        private TypeDeclarationSyntax typeNode;
-        private (IPropertySymbol, TomlValueType)[] valueMembers;
-        private ClassDeclarationSyntax[] allclassDeclarationSyntax;
-        private StringBuilder serializerBuilder;
-
-        public SerializeGenerator(INamedTypeSymbol typeSymbol, TypeDeclarationSyntax typeNode)
+        var builder = new StringBuilder();
+        foreach (var (property, kind, aliasName) in typeMeta.Members)
         {
-            this.typeSymbol = typeSymbol;
-            this.typeNode = typeNode;
-            this.allclassDeclarationSyntax = this.typeNode.SyntaxTree.GetRoot().DescendantNodes().OfType<ClassDeclarationSyntax>().ToArray();
-
-            var allmembers = SymbolUtility.GetProperties(typeSymbol);
-            valueMembers = SymbolUtility.FilterTomlDocumentValueMembers(allmembers, "TomlValueOnSerializedAttribute").ToArray();
-            serializerBuilder = new StringBuilder();
-        }
-
-        public string GenerateSerializeProcessCode(SourceProductionContext context)
-        {
-            serializerBuilder.Clear();
-            GenerateSerializeCore(context, string.Empty, typeSymbol, valueMembers);
-            return serializerBuilder.ToString();
-        }
-
-        private void GenerateSerializeCore(SourceProductionContext context, string accessName, INamedTypeSymbol typeSymbol, (IPropertySymbol, TomlValueType)[] properties)
-        {
-            var arrayOftableProperties = new List<(IPropertySymbol, TomlValueType, AttributeData)>();
-            foreach (var (property, type) in properties)
-            {
-                var propertyType = property.Type;
-                var attribute = propertyType.GetAttributes();
-
-                var kind = SymbolUtility.GetTomlSerializationKind(property.Type);
-                if (kind == TomlSerializationKind.NotAvailable)
-                {
-                    continue;
-                }
-
-                var accessNames = new List<string> { property.Name };
-                GenerateSerializeForKeyValue(context, accessNames, typeSymbol, property, type, kind);
-
-            }
-        }
-
-        private void GenerateSerializeForKeyValue(SourceProductionContext context, List<string> accessName, INamedTypeSymbol typeSymbol, IPropertySymbol property, TomlValueType type, TomlSerializationKind kind)
-        {
-            var findName = SymbolUtility.FormatUtf8PropertyName(accessName);
-            var propertyName = SymbolUtility.GetPropertyAccessName(accessName, ".");
-            var valueName = SymbolUtility.GetPropertyAccessName(accessName, "_");
+            var accessName = string.IsNullOrWhiteSpace(aliasName) ? property.Name : aliasName;
+            var propertyName = property.Name;
 
             if (kind == TomlSerializationKind.Primitive || kind == TomlSerializationKind.Object)
             {
-                serializerBuilder.AppendLine($"        writer.WriteKey({findName});");
-                serializerBuilder.AppendLine($"        writer.WriteEqual();");
-                serializerBuilder.AppendLine($"        var __{propertyName}__formatter = TomlValueFormatterResolver.GetFormatter<{property.Type.Name}>();");
-                serializerBuilder.AppendLine($"        __{propertyName}__formatter.Serialize(ref writer, target.{propertyName}, options);");
-                serializerBuilder.AppendLine($"        writer.EndKeyValue();");
+                builder.AppendLine($"        writer.WriteKey({$"\"{accessName}\"u8"});");
+                builder.AppendLine($"        writer.WriteEqual();");
+                builder.AppendLine($"        options.Resolver.GetFormatter<{property.Type.Name}>()!.Serialize(ref writer, target.{propertyName}, options);");
+                builder.AppendLine($"        writer.EndKeyValue();");
             }
             else if (kind == TomlSerializationKind.TomlSerializedObject)
             {
-                serializerBuilder.AppendLine($"        writer.PushKey({findName});");
-                serializerBuilder.AppendLine($"        var __{propertyName}__formatter = TomlValueFormatterResolver.GetFormatter<{property.Type.Name}>();");
-                serializerBuilder.AppendLine($"        __{propertyName}__formatter.Serialize(ref writer, target.{propertyName}, options);");
-                serializerBuilder.AppendLine($"        writer.PopKey();");
+                builder.AppendLine($"        writer.PushKey({$"\"{accessName}\"u8"});");
+                builder.AppendLine($"        options.Resolver.GetFormatter<{property.Type.Name}>()!.Serialize(ref writer, target.{propertyName}, options);");
+                builder.AppendLine($"        writer.PopKey();");
             }
             else if (kind == TomlSerializationKind.ArrayOfITomlSerializedObject)
             {
-                serializerBuilder.AppendLine($"        writer.WriteKey({findName});");
-                serializerBuilder.AppendLine($"        writer.WriteEqual();");
-                serializerBuilder.AppendLine($"        writer.BeginCurrentState(TomlValueState.ArrayOfTable);");
-                serializerBuilder.AppendLine($"        var __{propertyName}__formatter = TomlValueFormatterResolver.GetFormatter<{property.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>();");
-                serializerBuilder.AppendLine($"        __{propertyName}__formatter.Serialize(ref writer, target.{propertyName}, options);");
-                serializerBuilder.AppendLine($"        writer.EndCurrentState();");
-                serializerBuilder.AppendLine($"        writer.EndKeyValue();");
+                builder.AppendLine($"        writer.WriteKey({$"\"{accessName}\"u8"});");
+                builder.AppendLine($"        writer.WriteEqual();");
+                builder.AppendLine($"        writer.BeginCurrentState(TomlValueState.ArrayOfTable);");
+                builder.AppendLine($"        options.Resolver.GetFormatter<{property.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>()!.Serialize(ref writer, target.{propertyName}, options);");
+                builder.AppendLine($"        writer.EndCurrentState();");
+                builder.AppendLine($"        writer.EndKeyValue();");
             }
             else
             {
-                serializerBuilder.AppendLine($"        writer.WriteKey({findName});");
-                serializerBuilder.AppendLine($"        writer.WriteEqual();");
-                serializerBuilder.AppendLine($"        var __{propertyName}__formatter = TomlValueFormatterResolver.GetFormatter<{property.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>();");
-                serializerBuilder.AppendLine($"        __{propertyName}__formatter.Serialize(ref writer, target.{propertyName}, options);");
-                serializerBuilder.AppendLine($"        writer.EndKeyValue();");
+                builder.AppendLine($"        writer.WriteKey({$"\"{accessName}\"u8"});");
+                builder.AppendLine($"        writer.WriteEqual();");
+                builder.AppendLine($"        options.Resolver.GetFormatter<{property.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>()!.Serialize(ref writer, target.{propertyName}, options);");
+                builder.AppendLine($"        writer.EndKeyValue();");
             }
         }
+
+        return builder.ToString();
     }
 }
 
+internal class Comparer : IEqualityComparer<(GeneratorAttributeSyntaxContext, Compilation)>
+{
+    public static readonly Comparer Instance = new();
+
+    public bool Equals((GeneratorAttributeSyntaxContext, Compilation) x, (GeneratorAttributeSyntaxContext, Compilation) y)
+    {
+        return x.Item1.TargetNode.Equals(y.Item1.TargetNode);
+    }
+
+    public int GetHashCode((GeneratorAttributeSyntaxContext, Compilation) obj)
+    {
+        return obj.Item1.TargetNode.GetHashCode();
+    }
+}
