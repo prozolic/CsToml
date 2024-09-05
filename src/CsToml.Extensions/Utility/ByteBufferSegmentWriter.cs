@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace CsToml.Extensions.Utility;
 
-internal class ByteBufferSegmentWriter  : IBufferWriter<byte>, IDisposable
+internal sealed class ByteBufferSegmentWriter  : IBufferWriter<byte>, IDisposable
 {
     private struct ByteBufferSegment
     {

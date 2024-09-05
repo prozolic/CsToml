@@ -11,7 +11,7 @@ internal interface IFileWriter
     void Flush();
 }
 
-internal class RandomAccessFileWriter(SafeFileHandle handle) : IFileWriter
+internal sealed class RandomAccessFileWriter(SafeFileHandle handle) : IFileWriter
 {
     private SafeFileHandle handle = handle;
     private long written = 0;
