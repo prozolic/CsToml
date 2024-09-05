@@ -64,8 +64,8 @@ public partial class TomlValue
 
     public T GetValue<T>()
     {
-        var tempDocumentNode = new TomlDocumentNode(default!, this);
-        return TomlValueFormatterResolver.Instance.GetFormatter<T>()!.Deserialize(ref tempDocumentNode, CsTomlSerializerOptions.Default);
+        var tempDocumentNode = new TomlDocumentNode(this);
+        return tempDocumentNode.GetValue<T>();
     }
 
     public bool TryGetArray(out ReadOnlyCollection<TomlValue> value)
@@ -285,21 +285,16 @@ public partial class TomlValue
 
     public bool TryGetValue<T>(out T value)
     {
-        if (CanGetValue(TomlValueFeature.Object))
+        try
         {
-            try
-            {
-                value = GetValue<T>();
-                return true;
-            }
-            catch (CsTomlException)
-            {
-                value = default!;
-                return false;
-            }
+            value = GetValue<T>();
+            return true;
         }
-        value = default!;
-        return false;
+        catch (CsTomlException)
+        {
+            value = default!;
+            return false;
+        }
     }
 
 }

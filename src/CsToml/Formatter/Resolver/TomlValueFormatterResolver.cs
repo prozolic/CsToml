@@ -41,29 +41,7 @@ internal sealed class TomlValueFormatterResolver : ITomlValueFormatterResolver
         }
     }
 
-    private sealed class TomlDocumentFormatterCache
-    {
-        private static readonly TomlSerializedObjectFormatter<TomlDocument> tomlDocumentFormatter = new TomlSerializedObjectFormatter<TomlDocument>();
-
-        public static ITomlValueFormatter<T>? GetFormatter<T>()
-        {
-            return tomlDocumentFormatter as ITomlValueFormatter<T>;
-        }
-    }
-
     public static readonly TomlValueFormatterResolver Instance = new TomlValueFormatterResolver();
-
-    internal ITomlValueFormatter<T> GetFormatterForInternal<T>()
-    {
-        // get the TomlSerializedObjectFormatter<TomlDocument>
-        var formatter = TomlDocumentFormatterCache.GetFormatter<T>();
-        if (formatter != null)
-        {
-            return formatter;
-        }
-
-        return GetFormatter<T>()!;
-    }
 
     public ITomlValueFormatter<T>? GetFormatter<T>()
     {

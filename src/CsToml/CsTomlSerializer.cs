@@ -1,13 +1,58 @@
 ﻿using CsToml.Error;
+using CsToml.Formatter;
 using CsToml.Formatter.Resolver;
 using CsToml.Utility;
 using System.Buffers;
 
 namespace CsToml;
 
-public sealed class CsTomlSerializer
+public static class CsTomlSerializer
 {
-    private CsTomlSerializer() { }
+    [ThreadStatic]
+    private static TomlDocumentFormatter? DocumentFormatter;
+
+    private sealed class TomlDocumentFormatter : ITomlValueFormatter<TomlDocument>, IDisposable
+    {
+        private TomlDocument? tomlDocument;
+
+        public void SetTomlDocument(TomlDocument? tomlDocument)
+        {
+            this.tomlDocument = tomlDocument;
+        }
+
+        public TomlDocument Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
+        {
+            return this.tomlDocument!;
+        }
+
+        public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlDocument target, CsTomlSerializerOptions options) where TBufferWriter : IBufferWriter<byte>
+        {
+            try
+            {
+                target!.ToTomlString(ref writer);
+            }
+            catch (CsTomlException cte)
+            {
+                throw new CsTomlSerializeException("An error occurred when serializing the TOML file. Check InnerException for exception information.", cte);
+            }
+        }
+
+        public void Dispose()
+        {
+            tomlDocument = null;
+        }
+    }
+
+    private static ITomlValueFormatter<T> GetFormatter<T>(TomlDocument? tomlDocument)
+    {
+        if (typeof(T) == typeof(TomlDocument))
+        {
+            var formatter = DocumentFormatter ??= new TomlDocumentFormatter();
+            formatter.SetTomlDocument(tomlDocument);
+            return (formatter as ITomlValueFormatter<T>)!;
+        }
+        return TomlValueFormatterResolver.Instance.GetFormatter<T>()!;
+    }
 
     public static T Deserialize<T>(ReadOnlySpan<byte> tomlText, CsTomlSerializerOptions? options = null)
         where T : ITomlSerializedObject<T>
@@ -21,7 +66,11 @@ public sealed class CsTomlSerializer
         try
         {
             var rootNode = document.RootNode;
-            return TomlValueFormatterResolver.Instance.GetFormatterForInternal<T>().Deserialize(ref rootNode, options);
+            var formatter = GetFormatter<T>(document);
+            using (formatter as IDisposable)
+            {
+                return formatter.Deserialize(ref rootNode, options);
+            }
         }
         catch (CsTomlException cte)
         {
@@ -41,7 +90,11 @@ public sealed class CsTomlSerializer
         try
         {
             var rootNode = document.RootNode;
-            return TomlValueFormatterResolver.Instance.GetFormatterForInternal<T>().Deserialize(ref rootNode, options);
+            var formatter = GetFormatter<T>(document);
+            using (formatter as IDisposable)
+            {
+                return formatter.Deserialize(ref rootNode, options);
+            }
         }
         catch (CsTomlException cte)
         {
@@ -73,7 +126,11 @@ public sealed class CsTomlSerializer
         try
         {
             var documentWriter = new Utf8TomlDocumentWriter<TBufferWriter>(ref bufferWriter);
-            TomlValueFormatterResolver.Instance.GetFormatterForInternal<T>().Serialize(ref documentWriter, target, options);
+            var formatter = GetFormatter<T>(null);
+            using (formatter as IDisposable)
+            {
+                formatter.Serialize(ref documentWriter, target, options);
+            }
         }
         catch (CsTomlException cte)
         {

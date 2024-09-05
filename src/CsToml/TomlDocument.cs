@@ -13,21 +13,13 @@ public partial class TomlDocument : ITomlSerializedObject<TomlDocument>
 
     static void ITomlSerializedObject<TomlDocument>.Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlDocument? target, CsTomlSerializerOptions options)
     {
-        options ??= CsTomlSerializerOptions.Default;
-
-        try
-        {
-            target!.ToTomlString(ref writer);
-        }
-        catch (CsTomlException cte)
-        {
-            throw new CsTomlSerializeException("An error occurred when serializing the TOML file. Check InnerException for exception information.",cte);
-        }
+        // No registration required
     }
 
     static TomlDocument ITomlSerializedObject<TomlDocument>.Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
-        return rootNode.Document;
+        // No registration required
+        return default!;
     }
 
     static void ITomlSerializedObjectRegister.Register()
@@ -40,7 +32,7 @@ public partial class TomlDocument : ITomlSerializedObject<TomlDocument>
     private readonly TomlTable table;
 
     public TomlDocumentNode RootNode
-        => new(this, table.RootNode);
+        => new(table.RootNode);
 
     public long LineNumber { get; internal set; }
 

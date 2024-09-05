@@ -16,10 +16,8 @@ namespace CsToml;
 [DebuggerDisplay("{Value}")]
 public struct TomlDocumentNode
 {
-    private readonly TomlDocument document;
     private readonly TomlTableNode node;
     private readonly TomlValue value;
-    internal TomlDocument Document => document;
 
     internal TomlTableNodeDictionary.KeyValuePairEnumerator KeyValuePairs => node.KeyValuePairs;
 
@@ -67,9 +65,9 @@ public struct TomlDocumentNode
         {
             if (node?.TryGetChildNode(key, out var value) ?? false)
             {
-                return new TomlDocumentNode(document, value!);
+                return new TomlDocumentNode(value!);
             }
-            return new TomlDocumentNode(document, TomlTableNode.Empty);
+            return new TomlDocumentNode(TomlTableNode.Empty);
         }
     }
 
@@ -81,30 +79,28 @@ public struct TomlDocumentNode
             {
                 if (value is TomlTable table)
                 {
-                    return new TomlDocumentNode(document, table!.RootNode!);
+                    return new TomlDocumentNode(table!.RootNode!);
                 }
                 else if (value is TomlInlineTable inlineTable)
                 {
-                    return new TomlDocumentNode(document, inlineTable!.RootNode);
+                    return new TomlDocumentNode(inlineTable!.RootNode);
                 }
-                return new TomlDocumentNode(document, value);
+                return new TomlDocumentNode(value);
             }
-            return new TomlDocumentNode(document, TomlTableNode.Empty);
+            return new TomlDocumentNode(TomlTableNode.Empty);
         }
     }
 
     public readonly bool HasValue => Value.HasValue || NodeCount > 0;
 
-    internal TomlDocumentNode(TomlDocument document, TomlTableNode node)
+    internal TomlDocumentNode(TomlTableNode node)
     {
-        this.document = document;
         this.node = node;
         this.value = node.Value!;
     }
 
-    internal TomlDocumentNode(TomlDocument document, TomlValue value)
+    internal TomlDocumentNode(TomlValue value)
     {
-        this.document = document;
         if (value is TomlTable table)
         {
             this.value = TomlValue.Empty;

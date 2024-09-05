@@ -1,5 +1,4 @@
 ﻿using CsToml.Error;
-using CsToml.Utility;
 using System.Buffers;
 using System.Diagnostics;
 
@@ -14,11 +13,6 @@ public abstract partial class TomlValue :
     public virtual bool HasValue => false;
 
     protected TomlValue(){}
-
-    public TomlDocumentNode AsNode()
-    {
-        return new TomlDocumentNode(default!, this);
-    }
 
     internal virtual bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer) // Write TOML format.
         where TBufferWriter : IBufferWriter<byte>
