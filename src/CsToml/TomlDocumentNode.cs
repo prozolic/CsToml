@@ -3,7 +3,6 @@ using CsToml.Error;
 using CsToml.Formatter.Resolver;
 using CsToml.Utility;
 using CsToml.Values;
-using CsToml.Values.Internal;
 using System.Buffers;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -19,11 +18,11 @@ public struct TomlDocumentNode
     private readonly TomlTableNode node;
     private readonly TomlValue value;
 
-    internal TomlTableNodeDictionary.KeyValuePairEnumerator KeyValuePairs => node.KeyValuePairs;
-
     internal readonly int NodeCount => node?.NodeCount ?? 0;
 
-    public readonly TomlValue Value => value;
+    internal readonly TomlValue Value => value;
+
+    public readonly bool HasValue => Value.HasValue || NodeCount > 0;
 
     public TomlDocumentNode this[ReadOnlySpan<char> key]
     {
@@ -91,8 +90,6 @@ public struct TomlDocumentNode
         }
     }
 
-    public readonly bool HasValue => Value.HasValue || NodeCount > 0;
-
     internal TomlDocumentNode(TomlTableNode node)
     {
         this.node = node;
@@ -117,6 +114,9 @@ public struct TomlDocumentNode
             this.node = TomlTableNode.Empty;
         }
     }
+
+    public TomlValue GetTomlValue()
+        => Value;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool CanGetValue(TomlValueFeature feature)
