@@ -115,7 +115,7 @@ public struct TomlDocumentNode
         }
     }
 
-    public TomlValue GetTomlValue()
+    public readonly TomlValue GetTomlValue()
         => Value;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
