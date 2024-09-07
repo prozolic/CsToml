@@ -2,20 +2,25 @@
 
 namespace CsToml.Formatter;
 
-internal sealed class ConcurrentBagFormatter<T> : CollectionBaseFormatter<ConcurrentBag<T>, T, ConcurrentBag<T>>
+internal sealed class ConcurrentBagFormatter<T> : CollectionBaseFormatter<ConcurrentBag<T>, T, List<T>>
 {
-    protected override void AddValue(ConcurrentBag<T> mediator, T element)
+    protected override void AddValue(List<T> mediator, T element)
     {
         mediator.Add(element);
     }
 
-    protected override ConcurrentBag<T> Complete(ConcurrentBag<T> collection)
+    protected override ConcurrentBag<T> Complete(List<T> collection)
     {
-        return collection;
+        var bag = new ConcurrentBag<T>();
+        for (var i = collection.Count - 1; i >= 0; i--)
+        {
+            bag.Add(collection[i]);
+        }
+        return bag;
     }
 
-    protected override ConcurrentBag<T> CreateCollection(int capacity)
+    protected override List<T> CreateCollection(int capacity)
     {
-        return new ConcurrentBag<T>();
+        return new List<T>();
     }
 }
