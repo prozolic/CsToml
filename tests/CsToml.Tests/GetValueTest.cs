@@ -1,6 +1,15 @@
 ﻿using CsToml.Error;
+using FluentAssertions;
+using FluentAssertions.Execution;
 
 namespace CsToml.Tests;
+
+public static class ActionExtensions
+{
+    public static Action? ToAction(this Action action)
+        => action;
+
+}
 
 public class GetValueTest
 {
@@ -38,7 +47,8 @@ value3 = 3
     public void StringTest()
     {
         var value = document.RootNode["str"u8];
-        Assert.Equal("string", value!.GetString());
+        value!.GetString().Should().Be("string");
+
         Assert.Throws<CsTomlException>(() => value!.GetInt64());
         Assert.Throws<CsTomlException>(() => value!.GetDouble());
         Assert.Throws<CsTomlException>(() => value!.GetBool());
@@ -53,25 +63,25 @@ value3 = 3
     public void StringTest2()
     {
         var value = document.RootNode["str2"u8];
-        Assert.Equal("123", value!.GetString());
-        Assert.Equal(123, value!.GetInt64());
-        Assert.Equal(123d, value!.GetDouble());
+        value!.GetString().Should().Be("123");
+        value!.GetInt64().Should().Be(123);
+        value!.GetDouble().Should().Be(123d);
         Assert.Throws<CsTomlException>(() => value!.GetBool());
         Assert.Throws<CsTomlException>(() => value!.GetDateTime());
         Assert.Throws<CsTomlException>(() => value!.GetDateTimeOffset());
         Assert.Throws<CsTomlException>(() => value!.GetDateOnly());
         Assert.Throws<CsTomlException>(() => value!.GetTimeOnly());
-        Assert.Equal(123d, value!.GetNumber<int>());
+        value!.GetNumber<int>().Should().Be(123);
     }
 
     [Fact]
     public void StringTest3()
     {
         var value = document.RootNode["str3"u8];
-        Assert.Equal(" true ", value!.GetString());
+        value!.GetString().Should().Be(" true ");
         Assert.Throws<CsTomlException>(() => value!.GetInt64());
         Assert.Throws<CsTomlException>(() => value!.GetDouble());
-        Assert.True(value!.GetBool());
+        value!.GetBool().Should().BeTrue();
         Assert.Throws<CsTomlException>(() => value!.GetDateTime());
         Assert.Throws<CsTomlException>(() => value!.GetDateTimeOffset());
         Assert.Throws<CsTomlException>(() => value!.GetDateOnly());
@@ -83,15 +93,15 @@ value3 = 3
     public void IntTest()
     {
         var value = document.RootNode["int"u8];
-        Assert.Equal("99", value!.GetString());
-        Assert.Equal(99, value!.GetInt64());
-        Assert.Equal(99d, value!.GetDouble());
-        Assert.True(value!.GetBool());
+        value!.GetString().Should().Be("99");
+        value!.GetInt64().Should().Be(99);
+        value!.GetDouble().Should().Be(99d);
+        value!.GetBool().Should().BeTrue();
         Assert.Throws<CsTomlException>(() => value!.GetDateTime());
         Assert.Throws<CsTomlException>(() => value!.GetDateTimeOffset());
         Assert.Throws<CsTomlException>(() => value!.GetDateOnly());
         Assert.Throws<CsTomlException>(() => value!.GetTimeOnly());
-        Assert.Equal(99, value!.GetNumber<int>());
+        value!.GetNumber<int>().Should().Be(99);
     }
 
     [Fact]
@@ -99,56 +109,45 @@ value3 = 3
     {
         var value = document.RootNode["int"u8];
         {
-            var result = value!.TryGetString(out var v);
-            Assert.Equal("99", v);
+            value!.TryGetString(out var v).Should().BeTrue();
+            v.Should().Be("99");
         }
         {
-            var result = value!.TryGetInt64(out var v);
-            Assert.Equal(99, v);
+            value!.TryGetInt64(out var v).Should().BeTrue();
+            v.Should().Be(99);
         }
         {
-            var result = value!.TryGetDouble(out var v);
-            Assert.Equal(99d, v);
+            value!.TryGetDouble(out var v).Should().BeTrue();
+            v.Should().Be(99d);
         }
         {
-            var result = value!.TryGetBool(out var v);
-            Assert.True(v);
+            value!.TryGetBool(out var v).Should().BeTrue();
+            v.Should().BeTrue();
         }
         {
-            var result = value!.TryGetDateTime(out var v);
-            Assert.False(result);
+            value!.TryGetNumber<int>(out var v).Should().BeTrue();
+            v.Should().Be(99);
         }
-        {
-            var result = value!.TryGetDateTimeOffset(out var v);
-            Assert.False(result);
-        }
-        {
-            var result = value!.TryGetDateOnly(out var v);
-            Assert.False(result);
-        }
-        {
-            var result = value!.TryGetTimeOnly(out var v);
-            Assert.False(result);
-        }
-        {
-            var result = value!.TryGetNumber<int>(out var v);
-            Assert.Equal(99, v);
-        }
+
+        value!.TryGetDateTime(out var _).Should().BeFalse();
+        value!.TryGetDateTimeOffset(out var _).Should().BeFalse();
+        value!.TryGetDateOnly(out var _).Should().BeFalse();
+        value!.TryGetTimeOnly(out var _).Should().BeFalse();
     }
 
     [Fact]
     public void FloatTest()
     {
         var value = document.RootNode["flt"u8];
-        Assert.Equal("1", value!.GetString());
-        Assert.Equal(1, value!.GetInt64());
-        Assert.Equal(1.0d, value!.GetDouble());
-        Assert.True(value!.GetBool());
+        value!.GetString().Should().Be("1");
+        value!.GetInt64().Should().Be(1);
+        value!.GetDouble().Should().Be(1.0d);
+        value!.GetBool().Should().BeTrue();
         Assert.Throws<CsTomlException>(() => value!.GetDateTime());
         Assert.Throws<CsTomlException>(() => value!.GetDateTimeOffset());
         Assert.Throws<CsTomlException>(() => value!.GetDateOnly());
         Assert.Throws<CsTomlException>(() => value!.GetTimeOnly());
-        Assert.Equal(1, value!.GetNumber<int>());
+        value!.GetNumber<int>().Should().Be(1);
     }
 
     [Fact]
@@ -156,56 +155,45 @@ value3 = 3
     {
         var value = document.RootNode["flt"u8];
         {
-            var result = value!.TryGetString(out var v);
-            Assert.Equal("1", v);
+            value!.TryGetString(out var v).Should().BeTrue();
+            v.Should().Be("1");
         }
         {
-            var result = value!.TryGetInt64(out var v);
-            Assert.Equal(1, v);
+            value!.TryGetInt64(out var v).Should().BeTrue();
+            v.Should().Be(1);
         }
         {
-            var result = value!.TryGetDouble(out var v);
-            Assert.Equal(1.0d, v);
+            value!.TryGetDouble(out var v).Should().BeTrue();
+            v.Should().Be(1.0d);
         }
         {
-            var result = value!.TryGetBool(out var v);
-            Assert.True(v);
+            value!.TryGetBool(out var v).Should().BeTrue();
+            v.Should().BeTrue();
         }
         {
-            var result = value!.TryGetDateTime(out var v);
-            Assert.False(result);
+            value!.TryGetNumber<int>(out var v).Should().BeTrue();
+            v.Should().Be(1);
         }
-        {
-            var result = value!.TryGetDateTimeOffset(out var v);
-            Assert.False(result);
-        }
-        {
-            var result = value!.TryGetDateOnly(out var v);
-            Assert.False(result);
-        }
-        {
-            var result = value!.TryGetTimeOnly(out var v);
-            Assert.False(result);
-        }
-        {
-            var result = value!.TryGetNumber<int>(out var v);
-            Assert.Equal(1, v);
-        }
+
+        value!.TryGetDateTime(out var _).Should().BeFalse();
+        value!.TryGetDateTimeOffset(out var _).Should().BeFalse();
+        value!.TryGetDateOnly(out var _).Should().BeFalse();
+        value!.TryGetTimeOnly(out var _).Should().BeFalse();
     }
 
     [Fact]
     public void BoolTest()
     {
         var value = document.RootNode["bool"u8];
-        Assert.Equal("True", value!.GetString());
-        Assert.Equal(1, value!.GetInt64());
-        Assert.Equal(1d, value!.GetDouble());
-        Assert.True(value!.GetBool());
+        value!.GetString().Should().Be("True");
+        value!.GetInt64().Should().Be(1);
+        value!.GetDouble().Should().Be(1d);
+        value!.GetBool().Should().BeTrue();
         Assert.Throws<CsTomlException>(() => value!.GetDateTime());
         Assert.Throws<CsTomlException>(() => value!.GetDateTimeOffset());
         Assert.Throws<CsTomlException>(() => value!.GetDateOnly());
         Assert.Throws<CsTomlException>(() => value!.GetTimeOnly());
-        Assert.Equal(1, value!.GetNumber<int>());
+        value!.GetNumber<int>().Should().Be(1);
     }
 
     [Fact]
@@ -213,58 +201,48 @@ value3 = 3
     {
         var value = document.RootNode["bool"u8];
         {
-            var result = value!.TryGetString(out var v);
-            Assert.Equal("True", v);
+            value!.TryGetString(out var v).Should().BeTrue();
+            v.Should().Be("True");
         }
         {
-            var result = value!.TryGetInt64(out var v);
-            Assert.Equal(1, v);
+            value!.TryGetInt64(out var v).Should().BeTrue();
+            v.Should().Be(1);
         }
         {
-            var result = value!.TryGetDouble(out var v);
-            Assert.Equal(1.0d, v);
+            value!.TryGetDouble(out var v).Should().BeTrue();
+            v.Should().Be(1.0d);
         }
         {
-            var result = value!.TryGetBool(out var v);
-            Assert.True(v);
+            value!.TryGetBool(out var v).Should().BeTrue();
+            v.Should().BeTrue();
         }
         {
-            var result = value!.TryGetDateTime(out var v);
-            Assert.False(result);
+            value!.TryGetNumber<int>(out var v).Should().BeTrue();
+            v.Should().Be(1);
         }
-        {
-            var result = value!.TryGetDateTimeOffset(out var v);
-            Assert.False(result);
-        }
-        {
-            var result = value!.TryGetDateOnly(out var v);
-            Assert.False(result);
-        }
-        {
-            var result = value!.TryGetTimeOnly(out var v);
-            Assert.False(result);
-        }
-        {
-            var result = value!.TryGetNumber<int>(out var v);
-            Assert.Equal(1, v);
-        }
+
+        value!.TryGetDateTime(out var _).Should().BeFalse();
+        value!.TryGetDateTimeOffset(out var _).Should().BeFalse();
+        value!.TryGetDateOnly(out var _).Should().BeFalse();
+        value!.TryGetTimeOnly(out var _).Should().BeFalse();
     }
 
     [Fact]
     public void OffsetDateTimeTest()
     {
         var value = document.RootNode["odt"u8];
-        Assert.Equal(new DateTimeOffset(1979, 5, 27, 7, 32, 0, TimeSpan.Zero).ToString(), value!.GetString());
+        value!.GetString().Should().Be(new DateTimeOffset(1979, 5, 27, 7, 32, 0, TimeSpan.Zero).ToString());
         Assert.Throws<CsTomlException>(() => value!.GetInt64());
         Assert.Throws<CsTomlException>(() => value!.GetDouble());
         Assert.Throws<CsTomlException>(() => value!.GetBool());
 
         var utcTime1 = DateTime.SpecifyKind(new DateTime(1979, 5, 27, 7, 32, 0), DateTimeKind.Utc);
         DateTimeOffset utcTime2 = utcTime1;
-        Assert.Equal(utcTime1, value!.GetDateTime());
-        Assert.Equal(utcTime2, value!.GetDateTimeOffset());
-        Assert.Equal(new DateOnly(1979, 5, 27), value!.GetDateOnly());
-        Assert.Equal(new TimeOnly(7, 32, 0), value!.GetTimeOnly());
+
+        value!.GetDateTime().Should().Be(utcTime1);
+        value!.GetDateTimeOffset().Should().Be(utcTime2);
+        value!.GetDateOnly().Should().Be(new DateOnly(1979, 5, 27));
+        value!.GetTimeOnly().Should().Be(new TimeOnly(7, 32, 0));
         Assert.Throws<CsTomlException>(() => value!.GetNumber<int>());
     }
 
@@ -273,61 +251,49 @@ value3 = 3
     {
         var value = document.RootNode["odt"u8];
         {
-            var result = value!.TryGetString(out var v);
-            Assert.Equal(new DateTimeOffset(1979, 5, 27, 7, 32, 0, TimeSpan.Zero).ToString(), v);
+            value!.TryGetString(out var v).Should().BeTrue();
+            v.Should().Be(new DateTimeOffset(1979, 5, 27, 7, 32, 0, TimeSpan.Zero).ToString());
         }
-        {
-            var result = value!.TryGetInt64(out var v);
-            Assert.False(result);
-        }
-        {
-            var result = value!.TryGetDouble(out var v);
-            Assert.False(result);
-        }
-        {
-            var result = value!.TryGetBool(out var v);
-            Assert.False(result);
-        }
-
         var utcTime1 = DateTime.SpecifyKind(new DateTime(1979, 5, 27, 7, 32, 0), DateTimeKind.Utc);
         DateTimeOffset utcTime2 = utcTime1;
         {
-            var result = value!.TryGetDateTime(out var v);
-            Assert.Equal(utcTime1, v);
+            value!.TryGetDateTime(out var v).Should().BeTrue();
+            v.Should().Be(utcTime1);
         }
         {
-            var result = value!.TryGetDateTimeOffset(out var v);
-            Assert.Equal(utcTime2, v);
+            value!.TryGetDateTimeOffset(out var v).Should().BeTrue();
+            v.Should().Be(utcTime2);
         }
         {
-            var result = value!.TryGetDateOnly(out var v);
-            Assert.Equal(new DateOnly(1979, 5, 27), value!.GetDateOnly());
+            value!.TryGetDateOnly(out var v).Should().BeTrue();
+            v.Should().Be(new DateOnly(1979, 5, 27));
         }
         {
-            var result = value!.TryGetTimeOnly(out var v);
-            Assert.Equal(new TimeOnly(7, 32, 0), value!.GetTimeOnly());
+            value!.TryGetTimeOnly(out var v).Should().BeTrue();
+            v.Should().Be(new TimeOnly(7, 32, 0));
         }
-        {
-            var result = value!.TryGetNumber<int>(out var v);
-            Assert.False(result);
-        }
+
+        value!.TryGetInt64(out var _).Should().BeFalse();
+        value!.TryGetDouble(out var _).Should().BeFalse();
+        value!.TryGetBool(out var _).Should().BeFalse();
+        value!.TryGetNumber<int>(out var _).Should().BeFalse();
     }
 
     [Fact]
     public void LocalDateTimeTest()
     {
         var value = document.RootNode["ldt"u8];
-        Assert.Equal(new DateTime(1979, 5, 27, 7, 32, 0).ToString(), value!.GetString());
+        value.GetString()!.Should().Be(new DateTime(1979, 5, 27, 7, 32, 0).ToString());
         Assert.Throws<CsTomlException>(() => value!.GetInt64());
         Assert.Throws<CsTomlException>(() => value!.GetDouble());
         Assert.Throws<CsTomlException>(() => value!.GetBool());
 
         var utcTime1 = new DateTime(1979, 5, 27, 7, 32, 0);
         DateTimeOffset utcTime2 = utcTime1;
-        Assert.Equal(utcTime1, value!.GetDateTime());
-        Assert.Equal(utcTime2, value!.GetDateTimeOffset());
-        Assert.Equal(new DateOnly(1979, 5, 27), value!.GetDateOnly());
-        Assert.Equal(new TimeOnly(7, 32, 0), value!.GetTimeOnly());
+        value!.GetDateTime().Should().Be(utcTime1);
+        value!.GetDateTimeOffset().Should().Be(utcTime2);
+        value!.GetDateOnly().Should().Be(new DateOnly(1979, 5, 27));
+        value!.GetTimeOnly().Should().Be(new TimeOnly(7, 32, 0));
         Assert.Throws<CsTomlException>(() => value!.GetNumber<int>());
     }
 
@@ -336,60 +302,49 @@ value3 = 3
     {
         var value = document.RootNode["ldt"u8];
         {
-            var result = value!.TryGetString(out var v);
-            Assert.Equal(new DateTime(1979, 5, 27, 7, 32, 0).ToString(), v);
-        }
-        {
-            var result = value!.TryGetInt64(out var v);
-            Assert.False(result);
-        }
-        {
-            var result = value!.TryGetDouble(out var v);
-            Assert.False(result);
-        }
-        {
-            var result = value!.TryGetBool(out var v);
-            Assert.False(result);
+            value!.TryGetString(out var v).Should().BeTrue();
+            v.Should().Be(new DateTime(1979, 5, 27, 7, 32, 0).ToString());
         }
 
         var utcTime1 = new DateTime(1979, 5, 27, 7, 32, 0);
         DateTimeOffset utcTime2 = utcTime1;
         {
-            var result = value!.TryGetDateTime(out var v);
-            Assert.Equal(utcTime1, v);
+            value!.TryGetDateTime(out var v).Should().BeTrue();
+            v.Should().Be(utcTime1);
         }
         {
-            var result = value!.TryGetDateTimeOffset(out var v);
-            Assert.Equal(utcTime2, v);
+            value!.TryGetDateTimeOffset(out var v).Should().BeTrue();
+            v.Should().Be(utcTime2);
         }
         {
-            var result = value!.TryGetDateOnly(out var v);
-            Assert.Equal(new DateOnly(1979, 5, 27), value!.GetDateOnly());
+            value!.TryGetDateOnly(out var v).Should().BeTrue();
+            v.Should().Be(new DateOnly(1979, 5, 27));
         }
         {
-            var result = value!.TryGetTimeOnly(out var v);
-            Assert.Equal(new TimeOnly(7, 32, 0), value!.GetTimeOnly());
+            value!.TryGetTimeOnly(out var v).Should().BeTrue();
+            v.Should().Be(new TimeOnly(7, 32, 0));
         }
-        {
-            var result = value!.TryGetNumber<int>(out var v);
-            Assert.False(result);
-        }
+
+        value!.TryGetInt64(out var _).Should().BeFalse();
+        value!.TryGetDouble(out var _).Should().BeFalse();
+        value!.TryGetBool(out var _).Should().BeFalse();
+        value!.TryGetNumber<int>(out var _).Should().BeFalse();
     }
 
     [Fact]
     public void LocalDateTest()
     {
         var value = document.RootNode["ld1"u8];
-        Assert.Equal(new DateOnly(1979, 5, 27).ToString(), value!.GetString());
+        value!.GetString()!.Should().Be(new DateOnly(1979, 5, 27).ToString());
         Assert.Throws<CsTomlException>(() => value!.GetInt64());
         Assert.Throws<CsTomlException>(() => value!.GetDouble());
         Assert.Throws<CsTomlException>(() => value!.GetBool());
 
         var utcTime1 = new DateTime(1979, 5, 27);
         DateTimeOffset utcTime2 = utcTime1;
-        Assert.Equal(utcTime1, value!.GetDateTime());
-        Assert.Equal(utcTime2, value!.GetDateTimeOffset());
-        Assert.Equal(new DateOnly(1979, 5, 27), value!.GetDateOnly());
+        value!.GetDateTime().Should().Be(utcTime1);
+        value!.GetDateTimeOffset().Should().Be(utcTime2);
+        value!.GetDateOnly().Should().Be(new DateOnly(1979, 5, 27));
         Assert.Throws<CsTomlException>(() => value!.GetTimeOnly());
         Assert.Throws<CsTomlException>(() => value!.GetNumber<int>());
     }
@@ -399,51 +354,36 @@ value3 = 3
     {
         var value = document.RootNode["ld1"u8];
         {
-            var result = value!.TryGetString(out var v);
-            Assert.Equal(new DateOnly(1979, 5, 27).ToString(), v);
+            value!.TryGetString(out var v).Should().BeTrue();
+            v.Should().Be(new DateOnly(1979, 5, 27).ToString());
         }
-        {
-            var result = value!.TryGetInt64(out var v);
-            Assert.False(result);
-        }
-        {
-            var result = value!.TryGetDouble(out var v);
-            Assert.False(result);
-        }
-        {
-            var result = value!.TryGetBool(out var v);
-            Assert.False(result);
-        }
-
         var utcTime1 = new DateTime(1979, 5, 27);
         DateTimeOffset utcTime2 = utcTime1;
         {
-            var result = value!.TryGetDateTime(out var v);
-            Assert.Equal(utcTime1, v);
+            value!.TryGetDateTime(out var v).Should().BeTrue();
+            v.Should().Be(utcTime1);
         }
         {
-            var result = value!.TryGetDateTimeOffset(out var v);
-            Assert.Equal(utcTime2, v);
+            value!.TryGetDateTimeOffset(out var v).Should().BeTrue();
+            v.Should().Be(utcTime2);
         }
         {
-            var result = value!.TryGetDateOnly(out var v);
-            Assert.Equal(new DateOnly(1979, 5, 27), value!.GetDateOnly());
+            value!.TryGetDateOnly(out var v).Should().BeTrue();
+            v.Should().Be(new DateOnly(1979, 5, 27));
         }
-        {
-            var result = value!.TryGetTimeOnly(out var v);
-            Assert.False(result);
-        }
-        {
-            var result = value!.TryGetNumber<int>(out var v);
-            Assert.False(result);
-        }
+
+        value!.TryGetInt64(out var _).Should().BeFalse();
+        value!.TryGetDouble(out var _).Should().BeFalse();
+        value!.TryGetBool(out var _).Should().BeFalse();
+        value!.TryGetTimeOnly(out var _).Should().BeFalse();
+        value!.TryGetNumber<int>(out var _).Should().BeFalse();
     }
 
     [Fact]
     public void LocalTimeTest()
     {
         var value = document.RootNode["lt1"u8];
-        Assert.Equal(new TimeOnly(7,32,30).ToString(), value!.GetString());
+        value!.GetString()!.Should().Be(new TimeOnly(7, 32, 30).ToString());
         Assert.Throws<CsTomlException>(() => value!.GetInt64());
         Assert.Throws<CsTomlException>(() => value!.GetDouble());
         Assert.Throws<CsTomlException>(() => value!.GetBool());
@@ -451,7 +391,7 @@ value3 = 3
         Assert.Throws<CsTomlException>(() => value!.GetDateTime());
         Assert.Throws<CsTomlException>(() => value!.GetDateTimeOffset());
         Assert.Throws<CsTomlException>(() => value!.GetDateOnly());
-        Assert.Equal(new TimeOnly(7,32,30), value!.GetTimeOnly());
+        value!.GetTimeOnly().Should().Be(new TimeOnly(7, 32, 30));
         Assert.Throws<CsTomlException>(() => value!.GetNumber<int>());
     }
 
@@ -460,41 +400,21 @@ value3 = 3
     {
         var value = document.RootNode["lt1"u8];
         {
-            var result = value!.TryGetString(out var v);
-            Assert.Equal(new TimeOnly(7,32,30).ToString(), v);
+            value!.TryGetString(out var v).Should().BeTrue();
+            v.Should().Be(new TimeOnly(7, 32, 30).ToString());
         }
         {
-            var result = value!.TryGetInt64(out var v);
-            Assert.False(result);
+            value!.TryGetTimeOnly(out var v).Should().BeTrue();
+            v.Should().Be(new TimeOnly(7, 32, 30));
         }
-        {
-            var result = value!.TryGetDouble(out var v);
-            Assert.False(result);
-        }
-        {
-            var result = value!.TryGetBool(out var v);
-            Assert.False(result);
-        }
-        {
-            var result = value!.TryGetDateTime(out var v);
-            Assert.False(result);
-        }
-        {
-            var result = value!.TryGetDateTimeOffset(out var v);
-            Assert.False(result);
-        }
-        {
-            var result = value!.TryGetDateOnly(out var v);
-            Assert.False(result);
-        }
-        {
-            var result = value!.TryGetTimeOnly(out var v);
-            Assert.Equal(new TimeOnly(7, 32, 30), value!.GetTimeOnly());
-        }
-        {
-            var result = value!.TryGetNumber<int>(out var v);
-            Assert.False(result);
-        }
+
+        value!.TryGetInt64(out var _).Should().BeFalse();
+        value!.TryGetDouble(out var _).Should().BeFalse();
+        value!.TryGetBool(out var _).Should().BeFalse();
+        value!.TryGetDateTime(out var _).Should().BeFalse();
+        value!.TryGetDateTimeOffset(out var _).Should().BeFalse();
+        value!.TryGetDateOnly(out var _).Should().BeFalse();
+        value!.TryGetNumber<int>(out var _).Should().BeFalse();
     }
 
     [Fact]
@@ -502,14 +422,15 @@ value3 = 3
     {
         var value = document.RootNode["array"u8];
         var arrayValue = value!.GetArray();
-        Assert.Equal(3, arrayValue.Count);
-        Assert.Equal(1, arrayValue[0].GetInt64());
-        Assert.Equal(2, arrayValue[1].GetInt64());
-        Assert.Equal(3, arrayValue[2].GetInt64());
-        var arrayIndexValue = value!.GetArrayValue(0);
-        Assert.Equal(1, arrayIndexValue.GetInt64());
+        arrayValue.Select(i => i.GetInt64()).Should().Equal([1, 2, 3]);
+        arrayValue.Count.Should().Be(3);
+        arrayValue[0].GetInt64().Should().Be(1);
+        arrayValue[1].GetInt64().Should().Be(2);
+        arrayValue[2].GetInt64().Should().Be(3);
 
-        Assert.Equal("[1, 2, 3]", value!.GetString());
+        var arrayIndexValue = value!.GetArrayValue(0);
+        arrayIndexValue.GetInt64().Should().Be(1);
+        value!.GetString().Should().Be("[1, 2, 3]");
         Assert.Throws<CsTomlException>(() => value!.GetInt64());
         Assert.Throws<CsTomlException>(() => value!.GetDouble());
         Assert.Throws<CsTomlException>(() => value!.GetBool());
@@ -526,54 +447,29 @@ value3 = 3
         var value = document.RootNode["array"u8];
 
         {
-            var result = value!.TryGetArray(out var arrayValue);
-            Assert.Equal(3, arrayValue.Count);
-            Assert.Equal(1, arrayValue[0].GetInt64());
-            Assert.Equal(2, arrayValue[1].GetInt64());
-            Assert.Equal(3, arrayValue[2].GetInt64());
+            value!.TryGetArray(out var arrayValue).Should().BeTrue();
+            arrayValue.Select(i => i.GetInt64()).Should().Equal([1, 2, 3]);
+            arrayValue.Count.Should().Be(3);
+            arrayValue[0].GetInt64().Should().Be(1);
+            arrayValue[1].GetInt64().Should().Be(2);
+            arrayValue[2].GetInt64().Should().Be(3);
         }
         {
-            var result = value!.TryGetArrayValue(0, out var arrayIndexValue);
-            Assert.True(result);
-            Assert.Equal(1, arrayIndexValue.GetInt64());
+            value!.TryGetArrayValue(0, out var arrayIndexValue).Should().BeTrue();
+            arrayIndexValue.GetInt64().Should().Be(1);
         }
         {
-            var result = value!.TryGetString(out var v);
-            Assert.True(result);
-            Assert.Equal("[1, 2, 3]", v);
+            value!.TryGetString(out var v).Should().BeTrue();
+            v!.Should().Be("[1, 2, 3]");
         }
-        {
-            var result = value!.TryGetInt64(out var v);
-            Assert.False(result);
-        }
-        {
-            var result = value!.TryGetDouble(out var v);
-            Assert.False(result);
-        }
-        {
-            var result = value!.TryGetBool(out var v);
-            Assert.False(result);
-        }
-        {
-            var result = value!.TryGetDateTime(out var v);
-            Assert.False(result);
-        }
-        {
-            var result = value!.TryGetDateTimeOffset(out var v);
-            Assert.False(result);
-        }
-        {
-            var result = value!.TryGetDateOnly(out var v);
-            Assert.False(result);
-        }
-        {
-            var result = value!.TryGetTimeOnly(out var v);
-            Assert.False(result);
-        }
-        {
-            var result = value!.TryGetNumber<int>(out var v);
-            Assert.False(result);
-        }
+        value!.TryGetInt64(out var _).Should().BeFalse();
+        value!.TryGetDouble(out var _).Should().BeFalse();
+        value!.TryGetBool(out var _).Should().BeFalse();
+        value!.TryGetDateTime(out var _).Should().BeFalse();
+        value!.TryGetDateTimeOffset(out var _).Should().BeFalse();
+        value!.TryGetDateOnly(out var _).Should().BeFalse();
+        value!.TryGetTimeOnly(out var _).Should().BeFalse();
+        value!.TryGetNumber<int>(out var _).Should().BeFalse();
     }
 }
 

@@ -1,5 +1,6 @@
 ﻿
 using CsToml.Error;
+using FluentAssertions;
 
 namespace CsToml.Tests;
 
@@ -51,7 +52,6 @@ number2 = 123456
     public void DeserializeAndSerializeTest()
     {
         var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
-
         var serializeText = CsTomlSerializer.Serialize(document!);
     }
 
@@ -60,46 +60,13 @@ number2 = 123456
     {
         var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText)!;
 
-        Assert.Equal("value", document!.RootNode["key"u8].GetString());
-        Assert.Equal("value", document!.RootNode["first"u8]["second"u8]["third"u8].GetString());
-        Assert.Equal(123456, document!.RootNode["number"u8].GetInt64());
-        Assert.Equal("value", document!.RootNode["Table"u8]["test"u8]["key"u8].GetString());
-        Assert.Equal("value", document!.RootNode["arrayOfTables"u8]["test"u8][0]["key"u8].GetString());
-        Assert.Equal("inlinetable", document!.RootNode["inlineTable"u8]["key4"u8]["key"u8].GetString());
-
-        Assert.False(document!.RootNode["failed"u8].HasValue);
+        document!.RootNode["key"u8].GetString().Should().Be("value");
+        document!.RootNode["first"u8]["second"u8]["third"u8].GetString().Should().Be("value");
+        document!.RootNode["number"u8].GetInt64().Should().Be(123456);
+        document!.RootNode["Table"u8]["test"u8]["key"u8].GetString().Should().Be("value");
+        document!.RootNode["arrayOfTables"u8]["test"u8][0]["key"u8].GetString().Should().Be("value");
+        document!.RootNode["inlineTable"u8]["key4"u8]["key"u8].GetString().Should().Be("inlinetable");
+        document!.RootNode["failed"u8].HasValue.Should().BeFalse();
     }
-
-    [Fact]
-    public void GetValueTest()
-    {
-        //str = ""value""
-        //int = 123
-        //flt = 3.1415
-        //boolean = true
-        //odt1 = 1979 - 05 - 27T07: 32:00Z
-        //ldt1 = 1979 - 05 - 27T07: 32:00
-        //ldt2 = 1979 - 05 - 27T00: 32:00.999999
-        //ld1 = 1979 - 05 - 27
-        //lt1 = 07:32:00
-
-        var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
-
-        var v = document.RootNode["str"u8]!;
-        Assert.Throws<CsTomlException>(() => v.GetArray());
-        Assert.Throws<CsTomlException>(() => v.GetArrayValue(0));
-        Assert.Equal("value", v.GetString());
-        Assert.Throws<CsTomlException>(() => v.GetInt64());
-        Assert.Throws<CsTomlException>(() => v.GetDouble());
-        Assert.Throws<CsTomlException>(() => v.GetBool());
-        Assert.Throws<CsTomlException>(() => v.GetDateTime());
-        Assert.Throws<CsTomlException>(() => v.GetDateTimeOffset());
-        Assert.Throws<CsTomlException>(() => v.GetDateOnly());
-        Assert.Throws<CsTomlException>(() => v.GetTimeOnly());
-        Assert.Throws<CsTomlException>(() => v.GetNumber<long>());
-        Assert.Throws<CsTomlException>(() => v.GetTimeOnly());
-
-    }
-
 }
 

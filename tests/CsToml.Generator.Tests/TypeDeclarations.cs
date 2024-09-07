@@ -1,0 +1,179 @@
+﻿#pragma warning disable CS8618
+
+namespace CsToml.Generator.Tests;
+
+[TomlSerializedObject]
+internal partial class TypeZero
+{
+
+}
+
+[TomlSerializedObject]
+internal partial class TypeOne
+{
+    [TomlValueOnSerialized]
+    public int Value { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class TypeTwo
+{
+    [TomlValueOnSerialized]
+    public int Value { get; set; }
+
+    [TomlValueOnSerialized]
+    public int Value2 { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial record TypeRecord
+{
+    [TomlValueOnSerialized]
+    public int Value { get; set; }
+    [TomlValueOnSerialized]
+    public string Str { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial struct TestStruct
+{
+    [TomlValueOnSerialized]
+    public int Value { get; set; }
+
+    [TomlValueOnSerialized]
+    public string Str { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial record struct TestRecordStruct
+{
+    [TomlValueOnSerialized]
+    public int Value { get; set; }
+
+    [TomlValueOnSerialized]
+    public string Str { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial record TypeIgnore
+{
+    [TomlValueOnSerialized]
+    public int Value { get; set; }
+    public string Str { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class WithArray
+{
+    [TomlValueOnSerialized]
+    public long[] Value { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class WithArray2
+{
+    [TomlValueOnSerialized]
+    public long[][] Value { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class TomlPrimitive
+{
+    [TomlValueOnSerialized]
+    public string Str { get; set; }
+
+    [TomlValueOnSerialized]
+    public long Long { get; set; }
+
+    [TomlValueOnSerialized]
+    public double Float { get; set; }
+
+    [TomlValueOnSerialized]
+    public bool Boolean { get; set; }
+
+    [TomlValueOnSerialized]
+    public DateTimeOffset OffsetDateTime { get; set; }
+
+    [TomlValueOnSerialized]
+    public DateTime LocalDateTime { get; set; }
+
+    [TomlValueOnSerialized]
+    public DateOnly LocalDate { get; set; }
+
+    [TomlValueOnSerialized]
+    public TimeOnly LocalTime { get; set; }
+
+}
+
+[TomlSerializedObject]
+internal partial class NullableType
+{
+    [TomlValueOnSerialized]
+    public int? Value { get; set; }
+}
+
+[TomlSerializedObject]
+public partial class WithTuple
+{
+    [TomlValueOnSerialized]
+    public Tuple<int> One { get; set; } = default!;
+    [TomlValueOnSerialized]
+    public Tuple<int, int> Two { get; set; } = default!;
+    [TomlValueOnSerialized]
+    public Tuple<int, int, int> Three { get; set; } = default!;
+    [TomlValueOnSerialized]
+    public Tuple<int, int, int, int> Four { get; set; } = default!;
+    [TomlValueOnSerialized]
+    public Tuple<int, int, int, int, int> Five { get; set; } = default!;
+    [TomlValueOnSerialized]
+    public Tuple<int, int, int, int, int, int> Six { get; set; } = default!;
+    [TomlValueOnSerialized]
+    public Tuple<int, int, int, int, int, int, int> Seven { get; set; } = default!;
+    [TomlValueOnSerialized]
+    public Tuple<int, int, int, int, int, int, int, Tuple<int>> Eight { get; set; } = default!;
+}
+
+
+[TomlSerializedObject]
+public partial class WithValueTuple
+{
+    [TomlValueOnSerialized]
+    public ValueTuple<int> One { get; set; } = default!;
+    [TomlValueOnSerialized]
+    public ValueTuple<int, int> Two { get; set; } = default!;
+    [TomlValueOnSerialized]
+    public ValueTuple<int, int, int> Three { get; set; } = default!;
+    [TomlValueOnSerialized]
+    public ValueTuple<int, int, int, int> Four { get; set; } = default!;
+    [TomlValueOnSerialized]
+    public ValueTuple<int, int, int, int, int> Five { get; set; } = default!;
+    [TomlValueOnSerialized]
+    public ValueTuple<int, int, int, int, int, int> Six { get; set; } = default!;
+    [TomlValueOnSerialized]
+    public ValueTuple<int, int, int, int, int, int, int> Seven { get; set; } = default!;
+    [TomlValueOnSerialized]
+    public ValueTuple<int, int, int, int, int, int, int, ValueTuple<int>> Eight { get; set; } = default!;
+}
+
+
+[TomlSerializedObject]
+internal partial class TypeTable
+{
+    [TomlValueOnSerialized]
+    public TypeTable2 Table2 { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class TypeTable2
+{
+    [TomlValueOnSerialized]
+    public TypeTable3 Table3 { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class TypeTable3
+{
+    [TomlValueOnSerialized]
+    public string Value { get; set; }
+}
+

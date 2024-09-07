@@ -1,4 +1,5 @@
 using CsToml.Extensions;
+using FluentAssertions.Execution;
 
 namespace CsToml.Tests;
 
@@ -24,7 +25,7 @@ public class TomlTest
         }
         catch(Exception e)
         {
-            Assert.Fail($"TomlFile:{tomlFile} Message:{e}");
+            Execute.Assertion.FailWith($"TomlFile:{tomlFile} Message:{e}");
         }
     }
 
@@ -39,7 +40,7 @@ public class TomlTest
         {
             return;
         }
-        Assert.Fail($"TomlFile:{tomlFile}");
+        Execute.Assertion.FailWith($"TomlFile:{tomlFile}");
     }
 
     public static IEnumerable<object[]> ValidTomlFile()
