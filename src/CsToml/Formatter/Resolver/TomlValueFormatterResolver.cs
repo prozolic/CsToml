@@ -21,6 +21,12 @@ internal sealed class TomlValueFormatterResolver : ITomlValueFormatterResolver
                 Formatter = PrimitiveObjectFormatterResolver.Instance.GetFormatter<T>();
                 return;
             }
+            else if (typeof(T).IsEnum)
+            {
+                var enumFormatterType = typeof(EnumFormatter<>).MakeGenericType(typeof(T));
+                Formatter = Activator.CreateInstance(enumFormatterType) as ITomlValueFormatter<T>;
+                return;
+            }
             else
             {
                 var formatter = BuildinFormatterResolver.Instance.GetFormatter<T>();
