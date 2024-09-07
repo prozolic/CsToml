@@ -550,12 +550,12 @@ internal static class ExceptionHelper
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ThrowSerializationFailed(Type type)
     {
-        ThrowException($@"Serialization failed because the value ({type.Name}) is null.");
+        ThrowException($@"Serialization failed because the value ({type}) is null.");
     }
 
     internal static void ThrowDeserializationFailed(Type type)
     {
-        ThrowException($@"Cannot deserialize to {type.Name}.");
+        ThrowException($@"Cannot deserialize to {type}.");
     }
 
     internal static void ThrowInvalidTupleCount()

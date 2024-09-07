@@ -4,6 +4,7 @@ using CsToml.Utility;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace CsToml;
 
@@ -130,7 +131,7 @@ internal static class TomlCodes
 
     internal readonly struct Environment
     {
-        internal static readonly byte[] NewLine = OperatingSystem.IsWindows() ? [Symbol.CARRIAGE, Symbol.LINEFEED] : [Symbol.LINEFEED];
+        internal static readonly byte[] NewLine = Encoding.UTF8.GetBytes(System.Environment.NewLine);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
