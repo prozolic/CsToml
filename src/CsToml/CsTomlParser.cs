@@ -156,6 +156,9 @@ internal ref struct CsTomlParser
             }
             else
             {
+                if (CurrentState != ParserState.ParseEnd)
+                    return true;
+
                 CurrentState = ParserState.ParseEnd;
                 return false;
             }
