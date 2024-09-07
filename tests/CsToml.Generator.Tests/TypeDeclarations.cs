@@ -1,5 +1,8 @@
 ﻿#pragma warning disable CS8618
 
+using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
+
 namespace CsToml.Generator.Tests;
 
 [TomlSerializedObject]
@@ -177,3 +180,36 @@ internal partial class TypeTable3
     public string Value { get; set; }
 }
 
+[TomlSerializedObject]
+internal partial class TypeCollection
+{
+    [TomlValueOnSerialized]
+    public List<int> Value { get; set; }
+
+    [TomlValueOnSerialized]
+    public Stack<int> Value2 { get; set; }
+
+    [TomlValueOnSerialized]
+    public HashSet<int> Value3 { get; set; }
+
+    [TomlValueOnSerialized]
+    public SortedSet<int> Value4 { get; set; }
+
+    [TomlValueOnSerialized]
+    public Queue<int> Value5 { get; set; }
+
+    [TomlValueOnSerialized]
+    public LinkedList<int> Value6 { get; set; }
+
+    [TomlValueOnSerialized]
+    public ConcurrentQueue<int> Value7 { get; set; }
+
+    [TomlValueOnSerialized]
+    public ConcurrentStack<int> Value8 { get; set; }
+
+    [TomlValueOnSerialized]
+    public ConcurrentBag<int> Value9 { get; set; }
+
+    [TomlValueOnSerialized]
+    public ReadOnlyCollection<int> Value10 { get; set; }
+}

@@ -529,3 +529,70 @@ public class TypeTableTest
         type.Table2.Table3.Value.Should().Be("This is TypeTable3");
     }
 }
+
+public class TypeListTest
+{
+    [Fact]
+    public void Serialize()
+    {
+        var type = new TypeCollection()
+        {
+            Value = [1, 2, 3, 4, 5],
+            Value2 = new Stack<int>([5, 4, 3, 2, 1]),
+            Value3 = new HashSet<int>([1, 2, 3, 4, 5]),
+            Value4 = new SortedSet<int>([1, 2, 3, 4, 5]),
+            Value5 = new Queue<int>([1, 2, 3, 4, 5]),
+            Value6 = new LinkedList<int>([1, 2, 3, 4, 5]),
+            Value7 = new System.Collections.Concurrent.ConcurrentQueue<int>([1, 2, 3, 4, 5]),
+            Value8 = new System.Collections.Concurrent.ConcurrentStack<int>([5, 4, 3, 2, 1]),
+            Value9 = new System.Collections.Concurrent.ConcurrentBag<int>([5, 4, 3, 2, 1]),
+            Value10 = new System.Collections.ObjectModel.ReadOnlyCollection<int>([1, 2, 3, 4, 5])
+        };
+        using var bytes = CsTomlSerializer.Serialize(type);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value2 = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value3 = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value4 = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value5 = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value6 = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value7 = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value8 = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value9 = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value10 = [ 1, 2, 3, 4, 5 ]");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().Should().Equal(expected);
+    }
+
+    [Fact]
+    public void Deserialize()
+    {
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value2 = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value3 = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value4 = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value5 = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value6 = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value7 = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value8 = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value9 = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value10 = [ 1, 2, 3, 4, 5 ]");
+        writer.Flush();
+
+        var type = CsTomlSerializer.Deserialize<TypeCollection>(buffer.WrittenSpan);
+        type.Value.Should().Equal([1, 2, 3, 4, 5]);
+        type.Value2.Should().Equal([1, 2, 3, 4, 5]);
+        type.Value3.Should().Equal([1, 2, 3, 4, 5]);
+        type.Value4.Should().Equal([1, 2, 3, 4, 5]);
+        type.Value5.Should().Equal([1, 2, 3, 4, 5]);
+        type.Value6.Should().Equal([1, 2, 3, 4, 5]);
+        type.Value7.Should().Equal([1, 2, 3, 4, 5]);
+        type.Value8.Should().Equal([1, 2, 3, 4, 5]);
+        type.Value9.Should().Equal([1, 2, 3, 4, 5]);
+        type.Value10.Should().Equal([1, 2, 3, 4, 5]);
+    }
+}
