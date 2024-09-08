@@ -81,7 +81,6 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
 
     static {{typeMeta.TypeName}} ITomlSerializedObject<{{typeMeta.TypeName}}>.Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
-        // TODO: implemented...
 {{GenerateDeserializePart(typeMeta)}}
     }
 
