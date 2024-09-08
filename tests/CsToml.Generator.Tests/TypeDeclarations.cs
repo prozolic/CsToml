@@ -181,6 +181,23 @@ internal partial class TypeTable3
 }
 
 [TomlSerializedObject]
+internal partial class TypeTomlSerializedObjectList
+{
+    [TomlValueOnSerialized]
+    public List<TypeTable2> Table2 { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class TypeTomlSerializedObjectList2
+{
+    [TomlValueOnSerialized]
+    public int Value { get; set; }
+
+    [TomlValueOnSerialized]
+    public List<TypeTable> Table { get; set; }
+}
+
+[TomlSerializedObject]
 internal partial class TypeCollection
 {
     [TomlValueOnSerialized]
@@ -213,3 +230,18 @@ internal partial class TypeCollection
     [TomlValueOnSerialized]
     public ReadOnlyCollection<int> Value10 { get; set; }
 }
+
+[TomlSerializedObject]
+internal partial class TypeDictionary
+{
+    [TomlValueOnSerialized()]
+    public IDictionary<string, object?> Value { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class TypeAlias
+{
+    [TomlValueOnSerialized(aliasName:"alias")]
+    public string Value { get; set; }
+}
+
