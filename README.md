@@ -77,8 +77,8 @@ Built-in support type
 These types can be serialized/deserialize by default.
 
 * .NET Built-in types(`bool`, `long`, `double`, `string` etc)
-* `DateTime`, `DateTimeOffset`, `DateOnly`, `TimeOnly`, `TimeSpan`, `Enum`
-* `Half`, `Int128`, `UInt128`, `BigInteger`
+* `DateTime`, `DateTimeOffset`, `DateOnly`, `TimeOnly`, `TimeSpan`
+* `Enum`, `Half`, `Int128`, `UInt128`, `BigInteger`
 * `Uri`, `Version`, `Guid`, `Nullable`
 * `T[]`, `Memory<>`, `ReadOnlyMemory<>`
 * `List<>`, `Stack<>`, `HashSet<>`, `SortedSet<>`, `Queue<>`, `LinkedList<>`, `ReadOnlyCollection<>`
