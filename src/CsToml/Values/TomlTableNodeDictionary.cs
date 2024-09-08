@@ -30,17 +30,19 @@ internal class TomlTableNodeDictionary
 
     public int Count => count;
 
+    [DebuggerStepThrough]
     public TomlTableNodeDictionary()
     {
         buckets = [];
         entries = [];
     }
 
+    [DebuggerStepThrough]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryAdd(TomlDotKey key, TomlTableNode value)
+    public bool TryAdd(TomlDottedKey key, TomlTableNode value)
         => TryAddCore(key, key.GetHashCode(), value);
 
-    private bool TryAddCore(TomlDotKey key, int keyHashCode, TomlTableNode value)
+    private bool TryAddCore(TomlDottedKey key, int keyHashCode, TomlTableNode value)
     {
         if (buckets.Length == 0)
             Initialize(0);
@@ -80,7 +82,7 @@ internal class TomlTableNodeDictionary
         return true;
     }
 
-    public bool TryGetValueOrAdd(TomlDotKey key, Func<TomlTableNode> valueFactory, out TomlTableNode? existingValue, out TomlTableNode? addedValue)
+    public bool TryGetValueOrAdd(TomlDottedKey key, Func<TomlTableNode> valueFactory, out TomlTableNode? existingValue, out TomlTableNode? addedValue)
     {
         var hashCode = key.GetHashCode();
         if (TryGetValueCore(key.Value, hashCode, out existingValue))
@@ -94,18 +96,22 @@ internal class TomlTableNodeDictionary
         return false;
     }
 
+    [DebuggerStepThrough]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool ContainsKey(TomlDotKey key)
+    public bool ContainsKey(TomlDottedKey key)
         => TryGetValue(key, out var _);
 
+    [DebuggerStepThrough]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool ContainsKey(ReadOnlySpan<byte> key)
         => TryGetValue(key, out var _);
 
+    [DebuggerStepThrough]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetValue(TomlDotKey key, out TomlTableNode? value)
+    public bool TryGetValue(TomlDottedKey key, out TomlTableNode? value)
         => TryGetValueCore(key.Value, key.GetHashCode(), out value);
 
+    [DebuggerStepThrough]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGetValue(ReadOnlySpan<byte> key, out TomlTableNode? value)
         => TryGetValueCore(key, ByteArrayHash.ToInt32(key), out value);
@@ -187,7 +193,7 @@ internal class TomlTableNodeDictionary
     {
         public int hashCode;
         public int next;
-        public TomlDotKey key;
+        public TomlDottedKey key;
         public TomlTableNode value;
     }
 
@@ -195,9 +201,9 @@ internal class TomlTableNodeDictionary
     {
         private readonly TomlTableNodeDictionary dictionary;
         private int index;
-        private KeyValuePair<TomlDotKey, TomlTableNode> current;
+        private KeyValuePair<TomlDottedKey, TomlTableNode> current;
 
-        public readonly KeyValuePair<TomlDotKey, TomlTableNode> Current => current;
+        public readonly KeyValuePair<TomlDottedKey, TomlTableNode> Current => current;
 
         public readonly KeyValuePairEnumerator GetEnumerator() => this;
 
@@ -215,7 +221,7 @@ internal class TomlTableNodeDictionary
                 ref var entry = ref dictionary.entries[index++];
                 if (entry.next >= -1)
                 {
-                    current = new KeyValuePair<TomlDotKey, TomlTableNode>(entry.key, entry.value);
+                    current = new KeyValuePair<TomlDottedKey, TomlTableNode>(entry.key, entry.value);
                     return true;
                 }
             }

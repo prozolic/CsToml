@@ -20,7 +20,7 @@ internal sealed partial class TomlInlineTable : TomlValue
     {}
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal TomlTableNode AddKeyValue(ReadOnlySpan<TomlDotKey> keyArray, TomlValue value, TomlTableNode? searchRootNode)
+    internal TomlTableNode AddKeyValue(ReadOnlySpan<TomlDottedKey> keyArray, TomlValue value, TomlTableNode? searchRootNode)
         => inlineTable.AddKeyValue(keyArray, value, searchRootNode, []);
 
     internal IDictionary<string, object?> GetDictionary()
@@ -31,7 +31,7 @@ internal sealed partial class TomlInlineTable : TomlValue
         writer.BeginInlineTable();
         writer.WriteSpace();
 
-        var keys = new List<TomlDotKey>();
+        var keys = new List<TomlDottedKey>();
         ToTomlStringCore(ref writer, RootNode, keys);
 
         writer.WriteSpace();
@@ -39,7 +39,7 @@ internal sealed partial class TomlInlineTable : TomlValue
         return false;
     }
 
-    private void ToTomlStringCore<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlTableNode parentNode, List<TomlDotKey> keys)
+    private void ToTomlStringCore<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlTableNode parentNode, List<TomlDottedKey> keys)
         where TBufferWriter : IBufferWriter<byte>
     {
         var count = 0;

@@ -151,7 +151,7 @@ internal class TomlTableNode
         this.comments.AddRange(comments);
     }
 
-    internal TomlTableNode AddKeyValue(TomlDotKey key, TomlValue value, IReadOnlyCollection<TomlString>? comments)
+    internal TomlTableNode AddKeyValue(TomlDottedKey key, TomlValue value, IReadOnlyCollection<TomlString>? comments)
     {
         var newNode = new TomlTableNode(value);
         if (comments?.Count > 0)
@@ -167,7 +167,7 @@ internal class TomlTableNode
         return newNode;
     }
 
-    internal NodeStatus TryGetOrAddChildNode(TomlDotKey key, out TomlTableNode getOrAddChildNode)
+    internal NodeStatus TryGetOrAddChildNode(TomlDottedKey key, out TomlTableNode getOrAddChildNode)
     {
         if (nodes == null)
         {

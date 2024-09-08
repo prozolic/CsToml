@@ -49,7 +49,7 @@ internal sealed class IDictionaryFormatter : ITomlValueFormatter<IDictionary<str
         writer.BeginInlineTable();
         foreach (var (key, value) in target)
         {
-            TomlDotKey.ParseKey(key).ToTomlString(ref writer);
+            TomlDottedKey.ParseKey(key).ToTomlString(ref writer);
             writer.WriteEqual();
             PrimitiveObjectFormatter.Instance.Serialize(ref writer, value!, options);
 

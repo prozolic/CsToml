@@ -4,13 +4,13 @@ using System.Diagnostics;
 namespace CsToml.Debugger;
 
 [DebuggerDisplay("Key='{Key}', Value='{Value}'")]
-internal sealed class TomlTableNodeKeyValuePairDebugView(KeyValuePair<TomlDotKey, TomlTableNode> pair)
+internal sealed class TomlTableNodeKeyValuePairDebugView(KeyValuePair<TomlDottedKey, TomlTableNode> pair)
 {
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-    private readonly KeyValuePair<TomlDotKey, TomlTableNode> rawPair = pair;
+    private readonly KeyValuePair<TomlDottedKey, TomlTableNode> rawPair = pair;
 
     [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
-    public TomlDotKey Key => rawPair.Key;
+    public TomlDottedKey Key => rawPair.Key;
 
     [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
     public TomlTableNode Value => rawPair.Value;

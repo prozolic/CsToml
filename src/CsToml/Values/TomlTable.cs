@@ -33,7 +33,7 @@ internal sealed partial class TomlTable : TomlValue
 
     internal TomlTable() : base() { }
 
-    internal TomlTableNode AddKeyValue(ReadOnlySpan<TomlDotKey> dotKeys, TomlValue value, TomlTableNode? searchRootNode, IReadOnlyCollection<TomlString>? comments)
+    internal TomlTableNode AddKeyValue(ReadOnlySpan<TomlDottedKey> dotKeys, TomlValue value, TomlTableNode? searchRootNode, IReadOnlyCollection<TomlString>? comments)
     {
         var currentNode = searchRootNode ?? RootNode;
         var lastKey = dotKeys[^1];
@@ -66,7 +66,7 @@ internal sealed partial class TomlTable : TomlValue
         return currentNode.AddKeyValue(lastKey, value, comments);
     }
 
-    internal void AddTableHeader(ReadOnlySpan<TomlDotKey> dotKeys, IReadOnlyCollection<TomlString>? comments, out TomlTableNode? newNode)
+    internal void AddTableHeader(ReadOnlySpan<TomlDottedKey> dotKeys, IReadOnlyCollection<TomlString>? comments, out TomlTableNode? newNode)
     {
         var node = RootNode;
         var addedNewNode = false;
@@ -123,7 +123,7 @@ internal sealed partial class TomlTable : TomlValue
         newNode = node;
     }
 
-    internal void AddArrayOfTablesHeader(ReadOnlySpan<TomlDotKey> dotKeys, IReadOnlyCollection<TomlString>? comments, out TomlTableNode? newNode)
+    internal void AddArrayOfTablesHeader(ReadOnlySpan<TomlDottedKey> dotKeys, IReadOnlyCollection<TomlString>? comments, out TomlTableNode? newNode)
     {
         var currentNode = RootNode;
         var addedNewNode = false;
@@ -196,14 +196,14 @@ internal sealed partial class TomlTable : TomlValue
 
     internal override bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
-        var keys = new List<TomlDotKey>();
-        var tableNodes = new List<TomlDotKey>();
+        var keys = new List<TomlDottedKey>();
+        var tableNodes = new List<TomlDottedKey>();
         ToTomlStringCore(ref writer, RootNode, keys, tableNodes);
 
         return true;
     }
 
-    private void ToTomlStringCore<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlTableNode parentNode, List<TomlDotKey> keys, List<TomlDotKey> tableHeaderKeys)
+    private void ToTomlStringCore<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlTableNode parentNode, List<TomlDottedKey> keys, List<TomlDottedKey> tableHeaderKeys)
         where TBufferWriter : IBufferWriter<byte>
     {
         if (parentNode.IsArrayOfTablesHeader)
@@ -309,7 +309,7 @@ internal sealed partial class TomlTable : TomlValue
         keys.Clear(); // clear subkey
     }
 
-    private void WriterKey<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlDotKey key, bool isGroupingProperty)
+    private void WriterKey<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlDottedKey key, bool isGroupingProperty)
         where TBufferWriter : IBufferWriter<byte>
     {
         key.ToTomlString(ref writer);
@@ -319,7 +319,7 @@ internal sealed partial class TomlTable : TomlValue
         }
     }
 
-    private void WriteKeyValueAndNewLine<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlDotKey key, TomlValue value)
+    private void WriteKeyValueAndNewLine<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlDottedKey key, TomlValue value)
         where TBufferWriter : IBufferWriter<byte>
     {
         WriterKey(ref writer, key, false);
@@ -328,7 +328,7 @@ internal sealed partial class TomlTable : TomlValue
         writer.WriteNewLine();
     }
 
-    private void WriteTableHeader<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<TomlDotKey> keysSpan)
+    private void WriteTableHeader<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<TomlDottedKey> keysSpan)
         where TBufferWriter : IBufferWriter<byte>
     {
         writer.BeginTableHeader();
@@ -344,7 +344,7 @@ internal sealed partial class TomlTable : TomlValue
         writer.WriteNewLine();
     }
 
-    private void WriteArrayOfTablesHeader<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<TomlDotKey> keysSpan)
+    private void WriteArrayOfTablesHeader<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<TomlDottedKey> keysSpan)
         where TBufferWriter : IBufferWriter<byte>
     {
         writer.BeginArrayOfTablesHeader();

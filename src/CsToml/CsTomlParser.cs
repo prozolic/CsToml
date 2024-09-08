@@ -3,6 +3,7 @@ using CsToml.Utility;
 using CsToml.Values;
 using System.Buffers;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace CsToml;
 
@@ -19,10 +20,10 @@ internal enum ParserState : byte
 
 internal ref struct DottedKeyEnumerator
 {
-    private ReadOnlySpan<TomlDotKey> keys;
+    private ReadOnlySpan<TomlDottedKey> keys;
     private int index;
 
-    internal DottedKeyEnumerator(ReadOnlySpan<TomlDotKey> keys)
+    internal DottedKeyEnumerator(ReadOnlySpan<TomlDottedKey> keys)
     {
         this.keys = keys;
         index = 0;
@@ -47,7 +48,7 @@ internal ref struct CsTomlParser
 {
     private CsTomlReader reader;
     private TomlValue? comment;
-    private ExtendableArray<TomlDotKey> dottedKeys;
+    private ExtendableArray<TomlDottedKey> dottedKeys;
     private TomlValue? value;
     private CsTomlLineNumberException? exception;
 
@@ -55,42 +56,36 @@ internal ref struct CsTomlParser
 
     public ParserState CurrentState { get; private set; }
 
-    public CsTomlParser(ReadOnlySpan<byte> tomlText)
-    {
-        reader = new CsTomlReader(tomlText);
-        dottedKeys = new ExtendableArray<TomlDotKey>(16);
-        CurrentState = ParserState.ParseStart;
-    }
-
-    public CsTomlParser(in ReadOnlySequence<byte> tomlText)
-    {
-        reader = new CsTomlReader(tomlText);
-        dottedKeys = new ExtendableArray<TomlDotKey>(16);
-        CurrentState = ParserState.ParseStart;
-    }
-
     [DebuggerStepThrough]
     internal CsTomlParser(ref Utf8SequenceReader sequenceReader)
     {
         reader = new CsTomlReader(ref sequenceReader);
-        dottedKeys = new ExtendableArray<TomlDotKey>(16);
+        dottedKeys = new ExtendableArray<TomlDottedKey>(16);
         CurrentState = ParserState.ParseStart;
     }
 
+    [DebuggerStepThrough]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Return()
-    {
-        dottedKeys.Return();
-    }
+        => dottedKeys.Return();
 
+    [DebuggerStepThrough]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly CsTomlLineNumberException? GetException()
         => exception;
 
+    [DebuggerStepThrough]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly TomlValue? GetComment()
         => comment;
 
-    internal readonly ReadOnlySpan<TomlDotKey> GetDottedKeySpan()
+    [DebuggerStepThrough]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal readonly ReadOnlySpan<TomlDottedKey> GetDottedKeySpan()
         => dottedKeys.AsSpan();
 
+    [DebuggerStepThrough]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly TomlValue? GetValue()
         => value;
 

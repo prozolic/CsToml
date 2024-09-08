@@ -8,10 +8,10 @@ using System.Text.Unicode;
 namespace CsToml.Values;
 
 [DebuggerDisplay("{Utf16String}")]
-internal sealed class TomlDotKey :
+internal sealed class TomlDottedKey :
     TomlValue,
-    ITomlStringParser<TomlDotKey>,
-    IEquatable<TomlDotKey?>
+    ITomlStringParser<TomlDottedKey>,
+    IEquatable<TomlDottedKey?>
 {
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private byte[] bytes;
@@ -27,12 +27,12 @@ internal sealed class TomlDotKey :
     [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
     public string Utf16String => Utf8Helper.ToUtf16(Value);
 
-    public static TomlDotKey Parse(ReadOnlySpan<byte> value, CsTomlStringType type)
+    public static TomlDottedKey Parse(ReadOnlySpan<byte> value, CsTomlStringType type)
     {
-        return new TomlDotKey(value, type);
+        return new TomlDottedKey(value, type);
     }
 
-    public static TomlDotKey ParseKey(ReadOnlySpan<byte> utf16String)
+    public static TomlDottedKey ParseKey(ReadOnlySpan<byte> utf16String)
     {
         if (Utf8Helper.ContainInvalidSequences(utf16String))
             ExceptionHelper.ThrowInvalidCodePoints();
@@ -61,27 +61,27 @@ internal sealed class TomlDotKey :
         }
         if (barekey)
         {
-            return new TomlDotKey(utf16String, CsTomlStringType.Unquoted);
+            return new TomlDottedKey(utf16String, CsTomlStringType.Unquoted);
         }
 
         if (backslash && !singleQuoted)
         {
-            return new TomlDotKey(utf16String, CsTomlStringType.Basic);
+            return new TomlDottedKey(utf16String, CsTomlStringType.Basic);
         }
 
         if (doubleQuoted && !singleQuoted)
         {
-            return new TomlDotKey(utf16String, CsTomlStringType.Literal);
+            return new TomlDottedKey(utf16String, CsTomlStringType.Literal);
         }
 
         if (Utf8Helper.ContainsEscapeChar(utf16String, true))
         {
-            return new TomlDotKey(utf16String, CsTomlStringType.Literal);
+            return new TomlDottedKey(utf16String, CsTomlStringType.Literal);
         }
-        return new TomlDotKey(utf16String, CsTomlStringType.Basic);
+        return new TomlDottedKey(utf16String, CsTomlStringType.Basic);
     }
 
-    public static TomlDotKey ParseKey(ReadOnlySpan<char> utf16String)
+    public static TomlDottedKey ParseKey(ReadOnlySpan<char> utf16String)
     {
         var writer = RecycleArrayPoolBufferWriter<byte>.Rent();
         try
@@ -95,7 +95,7 @@ internal sealed class TomlDotKey :
         }
     }
 
-    public TomlDotKey(ReadOnlySpan<byte> value, CsTomlStringType type = CsTomlStringType.Basic) : base()
+    public TomlDottedKey(ReadOnlySpan<byte> value, CsTomlStringType type = CsTomlStringType.Basic) : base()
     {
         bytes = value.ToArray();
         TomlStringType = type;
@@ -155,12 +155,12 @@ internal sealed class TomlDotKey :
     public override bool Equals(object? obj)
     {
         if (obj == null) return false;
-        if (obj.GetType() != typeof(TomlDotKey)) return false;
+        if (obj.GetType() != typeof(TomlDottedKey)) return false;
 
-        return Equals((TomlDotKey)obj);
+        return Equals((TomlDottedKey)obj);
     }
 
-    public bool Equals(TomlDotKey? other)
+    public bool Equals(TomlDottedKey? other)
     {
         if (other == null) return false;
 
@@ -176,7 +176,7 @@ internal sealed class TomlDotKey :
 
 internal static class CsTomlDotKeyExtensions
 {
-    public static string GetJoinName(this ReadOnlySpan<TomlDotKey> key)
+    public static string GetJoinName(this ReadOnlySpan<TomlDottedKey> key)
     {
         var bufferWriter = RecycleArrayPoolBufferWriter<byte>.Rent();
         try
