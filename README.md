@@ -1,14 +1,16 @@
 [CsToml - TOML Parser/Serializer  for .NET](https://prozolic.github.io/CsToml)
 ===
 
+[![MIT License](https://img.shields.io/github/license/prozolic/CsToml)](LICENSE)
+[![NuGet](https://img.shields.io/nuget/v/CsToml)](https://www.nuget.org/packages/CsToml)
+[![NuGet](https://img.shields.io/nuget/v/CsToml.Extensions)](https://www.nuget.org/packages/CsToml.Extensions)
+[![NuGet](https://img.shields.io/nuget/v/CsToml.Generator)](https://www.nuget.org/packages/CsToml.Generator/)
+
 CsToml is TOML Parser/Serializer for .NET.  
 For more information about TOML, visit the official website at [https://toml.io/en/](https://toml.io/en/)
 
 > [!NOTE]
-> It is currently in preview. The library name and API may undergo breaking changes.  
-> Currently he latest version is CsToml Ver.1.0.6, CsToml.Extensions Ver.1.0.3, and CsToml.Generator Ver.1.0.2.  
-> The API specifications have changed significantly in the latest versions of each library.
-> The next version will be released as the official version.
+> The officially released versions are CsToml Ver. 1.1.0, CsToml.Extensions Ver. 1.1.0, and CsToml.Generator Ver. 1.1.0.
 
 ```csharp
 using CsToml;
@@ -21,12 +23,10 @@ number = 123
 
 var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
 
-if (document!.TryFind("key"u8, out var value))
+if (document!.RootNode["key"u8].TryGetString(out var value))
 {
-    var str = value!.GetString(); // value
-    Console.WriteLine($"key = {str}"); // key = value
+    Console.WriteLine($"key = {value}"); // key = value
 }
-
 Console.WriteLine($"key = {document!.RootNode["key"u8].GetString()}"); // key = value
 
 using var serializedTomlText = CsTomlSerializer.Serialize(document);
@@ -41,23 +41,23 @@ Table of Contents
 
 * [Feature](#feature)
 * [Installation](#installation)
-* [Deserialize a toml format string to TomlDocument](#deserialize-a-toml-format-string-to-tomldocument)
-* [Serialize TomlDocument](#serialize-tomldocument)
+* [Built-in support type](#built-in-support-type)
+* [Serialize and deserialize TomlDocument](#serialize-and-deserialize-tomldocument)
 * [Find values from TomlDocument](#find-values-from-tomldocument)
-* [Casting a TOML value](#casting-a-toml-value)
-* [Serialize and deserialize custom classes](#serialize-and-deserialize-custom-classes)
-* [Extensions](#extensions)
-* [Third Party Libraries](#third-party-libraries)
+* [Serialize and deserialize custom classes (CsToml.Generator)](#serialize-and-deserialize-custom-classes-cstomlgenerator)
+* [Extensions (CsToml.Extensions)](#extensions-cstomlextensions)
 * [UnitTest](#unittest)
 * [License](#license)
 
 Feature
 ---
 
-- Compatible with [TOML v1.0.0](https://toml.io/en/v1.0.0) specification.  
+- [TOML v1.0.0](https://toml.io/en/v1.0.0) supported
 - Implemented in .NET 8 and C# 12.(supports .NET 8 or later. )  
 - Supports I/O APIs (`IBufferWriter<byte>`, `ReadOnlySpan<byte>`, `ReadOnlySequence<byte>`)  
 - By parsing directly in UTF-8 (byte array) instead of UTF-16 (strings), low allocation and high speed are achieved.  
+- All standard [TOML v1.0.0 test cases](https://github.com/toml-lang/toml-test/tree/master/tests) are passed..
+- The serialization interface and implementation is influenced by [MemoryPack](https://github.com/Cysharp/MemoryPack) and [VYaml](https://github.com/hadashiA/VYaml).
 
 Installation
 ---
@@ -66,15 +66,38 @@ This library is distributed via NuGet.
 
 > PM> Install-Package [CsToml](https://www.nuget.org/packages/CsToml/)
 
-Additional features are available by installing optional documents.(learn more in our [extensions section](#extensions))
+Additional features are available by installing optional documents.(learn more in our [extensions section](#extensions-cstomlextensions))
 
 > PM> Install-Package [CsToml.Extensions](https://www.nuget.org/packages/CsToml.Extensions/)  
 > PM> Install-Package [CsToml.Generator](https://www.nuget.org/packages/CsToml.Generator/)  
 
-Deserialize a toml format string to `TomlDocument`
+Built-in support type
 ---
 
-It can deserialize (parse) from a UTF8 string (`byte[], ReadOnlySpan<byte>`) in TOML format.
+These types can be serialized/deserialize by default.
+
+* .NET Built-in types(`bool`, `long`, `double`, `string` etc)
+* `DateTime`, `DateTimeOffset`, `DateOnly`, `TimeOnly`, `TimeSpan`, `Enum`
+* `Half`, `Int128`, `UInt128`, `BigInteger`
+* `Uri`, `Version`, `Guid`, `Nullable`
+* `T[]`, `Memory<>`, `ReadOnlyMemory<>`
+* `List<>`, `Stack<>`, `HashSet<>`, `SortedSet<>`, `Queue<>`, `LinkedList<>`, `ReadOnlyCollection<>`
+* `ConcurrentQueue<>`, `ConcurrentStack<>`, `ConcurrentBag<>`
+* `IEnumerable<>`, `ICollection<>`, `IReadOnlyCollection<>`, `IList<>`, `IReadOnlyList<>`, `ISet<>`, `IReadOnlySet<>`
+* `Dictionary<string, object?>`, `IDictionary<string, object?>`
+* `KeyValuePair<>`, `Tuple<,...>`, `ValueTuple<,...>`
+
+Serialize and deserialize `TomlDocument`
+---
+
+By specifying `TomlDocument`, serialization and deserialization can be performed while preserving the TOML data structure.
+Call `CsTomlSerializer.Deserialize<TomlDocument>(tomlText)` to deserialize a UTF-8 string (`ReadOnlySpan<byte>` or `ReadOnlySequence<byte>`) in TOML format.
+The second argument is `CsTomlSerializerOptions`, which does not need to be specified explicitly at this time.
+It may be used to add optional features in the future.   
+
+Call `CsTomlSerializer.Serialize` to Serialize `TomlDocument`.
+You can return a ByteMemoryResult or get a utf8 byte array via IBufferWriter<byte>.
+
 
 ```csharp
 var tomlText = @"
@@ -83,11 +106,18 @@ number = 123
 "u8;
 
 var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
+
+// The first is obtained by ByteMemoryResult.
+using var result = CsTomlSerializer.Serialize(document);
+Console.WriteLine(Encoding.UTF8.GetString(result.ByteSpan));
+
+// The second is obtained via IBufferWriter<byte>.
+var bufferWriter = new ArrayBufferWriter<byte>();
+CsTomlSerializer.Serialize(ref bufferWriter, document);
 ```
 
-Call `CsTomlSerializer.Deserialize<TomlDocument>(tomlText)` to deserialize a UTF-8 string (`ReadOnlySpan<byte>` or `ReadOnlySequence<byte>`) in TOML format.
-The second argument is `CsTomlSerializerOptions`, which does not need to be specified explicitly at this time.
-It may be used to add optional features in the future.  
+If a syntax error is found during deserialization, an `CsTomlSerializeException` is thrown after deserialization.
+The contents of the thrown exception can be viewed at `CsTomlException.InnerException`.
 
 ```csharp
 var tomlText = @"
@@ -110,226 +140,115 @@ catch(CsTomlSerializeException ctse)
 }
 ```
 
-If a syntax error is found during deserialization, an `CsTomlSerializeException` is thrown after deserialization.
-The contents of the thrown exception can be viewed at `CsTomlException.InnerException`.
-
-Serialize `TomlDocument`
----
-
-Call `CsTomlSerializer.Serialize` to Serialize `TomlDocument`.
-You can return a ByteMemoryResult or get a utf8 byte array via IBufferWriter<byte>.
-
-```csharp
-var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
-
-// The first is obtained by ByteMemoryResult.
-using var result = CsTomlSerializer.Serialize(document);
-Console.WriteLine(Encoding.UTF8.GetString(result.ByteSpan));
-
-// The second is obtained via IBufferWriter<byte>.
-var bufferWriter = new ArrayBufferWriter<byte>();
-CsTomlSerializer.Serialize(ref bufferWriter, document);
-```
-
 Find values from `TomlDocument`
 ---
 
-```csharp
-var tomlText = @"
-key = ""value""
-number = 123
-"u8;
-
-var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
-
-var value = document!.Find("key"u8)!.GetString();
-Console.WriteLine($"key = {value}"); // key = value
-
-if (document!.TryFind("key"u8, out var value2))
-{
-    var str = value2!.GetString(); // value
-    Console.WriteLine($"key = {str}"); // key = value
-}
-```
-
-You can get a `TomlValue` by calling `Find`, `TryFind`.
-You can call the API defined in `TomlValue` to convert the value to the corresponding type.
+It can be obtained via indexers(`[ReadOnlySpan<char>]`,`[ReadOnlySpan<byte>]`,`[int index]`) from `TomlDocument.RootNode` property.
 
 ```csharp
 var tomlText = @"
-array = [1, 2, 3]
-inlineTable = { key = ""value"", number = 123 }
+key = 123
+dotted.keys = ""value""
+array = [1, ""2"", 3]
+inlineTable = { key = ""value2"", number = 123 }
+configurations = [1, {key = [ { key2 = [""VALUE""]}]}]
 
 [table]
-key = ""value""
+key = ""value3""
 
 [[arrayOfTables]]
-key = ""value""
+key = ""value4""
 
 [[arrayOfTables]]
 number = 123
 "u8;
 
 var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
-// Array
-{
-    var tomlArray = document!.Find("array"u8);
-    foreach (var tomlValue in tomlArray!.GetArray())
-    {
-        var value = tomlValue!.GetInt64(); // 1, 2, 3
-    }
-}
-// InlineTable
-{
-    var tomlInlineTable = document!.Find("inlineTable"u8)!.Find("key"u8);
-    var tomlInlineTable2 = document!.Find("inlineTable.key"u8, isDottedKeys:true);
-   var value = tomlInlineTable!.GetString(); // "value"
-}
-// Table
-{
-    var tomlValue = document!.Find("table"u8, "key"u8);
-    var value = tomlValue!.GetString(); // "value"
-}
-// ArrayOfTables
-{
-    var tomlValue = document!.Find("arrayOfTables"u8, 0, "key"u8);  // "value"
-    var value = tomlValue!.GetString(); // "value"
-}
+
+var key = document!.RootNode["key"u8].GetInt64();   // 123
+var dottedKeys = document!.RootNode["dotted"u8]["keys"u8].GetString();  // "value"
+var array = document!.RootNode["array"u8].GetArray();   // [1, 2, 3]
+var item1 = array[0].GetInt64();    // 1
+var item2 = array[1].GetString();   // "2"
+var item3 = array[2].GetInt64();   // 3
+// Same as "array[0].GetInt64()"
+var item1_2 = document!.RootNode["array"u8].GetArrayValue(0).GetInt64();
+var inlineTable = document!.RootNode["inlineTable"u8]["key"u8].GetString();  // "value2"
+var configurations = document!.RootNode["configurations"u8][1]["key"u8][0]["key2"u8][0].GetString(); // "VALUE"
+
+var table = document!.RootNode["table"u8]["key"u8].GetString();  // "value3"
+var arrayOfTables = document!.RootNode["arrayOfTables"u8][0]["key"u8].GetString();  // "value4"
+var arrayOfTables2 = document!.RootNode["arrayOfTables"u8][1]["number"u8].GetString();  // 123
+
+var tuple = document!.RootNode["array"u8].GetValue<Tuple<long, string, long>>(); // Tuple<long, string, long>(1, "2", 3)
 ```
 
-The same search can be performed on array, tables, arrays of tables, and inline tables.
-These APIs have several overload methods that can be used for different purposes, such as retrieving table values or table array values.
-
-
-```csharp
-var tomlText = @"
-dotted.keys = ""value""
-
-"u8;
-
-var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
-if (document!.TryFind(["dotted"u8, "keys"u8], out var tomlValue))
-{
-    var value = tomlValue!.GetString(); // "value"
-}
-if (document!.TryFind("dotted.keys"u8, out var tomlValue2, isDottedKeys: true))
-{
-    var value2 = tomlValue2!.GetString(); // "value"
-}
-var value3 = document!.RootNode["dotted"u8]["keys"u8].GetString(); // "value"
-```
-
-There are three ways to search with the dotted key.
-The first is to search using `ReadOnlySpan<ByteArray>` as the key.
-Collection expressions have been available since C#12, making it convenient to create `ReadOnlySpan<ByteArray>` as well as initialize arrays.
-
-The second is to include a dot in the key string.
-If the call is made with `isDottedKeys:true` as an argument, the keys are interpreted as dotted keys and searched.
-For example, if the key is “A.B”, the table “A” containing the key “B” is searched.
-
-The third is a search using the `TomlDocument.RootNode` property and indexer.
-This gives `TomlDocumentNode` instead of `TomlValue`, but the value can be retrieved using the same API as `TomlValue`.
-Also, if you have a complex configuration, it is easier to understand and implement using this method.
-
-Casting a TOML value
----
-
-Each TOML value type can be cast as follows.
-
-| TOML Value Type        | Castable types from `TomlValue`                                                                          |
-|:-----------------------|:-----------------------------------------------------------------------------------------------------------|
-| `String`               | `string`, `long`, `double`, `bool`, `DateTime`, `DateTimeOffset`, `DateOnly`, `TimeOnly`, `INumberBase<T>` |
-| `Integer`              | `string`, `long`, `double`, `bool`,`INumberBase<T>`                                                        |
-| `Floating`             | `string`, `long`, `double`, `bool`,`INumberBase<T>`                                                        |
-| `Boolean`              | `string`, `long`, `double`, `bool`,`INumberBase<T>`                                                        |
-| `Offset Date-Time`     | `string`, `DateTime`, `DateTimeOffset`, `DateOnly`, `TimeOnly`                                             |
-| `Local Date-Time`      | `string`, `DateTime`, `DateTimeOffset`, `DateOnly`, `TimeOnly`                                             |
-| `Local Date`           | `string`, `DateTime`, `DateTimeOffset`, `DateOnly`                                                         |
-| `Local Time`           | `string`, `TimeOnly`                                                                                       |
-| `Array`                | `ReadOnlyCollection<TomlValue>`,`T[]`,`IEnumerable<T>`,`IReadOnlyCollection<T>`,`IReadOnlyList<T>`                                                                          |
-
-The following APIs are defined in `TomlValue`.
-APIs with the `Get` prefix throw an error on failure and return a value on success.
+`TomlValue` and `TomlDocumentNode` have APIs for accessing and casting values.
+APIs with the `Get` prefix throw an `CsTomlException` on failure and return a value on success.
 APIs with the `TryGet` prefix return false on failure and set the value to the argument of the out parameter on success.
-`CanGetValue` can be used to see which types can be converted.
+`CanGetValue` can be used to see which Toml value types can be converted.
+`GetValue<T>` and `TryGetValue<T>` can be used to obtain a value converted from a Toml value type to a specified type.
 
 ```csharp
-public partial class TomlValue :
-    ISpanFormattable,
-    IUtf8SpanFormattable
-{
-    public bool CanGetValue(TomlValueFeature feature)
-    public ReadOnlyCollection<TomlValue> GetArray()
-    public TomlValue GetArrayValue(int index)
-    public string GetString()
-    public long GetInt64()
-    public double GetDouble()
-    public bool GetBool()
-    public DateTime GetDateTime()
-    public DateTimeOffset GetDateTimeOffset()
-    public DateOnly GetDateOnly()
-    public TimeOnly GetTimeOnly()
-    public object GetObject()
-    public T GetNumber<T>() where T : struct, INumberBase<T>
-    public T GetValue<T>()
-    public bool TryGetArray(out IReadOnlyList<TomlValue> value)
-    public bool TryGetArrayValue(int index, out TomlValue value)
-    public bool TryGetString(out string value)
-    public bool TryGetInt64(out long value)
-    public bool TryGetDouble(out double value)
-    public bool TryGetBool(out bool value)
-    public bool TryGetDateTime(out DateTime value)
-    public bool TryGetDateTimeOffset(out DateTimeOffset value)
-    public bool TryGetDateOnly(out DateOnly value)
-    public bool TryGetTimeOnly(out TimeOnly value)
-    public bool TryGetObject(out object value)
-    public bool TryGetNumber<T>(out T value) where T : struct, INumberBase<T>
-    public bool TryGetValue<T>(out T value)
-    public TomlValue? Find(ReadOnlySpan<byte> keys, bool isDottedKeys = false)
-    public TomlValue? Find(ReadOnlySpan<char> keys, bool isDottedKeys = false)
-    public TomlValue? Find(ReadOnlySpan<ByteArray> dottedKeys)
-    public bool TryFind(ReadOnlySpan<byte> key, out TomlValue? value, bool isDottedKeys = false)
-    public bool TryFind(ReadOnlySpan<char> key, out TomlValue? value, bool isDottedKeys = false)
-    public bool TryFind(ReadOnlySpan<ByteArray> dottedKeys, out TomlValue? value)
-}
+public bool CanGetValue(TomlValueFeature feature)
+public ReadOnlyCollection<TomlValue> GetArray()
+public TomlValue GetArrayValue(int index)
+public string GetString()
+public long GetInt64()
+public double GetDouble()
+public bool GetBool()
+public DateTime GetDateTime()
+public DateTimeOffset GetDateTimeOffset()
+public DateOnly GetDateOnly()
+public TimeOnly GetTimeOnly()
+public object GetObject()
+public T GetNumber<T>() where T : struct, INumberBase<T>
+public T GetValue<T>()
+public bool TryGetArray(out IReadOnlyList<TomlValue> value)
+public bool TryGetArrayValue(int index, out TomlValue value)
+public bool TryGetString(out string value)
+public bool TryGetInt64(out long value)
+public bool TryGetDouble(out double value)
+public bool TryGetBool(out bool value)
+public bool TryGetDateTime(out DateTime value)
+public bool TryGetDateTimeOffset(out DateTimeOffset value)
+public bool TryGetDateOnly(out DateOnly value)
+public bool TryGetTimeOnly(out TimeOnly value)
+public bool TryGetObject(out object value)
+public bool TryGetNumber<T>(out T value) where T : struct, INumberBase<T>
+public bool TryGetValue<T>(out T value)
 ```
 
-Serialize and deserialize custom classes
+Serialize and deserialize custom classes (`CsToml.Generator`)
 ---
 
-`CsToml.Generator` provides the ability to serialize and deserialize your own classes.
-Define the class to be serialized and assign the `TomlSerializedObject` and `TomlValueOnSerialized` attribute and the partial keyword.
-`TomlValueOnSerialized` can only be given to read-write (they have both a get and a set accessor) properties.
+Define the class to be serialized and assign the `[TomlSerializedObject]` and `[TomlValueOnSerialized]` attribute and the partial keyword.
+`[TomlValueOnSerialized]` can only be given to read-write (they have both a get and a set accessor) properties.
 
 ```csharp
 [TomlSerializedObject]
 public partial class CsTomlClass
 {
-    [TomlValueOnSerialized(TomlValueType.KeyValue)]
+    [TomlValueOnSerialized]
     public string Key { get; set; }
 
-    [TomlValueOnSerialized(TomlValueType.KeyValue)]
-    public int Number { get; set; }
+    [TomlValueOnSerialized]
+    public int? Number { get; set; }
 
-    [TomlValueOnSerialized(TomlValueType.Array)]
+    [TomlValueOnSerialized]
     public int[] Array { get; set; }
 
-    [TomlValueOnSerialized(TomlValueType.Table)]
+    [TomlValueOnSerialized(aliasName: "alias")]
+    public string Value { get; set; }
+
+    [TomlValueOnSerialized]
     public TableClass Table { get; set; } = new TableClass();
-
-    public class TableClass
-    {
-        [TomlValueOnSerialized(TomlValueType.KeyValue)]
-        public string Key { get; set; }
-
-        [TomlValueOnSerialized(TomlValueType.KeyValue)]
-        public int Number { get; set; }
-    }
 }
 ```
 
 Adding the above attributes will generate code for serialization/deserialization by [Source Generators](https://learn.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/source-generators-overview).
-Property names with `TomlValueOnSerialized` are used as keys in the TOML document.
+Property names with `[TomlValueOnSerialized]` are used as keys in the TOML document.
+The key name can also be changed with `[TomlValueOnSerialized(aliasName)]`.
 
 <details><summary>Generated Code</summary>
 
@@ -341,82 +260,61 @@ Property names with `TomlValueOnSerialized` are used as keys in the TOML documen
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
 #pragma warning disable CS8603 // Possible null reference return.
 #pragma warning disable CS8604 // Possible null reference argument for parameter.
+#pragma warning disable CS8619 // Possible null reference assignment fix
 
 using CsToml;
-using System.Buffers;
+using CsToml.Formatter;
+using CsToml.Formatter.Resolver;
 
 namespace ConsoleApp;
 
 partial class CsTomlClass : ITomlSerializedObject<CsTomlClass>
 {
-    static void ITomlSerializedObject<CsTomlClass>.Serialize<TBufferWriter, ITomlValueSerializer>(ref TBufferWriter writer, CsTomlClass? target, CsTomlSerializerOptions? options)
-    {
-        ITomlValueSerializer.SerializeKey(ref writer, "Key");
-        ITomlValueSerializer.SerializeEqual(ref writer);
-        if (string.IsNullOrEmpty(target.Key))
-            ITomlValueSerializer.Serialize(ref writer, Span<char>.Empty);
-        else
-            ITomlValueSerializer.Serialize(ref writer, target.Key.AsSpan());
-        ITomlValueSerializer.SerializeNewLine(ref writer);
-        ITomlValueSerializer.SerializeKey(ref writer, "Number");
-        ITomlValueSerializer.SerializeEqual(ref writer);
-        ITomlValueSerializer.Serialize(ref writer, target.Number);
-        ITomlValueSerializer.SerializeNewLine(ref writer);
-        ITomlValueSerializer.SerializeKey(ref writer, "Array");
-        ITomlValueSerializer.SerializeEqual(ref writer);
-        ITomlValueSerializer.Serialize(ref writer, target.Array);
-        ITomlValueSerializer.SerializeNewLine(ref writer);
-        ITomlValueSerializer.SerializeNewLine(ref writer);
-        ITomlValueSerializer.SerializeTableHeader(ref writer, "Table");
-        ITomlValueSerializer.SerializeKey(ref writer, "Key");
-        ITomlValueSerializer.SerializeEqual(ref writer);
-        if (string.IsNullOrEmpty(target.Table.Key))
-            ITomlValueSerializer.Serialize(ref writer, Span<char>.Empty);
-        else
-            ITomlValueSerializer.Serialize(ref writer, target.Table.Key.AsSpan());
-        ITomlValueSerializer.SerializeNewLine(ref writer);
-        ITomlValueSerializer.SerializeKey(ref writer, "Number");
-        ITomlValueSerializer.SerializeEqual(ref writer);
-        ITomlValueSerializer.Serialize(ref writer, target.Table.Number);
-        ITomlValueSerializer.SerializeNewLine(ref writer);
 
-    }
-
-    static CsTomlClass ITomlSerializedObject<CsTomlClass>.Deserialize<ITomlValueSerializer>(ReadOnlySpan<byte> tomlText, CsTomlSerializerOptions? options)
+    static CsTomlClass ITomlSerializedObject<CsTomlClass>.Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
-        var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText, options);
-        var target = new ConsoleApp.CsTomlClass();
-        if (document.TryFind("Key"u8, out var _Key))
-            target.Key = (String)_Key!.GetString();
-        if (document.TryFind("Number"u8, out var _Number))
-            target.Number = (Int32)_Number!.GetInt64();
-        if (document.TryFind("Array"u8, out var _Array))
-            target.Array = _Array!.GetValue<Int32[]>();
-        if (document.TryFind(["Table"u8, "Key"u8], out var _Table_Key))
-            target.Table.Key = (String)_Table_Key!.GetString();
-        if (document.TryFind(["Table"u8, "Number"u8], out var _Table_Number))
-            target.Table.Number = (Int32)_Table_Number!.GetInt64();
+        var target = new CsTomlClass();
+        var __Key__RootNode = rootNode["Key"u8];
+        target.Key = options.Resolver.GetFormatter<string>()!.Deserialize(ref __Key__RootNode, options);
+        var __Value__RootNode = rootNode["alias"u8];
+        target.Value = options.Resolver.GetFormatter<string>()!.Deserialize(ref __Value__RootNode, options);
+        var __Array__RootNode = rootNode["Array"u8];
+        target.Array = options.Resolver.GetFormatter<int[]>()!.Deserialize(ref __Array__RootNode, options);
+        var __Number__RootNode = rootNode["Number"u8];
+        target.Number = options.Resolver.GetFormatter<int?>()!.Deserialize(ref __Number__RootNode, options);
+        var __Table__RootNode = rootNode["Table"u8];
+        target.Table = options.Resolver.GetFormatter<global::ConsoleApp.TableClass>()!.Deserialize(ref __Table__RootNode, options);
         return target;
 
     }
 
-    static CsTomlClass ITomlSerializedObject<CsTomlClass>.Deserialize<ITomlValueSerializer>(in ReadOnlySequence<byte> tomlText, CsTomlSerializerOptions? options)
+    static void ITomlSerializedObject<CsTomlClass>.Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, CsTomlClass target, CsTomlSerializerOptions options)
     {
-        // TODO: implemented...
-        var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText, options);
-        var target = new ConsoleApp.CsTomlClass();
-        if (document.TryFind("Key"u8, out var _Key))
-            target.Key = (String)_Key!.GetString();
-        if (document.TryFind("Number"u8, out var _Number))
-            target.Number = (Int32)_Number!.GetInt64();
-        if (document.TryFind("Array"u8, out var _Array))
-            target.Array = _Array!.GetValue<Int32[]>();
-        if (document.TryFind(["Table"u8, "Key"u8], out var _Table_Key))
-            target.Table.Key = (String)_Table_Key!.GetString();
-        if (document.TryFind(["Table"u8, "Number"u8], out var _Table_Number))
-            target.Table.Number = (Int32)_Table_Number!.GetInt64();
-        return target;
+        writer.WriteKey("Key"u8);
+        writer.WriteEqual();
+        options.Resolver.GetFormatter<String>()!.Serialize(ref writer, target.Key, options);
+        writer.EndKeyValue();
+        writer.WriteKey("alias"u8);
+        writer.WriteEqual();
+        options.Resolver.GetFormatter<String>()!.Serialize(ref writer, target.Value, options);
+        writer.EndKeyValue();
+        writer.WriteKey("Array"u8);
+        writer.WriteEqual();
+        options.Resolver.GetFormatter<int[]>()!.Serialize(ref writer, target.Array, options);
+        writer.EndKeyValue();
+        writer.WriteKey("Number"u8);
+        writer.WriteEqual();
+        options.Resolver.GetFormatter<int?>()!.Serialize(ref writer, target.Number, options);
+        writer.EndKeyValue();
+        writer.PushKey("Table"u8);
+        options.Resolver.GetFormatter<TableClass>()!.Serialize(ref writer, target.Table, options);
+        writer.PopKey();
 
+    }
+
+    static void ITomlSerializedObjectRegister.Register()
+    {
+        TomlSerializedObjectFormatterResolver.Register(new TomlSerializedObjectFormatter<CsTomlClass>());
     }
 }
 ```
@@ -424,12 +322,14 @@ partial class CsTomlClass : ITomlSerializedObject<CsTomlClass>
 </details>
 
 As a result, it can be serialized and deserialized as follows.
+Custom class serialization does not preserve the layout of the original TOML text.
 
 ```csharp
 var tomlText = @"
 Key = ""value""
 Number = 123
 Array = [1, 2, 3]
+alias = ""alias""
 
 [Table]
 Key = ""value""
@@ -437,45 +337,36 @@ Number = 123
 "u8;
 
 var value = CsTomlSerializer.Deserialize<CsTomlClass>(tomlText);
-using var serializedText = CsTomlSerializer.Serialize(ref value);
+using var serializedText = CsTomlSerializer.Serialize(value);
 
 // Key = "value"
+// alias = "alias"
+// Array = [ 1, 2, 3 ]
 // Number = 123
-// Array = [1, 2, 3]
-//
-// [Table]
-// Key = "value"
-// Number = 123
+// Table.Key = "value"
+// Table.Number = 123
 var serializedTomlText = Encoding.UTF8.GetString(serializedText.ByteSpan);
 ```
 
-These types can be serialized/deserialize by default
-* .NET Built-in types(`bool`, `byte`, `long`, `double`, etc)
-* `string`, `object`
-* `T[]`, `IEnumerator<>`, `IReadOnlyCollection<>`, `IReadOnlyList<>`
-
-Extensions
+Extensions (`CsToml.Extensions`)
 ---
 
-`CsToml.Extensions` provides an API for reading and writing TOML file.
+`CsToml.Extensions` provides APIs to serialize and deserialize Toml files on disk.
 
 ```csharp
 // deserialize from TOML File
 var document = CsTomlFileSerializer.Deserialize<TomlDocument>("test.toml");
 var document2 = await CsTomlFileSerializer.DeserializeAsync<TomlDocument>("test.toml");
 
-// seserialize To TOML File
+// serialize To TOML File
 CsTomlFileSerializer.Serialize("test.toml", document);
 await CsTomlFileSerializer.SerializeAsync("test.toml", document);
 ```
 
 `CsTomlFileSerializer.Deserialize` and `CsTomlFileSerializer.DeserializeAsync` deserialize UTF8 strings in TOML files into `TomlDocument`.
-`CsTomlFileSerializer.Serialize` and `CsTomlFileSerializer.SerializeAsync` serialize the UTF8 string of `TomlDocument` to the TOML file.
+`CsTomlFileSerializer.Serialize` and `CsTomlFileSerializer.SerializeAsync` serialize the UTF8 string of `TomlDocument` to the TOML file.  
 
-Third Party Libraries
----
-
-`CsToml.Extensions` references [Cysharp/NativeMemoryArray](https://github.com/Cysharp/NativeMemoryArray) as a dependent library.  
+`CsToml.Extensions` uses [Cysharp/NativeMemoryArray](https://github.com/Cysharp/NativeMemoryArray) as a third party library.
 
 UnitTest
 ---
