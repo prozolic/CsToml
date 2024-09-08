@@ -6,8 +6,24 @@ using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Numerics;
+using System.Runtime.Serialization;
 
 namespace ConsoleApp;
+
+public enum Test123
+{
+    [EnumMember(Value = "1")]
+    ONe,
+    Two,
+    tHrEE
+};
+
+[TomlSerializedObject]
+public partial class EnumObject
+{
+    [TomlValueOnSerialized()]
+    public Test123 Value { get; set; }
+}
 
 [TomlSerializedObject]
 public partial class TestTomlSerializedObject2Nest
@@ -234,16 +250,19 @@ public partial class TestE_
 [TomlSerializedObject]
 public partial class CsTomlClass
 {
-    [TomlValueOnSerialized()]
+    [TomlValueOnSerialized]
     public string Key { get; set; }
 
-    [TomlValueOnSerialized()]
-    public int Number { get; set; }
+    [TomlValueOnSerialized]
+    public int? Number { get; set; }
 
-    [TomlValueOnSerialized()]
+    [TomlValueOnSerialized]
     public int[] Array { get; set; }
 
-    [TomlValueOnSerialized()]
+    [TomlValueOnSerialized(aliasName: "alias")]
+    public string Value { get; set; }
+
+    [TomlValueOnSerialized]
     public TableClass Table { get; set; } = new TableClass();
 }
 

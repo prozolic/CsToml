@@ -10,6 +10,7 @@ using System.Text;
 Console.WriteLine("Hello, World!");
 
 var testDocument = await CsTomlFileSerializer.DeserializeAsync<TomlDocument>("./../../../Toml/test_withoutBOM.toml");
+var testDocument_lf = await CsTomlFileSerializer.DeserializeAsync<TomlDocument>("./../../../Toml/test_withoutBOM_LF.toml");
 if (!testDocument.RootNode["s"u8].GetString().Equals(""))
 {
 }
@@ -74,7 +75,7 @@ var document2 = CsTomlSerializer.Deserialize<TomlDocument>(serializedDocumentTom
     var value = document.RootNode["integers"u8].GetArrayValue(0);
     var value2 = document!.RootNode["nested_mixed_array"u8][0][1].GetInt64();
     var _ = document!.RootNode["integers"u8].TryGetArray(out var value12);
-    var valu3 = document!.RootNode["Name\\tJos\\u00E9"].Value;
+    var valu3 = document!.RootNode["Name\\tJos\\u00E9"].GetTomlValue();
 
     var valu4 = document!.RootNode["products"u8][0]["name"u8];
     var valu5 = document!.RootNode["fruit"u8]["apple"u8]["texture"u8]["smooth"u8].GetBool();
@@ -84,6 +85,7 @@ var document2 = CsTomlSerializer.Deserialize<TomlDocument>(serializedDocumentTom
 }
 
 var tomlText = @"
+d = 1985-06-18 17:04:07+12:61
 flt7 = 6.626e-34
 str = ""string""
 int = 99
@@ -153,6 +155,13 @@ testTomlSerializedObject2.intArr[0] = 9999;
 using var testTomlSerializedObject2SerializedText = CsTomlSerializer.Serialize(testTomlSerializedObject2);
 var testTomlSerializedObject2_2 = CsTomlSerializer.Deserialize<TestTomlSerializedObject>(testTomlSerializedObject2SerializedText.ByteSpan);
 
+var tomlTextEnum = @"
+Value = ""1""
+"u8.ToArray();
+
+var enumObject = CsTomlSerializer.Deserialize<EnumObject>(tomlTextEnum);
+var enumObjectText = CsTomlSerializer.Serialize<EnumObject>(enumObject);
+
 void Test()
 {
     var tomlText = @"
@@ -166,6 +175,9 @@ array3 = [100,200,300,400]
 test128 = ""17.234""
 guid = ""2D5139DB-CBA6-4641-BB50-04038A47C3ED""
 uri = ""https://learn.microsoft.com/""
+uri2 = ""https://learn.microsoft.com/2""
+tuple = [1979-05-27T07:32:00Z, 123, 456, ""test"",""TEST"", true, 0.11]
+KeyValuePair = [1979-05-27T07:32:00Z, ""test""]
 
 [Dict]
 key.a.b.v = ""value""
@@ -201,6 +213,36 @@ a = 4564
 
 }
 Test();
+
+void Sample()
+{
+    var tomlText = @"
+Key = ""value""
+Number = 123
+Array = [1, 2, 3]
+alias = ""alias""
+
+[Table]
+Key = ""value""
+Number = 123
+"u8;
+
+    var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
+    var value = CsTomlSerializer.Deserialize<CsTomlClass>(tomlText);
+    using var serializedText = CsTomlSerializer.Serialize(value);
+
+    // Key = "value"
+    // Number = 123
+    // Array = [1, 2, 3]
+    // alias = ""alias""
+    //
+    // [Table]
+    // Key = "value"
+    // Number = 123
+    var serializedTomlText = Encoding.UTF8.GetString(serializedText.ByteSpan);
+}
+
+Sample();
 
 Console.WriteLine("END");
 
