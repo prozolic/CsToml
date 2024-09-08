@@ -1,14 +1,5 @@
 ﻿using CsToml.Error;
 using FluentAssertions;
-using Newtonsoft.Json.Linq;
-using System;
-using System.Buffers;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 using Utf8StringInterpolation;
 
 namespace CsToml.Generator.Tests.Seirialization;
@@ -680,6 +671,55 @@ public class TypeCollectionTest
         type.Value10.Should().Equal([1, 2, 3, 4, 5]);
     }
 }
+
+public class TypeArrayOfTablesTest
+{
+    [Fact]
+    public void Serialize()
+    {
+        var type = new TypeArrayOfTable()
+        {
+            Header = new TypeTomlSerializedObjectList()
+            {
+                Table2 = [
+                    new TypeTable2(){ Table3 = new TypeTable3() { Value = "[1] This is TypeTable3" } },
+                    new TypeTable2(){ Table3 = new TypeTable3() { Value = "[2] This is TypeTable3" } },
+                    new TypeTable2(){ Table3 = new TypeTable3() { Value = "[3] This is TypeTable3" } }
+                ],
+            }
+        };
+
+        using var bytes = CsTomlSerializer.Serialize(type);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Header.Table2 = [ {Table3.Value = \"[1] This is TypeTable3\"}, {Table3.Value = \"[2] This is TypeTable3\"}, {Table3.Value = \"[3] This is TypeTable3\"} ]");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().Should().Equal(expected);
+    }
+
+    [Fact]
+    public void Deserialize()
+    {
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("[[Header.Table2]]");
+        writer.AppendLine("Table3.Value = \"[1] This is TypeTable3\"");
+        writer.AppendLine();
+        writer.AppendLine("[[Header.Table2]]");
+        writer.AppendLine("Table3.Value = \"[2] This is TypeTable3\"");
+        writer.AppendLine();
+        writer.AppendLine("[[Header.Table2]]");
+        writer.AppendLine("Table3.Value = \"[3] This is TypeTable3\"");
+        writer.Flush();
+
+        var type = CsTomlSerializer.Deserialize<TypeArrayOfTable>(buffer.WrittenSpan);
+        type.Header.Table2[0].Table3.Value.Should().Be("[1] This is TypeTable3");
+        type.Header.Table2[1].Table3.Value.Should().Be("[2] This is TypeTable3");
+        type.Header.Table2[2].Table3.Value.Should().Be("[3] This is TypeTable3");
+    }
+}
+
 
 public class TypeDictionaryTest
 {

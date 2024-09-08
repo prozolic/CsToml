@@ -239,9 +239,15 @@ internal partial class TypeDictionary
 }
 
 [TomlSerializedObject]
+internal partial class TypeArrayOfTable
+{
+    [TomlValueOnSerialized]
+    public TypeTomlSerializedObjectList Header { get; set; }
+}
+
+[TomlSerializedObject]
 internal partial class TypeAlias
 {
     [TomlValueOnSerialized(aliasName:"alias")]
     public string Value { get; set; }
 }
-
