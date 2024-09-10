@@ -1,9 +1,9 @@
 ﻿
 using CsToml.Error;
+using CsToml.Extension;
 using CsToml.Utility;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text;
 
 namespace CsToml;
@@ -156,7 +156,7 @@ internal static class TomlCodes
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
         ];
-        return Unsafe.AddByteOffset(ref MemoryMarshal.GetReference(escapeTable), rawByte);
+        return escapeTable.At(rawByte);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -181,7 +181,7 @@ internal static class TomlCodes
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
         ];
-        return Unsafe.AddByteOffset(ref MemoryMarshal.GetReference(escapeSequenceTable), rawByte);
+        return escapeSequenceTable.At(rawByte);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -206,7 +206,7 @@ internal static class TomlCodes
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
         ];
-        return Unsafe.AddByteOffset(ref MemoryMarshal.GetReference(barekeyTable), rawByte);
+        return barekeyTable.At(rawByte);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -283,15 +283,78 @@ internal static class TomlCodes
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsNumber(byte rawByte)
-        => Number.Zero <= rawByte && rawByte <= Number.Nine;
+    {
+        ReadOnlySpan<bool> numberTable =
+        [
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x00 - 0x0f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x10 - 0x1f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x20 - 0x2f
+            true, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false,           // 0x30 - 0x3f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x40 - 0x4f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x50 - 0x5f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x60 - 0x6f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x70 - 0x7f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x80 - 0x8f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x90 - 0x9f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xa0 - 0xaf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xb0 - 0xbf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xc0 - 0xcf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xd0 - 0xdf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
+        ];
+        return numberTable.At(rawByte);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsBinary(byte rawByte)
-        => Number.Zero <= rawByte && rawByte <= Number.One;
+    {
+        ReadOnlySpan<bool> binaryTable =
+        [
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x00 - 0x0f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x10 - 0x1f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x20 - 0x2f
+            true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false,   // 0x30 - 0x3f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x40 - 0x4f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x50 - 0x5f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x60 - 0x6f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x70 - 0x7f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x80 - 0x8f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x90 - 0x9f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xa0 - 0xaf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xb0 - 0xbf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xc0 - 0xcf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xd0 - 0xdf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
+        ];
+        return binaryTable.At(rawByte);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsOctal(byte rawByte)
-        => Number.Zero <= rawByte && rawByte <= Number.Seven;
+    {
+        ReadOnlySpan<bool> octalTable =
+        [
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x00 - 0x0f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x10 - 0x1f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x20 - 0x2f
+            true, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false,         // 0x30 - 0x3f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x40 - 0x4f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x50 - 0x5f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x60 - 0x6f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x70 - 0x7f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x80 - 0x8f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x90 - 0x9f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xa0 - 0xaf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xb0 - 0xbf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xc0 - 0xcf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xd0 - 0xdf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
+        ];
+        return octalTable.At(rawByte);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsHex(byte rawByte)
@@ -299,23 +362,131 @@ internal static class TomlCodes
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsUpperHexAlphabet(byte rawByte)
-        => Alphabet.A <= rawByte && rawByte <= Alphabet.F;
+    {
+        // Alphabet.A <= rawByte && rawByte <= Alphabet.F;
+        ReadOnlySpan<bool> upperHexAlphabetTable =
+        [
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x00 - 0x0f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x10 - 0x1f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x20 - 0x2f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x30 - 0x3f
+            false, true, true, true, true, true, true, false, false, false, false, false, false, false, false, false,       // 0x40 - 0x4f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x50 - 0x5f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x60 - 0x6f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x70 - 0x7f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x80 - 0x8f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x90 - 0x9f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xa0 - 0xaf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xb0 - 0xbf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xc0 - 0xcf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xd0 - 0xdf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
+        ];
+        return upperHexAlphabetTable.At(rawByte);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsLowerHexAlphabet(byte rawByte)
-        => Alphabet.a <= rawByte && rawByte <= Alphabet.f;
+    {
+        // Alphabet.a <= rawByte && rawByte <= Alphabet.f;
+        ReadOnlySpan<bool> lowerHexAlphabetTable =
+        [
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x00 - 0x0f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x10 - 0x1f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x20 - 0x2f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x30 - 0x3f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x40 - 0x4f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x50 - 0x5f
+            false, true, true, true, true, true, true, false, false, false, false, false, false, false, false, false,       // 0x60 - 0x6f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x70 - 0x7f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x80 - 0x8f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x90 - 0x9f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xa0 - 0xaf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xb0 - 0xbf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xc0 - 0xcf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xd0 - 0xdf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
+        ];
+        return lowerHexAlphabetTable.At(rawByte);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsAlphabet(byte rawByte)
-        => IsUpperAlphabet(rawByte) || IsLowerAlphabet(rawByte);
+    {
+        // IsUpperAlphabet(rawByte) || IsLowerAlphabet(rawByte);
+        ReadOnlySpan<bool> alphabetTable =
+        [
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x00 - 0x0f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x10 - 0x1f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x20 - 0x2f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x30 - 0x3f
+            false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,                // 0x40 - 0x4f
+            true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false,            // 0x50 - 0x5f
+            false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,                // 0x60 - 0x6f
+            true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false,            // 0x70 - 0x7f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x80 - 0x8f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x90 - 0x9f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xa0 - 0xaf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xb0 - 0xbf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xc0 - 0xcf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xd0 - 0xdf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
+        ];
+        return alphabetTable.At(rawByte);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static bool IsUpperAlphabet(byte ch)
-        => Alphabet.A <= ch && ch <= Alphabet.Z;
+    internal static bool IsUpperAlphabet(byte rawByte)
+    {
+        ReadOnlySpan<bool> upperAlphabetTable =
+        [
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x00 - 0x0f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x10 - 0x1f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x20 - 0x2f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x30 - 0x3f
+            false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,                // 0x40 - 0x4f
+            true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false,            // 0x50 - 0x5f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x60 - 0x6f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x70 - 0x7f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x80 - 0x8f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x90 - 0x9f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xa0 - 0xaf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xb0 - 0xbf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xc0 - 0xcf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xd0 - 0xdf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
+        ];
+        return upperAlphabetTable.At(rawByte);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsLowerAlphabet(byte rawByte)
-        => Alphabet.a <= rawByte && rawByte <= Alphabet.z;
+    {
+        ReadOnlySpan<bool> lowerAlphabetTable =
+        [
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x00 - 0x0f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x10 - 0x1f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x20 - 0x2f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x30 - 0x3f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x40 - 0x4f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x50 - 0x5f
+            false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,                // 0x60 - 0x6f
+            true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false,            // 0x70 - 0x7f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x80 - 0x8f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x90 - 0x9f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xa0 - 0xaf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xb0 - 0xbf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xc0 - 0xcf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xd0 - 0xdf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
+        ];
+        return lowerAlphabetTable.At(rawByte);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsPlusSign(byte rawByte)
@@ -352,7 +523,6 @@ internal static class TomlCodes
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsComma(byte rawByte)
         => rawByte == Symbol.COMMA;
-
 
     internal static EscapeSequenceResult TryParseEscapeSequence(ref Utf8SequenceReader sequenceReader, ArrayPoolBufferWriter<byte> bufferWriter, bool multiLine, bool throwError)
     {

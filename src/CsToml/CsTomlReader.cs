@@ -1,4 +1,5 @@
 ﻿using CsToml.Error;
+using CsToml.Extension;
 using CsToml.Utility;
 using CsToml.Values;
 using System.Buffers;
@@ -324,7 +325,7 @@ internal ref struct CsTomlReader
         {
             for (var index = 0; index < currentSpan.Length; index++)
             {
-                if (!TomlCodes.IsTabOrWhiteSpace(currentSpan[index]))
+                if (!TomlCodes.IsTabOrWhiteSpace(currentSpan.At(index)))
                 {
                     Advance(index);
                     return;
@@ -494,7 +495,7 @@ internal ref struct CsTomlReader
             {
                 for (var index = 0; index < currentSpan.Length; index++)
                 {
-                    var ch = currentSpan[index];
+                    ref var ch = ref currentSpan.At(index);
                     if (TomlCodes.IsEscape(ch))
                     {
                         ExceptionHelper.ThrowEscapeCharactersIncluded(ch);
@@ -727,7 +728,7 @@ internal ref struct CsTomlReader
         {
             for (var index = 0; index < currentSpan.Length; index++)
             {
-                var ch = currentSpan[index];
+                ref var ch = ref currentSpan.At(index);
                 if (TomlCodes.IsEscape(ch))
                 {
                     ExceptionHelper.ThrowEscapeCharactersIncluded(ch);
@@ -803,7 +804,7 @@ internal ref struct CsTomlReader
         {
             for (var index = 0; index < currentSpan.Length; index++)
             {
-                var ch = currentSpan[index];
+                ref var ch = ref currentSpan.At(index);
                 if (TomlCodes.IsEscape(ch))
                 {
                     switch (ch)
@@ -919,7 +920,7 @@ internal ref struct CsTomlReader
         {
             for (var index = 0; index < currentSpan.Length; index++)
             {
-                var ch = currentSpan[index];
+                ref var ch = ref currentSpan.At(index);
                 switch (ch)
                 {
                     case TomlCodes.Symbol.TAB:
@@ -1463,7 +1464,7 @@ internal ref struct CsTomlReader
             if (writingSpan.Length > 2)
             {
                 // +00 or -01
-                if (writingSpan[1] == TomlCodes.Number.Zero)
+                if (writingSpan.At(1) == TomlCodes.Number.Zero)
                     ExceptionHelper.ThrowIncorrectTomlIntegerFormat();
             }
         }
@@ -1472,7 +1473,7 @@ internal ref struct CsTomlReader
             if (writingSpan.Length > 1)
             {
                 // 00 or 01
-                if (writingSpan[0] == TomlCodes.Number.Zero)
+                if (writingSpan.At(0) == TomlCodes.Number.Zero)
                     ExceptionHelper.ThrowIncorrectTomlIntegerFormat();
 
             }
@@ -1951,16 +1952,16 @@ internal ref struct CsTomlReader
             {
                 return ReadOffsetDateTime(bytes);
             }
-            else if (TomlCodes.IsPlusOrMinusSign(bytes[19]))
+            else if (TomlCodes.IsPlusOrMinusSign(bytes.At(19)))
             {
                 return ReadOffsetDateTimeByNumber(bytes);
             }
-            else if (TomlCodes.IsDot(bytes[19]))
+            else if (TomlCodes.IsDot(bytes.At(19)))
             {
                 var index = 20;
                 while (index < bytes.Length)
                 {
-                    var c = bytes[index++];
+                    ref var c = ref bytes.At(index++);
                     if (!TomlCodes.IsNumber(c))
                     {
                         if (TomlCodes.IsPlusOrMinusSign(c)) break;
@@ -1968,11 +1969,11 @@ internal ref struct CsTomlReader
                 }
                 if (index < bytes.Length)
                 {
-                    if (!TomlCodes.IsNumber(bytes[index++])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-                    if (!TomlCodes.IsNumber(bytes[index++])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-                    if (!TomlCodes.IsColon(bytes[index++])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-                    if (!TomlCodes.IsNumber(bytes[index++])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-                    if (!TomlCodes.IsNumber(bytes[index++])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+                    if (!TomlCodes.IsNumber(bytes.At(index++))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+                    if (!TomlCodes.IsNumber(bytes.At(index++))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+                    if (!TomlCodes.IsColon( bytes.At(index++))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+                    if (!TomlCodes.IsNumber(bytes.At(index++))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+                    if (!TomlCodes.IsNumber(bytes.At(index++))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
                     return ReadOffsetDateTimeByNumber(bytes);
                 }
             }
@@ -1987,34 +1988,34 @@ internal ref struct CsTomlReader
         if (bytes.Length < TomlCodes.DateTime.LocalDateTimeFormatLength) 
             ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
 
-        if (!TomlCodes.IsNumber(bytes[0])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[1])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[2])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[3])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
-        if (!TomlCodes.IsHyphen(bytes[4])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[5])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[6])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
-        if (!TomlCodes.IsHyphen(bytes[7])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[8])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[9])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
-        if (!(TomlCodes.IsWhiteSpace(bytes[10]) || bytes[10] == TomlCodes.Alphabet.T || bytes[10] == TomlCodes.Alphabet.t)) 
+        if (!TomlCodes.IsNumber(bytes.At(0))) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(1))) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(2))) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(3))) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
+        if (!TomlCodes.IsHyphen(bytes.At(4))) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(5))) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(6))) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
+        if (!TomlCodes.IsHyphen(bytes.At(7))) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(8))) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(9))) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
+        if (!(TomlCodes.IsWhiteSpace(bytes.At(10)) || bytes.At(10) == TomlCodes.Alphabet.T || bytes.At(10) == TomlCodes.Alphabet.t)) 
             ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[11])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[12])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
-        if (!TomlCodes.IsColon(bytes[13])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[14])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[15])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
-        if (!TomlCodes.IsColon(bytes[16])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[17])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[18])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(11))) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(12))) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
+        if (!TomlCodes.IsColon( bytes.At(13))) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(14))) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(15))) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
+        if (!TomlCodes.IsColon( bytes.At(16))) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(17))) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(18))) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
 
         if (bytes.Length > TomlCodes.DateTime.LocalDateTimeFormatLength)
         {
-            if (!TomlCodes.IsDot(bytes[19])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
+            if (!TomlCodes.IsDot(bytes.At(19))) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
             var index = 20;
             while (index < bytes.Length)
             {
-                if (!TomlCodes.IsNumber(bytes[index++])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
+                if (!TomlCodes.IsNumber(bytes.At(index++))) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
             }
         }
 
@@ -2024,16 +2025,16 @@ internal ref struct CsTomlReader
     private TomlLocalDate ReadLocalDate(ReadOnlySpan<byte> bytes)
     {
         if (bytes.Length < TomlCodes.DateTime.LocalDateFormatLength) ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
-        if (!TomlCodes.IsNumber(bytes[0])) ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
-        if (!TomlCodes.IsNumber(bytes[1])) ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
-        if (!TomlCodes.IsNumber(bytes[2])) ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
-        if (!TomlCodes.IsNumber(bytes[3])) ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
-        if (!TomlCodes.IsHyphen(bytes[4])) ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
-        if (!TomlCodes.IsNumber(bytes[5])) ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
-        if (!TomlCodes.IsNumber(bytes[6])) ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
-        if (!TomlCodes.IsHyphen(bytes[7])) ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
-        if (!TomlCodes.IsNumber(bytes[8])) ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
-        if (!TomlCodes.IsNumber(bytes[9])) ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
+        if (!TomlCodes.IsNumber(bytes.At(0))) ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
+        if (!TomlCodes.IsNumber(bytes.At(1))) ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
+        if (!TomlCodes.IsNumber(bytes.At(2))) ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
+        if (!TomlCodes.IsNumber(bytes.At(3))) ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
+        if (!TomlCodes.IsHyphen(bytes.At(4))) ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
+        if (!TomlCodes.IsNumber(bytes.At(5))) ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
+        if (!TomlCodes.IsNumber(bytes.At(6))) ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
+        if (!TomlCodes.IsHyphen(bytes.At(7))) ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
+        if (!TomlCodes.IsNumber(bytes.At(8))) ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
+        if (!TomlCodes.IsNumber(bytes.At(9))) ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
 
         return TomlLocalDate.Parse(bytes);
     }
@@ -2041,22 +2042,22 @@ internal ref struct CsTomlReader
     private TomlLocalTime ReadLocalTime(ReadOnlySpan<byte> bytes)
     {
         if (bytes.Length < TomlCodes.DateTime.LocalTimeFormatLength) ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[0])) ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[1])) ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
-        if (!TomlCodes.IsColon(bytes[2])) ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[3])) ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[4])) ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
-        if (!TomlCodes.IsColon(bytes[5])) ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[6])) ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[7])) ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(0))) ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(1))) ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
+        if (!TomlCodes.IsColon( bytes.At(2))) ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(3))) ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(4))) ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
+        if (!TomlCodes.IsColon( bytes.At(5))) ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(6))) ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(7))) ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
 
         if (bytes.Length > TomlCodes.DateTime.LocalTimeFormatLength)
         {
-            if (!TomlCodes.IsDot(bytes[8])) ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
+            if (!TomlCodes.IsDot(bytes.At(8))) ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
             var index = 9;
             while(index < bytes.Length)
             {
-                if (!TomlCodes.IsNumber(bytes[index++])) ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
+                if (!TomlCodes.IsNumber(bytes.At(index++))) ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
             }
         }
 
@@ -2071,26 +2072,26 @@ internal ref struct CsTomlReader
         if (!(bytes[^1] == TomlCodes.Alphabet.Z || bytes[^1] == TomlCodes.Alphabet.z)) 
             ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
 
-        if (!TomlCodes.IsNumber(bytes[0])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[1])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[2])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[3])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!TomlCodes.IsHyphen(bytes[4])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[5])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[6])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!TomlCodes.IsHyphen(bytes[7])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[8])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[9])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!(TomlCodes.IsWhiteSpace(bytes[10]) || bytes[10] == TomlCodes.Alphabet.T || bytes[10] == TomlCodes.Alphabet.t)) 
+        if (!TomlCodes.IsNumber(bytes.At(0))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(1))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(2))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(3))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!TomlCodes.IsHyphen(bytes.At(4))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(5))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(6))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!TomlCodes.IsHyphen(bytes.At(7))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(8))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(9))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!(TomlCodes.IsWhiteSpace(bytes.At(10)) || bytes.At(10) == TomlCodes.Alphabet.T || bytes.At(10) == TomlCodes.Alphabet.t)) 
             ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[11])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[12])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!TomlCodes.IsColon(bytes[13])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[14])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[15])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!TomlCodes.IsColon(bytes[16])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[17])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[18])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(11))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(12))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!TomlCodes.IsColon( bytes.At(13))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(14))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(15))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!TomlCodes.IsColon( bytes.At(16))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(17))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(18))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
 
 
         return TomlOffsetDateTime.Parse(bytes);
@@ -2101,52 +2102,52 @@ internal ref struct CsTomlReader
         if (bytes.Length < TomlCodes.DateTime.OffsetDateTimeZFormatLength) 
             ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
 
-        if (!TomlCodes.IsNumber(bytes[0])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[1])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[2])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[3])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!TomlCodes.IsHyphen(bytes[4])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[5])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[6])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!TomlCodes.IsHyphen(bytes[7])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[8])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[9])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!(TomlCodes.IsWhiteSpace(bytes[10]) || bytes[10] == TomlCodes.Alphabet.T || bytes[10] == TomlCodes.Alphabet.t)) 
+        if (!TomlCodes.IsNumber(bytes.At(0))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(1))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(2))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(3))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!TomlCodes.IsHyphen(bytes.At(4))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(5))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(6))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!TomlCodes.IsHyphen(bytes.At(7))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(8))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(9))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!(TomlCodes.IsWhiteSpace(bytes.At(10)) || bytes.At(10) == TomlCodes.Alphabet.T || bytes.At(10) == TomlCodes.Alphabet.t)) 
             ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[11])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[12])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!TomlCodes.IsColon(bytes[13])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[14])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[15])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!TomlCodes.IsColon(bytes[16])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[17])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!TomlCodes.IsNumber(bytes[18])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(11))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(12))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!TomlCodes.IsColon( bytes.At(13))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(14))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(15))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!TomlCodes.IsColon( bytes.At(16))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(17))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!TomlCodes.IsNumber(bytes.At(18))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
 
-        if (TomlCodes.IsHyphen(bytes[19]))
+        if (TomlCodes.IsHyphen(bytes.At(19)))
         {
-            if (!TomlCodes.IsNumber(bytes[20])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-            if (!TomlCodes.IsNumber(bytes[21])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-            if (!TomlCodes.IsColon(bytes[22])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-            if (!TomlCodes.IsNumber(bytes[23])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-            if (!TomlCodes.IsNumber(bytes[24])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+            if (!TomlCodes.IsNumber(bytes.At(20))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+            if (!TomlCodes.IsNumber(bytes.At(21))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+            if (!TomlCodes.IsColon(bytes.At(22))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+            if (!TomlCodes.IsNumber(bytes.At(23))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+            if (!TomlCodes.IsNumber(bytes.At(24))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
         }
-        else if (TomlCodes.IsDot(bytes[19]))
+        else if (TomlCodes.IsDot(bytes.At(19)))
         {
             var index = 20;
             while (index < bytes.Length)
             {
-                var c = bytes[index++];
+                ref var c = ref bytes.At(index++);
                 if (!TomlCodes.IsNumber(c))
                 {
                     if (TomlCodes.IsPlusOrMinusSign(c)) break;
                     ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
                 }
             }
-            if (!TomlCodes.IsNumber(bytes[index++])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-            if (!TomlCodes.IsNumber(bytes[index++])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-            if (!TomlCodes.IsColon(bytes[index++])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-            if (!TomlCodes.IsNumber(bytes[index++])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-            if (!TomlCodes.IsNumber(bytes[index++])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+            if (!TomlCodes.IsNumber(bytes.At(index++))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+            if (!TomlCodes.IsNumber(bytes.At(index++))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+            if (!TomlCodes.IsColon(bytes.At(index++))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+            if (!TomlCodes.IsNumber(bytes.At(index++))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+            if (!TomlCodes.IsNumber(bytes.At(index++))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
         }
 
         return TomlOffsetDateTime.Parse(bytes);
@@ -2188,7 +2189,7 @@ internal ref struct CsTomlReader
                     {
                         goto BREAK;
                     }
-                    if (index + 1 < currentSpan.Length && TomlCodes.IsLf(currentSpan[index + 1]))
+                    if (index + 1 < currentSpan.Length && TomlCodes.IsLf(currentSpan.At(index + 1)))
                     {
                         goto BREAK;
                     }

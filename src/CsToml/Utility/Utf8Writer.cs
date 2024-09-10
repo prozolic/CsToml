@@ -1,4 +1,5 @@
 ﻿
+using CsToml.Extension;
 using System.Buffers;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -17,7 +18,7 @@ internal ref struct Utf8Writer<TBufferWriter>(ref TBufferWriter bufferWriter)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Write(byte @byte)
     {
-        GetSpan(1)[0] = @byte;
+        GetSpan(1).At(0) = @byte;
         Advance(1);
     }
 

@@ -1,4 +1,5 @@
 ﻿using CsToml.Error;
+using CsToml.Extension;
 using System.Buffers;
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
@@ -81,7 +82,7 @@ internal sealed class ArrayPoolBufferWriter<T> : IBufferWriter2<T>, IDisposable
             Reserve(1);
         }
 
-        buffer[index++] = value;
+        buffer.At(index++) = value;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

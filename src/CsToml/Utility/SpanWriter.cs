@@ -1,4 +1,4 @@
-﻿
+﻿using CsToml.Extension;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -14,7 +14,7 @@ internal ref struct SpanWriter(Span<byte> buffer)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Write(byte ch)
     {
-        ref var v = ref Unsafe.AddByteOffset(ref MemoryMarshal.GetReference(source), written++);
+        ref var v = ref source.At(written++);
         v = ch;
     }
 

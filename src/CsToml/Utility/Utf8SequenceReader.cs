@@ -1,4 +1,5 @@
-﻿using System.Buffers;
+﻿using CsToml.Extension;
+using System.Buffers;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
@@ -98,7 +99,7 @@ internal ref struct Utf8SequenceReader
     {
         if (moreData)
         {
-            value = CurrentSpan[CurrentSpanIndex];
+            value = CurrentSpan.At(CurrentSpanIndex);
             return true;
         }
         else
@@ -118,7 +119,7 @@ internal ref struct Utf8SequenceReader
 
         if (CurrentSpanIndex + offset <= CurrentSpan.Length - 1)
         {
-            value = CurrentSpan[CurrentSpanIndex + (int)offset];
+            value = CurrentSpan.At(CurrentSpanIndex + (int)offset);
             return true;
         }
 
@@ -137,7 +138,7 @@ internal ref struct Utf8SequenceReader
                 break;
         }
 
-        value = currentMemory.Span[(int)remainingOffset];
+        value = currentMemory.Span.At((int)remainingOffset);
         return true;
     }
 

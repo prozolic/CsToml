@@ -1,6 +1,5 @@
 ﻿using CsToml.Error;
-using CsToml.Formatter;
-using CsToml.Utility;
+using CsToml.Extension;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -84,7 +83,6 @@ internal sealed partial class TomlBoolean : TomlValue
         return true;
     }
 
-
     public static TomlBoolean Parse(ReadOnlySpan<byte> bytes)
     {
         if (bytes.Length == 4)
@@ -99,7 +97,7 @@ internal sealed partial class TomlBoolean : TomlValue
         {
             var falseValue = Unsafe.ReadUnaligned<int>(ref MemoryMarshal.GetReference<byte>(bytes));
             if (falseValue == 1936482662 // fals
-                && bytes[4] == TomlCodes.Alphabet.e) // e
+                && bytes.At(4) == TomlCodes.Alphabet.e) // e
             {
                 return TomlBoolean.False;
             }
