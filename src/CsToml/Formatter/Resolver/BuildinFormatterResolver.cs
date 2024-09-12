@@ -1,7 +1,9 @@
 ﻿
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Numerics;
+using System.Text;
 
 namespace CsToml.Formatter.Resolver;
 
@@ -119,6 +121,8 @@ internal sealed class BuildinFormatterResolver : ITomlValueFormatterResolver
         DefaultFormatterCache<Guid>.Formatter = GuidFormatter.Instance;
         DefaultFormatterCache<Guid?>.Formatter = NullableGuidFormatter.Instance;
         DefaultFormatterCache<Version>.Formatter = VersionFormatter.Instance;
+        DefaultFormatterCache<StringBuilder>.Formatter = StringBuilderFormatter.Instance;
+        DefaultFormatterCache<BitArray>.Formatter = BitArrayFormatter.Instance;
 
         DefaultFormatterCache<bool[]>.Formatter = new ArrayFormatter<bool>();
         DefaultFormatterCache<byte[]>.Formatter = new ArrayFormatter<byte>();
