@@ -40,6 +40,8 @@ internal sealed class BuildinFormatterResolver : ITomlValueFormatterResolver
         { typeof(ConcurrentStack<>), typeof(ConcurrentStackFormatter<>) },
         { typeof(ConcurrentBag<>), typeof(ConcurrentBagFormatter<>) },
         { typeof(ReadOnlyCollection<>), typeof(ReadOnlyCollectionFormatter<>) },
+        { typeof(BlockingCollection<>), typeof(BlockingCollectionFormatter<>) },
+        { typeof(PriorityQueue<,>), typeof(PriorityQueueFormatter<,>) },
 
         { typeof(IEnumerable<>), typeof(IEnumerableFormatter<>) },
         { typeof(ICollection<>),  typeof(ICollectionFormatter<>) },
@@ -123,6 +125,7 @@ internal sealed class BuildinFormatterResolver : ITomlValueFormatterResolver
         DefaultFormatterCache<Version>.Formatter = VersionFormatter.Instance;
         DefaultFormatterCache<StringBuilder>.Formatter = StringBuilderFormatter.Instance;
         DefaultFormatterCache<BitArray>.Formatter = BitArrayFormatter.Instance;
+        DefaultFormatterCache<Type>.Formatter = TypeFormatter.Instance;
 
         DefaultFormatterCache<bool[]>.Formatter = new ArrayFormatter<bool>();
         DefaultFormatterCache<byte[]>.Formatter = new ArrayFormatter<byte>();
@@ -164,6 +167,8 @@ internal sealed class BuildinFormatterResolver : ITomlValueFormatterResolver
 
         DefaultFormatterCache<Dictionary<string, object?>>.Formatter = new DictionaryFormatter();
         DefaultFormatterCache<IDictionary<string, object?>>.Formatter = new IDictionaryFormatter();
+
+        DefaultFormatterCache<ArrayList>.Formatter = ArrayListFormatter.Instance;
     }
 
     public static readonly BuildinFormatterResolver Instance = new BuildinFormatterResolver();
