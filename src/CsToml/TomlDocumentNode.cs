@@ -12,11 +12,12 @@ using System.Text.Unicode;
 
 namespace CsToml;
 
-[DebuggerDisplay("{Value}")]
+[DebuggerDisplay("DocumentNode = {NodeCount}")]
 public struct TomlDocumentNode
 {
-    private readonly TomlTableNode node;
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private readonly TomlValue value;
+    private readonly TomlTableNode node;
 
     internal readonly int NodeCount => node?.NodeCount ?? 0;
 

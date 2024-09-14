@@ -5,9 +5,6 @@ using CsToml.Utility;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Xml.Linq;
-using System.Reflection.Metadata;
-using System.Collections.Generic;
 
 namespace CsToml.Values;
 
@@ -19,7 +16,7 @@ internal enum NodeStatus : byte
 }
 
 [DebuggerTypeProxy(typeof(TomlTableNodeDebugView))]
-[DebuggerDisplay("{Value}")]
+[DebuggerDisplay("{DebuggerValue}")]
 internal class TomlTableNode
 {
     internal static readonly TomlTableNode Empty = new() { Value = TomlValue.Empty};
@@ -39,6 +36,8 @@ internal class TomlTableNode
     internal ReadOnlySpan<TomlString> CommentSpan => comments != null ? CollectionsMarshal.AsSpan(comments) : ReadOnlySpan<TomlString>.Empty;
 
     internal TomlTableNodeDictionary.KeyValuePairEnumerator KeyValuePairs => new(nodes ?? Empty.nodes!);
+
+    internal object DebuggerValue => (Value?.HasValue ?? false ? Value : nodes)!;
 
     internal bool IsGroupingProperty 
     {
@@ -124,11 +123,7 @@ internal class TomlTableNode
     internal static TomlTableNode CreateGroupingPropertyNode()
     {
         var node = new TomlTableNode() { IsGroupingProperty = true};
-#if DEBUG
-        node.Value = new NodeCountDebuggerValue(node);
-#else
         node.Value = TomlValue.Empty;
-#endif
         return node;
     }
 
@@ -281,18 +276,6 @@ internal class TomlTableNode
         {
             value = default!;
             return false;
-        }
-    }
-
-    [DebuggerDisplay("NodeCount = {currentNode.NodeCount}")]
-    private sealed class NodeCountDebuggerValue : TomlValue
-    {
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly TomlTableNode currentNode;
-
-        internal NodeCountDebuggerValue(TomlTableNode node) : base()
-        {
-            currentNode = node;
         }
     }
 }

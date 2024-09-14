@@ -40,7 +40,7 @@ public abstract partial class TomlValue :
         return false;
     }
 
-    [DebuggerDisplay("None")]
+    [DebuggerDisplay("Empty")]
     private sealed class CsTomlEmpty : TomlValue
     {
         public CsTomlEmpty() : base() { }

@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 
 namespace CsToml.Values;
 
-[DebuggerDisplay("CsTomlInlineTable : {RootNode}")]
+[DebuggerDisplay("Inline Table = {RootNode.NodeCount}")]
 internal sealed partial class TomlInlineTable : TomlValue
 {
     private readonly TomlTable inlineTable = new TomlTable();

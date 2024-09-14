@@ -1,14 +1,12 @@
 ﻿using CsToml.Error;
-using CsToml.Extension;
 using CsToml.Utility;
 using System.Buffers;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Xml.Linq;
 
 namespace CsToml.Values;
 
-[DebuggerDisplay("Count = {RootNode.NodeCount}")]
+[DebuggerDisplay("Table = {RootNode.NodeCount}")]
 internal sealed partial class TomlTable : TomlValue
 {
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]

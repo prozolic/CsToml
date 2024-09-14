@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 namespace CsToml.Values;
 
 [DebuggerTypeProxy(typeof(TomlArrayDebugView))]
-[DebuggerDisplay("Count = {Count}")]
+[DebuggerDisplay("Array[{Count}]")]
 internal sealed partial class TomlArray(int capacity) : 
     TomlValue(), 
     IEnumerable<TomlValue>

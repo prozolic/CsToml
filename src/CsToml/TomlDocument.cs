@@ -6,7 +6,7 @@ using System.Diagnostics;
 
 namespace CsToml;
 
-[DebuggerDisplay("{table}")]
+[DebuggerDisplay("Toml Document = {table.RootNode.NodeCount}")]
 public partial class TomlDocument : ITomlSerializedObject<TomlDocument>
 {
     #region ITomlSerializedObject
