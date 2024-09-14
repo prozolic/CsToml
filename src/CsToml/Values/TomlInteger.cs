@@ -1,6 +1,4 @@
 ﻿using CsToml.Error;
-using CsToml.Formatter;
-using CsToml.Utility;
 using System.Buffers.Text;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -40,7 +38,7 @@ internal sealed partial class TomlInteger : TomlValue
 
     public override bool HasValue => true;
 
-    private TomlInteger(long value) : base()
+    private TomlInteger(long value)
     {
         this.Value = value;
     }

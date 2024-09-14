@@ -72,7 +72,7 @@ public partial class TomlDocument : ITomlSerializedObject<TomlDocument>
                             break;
 
                         case ParserState.KeyValue:
-                            table.AddKeyValue(parser.GetDottedKeySpan(), parser.GetValue()!, currentNode, comments);
+                            currentNode!.AddKeyValue(parser.GetDottedKeySpan(), parser.GetValue()!, comments);
                             comments?.Clear();
                             break;
 

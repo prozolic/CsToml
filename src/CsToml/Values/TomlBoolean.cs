@@ -1,5 +1,6 @@
 ﻿using CsToml.Error;
 using CsToml.Extension;
+using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -16,7 +17,7 @@ internal sealed partial class TomlBoolean : TomlValue
 
     public override bool HasValue => true;
 
-    private TomlBoolean(bool value) : base()
+    private TomlBoolean(bool value)
     {
         Value = value;
     }
@@ -95,9 +96,10 @@ internal sealed partial class TomlBoolean : TomlValue
         }
         if (bytes.Length == 5)
         {
-            var falseValue = Unsafe.ReadUnaligned<int>(ref MemoryMarshal.GetReference<byte>(bytes));
+            ref var refBytes = ref MemoryMarshal.GetReference(bytes);
+            var falseValue = Unsafe.ReadUnaligned<int>(ref refBytes);
             if (falseValue == 1936482662 // fals
-                && bytes.At(4) == TomlCodes.Alphabet.e) // e
+                && Unsafe.Add(ref refBytes, 4) == TomlCodes.Alphabet.e) // e
             {
                 return TomlBoolean.False;
             }

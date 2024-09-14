@@ -1,5 +1,6 @@
 ﻿using CsToml.Error;
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.Unicode;
 
@@ -9,12 +10,15 @@ internal static class Utf8Helper
 {
     public static bool ContainInvalidSequences(ReadOnlySpan<byte> bytes)
     {
+        ref var refBytes = ref MemoryMarshal.GetReference(bytes);
+
         for (int i = 0; i < bytes.Length; i++)
         {
-            if ((bytes[i] & 0x80) == 0x00) goto One;
-            else if (((bytes[i] & 0xe0) == 0xc0)) goto Two;
-            else if (((bytes[i] & 0xf0) == 0xe0)) goto Three;
-            else if (((bytes[i] & 0xf8) == 0xf0)) goto Four;
+            ref var b1 = ref Unsafe.Add(ref refBytes, i);
+            if ((b1 & 0x80) == 0x00) goto One;
+            else if (((b1 & 0xe0) == 0xc0)) goto Two;
+            else if (((b1 & 0xf0) == 0xe0)) goto Three;
+            else if (((b1 & 0xf8) == 0xf0)) goto Four;
             else return true;
 
         One:
@@ -25,34 +29,36 @@ internal static class Utf8Helper
 
         Two:
             if (bytes.Length <= ++i) return true;
-            if ((bytes[i] & 0xc0) != 0x80) return true;
+            if ((Unsafe.Add(ref refBytes, i) & 0xc0) != 0x80) return true;
             continue;
 
         Three:
             if (bytes.Length <= i + 2) return true;
 
-            if (bytes[i] == 0xe0)
+            if (Unsafe.Add(ref refBytes, i) == 0xe0)
             {
-                if (0x7f < bytes[i + 1] && bytes[i + 1] < 0xa0) return true;
+                ref var b2 = ref Unsafe.Add(ref refBytes, i + 1);
+                if (0x7f < b2 && b2 < 0xa0) return true;
             }
-            else if (bytes[i] == 0xed) // surrogate pair
+            else if (Unsafe.Add(ref refBytes, i) == 0xed) // surrogate pair
             {
-                if (0x9f < bytes[i + 1]) return true;
+                if (0x9f < Unsafe.Add(ref refBytes, i + 1)) return true;
             }
-            if ((bytes[++i] & 0xc0) != 0x80) return true;
-            if ((bytes[++i] & 0xc0) != 0x80) return true;
+            if ((Unsafe.Add(ref refBytes, ++i) & 0xc0) != 0x80) return true;
+            if ((Unsafe.Add(ref refBytes, ++i) & 0xc0) != 0x80) return true;
             continue;
 
         Four:
             if (bytes.Length <= i + 3) return true;
 
-            if (bytes[i] == 0xf0)
+            if (Unsafe.Add(ref refBytes, i) == 0xf0)
             {
-                if (0x7f < bytes[i + 1] && bytes[i + 1] < 0x90) return true;
+                ref var b2 = ref Unsafe.Add(ref refBytes, i + 1);
+                if (0x7f < b2 && b2 < 0x90) return true;
             }
-            if ((bytes[++i] & 0xc0) != 0x80) return true;
-            if ((bytes[++i] & 0xc0) != 0x80) return true;
-            if ((bytes[++i] & 0xc0) != 0x80) return true;
+            if ((Unsafe.Add(ref refBytes, ++i) & 0xc0) != 0x80) return true;
+            if ((Unsafe.Add(ref refBytes, ++i) & 0xc0) != 0x80) return true;
+            if ((Unsafe.Add(ref refBytes, ++i) & 0xc0) != 0x80) return true;
             continue;
 
         }

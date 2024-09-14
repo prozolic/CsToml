@@ -2,15 +2,14 @@
 using CsToml.Utility;
 using System.Collections;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace CsToml.Values;
 
 [DebuggerTypeProxy(typeof(TomlArrayDebugView))]
 [DebuggerDisplay("Array[{Count}]")]
-internal sealed partial class TomlArray(int capacity) : 
-    TomlValue(), 
-    IEnumerable<TomlValue>
+internal sealed partial class TomlArray(int capacity) : TomlValue, IEnumerable<TomlValue>
 {
     private readonly List<TomlValue> values = new(capacity);
 
@@ -130,12 +129,15 @@ internal sealed partial class TomlArray(int capacity) :
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Add(TomlValue tomlValue)
         => values.Add(tomlValue);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IEnumerator<TomlValue> GetEnumerator()
         => new Enumerator(this);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     IEnumerator IEnumerable.GetEnumerator()
         => GetEnumerator();
 

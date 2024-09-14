@@ -1,5 +1,4 @@
-﻿using CsToml.Error;
-using CsToml.Formatter;
+﻿
 using CsToml.Utility;
 using System.Buffers;
 using System.Diagnostics;
@@ -24,7 +23,7 @@ internal sealed partial class TomlString : TomlValue, ITomlStringParser<TomlStri
     [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
     public string Utf16String => utf16String;
 
-    public TomlString(string value, CsTomlStringType type = CsTomlStringType.Basic) : base()
+    public TomlString(string value, CsTomlStringType type = CsTomlStringType.Basic)
     {
         TomlStringType = type;
         utf16String = value;

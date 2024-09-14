@@ -169,6 +169,20 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowTableHeaderIsNotClosedWithClosingBrackets()
+    {
+        ThrowException($@"Table Header is not closed with closing brackets.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowArrayOfTablesHeaderIsNotClosedWithClosingBrackets()
+    {
+        ThrowException($@"Array Of Tables Header is not closed with closing brackets.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ThrowNotTurnIntoTable(string tableName)
     {
         ThrowException($@"Cannot be a table because the value is already defined in '{tableName}'");
@@ -352,9 +366,9 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void ThrowDottedKeysAreNotJoinedByDots()
+    internal static void ThrowKeysAreNotJoinedByDots()
     {
-        ThrowException($@"Dotted keys are not joined by dots.");
+        ThrowException($@"Keys are not joined by dots.");
     }
 
     [DoesNotReturn]
@@ -529,7 +543,35 @@ internal static class ExceptionHelper
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ThrowBareKeyIsEmpty()
     {
-        ThrowException($@"A bare key is empty.");
+        ThrowException($@"Bare keys is empty.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowBareKeyContainsInvalid(byte ch)
+    {
+        ThrowException($@"Bare keys contains an invalid string '{ch}'.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowKeyContainsInvalid(byte ch)
+    {
+        ThrowException($@"Key contains an invalid string '{ch}'.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowTableHeaderContainsInvalid(byte ch)
+    {
+        ThrowException($@"Table Header contains an invalid string '{ch}'.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowArrayOfTablesHeaderContainsInvalid(byte ch)
+    {
+        ThrowException($@"Array Of Tables Header contains an invalid string '{ch}'.");
     }
 
     [DoesNotReturn]

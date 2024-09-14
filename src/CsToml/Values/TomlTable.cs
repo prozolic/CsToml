@@ -29,40 +29,7 @@ internal sealed partial class TomlTable : TomlValue
         }
     }
 
-    internal TomlTable() : base() { }
-
-    internal TomlTableNode AddKeyValue(ReadOnlySpan<TomlDottedKey> dotKeys, TomlValue value, TomlTableNode? searchRootNode, IReadOnlyCollection<TomlString>? comments)
-    {
-        var currentNode = searchRootNode ?? RootNode;
-        var lastKey = dotKeys[^1];
-
-        for (var i = 0; i < dotKeys.Length - 1; i++)
-        {
-            var sectionKey = dotKeys[i];
-            if (currentNode!.TryGetOrAddChildNode(sectionKey, out var childNode) == NodeStatus.NewAdd)
-            {
-                currentNode = childNode;
-                continue;
-            }
-            if (childNode.IsTableHeaderDefinitionPosition)
-            {
-                ExceptionHelper.ThrowTheKeyIsDefinedAsTable();
-            }
-            if (childNode.IsArrayOfTablesHeaderDefinitionPosition)
-            {
-                ExceptionHelper.ThrowTheKeyIsDefinedAsArrayOfTables();
-            }
-            if (childNode.IsGroupingProperty)
-            {
-                currentNode = childNode;
-                continue;
-            }
-
-            ExceptionHelper.ThrowNotTurnIntoTable(dotKeys.GetJoinName());
-        }
-
-        return currentNode.AddKeyValue(lastKey, value, comments);
-    }
+    internal TomlTable() { }
 
     internal void AddTableHeader(ReadOnlySpan<TomlDottedKey> dotKeys, IReadOnlyCollection<TomlString>? comments, out TomlTableNode? newNode)
     {

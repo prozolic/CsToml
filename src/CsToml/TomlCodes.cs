@@ -38,10 +38,27 @@ internal static class TomlCodes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static int ParseHex(byte hexNumber)
         {
-            if (IsNumber(hexNumber)) return ParseDecimal(hexNumber);
-            if ((Alphabet.A <= hexNumber && hexNumber <= Alphabet.F)) return hexNumber - 0x37;
-            if ((Alphabet.a <= hexNumber && hexNumber <= Alphabet.f)) return hexNumber - 0x57;
-            return -1;
+            //https://devblogs.microsoft.com/dotnet/performance-improvements-in-net-8/
+            ReadOnlySpan<sbyte> hexTable =
+            [
+                -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 0x00 - 0x0f
+                -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 0x10 - 0x1f
+                -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 0x20 - 0x2f
+                 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, -1, -1, -1, -1, -1, -1, // 0x30 - 0x3f
+                -1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 0x40 - 0x4f
+                -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 0x50 - 0x5f
+                -1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 0x60 - 0x6f
+                -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 0x70 - 0x7f
+                -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 0x80 - 0x8f
+                -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 0x90 - 0x9f
+                -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 0xa0 - 0xaf
+                -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 0xb0 - 0xbf
+                -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 0xc0 - 0xcf
+                -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 0xd0 - 0xdf
+                -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 0xe0 - 0xef
+                -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 0xf0 - 0xff
+            ];
+            return hexTable.At(hexNumber);
         }
 
         internal static int DigitsDecimalUnroll4(long value)
@@ -63,8 +80,6 @@ internal static class TomlCodes
 
     internal readonly struct Float
     {
-        internal static readonly double[] PositivePosExps15 = [1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13, 1e14, 1e15];
-
         internal const double Inf = double.PositiveInfinity;
         internal const double NInf = double.NegativeInfinity;
         internal const double Nan = double.NaN;
@@ -222,7 +237,7 @@ internal static class TomlCodes
         => ch == Symbol.CARRIAGE;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static bool IsLf(byte ch) 
+    internal static bool IsLf(byte ch)
         => ch == Symbol.LINEFEED;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -358,7 +373,28 @@ internal static class TomlCodes
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsHex(byte rawByte)
-        => IsNumber(rawByte) || IsUpperHexAlphabet(rawByte) || IsLowerHexAlphabet(rawByte);
+    {
+        ReadOnlySpan<bool> hexTable =
+        [
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x00 - 0x0f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x10 - 0x1f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x20 - 0x2f
+            true, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false,           // 0x30 - 0x3f
+            false, true, true, true, true, true, true, false, false, false, false, false, false, false, false, false,       // 0x40 - 0x4f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x50 - 0x5f
+            false, true, true, true, true, true, true, false, false, false, false, false, false, false, false, false,       // 0x60 - 0x6f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x70 - 0x7f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x80 - 0x8f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x90 - 0x9f
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xa0 - 0xaf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xb0 - 0xbf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xc0 - 0xcf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xd0 - 0xdf
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
+        ];
+        return hexTable.At(rawByte);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsUpperHexAlphabet(byte rawByte)

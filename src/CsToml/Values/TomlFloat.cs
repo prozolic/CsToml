@@ -1,12 +1,10 @@
 ﻿using CsToml.Error;
-using CsToml.Formatter;
-using CsToml.Utility;
 using System.Diagnostics;
 
 namespace CsToml.Values;
 
 [DebuggerDisplay("{Value}")]
-internal sealed partial class TomlFloat(double value, TomlFloat.FloatKind kind = TomlFloat.FloatKind.Normal) : TomlValue()
+internal sealed partial class TomlFloat(double value, TomlFloat.FloatKind kind = TomlFloat.FloatKind.Normal) : TomlValue
 {
     public readonly static TomlFloat Inf = new(TomlCodes.Float.Inf, FloatKind.Inf);
     public readonly static TomlFloat NInf = new (TomlCodes.Float.NInf, FloatKind.NInf);

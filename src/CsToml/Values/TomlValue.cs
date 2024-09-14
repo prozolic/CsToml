@@ -12,8 +12,6 @@ public abstract partial class TomlValue :
 
     public virtual bool HasValue => false;
 
-    protected TomlValue(){}
-
     internal virtual bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer) // Write TOML format.
         where TBufferWriter : IBufferWriter<byte>
     {

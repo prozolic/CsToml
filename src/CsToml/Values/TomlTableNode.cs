@@ -122,9 +122,11 @@ internal class TomlTableNode
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static TomlTableNode CreateGroupingPropertyNode()
     {
-        var node = new TomlTableNode() { IsGroupingProperty = true};
-        node.Value = TomlValue.Empty;
-        return node;
+        return new TomlTableNode() 
+        { 
+            IsGroupingProperty = true,
+            Value = TomlValue.Empty
+        };
     }
 
     private TomlTableNode()
@@ -146,17 +148,45 @@ internal class TomlTableNode
         this.comments.AddRange(comments);
     }
 
-    internal TomlTableNode AddKeyValue(TomlDottedKey key, TomlValue value, IReadOnlyCollection<TomlString>? comments)
+    internal TomlTableNode AddKeyValue(ReadOnlySpan<TomlDottedKey> dotKeys, TomlValue value, IReadOnlyCollection<TomlString>? comments)
     {
+        var currentNode = this;
+        var lastKey = dotKeys[^1];
+
+        for (var i = 0; i < dotKeys.Length - 1; i++)
+        {
+            var sectionKey = dotKeys[i];
+            if (currentNode.TryGetOrAddChildNode(sectionKey, out var childNode) == NodeStatus.NewAdd)
+            {
+                currentNode = childNode;
+                continue;
+            }
+            if (childNode.IsTableHeaderDefinitionPosition)
+            {
+                ExceptionHelper.ThrowTheKeyIsDefinedAsTable();
+            }
+            if (childNode.IsArrayOfTablesHeaderDefinitionPosition)
+            {
+                ExceptionHelper.ThrowTheKeyIsDefinedAsArrayOfTables();
+            }
+            if (childNode.IsGroupingProperty)
+            {
+                currentNode = childNode;
+                continue;
+            }
+
+            ExceptionHelper.ThrowNotTurnIntoTable(dotKeys.GetJoinName());
+        }
+
         var newNode = new TomlTableNode(value);
         if (comments?.Count > 0)
         {
             newNode.AddComment(comments);
         }
-        
-        if (!IsGroupingProperty || !(nodes?.TryAdd(key, newNode) ?? false))
+
+        if (!currentNode.IsGroupingProperty || !(currentNode.nodes?.TryAdd(lastKey, newNode) ?? false))
         {
-            ExceptionHelper.ThrowKeyIsDefined(key);
+            ExceptionHelper.ThrowKeyIsDefined(lastKey);
         }
 
         return newNode;
