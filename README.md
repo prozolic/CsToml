@@ -12,80 +12,43 @@ For more information about TOML, visit the official website at [https://toml.io/
 > [!NOTE]
 > The officially released versions are CsToml Ver. 1.1.0, CsToml.Extensions Ver. 1.1.0, and CsToml.Generator Ver. 1.1.0.
 
-```csharp
-using CsToml;
-using System.Text;
+CsToml has the following features.
 
-var tomlText = @"
-key = ""value""
-number = 123
-"u8;
-
-var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
-
-if (document!.RootNode["key"u8].TryGetString(out var value))
-{
-    Console.WriteLine($"key = {value}"); // key = value
-}
-Console.WriteLine($"key = {document!.RootNode["key"u8].GetString()}"); // key = value
-
-using var serializedTomlText = CsTomlSerializer.Serialize(document);
-Console.WriteLine(Encoding.UTF8.GetString(serializedTomlText.ByteSpan));
-// key = "value"
-// number = 123
-
-```
+- [TOML v1.0.0](https://toml.io/en/v1.0.0) supported
+- Implemented in .NET 8 and C# 12.(supports .NET 8 or later. )  
+- Parsing is performed using byte sequence instead of `string`.
+- It is processed byte sequence directly by the API defined in `System.Buffers`(`IBufferWriter<byte>`,`ReadOnlySequence<byte>`), memory allocation is small and fast.
+- Buffers are rented from the pool(`ArrayPool<T>`), reducing the allocation.
+- All standard [TOML v1.0.0 test cases](https://github.com/toml-lang/toml-test/tree/master/tests) are passed.
+- The serialization interface and implementation is influenced by [MemoryPack](https://github.com/Cysharp/MemoryPack) and [VYaml](https://github.com/hadashiA/VYaml).
 
 Table of Contents
 ---
 
-* [Feature](#feature)
 * [Installation](#installation)
-* [Built-in support type](#built-in-support-type)
 * [Serialize and deserialize TomlDocument](#serialize-and-deserialize-tomldocument)
 * [Find values from TomlDocument](#find-values-from-tomldocument)
+* [Built-in support type](#built-in-support-type)
 * [Serialize and deserialize custom classes (CsToml.Generator)](#serialize-and-deserialize-custom-classes-cstomlgenerator)
 * [Extensions (CsToml.Extensions)](#extensions-cstomlextensions)
 * [UnitTest](#unittest)
 * [License](#license)
 
-Feature
----
-
-- [TOML v1.0.0](https://toml.io/en/v1.0.0) supported
-- Implemented in .NET 8 and C# 12.(supports .NET 8 or later. )  
-- Supports I/O APIs (`IBufferWriter<byte>`, `ReadOnlySpan<byte>`, `ReadOnlySequence<byte>`)  
-- By parsing directly in UTF-8 (byte array) instead of UTF-16 (strings), low allocation and high speed are achieved.  
-- All standard [TOML v1.0.0 test cases](https://github.com/toml-lang/toml-test/tree/master/tests) are passed..
-- The serialization interface and implementation is influenced by [MemoryPack](https://github.com/Cysharp/MemoryPack) and [VYaml](https://github.com/hadashiA/VYaml).
-
 Installation
 ---
 
-This library is distributed via NuGet.
+This library is distributed via NuGet.  
+We target .NET 8 or later.
 
 > PM> Install-Package [CsToml](https://www.nuget.org/packages/CsToml/)
 
-Additional features are available by installing optional documents.(learn more in our [extensions section](#extensions-cstomlextensions))
+When you install Generator, it automatically creates code to make your custom classes serializable.(learn more in our [Serialize and deserialize custom classes (CsToml.Generator)](#serialize-and-deserialize-custom-classes-cstomlgenerator))
 
-> PM> Install-Package [CsToml.Extensions](https://www.nuget.org/packages/CsToml.Extensions/)  
 > PM> Install-Package [CsToml.Generator](https://www.nuget.org/packages/CsToml.Generator/)  
 
-Built-in support type
----
+Additional features are available by installing optional documents.(learn more in our [Extensions (CsToml.Extensions)](#extensions-cstomlextensions))
 
-These types can be serialized/deserialize by default.
-
-* .NET Built-in types(`bool`, `long`, `double`, `string` etc)
-* `DateTime`, `DateTimeOffset`, `DateOnly`, `TimeOnly`, `TimeSpan`
-* `Enum`, `Half`, `Int128`, `UInt128`, `BigInteger`
-* `Uri`, `Version`, `Guid`, `Nullable`
-* `T[]`, `Memory<>`, `ReadOnlyMemory<>`
-* `List<>`, `Stack<>`, `HashSet<>`, `SortedSet<>`, `Queue<>`, `LinkedList<>`, `ReadOnlyCollection<>`
-* `ConcurrentQueue<>`, `ConcurrentStack<>`, `ConcurrentBag<>`
-* `IEnumerable<>`, `ICollection<>`, `IReadOnlyCollection<>`, `IList<>`, `IReadOnlyList<>`, `ISet<>`, `IReadOnlySet<>`
-* `Dictionary<string, object?>`, `IDictionary<string, object?>`
-* `KeyValuePair<>`, `Tuple<,...>`, `ValueTuple<,...>`
+> PM> Install-Package [CsToml.Extensions](https://www.nuget.org/packages/CsToml.Extensions/)  
 
 Serialize and deserialize `TomlDocument`
 ---
@@ -93,10 +56,10 @@ Serialize and deserialize `TomlDocument`
 By specifying `TomlDocument`, serialization and deserialization can be performed while preserving the TOML data structure.
 Call `CsTomlSerializer.Deserialize<TomlDocument>(tomlText)` to deserialize a UTF-8 string (`ReadOnlySpan<byte>` or `ReadOnlySequence<byte>`) in TOML format.
 The second argument is `CsTomlSerializerOptions`, which does not need to be specified explicitly at this time.
-It may be used to add optional features in the future.   
+It may be used to add optional features in the future.  
 
 Call `CsTomlSerializer.Serialize` to Serialize `TomlDocument`.
-You can return a ByteMemoryResult or get a utf8 byte array via IBufferWriter<byte>.
+You can return a ByteMemoryResult or get a utf8 byte array via `IBufferWriter<byte>`.
 
 
 ```csharp
@@ -218,6 +181,23 @@ public bool TryGetObject(out object value)
 public bool TryGetNumber<T>(out T value) where T : struct, INumberBase<T>
 public bool TryGetValue<T>(out T value)
 ```
+
+Built-in support type
+---
+
+These types can be serialized/deserialize by default.
+
+* .NET Built-in types(`bool`, `long`, `double`, `string` etc)
+* `DateTime`, `DateTimeOffset`, `DateOnly`, `TimeOnly`, `TimeSpan`
+* `Enum`, `Half`, `Int128`, `UInt128`, `BigInteger`, `BitArray`
+* `Uri`, `Version`, `Guid`, `Type`, `Nullable`, `StringBuilder`
+* `T[]`, `Memory<>`, `ReadOnlyMemory<>`
+* `List<>`, `Stack<>`, `HashSet<>`, `SortedSet<>`, `Queue<>`, `PriorityQueue<,>`, `LinkedList<>`, `ReadOnlyCollection<>`, `BlockingCollection<>`
+* `ConcurrentQueue<>`, `ConcurrentStack<>`, `ConcurrentBag<>`
+* `IEnumerable<>`, `ICollection<>`, `IReadOnlyCollection<>`, `IList<>`, `IReadOnlyList<>`, `ISet<>`, `IReadOnlySet<>`
+* `Dictionary<string, object?>`, `IDictionary<string, object?>`
+* `ArrayList`
+* `KeyValuePair<>`, `Tuple<,...>`, `ValueTuple<,...>`
 
 Serialize and deserialize custom classes (`CsToml.Generator`)
 ---
