@@ -21,6 +21,13 @@ public class GetValueTest
 str = ""string""
 str2 = ""123""
 str3 = "" true ""
+str4 = """"""\
+       The quick brown \
+       fox jumps over \
+       the lazy dog.\
+       """"""
+str5 = 'this is str5.'
+str6 = '''t\h\i\s i\s s\t\r\6'''
 int = 99
 flt = 1.0
 bool = true
@@ -29,6 +36,14 @@ ldt = 1979-05-27T07:32:00
 ld1 = 1979-05-27
 lt1 = 07:32:30
 array = [ 1, 2, 3]
+
+""127.0.0.1"" = ""value""
+
+[Table]
+value = 100
+
+[Dotted.Table]
+value = 200
 
 [[ArrayOfTables]]
 value = 1
@@ -60,6 +75,25 @@ value3 = 3
     }
 
     [Fact]
+    public void TryStringTest()
+    {
+        var value = document.RootNode["str"u8];
+        {
+            value!.TryGetString(out var v).Should().BeTrue();
+            v.Should().Be("string");
+        }
+
+        value!.TryGetInt64(out var _).Should().BeFalse();
+        value!.TryGetDouble(out var _).Should().BeFalse();
+        value!.TryGetBool(out var _).Should().BeFalse();
+        value!.TryGetNumber<int>(out var _).Should().BeFalse();
+        value!.TryGetDateTime(out var _).Should().BeFalse();
+        value!.TryGetDateTimeOffset(out var _).Should().BeFalse();
+        value!.TryGetDateOnly(out var _).Should().BeFalse();
+        value!.TryGetTimeOnly(out var _).Should().BeFalse();
+    }
+
+    [Fact]
     public void StringTest2()
     {
         var value = document.RootNode["str2"u8];
@@ -75,6 +109,31 @@ value3 = 3
     }
 
     [Fact]
+    public void TryStringTest2()
+    {
+        var value = document.RootNode["str2"u8];
+        {
+            value!.TryGetString(out var v).Should().BeTrue();
+            v.Should().Be("123");
+        }
+        {
+            value!.TryGetInt64(out var v).Should().BeTrue();
+            v.Should().Be(123);
+        }
+        {
+            value!.TryGetDouble(out var v).Should().BeTrue();
+            v.Should().Be(123d);
+        }
+
+        value!.TryGetBool(out var _).Should().BeFalse();
+        value!.TryGetNumber<int>(out var _).Should().BeFalse();
+        value!.TryGetDateTime(out var _).Should().BeFalse();
+        value!.TryGetDateTimeOffset(out var _).Should().BeFalse();
+        value!.TryGetDateOnly(out var _).Should().BeFalse();
+        value!.TryGetTimeOnly(out var _).Should().BeFalse();
+    }
+
+    [Fact]
     public void StringTest3()
     {
         var value = document.RootNode["str3"u8];
@@ -82,6 +141,73 @@ value3 = 3
         Assert.Throws<CsTomlException>(() => value!.GetInt64());
         Assert.Throws<CsTomlException>(() => value!.GetDouble());
         value!.GetBool().Should().BeTrue();
+        Assert.Throws<CsTomlException>(() => value!.GetDateTime());
+        Assert.Throws<CsTomlException>(() => value!.GetDateTimeOffset());
+        Assert.Throws<CsTomlException>(() => value!.GetDateOnly());
+        Assert.Throws<CsTomlException>(() => value!.GetTimeOnly());
+        Assert.Throws<CsTomlException>(() => value!.GetNumber<int>());
+    }
+
+    [Fact]
+    public void TryStringTest3()
+    {
+        var value = document.RootNode["str3"u8];
+        {
+            value!.TryGetString(out var v).Should().BeTrue();
+            v.Should().Be(" true ");
+        }
+        {
+            value!.TryGetBool(out var v).Should().BeTrue();
+            v.Should().BeTrue();
+        }
+
+        value!.TryGetInt64(out var _).Should().BeFalse();
+        value!.TryGetDouble(out var _).Should().BeFalse();
+        value!.TryGetNumber<int>(out var _).Should().BeFalse();
+        value!.TryGetDateTime(out var _).Should().BeFalse();
+        value!.TryGetDateTimeOffset(out var _).Should().BeFalse();
+        value!.TryGetDateOnly(out var _).Should().BeFalse();
+        value!.TryGetTimeOnly(out var _).Should().BeFalse();
+    }
+
+    [Fact]
+    public void StringTest4()
+    {
+        var value = document.RootNode["str4"u8];
+        value!.GetString().Should().Be("The quick brown fox jumps over the lazy dog.");
+        Assert.Throws<CsTomlException>(() => value!.GetInt64());
+        Assert.Throws<CsTomlException>(() => value!.GetDouble());
+        Assert.Throws<CsTomlException>(() => value!.GetBool());
+        Assert.Throws<CsTomlException>(() => value!.GetDateTime());
+        Assert.Throws<CsTomlException>(() => value!.GetDateTimeOffset());
+        Assert.Throws<CsTomlException>(() => value!.GetDateOnly());
+        Assert.Throws<CsTomlException>(() => value!.GetTimeOnly());
+        Assert.Throws<CsTomlException>(() => value!.GetNumber<int>());
+    }
+
+    [Fact]
+    public void StringTest5()
+    {
+        var value = document.RootNode["str5"u8];
+        value!.GetString().Should().Be("this is str5.");
+        Assert.Throws<CsTomlException>(() => value!.GetInt64());
+        Assert.Throws<CsTomlException>(() => value!.GetDouble());
+        Assert.Throws<CsTomlException>(() => value!.GetBool());
+        Assert.Throws<CsTomlException>(() => value!.GetDateTime());
+        Assert.Throws<CsTomlException>(() => value!.GetDateTimeOffset());
+        Assert.Throws<CsTomlException>(() => value!.GetDateOnly());
+        Assert.Throws<CsTomlException>(() => value!.GetTimeOnly());
+        Assert.Throws<CsTomlException>(() => value!.GetNumber<int>());
+    }
+
+    [Fact]
+    public void StringTest6()
+    {
+        var value = document.RootNode["str6"u8];
+        value!.GetString().Should().Be("t\\h\\i\\s i\\s s\\t\\r\\6");
+        Assert.Throws<CsTomlException>(() => value!.GetInt64());
+        Assert.Throws<CsTomlException>(() => value!.GetDouble());
+        Assert.Throws<CsTomlException>(() => value!.GetBool());
         Assert.Throws<CsTomlException>(() => value!.GetDateTime());
         Assert.Throws<CsTomlException>(() => value!.GetDateTimeOffset());
         Assert.Throws<CsTomlException>(() => value!.GetDateOnly());
@@ -470,6 +596,90 @@ value3 = 3
         value!.TryGetDateOnly(out var _).Should().BeFalse();
         value!.TryGetTimeOnly(out var _).Should().BeFalse();
         value!.TryGetNumber<int>(out var _).Should().BeFalse();
+    }
+
+    [Fact]
+    public void QuotedkeysTest()
+    {
+        var value = document.RootNode["127.0.0.1"u8];
+        value!.GetString().Should().Be("value");
+
+        Assert.Throws<CsTomlException>(() => value!.GetInt64());
+        Assert.Throws<CsTomlException>(() => value!.GetDouble());
+        Assert.Throws<CsTomlException>(() => value!.GetBool());
+        Assert.Throws<CsTomlException>(() => value!.GetDateTime());
+        Assert.Throws<CsTomlException>(() => value!.GetDateTimeOffset());
+        Assert.Throws<CsTomlException>(() => value!.GetDateOnly());
+        Assert.Throws<CsTomlException>(() => value!.GetTimeOnly());
+        Assert.Throws<CsTomlException>(() => value!.GetNumber<int>());
+    }
+
+
+    [Fact]
+    public void TableTest()
+    {
+        var value = document.RootNode["Table"u8]["value"u8];
+        value!.GetInt64().Should().Be(100);
+        value!.GetDouble().Should().Be(100d);
+        value!.GetBool().Should().BeTrue();
+        Assert.Throws<CsTomlException>(() => value!.GetDateTime());
+        Assert.Throws<CsTomlException>(() => value!.GetDateTimeOffset());
+        Assert.Throws<CsTomlException>(() => value!.GetDateOnly());
+        Assert.Throws<CsTomlException>(() => value!.GetTimeOnly());
+        value!.GetNumber<int>().Should().Be(100);
+    }
+
+    [Fact]
+    public void DottedTableTest()
+    {
+        var value = document.RootNode["Dotted"u8]["Table"u8]["value"u8];
+        value!.GetInt64().Should().Be(200);
+        value!.GetDouble().Should().Be(200d);
+        value!.GetBool().Should().BeTrue();
+        Assert.Throws<CsTomlException>(() => value!.GetDateTime());
+        Assert.Throws<CsTomlException>(() => value!.GetDateTimeOffset());
+        Assert.Throws<CsTomlException>(() => value!.GetDateOnly());
+        Assert.Throws<CsTomlException>(() => value!.GetTimeOnly());
+        value!.GetNumber<int>().Should().Be(200);
+    }
+
+    [Fact]
+    public void ArrayOfTablesTest()
+    {
+        var arrayOfTables = document.RootNode["ArrayOfTables"u8];
+        {
+            var value = arrayOfTables[0]["value"u8];
+            value!.GetInt64().Should().Be(1);
+            value!.GetDouble().Should().Be(1d);
+            value!.GetBool().Should().BeTrue();
+            Assert.Throws<CsTomlException>(() => value!.GetDateTime());
+            Assert.Throws<CsTomlException>(() => value!.GetDateTimeOffset());
+            Assert.Throws<CsTomlException>(() => value!.GetDateOnly());
+            Assert.Throws<CsTomlException>(() => value!.GetTimeOnly());
+            value!.GetNumber<int>().Should().Be(1);
+        }
+        {
+            var value = arrayOfTables[1]["value2"u8];
+            value!.GetInt64().Should().Be(2);
+            value!.GetDouble().Should().Be(2d);
+            value!.GetBool().Should().BeTrue();
+            Assert.Throws<CsTomlException>(() => value!.GetDateTime());
+            Assert.Throws<CsTomlException>(() => value!.GetDateTimeOffset());
+            Assert.Throws<CsTomlException>(() => value!.GetDateOnly());
+            Assert.Throws<CsTomlException>(() => value!.GetTimeOnly());
+            value!.GetNumber<int>().Should().Be(2);
+        }
+        {
+            var value = arrayOfTables[2]["value3"u8];
+            value!.GetInt64().Should().Be(3);
+            value!.GetDouble().Should().Be(3d);
+            value!.GetBool().Should().BeTrue();
+            Assert.Throws<CsTomlException>(() => value!.GetDateTime());
+            Assert.Throws<CsTomlException>(() => value!.GetDateTimeOffset());
+            Assert.Throws<CsTomlException>(() => value!.GetDateOnly());
+            Assert.Throws<CsTomlException>(() => value!.GetTimeOnly());
+            value!.GetNumber<int>().Should().Be(3);
+        }
     }
 }
 
