@@ -108,21 +108,14 @@ internal static class ExceptionHelper
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ThrowOverflowDuringParsingOfNumericTypes()
     {
-        ThrowOverflowCountCore("numeric");
-    }
-
-    [DoesNotReturn]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void ThrowOverflowCountCore(string type)
-    {
-        ThrowException($@"The set value has overflowed during parsing of {type} types.");
+        ThrowException($@"The value set is too large or too small.");
     }
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ThrowOverflowCount()
     {
-        ThrowException($@"The set value has overflowed.");
+        ThrowException($@"Value has overflowed.");
     }
 
     [DoesNotReturn]
