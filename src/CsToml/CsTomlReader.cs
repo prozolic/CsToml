@@ -1389,8 +1389,8 @@ internal ref struct CsTomlReader
             }
         }
 
-        ExceptionHelper.ThrowIncorrectTomlFormat();
-        return default!;
+        // If EOF, read as integer.
+        return ReadDecimalNumeric();
     }
 
     private bool ExistNoNewLineAndComment(int length)
