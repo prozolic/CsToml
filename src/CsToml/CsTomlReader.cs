@@ -982,10 +982,7 @@ internal ref struct CsTomlReader
         }
         try
         {
-            var written = bufferWriter!.WrittenSpan;
-            if (Utf8Helper.ContainInvalidSequences(written))
-                ExceptionHelper.ThrowInvalidCodePoints();
-            return new TomlDottedKey(written, CsTomlStringType.Unquoted);
+            return new TomlDottedKey(bufferWriter!.WrittenSpan, CsTomlStringType.Unquoted);
         }
         finally
         {
@@ -1060,50 +1057,61 @@ internal ref struct CsTomlReader
         SkipWhiteSpace();
 
         var inlineTable = new TomlInlineTable();
-        if (TryPeek(out var c) && TomlCodes.IsRightBraces(c)) // empty inlinetable
+        if (TryPeek(out var c)) // empty inlinetable
         {
-            Advance(1); // }
-            return inlineTable;
+            if (TomlCodes.IsRightBraces(c))
+            {
+                Advance(1); // }
+                return inlineTable;
+            }
+        }
+        else
+        {
+            ExceptionHelper.ThrowInlineTableIsNotClosedWithClosingCurlyBrackets();
+            return default;
         }
 
         TomlTableNode? currentNode = inlineTable.RootNode;
-        while (Peek())
+        var dotKeysForInlineTable = new ExtendableArray<TomlDottedKey>(16);
+        try
         {
-            var dotKeysForInlineTable = new ExtendableArray<TomlDottedKey>(16);
-            TomlTableNode node = TomlTableNode.Empty;
-            try
+            do
             {
+                dotKeysForInlineTable.Clear();
+                TomlTableNode node = TomlTableNode.Empty;
+
                 ReadKey(ref dotKeysForInlineTable);
                 ReadEqual();
                 SkipWhiteSpace();
                 // Register only the key, then set the value.
                 node = currentNode.AddKeyValue(dotKeysForInlineTable.AsSpan(), TomlValue.Empty, []);
-            }
-            finally
-            {
-                dotKeysForInlineTable.Return();
-            }
 
-            node.Value = ReadValue();
-            SkipWhiteSpace();
-            if (TryPeek(out var ch))
-            {
-                if (TomlCodes.IsComma(ch))
+                node.Value = ReadValue();
+                SkipWhiteSpace();
+                if (TryPeek(out var ch))
                 {
-                    Advance(1);
-                    SkipWhiteSpace();
-                    continue;
+                    if (TomlCodes.IsComma(ch))
+                    {
+                        Advance(1);
+                        SkipWhiteSpace();
+                        continue;
+                    }
+                    if (TomlCodes.IsRightBraces(ch))
+                    {
+                        Advance(1);
+                        return inlineTable;
+                    }
+                    ExceptionHelper.ThrowIncorrectTomlInlineTableFormat();
                 }
-                if (TomlCodes.IsRightBraces(ch))
-                {
-                    Advance(1);
-                    break;
-                }
-                ExceptionHelper.ThrowIncorrectTomlInlineTableFormat();
-            }
+            } while (Peek());
+        }
+        finally
+        {
+            dotKeysForInlineTable.Return();
         }
 
-        return inlineTable;
+        ExceptionHelper.ThrowInlineTableIsNotClosedWithClosingCurlyBrackets();
+        return default;
     }
 
     internal TomlBoolean ReadBool(bool predictedValue)

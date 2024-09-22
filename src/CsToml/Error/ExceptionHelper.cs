@@ -169,6 +169,13 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowInlineTableIsNotClosedWithClosingCurlyBrackets()
+    {
+        ThrowException($@"InlineTable is not closed with closing curly brackets.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ThrowTableHeaderIsNotClosedWithClosingBrackets()
     {
         ThrowException($@"Table Header is not closed with closing brackets.");
