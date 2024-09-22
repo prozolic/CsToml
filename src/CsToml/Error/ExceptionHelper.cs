@@ -50,6 +50,13 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowEndOfFileReachedAfterKey()
+    {
+        ThrowException($@"Reached end of file after key.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ThrowInvalidAdvance()
     {
         ThrowException($@"Cannot advance past the end of the buffer.");

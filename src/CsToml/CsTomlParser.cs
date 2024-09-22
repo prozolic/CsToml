@@ -181,7 +181,7 @@ internal ref struct CsTomlParser
         CurrentState = ParserState.KeyValue;
         dottedKeys.Clear();
         reader.ReadKey(ref dottedKeys);
-        reader.Advance(1); // skip "="
+        reader.ReadEqual();
         reader.SkipWhiteSpace();
         value = reader.ReadValue();
     }

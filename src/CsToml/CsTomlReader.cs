@@ -442,6 +442,15 @@ internal ref struct CsTomlReader
     public readonly bool Peek()
         => !sequenceReader.End;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void ReadEqual()
+    {
+        if (!Peek())
+            ExceptionHelper.ThrowEndOfFileReachedAfterKey();
+
+        Advance(1); // skip "="
+    }
+
     internal TomlString ReadDoubleQuoteString()
     {
         var doubleQuoteCount = 0;
@@ -1065,7 +1074,7 @@ internal ref struct CsTomlReader
             try
             {
                 ReadKey(ref dotKeysForInlineTable);
-                Advance(1); // skip "="
+                ReadEqual();
                 SkipWhiteSpace();
                 // Register only the key, then set the value.
                 node = currentNode.AddKeyValue(dotKeysForInlineTable.AsSpan(), TomlValue.Empty, []);
