@@ -453,8 +453,8 @@ internal ref struct CsTomlReader
 
     internal TomlString ReadDoubleQuoteString()
     {
-        var doubleQuoteCount = 0;
-        var index = 0;
+        var doubleQuoteCount = 1;
+        var index = 1;
         while(TryPeek(index++, out var ch))
         {
             if (TomlCodes.IsDoubleQuoted(ch))
@@ -688,8 +688,8 @@ internal ref struct CsTomlReader
 
     internal TomlString ReadSingleQuoteString()
     {
-        var singleQuoteCount = 0;
-        var index = 0;
+        var singleQuoteCount = 1;
+        var index = 1;
         while (TryPeek(index++, out var ch))
         {
             if (TomlCodes.IsSingleQuoted(ch))
