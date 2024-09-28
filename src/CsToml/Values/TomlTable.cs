@@ -60,8 +60,9 @@ internal sealed partial class TomlTable : TomlValue
                 continue;
             }
 
-            newNode = null;
-            ExceptionHelper.ThrowIncorrectTomlFormat();
+            // dotKeys[i] is already defined.
+            newNode = RootNode;
+            ExceptionHelper.ThrowKeyIsDefined(dotKeys[i]);
         }
 
         if (!addedNewNode)
