@@ -2,15 +2,18 @@
 ===
 
 [![MIT License](https://img.shields.io/github/license/prozolic/CsToml)](LICENSE)
-[![NuGet](https://img.shields.io/nuget/v/CsToml)](https://www.nuget.org/packages/CsToml)
-[![NuGet](https://img.shields.io/nuget/v/CsToml.Extensions)](https://www.nuget.org/packages/CsToml.Extensions)
-[![NuGet](https://img.shields.io/nuget/v/CsToml.Generator)](https://www.nuget.org/packages/CsToml.Generator/)
+[![CsToml](https://img.shields.io/nuget/v/CsToml?label=nuget%20CsToml)](https://www.nuget.org/packages/CsToml)
+[![CsToml.Extensions](https://img.shields.io/nuget/v/CsToml.Extensions?label=nuget%20CsToml.Extensions
+)](https://www.nuget.org/packages/CsToml.Extensions)
+[![CsToml.Generator](https://img.shields.io/nuget/v/CsToml.Generator?label=nuget%20CsToml.Generator
+)](https://www.nuget.org/packages/CsToml.Generator/)
 
 CsToml is TOML Parser/Serializer for .NET.  
 For more information about TOML, visit the official website at [https://toml.io/en/](https://toml.io/en/)
 
 > [!NOTE]
-> The officially released versions are CsToml Ver. 1.1.0, CsToml.Extensions Ver. 1.1.0, and CsToml.Generator Ver. 1.1.0.
+> The official release version is v1.1.0 or higher.  
+> Less than v1.1.0 is deprecated due to incompatible APIs.
 
 CsToml has the following features.
 
