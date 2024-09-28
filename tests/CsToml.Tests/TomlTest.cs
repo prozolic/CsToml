@@ -1,3 +1,4 @@
+using CsToml.Error;
 using CsToml.Extensions;
 using FluentAssertions.Execution;
 
@@ -23,7 +24,14 @@ public class TomlTest
         {
             var document = CsTomlFileSerializer.Deserialize<TomlDocument>(tomlFile);
         }
-        catch(Exception e)
+        catch (CsTomlSerializeException ctse)
+        {
+            foreach(var ce in ctse.Exceptions!)
+            {
+                Execute.Assertion.FailWith($"TomlFile:{tomlFile} Message:{ce}");
+            }
+        }
+        catch (Exception e)
         {
             Execute.Assertion.FailWith($"TomlFile:{tomlFile} Message:{e}");
         }
@@ -36,11 +44,15 @@ public class TomlTest
         {
             var document = CsTomlFileSerializer.Deserialize<TomlDocument>(tomlFile);
         }
-        catch (Exception)
+        catch (CsTomlSerializeException)
         {
             return;
         }
-        Execute.Assertion.FailWith($"TomlFile:{tomlFile}");
+        catch (Exception e)
+        {
+            Execute.Assertion.FailWith($"TomlFile:{tomlFile} Message:{e}");
+        }
+        Execute.Assertion.FailWith($"TomlFile:{tomlFile} Message:Incorrect syntax was not detected.");
     }
 
     public static IEnumerable<object[]> ValidTomlFile()
