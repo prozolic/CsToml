@@ -2,6 +2,7 @@
 using CsToml.Error;
 using FluentAssertions;
 using FluentAssertions.Execution;
+using Utf8StringInterpolation;
 
 namespace CsToml.Tests;
 
@@ -88,44 +89,46 @@ number2 = 123456
         // failed
         document!.RootNode["failed"u8].HasValue.Should().BeFalse();
 
-
-        var expectedText = @"str = ""value""
-int = 123
-flt = 3.1415
-boolean = true
-odt1 = 1979-05-27T07:32:00Z
-ldt1 = 1979-05-27T07:32:00
-ldt2 = 1979-05-27T00:32:00.999999
-ld1 = 1979-05-27
-lt1 = 07:32:00
-key = ""value""
-first.second.third = ""value""
-number = 123456
-array = [ 123, ""456"", true ]
-inlineTable = { key = 1, key2 = ""value"", key3 = [ 123, 456, 789 ], key4 = { key = ""inlinetable"" } }
-
-[Table.test]
-key = ""value""
-first.second.third = ""value""
-number = 123456
-
-[arrayOfTables]
-
-[[arrayOfTables.test]]
-key = ""value""
-first.second.third = ""value""
-number = 123456
-
-[[arrayOfTables.test]]
-
-[[arrayOfTables.test]]
-key2 = ""value""
-first2.second2.third2 = ""value""
-number2 = 123456
-"u8;
         using var serializeText = CsTomlSerializer.Serialize(document!);
 
-        expectedText.ToArray().Should().Equal(serializeText.ByteSpan.ToArray());
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("str = \"value\"");
+        writer.AppendLine("int = 123");
+        writer.AppendLine("flt = 3.1415");
+        writer.AppendLine("boolean = true");
+        writer.AppendLine("odt1 = 1979-05-27T07:32:00Z");
+        writer.AppendLine("ldt1 = 1979-05-27T07:32:00");
+        writer.AppendLine("ldt2 = 1979-05-27T00:32:00.999999");
+        writer.AppendLine("ld1 = 1979-05-27");
+        writer.AppendLine("lt1 = 07:32:00");
+        writer.AppendLine("key = \"value\"");
+        writer.AppendLine("first.second.third = \"value\"");
+        writer.AppendLine("number = 123456");
+        writer.AppendLine("array = [ 123, \"456\", true ]");
+        writer.AppendLine("inlineTable = { key = 1, key2 = \"value\", key3 = [ 123, 456, 789 ], key4 = { key = \"inlinetable\" } }");
+        writer.AppendLine("");
+        writer.AppendLine("[Table.test]");
+        writer.AppendLine("key = \"value\"");
+        writer.AppendLine("first.second.third = \"value\"");
+        writer.AppendLine("number = 123456");
+        writer.AppendLine("");
+        writer.AppendLine("[arrayOfTables]");
+        writer.AppendLine("");
+        writer.AppendLine("[[arrayOfTables.test]]");
+        writer.AppendLine("key = \"value\"");
+        writer.AppendLine("first.second.third = \"value\"");
+        writer.AppendLine("number = 123456");
+        writer.AppendLine("");
+        writer.AppendLine("[[arrayOfTables.test]]");
+        writer.AppendLine("");
+        writer.AppendLine("[[arrayOfTables.test]]");
+        writer.AppendLine("key2 = \"value\"");
+        writer.AppendLine("first2.second2.third2 = \"value\"");
+        writer.AppendLine("number2 = 123456");
+        writer.Flush();
+
+        buffer.ToArray().Should().Equal(serializeText.ByteSpan.ToArray());
+
     }
 
     [Fact]
