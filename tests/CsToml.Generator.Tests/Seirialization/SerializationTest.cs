@@ -1,5 +1,6 @@
 ﻿using CsToml.Error;
 using FluentAssertions;
+using System.Collections;
 using Utf8StringInterpolation;
 
 namespace CsToml.Generator.Tests.Seirialization;
@@ -955,6 +956,47 @@ public class TypeDictionaryTest3
         value3.Should().Be("Value3");
     }
 }
+
+public class TypeHashtableTest
+{
+    [Fact]
+    public void Serialize()
+    {
+        var dict = new Hashtable()
+        {
+            [123] = "Value",
+            [-1] = "Value",
+            [123456789] = "Value",
+        };
+
+        var type = new TypeHashtable() { Value = dict };
+        using var bytes = CsTomlSerializer.Serialize(type);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = {123 = \"Value\", 123456789 = \"Value\", -1 = \"Value\"}");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().Should().Equal(expected);
+    }
+
+    [Fact]
+    public void Deserialize()
+    {
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = {123 = \"Value\", -1 = \"Value2\", 123456789 = \"Value3\" }");
+        writer.Flush();
+
+        var type = CsTomlSerializer.Deserialize<TypeHashtable>(buffer.WrittenSpan);
+        string value = (string)type.Value["123"]!;
+        value.Should().Be("Value");
+        string value2 = (string)type.Value["-1"]!;
+        value2.Should().Be("Value2");
+        string value3 = (string)type.Value["123456789"]!;
+        value3.Should().Be("Value3");
+    }
+}
+
 
 public class TypeAliasTest
 {

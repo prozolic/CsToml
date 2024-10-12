@@ -1,5 +1,6 @@
 ﻿#pragma warning disable CS8618
 
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 
@@ -265,6 +266,13 @@ internal partial class TypeDictionary3
 {
     [TomlValueOnSerialized()]
     public Dictionary<long, string> Value { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class TypeHashtable
+{
+    [TomlValueOnSerialized()]
+    public Hashtable Value { get; set; }
 }
 
 [TomlSerializedObject]

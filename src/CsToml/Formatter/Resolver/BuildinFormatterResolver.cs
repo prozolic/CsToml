@@ -171,6 +171,7 @@ internal sealed class BuildinFormatterResolver : ITomlValueFormatterResolver
         DefaultFormatterCache<List<char>>.Formatter = new ListFormatter<char>();
         DefaultFormatterCache<List<string>>.Formatter = new ListFormatter<string>();
 
+        DefaultFormatterCache<Hashtable>.Formatter = HashtableFormatter.Instance;
         DefaultFormatterCache<ArrayList>.Formatter = ArrayListFormatter.Instance;
     }
 
