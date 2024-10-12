@@ -3,6 +3,8 @@ using CsToml.Formatter.Resolver;
 using CsToml.Values;
 using System.Buffers;
 using System.Collections;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace CsToml.Formatter;
 
@@ -31,71 +33,81 @@ internal sealed class PrimitiveObjectFormatter : ITomlValueFormatter<object>
         { typeof(TimeOnly), 16 },
     };
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool TryGetJumpCode(Type type, out int jumpCode)
+        => TypeToJumpCode.TryGetValue(type, out jumpCode);
+
     public object Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
-        if (!rootNode.HasValue)
+        if (rootNode.Value.HasValue)
         {
-            return default!;
-        }
-
-        var value = rootNode.Value;
-        if(value is TomlBoolean boolValue)
-        {
-            return boolValue.GetBool();
-        }
-        else if (value is TomlInteger intValue)
-        {
-            return intValue.GetInt64();
-        }
-        else if (value is TomlFloat doubleValue)
-        {
-            return doubleValue.GetDouble();
-        }
-        else if (value is TomlString stringValue)
-        {
-            return stringValue.GetString();
-        }
-        else if (value is TomlOffsetDateTime dateTimeOffsetValue)
-        {
-            return dateTimeOffsetValue.GetDateTimeOffset();
-        }
-        else if (value is TomlLocalDateTime dateTimeValue)
-        {
-            return dateTimeValue.GetDateTime();
-        }
-        else if (value is TomlLocalDate dateOnlyValue)
-        {
-            return dateOnlyValue.GetDateOnly();
-        }
-        else if (value is TomlLocalTime timeOnlyValue)
-        {
-            return timeOnlyValue.GetTimeOnly();
-        }
-        else if (value is TomlArray arrayValue)
-        {
-            ITomlValueFormatter<object> formatter = options.Resolver.GetFormatter<object>()!;
-
-            var array = new object[arrayValue.Count];
-            var arraySpan = array.AsSpan();
-            for (int i = 0; i < arraySpan.Length; i++)
+            var value = rootNode.Value;
+            if (value is TomlBoolean boolValue)
             {
-                var arrayValueNode = rootNode[i];
-                arraySpan[i] = formatter.Deserialize(ref arrayValueNode, options);
+                return boolValue.GetBool();
             }
-            return array;
-        }
-        else if (value is TomlTable tableValue)
-        {
-            return tableValue.GetDictionary();
-        }
-        else if (value is TomlInlineTable inlineTableValue)
-        {
-            return inlineTableValue.GetDictionary();
+            else if (value is TomlInteger intValue)
+            {
+                return intValue.GetInt64();
+            }
+            else if (value is TomlFloat doubleValue)
+            {
+                return doubleValue.GetDouble();
+            }
+            else if (value is TomlString stringValue)
+            {
+                return stringValue.GetString();
+            }
+            else if (value is TomlOffsetDateTime dateTimeOffsetValue)
+            {
+                return dateTimeOffsetValue.GetDateTimeOffset();
+            }
+            else if (value is TomlLocalDateTime dateTimeValue)
+            {
+                return dateTimeValue.GetDateTime();
+            }
+            else if (value is TomlLocalDate dateOnlyValue)
+            {
+                return dateOnlyValue.GetDateOnly();
+            }
+            else if (value is TomlLocalTime timeOnlyValue)
+            {
+                return timeOnlyValue.GetTimeOnly();
+            }
+            else if (value is TomlArray arrayValue)
+            {
+                ITomlValueFormatter<object> formatter = options.Resolver.GetFormatter<object>()!;
+
+                var array = new object[arrayValue.Count];
+                var arraySpan = array.AsSpan();
+                for (int i = 0; i < arraySpan.Length; i++)
+                {
+                    var arrayValueNode = rootNode[i];
+                    arraySpan[i] = formatter.Deserialize(ref arrayValueNode, options);
+                }
+                return array;
+            }
+            else if (value is TomlTable tableValue)
+            {
+                return tableValue.GetDictionary();
+            }
+            else if (value is TomlInlineTable inlineTableValue)
+            {
+                return inlineTableValue.GetDictionary();
+            }
+            else if (value is TomlDottedKey dottedKey)
+            {
+                return dottedKey.GetString();
+            }
+            else
+            {
+                ExceptionHelper.ThrowNotRegisteredInResolver(value.GetType());
+                return default;
+            }
         }
         else
         {
-            ExceptionHelper.ThrowNotRegisteredInResolver(value.GetType());
-            return default;
+            return options.Resolver.GetFormatter<IDictionary<object, object>>()!.Deserialize(ref rootNode, options);
         }
     }
 
@@ -161,9 +173,98 @@ internal sealed class PrimitiveObjectFormatter : ITomlValueFormatter<object>
             return;
         }
 
-        if (target is IDictionary<string, object> dict)
+        if (target is IDictionary dictionary)
         {
-            IDictionaryFormatter.Instance.Serialize(ref writer, dict!, options);
+            var count = 0;
+            writer.BeginInlineTable();
+            foreach (DictionaryEntry entry in dictionary)
+            {
+                var key = entry.Key;
+                var value = entry.Value;
+                if (TryGetJumpCode(key.GetType(), out var keyJumpCode))
+                {
+                    switch (keyJumpCode)
+                    {
+                        case 0:
+                            writer.WriteBoolean((bool)key);
+                            break;
+                        case 1:
+                            writer.WriteInt64((byte)key);
+                            break;
+                        case 2:
+                            writer.WriteInt64((sbyte)key);
+                            break;
+                        case 3:
+                            writer.WriteInt64((char)key);
+                            break;
+                        case 4:
+                            writer.WriteInt64((short)key);
+                            break;
+                        case 5:
+                            writer.WriteInt64((int)key);
+                            break;
+                        case 6:
+                            writer.WriteInt64((long)key);
+                            break;
+                        case 7:
+                            writer.WriteInt64((ushort)key);
+                            break;
+                        case 8:
+                            writer.WriteInt64((uint)key);
+                            break;
+                        case 9:
+                            writer.WriteInt64(checked((long)key));
+                            break;
+                        case 10:
+                            writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
+                            writer.WriteDouble((float)key);
+                            writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
+                            break;
+                        case 11:
+                            writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
+                            writer.WriteDouble((double)key);
+                            writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
+                            break;
+                        case 12:
+                            var strKey = key as string;
+                            TomlDottedKey.ParseKey(strKey.AsSpan()).ToTomlString(ref writer);
+                            break;
+                        case 13:
+                            writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
+                            writer.WriteDateTime((DateTime)key);
+                            writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
+                            break;
+                        case 14:
+                            writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
+                            writer.WriteDateTimeOffset((DateTimeOffset)key);
+                            writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
+                            break;
+                        case 15:
+                            writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
+                            writer.WriteDateOnly((DateOnly)key);
+
+                            break;
+                        case 16:
+                            writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
+                            writer.WriteTimeOnly((TimeOnly)key);
+                            writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
+                            break;
+                    }
+                }
+                else
+                {
+                    ExceptionHelper.ThrowSerializationFailedAsKey(target.GetType());
+                }
+                writer.WriteEqual();
+                options.Resolver.GetFormatter<object>()!.Serialize(ref writer, value!, options);
+
+                if (++count != dictionary.Count)
+                {
+                    writer.Write(TomlCodes.Symbol.COMMA);
+                    writer.WriteSpace();
+                }
+            }
+            writer.EndInlineTable();
             return;
         }
 
@@ -193,7 +294,11 @@ internal sealed class PrimitiveObjectFormatter : ITomlValueFormatter<object>
 
             } while (en.MoveNext());
             writer.EndArray();
+            return;
         }
+
+        ExceptionHelper.ThrowSerializationFailedAsKey(target.GetType());
     }
+
 }
 

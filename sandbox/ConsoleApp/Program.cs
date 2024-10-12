@@ -4,8 +4,9 @@ using CsToml;
 using CsToml.Error;
 using CsToml.Extensions;
 using System.Buffers;
+using System.Collections;
+using System.Collections.Immutable;
 using System.Text;
-
 
 Console.WriteLine("Hello, World!");
 
@@ -165,7 +166,8 @@ var enumObjectText = CsTomlSerializer.Serialize<EnumObject>(enumObject);
 void Test()
 {
     var tomlText = @"
-Value = 128
+str5 = 'this is str5.'
+Value = 0xAbcdef
 Str = ""this is Str""
 Doubl = 123.455
 odt1 = 1979-05-27T07:32:00Z
@@ -187,6 +189,12 @@ ab = {key = 23}
 [Dict2]
 a.a = 123
 Key.test = ""value""
+
+[Dict4]
+abc = [1, {key = [1, [1, {test = 123, TEST2 = [67, ""test"", 1.01 ]} ] , 5, 1979-05-27T07:32:00Z], key2 = {key3 = 0.1, key4 = 123}}, 23]
+#abc = { type.name = ""pug"" }
+234 = 345
+345 = 567
 
 [[Dict3.b]]
 a = 34534
@@ -216,20 +224,19 @@ Test();
 
 void Sample()
 {
-    var tomlText = @"
-Key = ""value""
-Number = 123
-Array = [1, 2, 3]
-alias = ""alias""
+    ReadOnlySpan<byte> tomlText = @"
+int = 99
+Boolean = true
+Number = -2
+Number8 = 8
+Number2 = 9
+NumOverflow    = 9223372036854775807
+"""" = [-0.2]"u8;
 
-[Table]
-Key = ""value""
-Number = 123
-"u8;
 
     var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
     var value = CsTomlSerializer.Deserialize<CsTomlClass>(tomlText);
-    using var serializedText = CsTomlSerializer.Serialize(value);
+    using var serializedText = CsTomlSerializer.Serialize(document);
 
     // Key = "value"
     // Number = 123
@@ -240,6 +247,16 @@ Number = 123
     // Key = "value"
     // Number = 123
     var serializedTomlText = Encoding.UTF8.GetString(serializedText.ByteSpan);
+
+    var testObject = new TestObject();
+    testObject.Type = new System.Collections.Concurrent.BlockingCollection<int>();
+    testObject.Type.Add(10);
+    testObject.Type.Add(20);
+    testObject.Type.Add(30);
+    testObject.Type.Add(40);
+    using var BaResult = CsTomlSerializer.Serialize(testObject);
+    var testObject2 = CsTomlSerializer.Deserialize<TestObject>(BaResult.ByteSpan);
+
 }
 
 Sample();

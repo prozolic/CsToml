@@ -720,7 +720,6 @@ public class TypeArrayOfTablesTest
     }
 }
 
-
 public class TypeDictionaryTest
 {
     [Fact]
@@ -750,7 +749,7 @@ public class TypeDictionaryTest
         using var bytes = CsTomlSerializer.Serialize(type);
 
         using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("Value = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]}");
+        writer.AppendLine("Value = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
         writer.Flush();
 
         var expected = buffer.ToArray();
@@ -775,6 +774,185 @@ public class TypeDictionaryTest
         value3.Should().Equal(new object[] { 1, 2, 3 });
         string value4 = dynamicDict["key"][2]["key"][1]["key"];
         value4.Should().Be("value");
+    }
+}
+
+public class TypeDictionaryTest2
+{
+    [Fact]
+    public void Serialize()
+    {
+        var dict = new Dictionary<object, object>()
+        {
+            ["key"] = new object[]
+            {
+                999,
+                "Value",
+                new Dictionary<object, object?>()
+                {
+                    ["key"] = new object[]
+                    {
+                        new long[] {1, 2, 3},
+                        new Dictionary<object, object?>()
+                        {
+                            ["key"] = "value"
+                        }
+                    }
+                }
+            }
+        };
+
+        var type = new TypeDictionary2() { 
+            Value = dict,
+            Value2 = dict.AsReadOnly(),
+            Value3 = new SortedDictionary<object, object>(dict),
+            Value4 = new System.Collections.Concurrent.ConcurrentDictionary<object, object>(dict),
+            Value5 = dict,
+            Value6 = dict,
+        };
+        using var bytes = CsTomlSerializer.Serialize(type);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
+        writer.AppendLine("Value2 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
+        writer.AppendLine("Value3 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
+        writer.AppendLine("Value4 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
+        writer.AppendLine("Value5 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
+        writer.AppendLine("Value6 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().Should().Equal(expected);
+    }
+
+    [Fact]
+    public void Deserialize()
+    {
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]}");
+        writer.AppendLine("Value2 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]}");
+        writer.AppendLine("Value3 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]}");
+        writer.AppendLine("Value4 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]}");
+        writer.AppendLine("Value5 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]}");
+        writer.AppendLine("Value6 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]}");
+        writer.Flush();
+
+        var type = CsTomlSerializer.Deserialize<TypeDictionary2>(buffer.WrittenSpan);
+        {
+            dynamic dynamicDict = type.Value;
+
+            long value = dynamicDict["key"][0];
+            value.Should().Be(999);
+            string value2 = dynamicDict["key"][1];
+            value2.Should().Be("Value");
+            object[] value3 = dynamicDict["key"][2]["key"][0];
+            value3.Should().Equal(new object[] { 1, 2, 3 });
+            string value4 = dynamicDict["key"][2]["key"][1]["key"];
+            value4.Should().Be("value");
+        }
+        {
+            dynamic dynamicDict = type.Value2;
+
+            long value = dynamicDict["key"][0];
+            value.Should().Be(999);
+            string value2 = dynamicDict["key"][1];
+            value2.Should().Be("Value");
+            object[] value3 = dynamicDict["key"][2]["key"][0];
+            value3.Should().Equal(new object[] { 1, 2, 3 });
+            string value4 = dynamicDict["key"][2]["key"][1]["key"];
+            value4.Should().Be("value");
+        }
+        {
+            dynamic dynamicDict = type.Value3;
+
+            long value = dynamicDict["key"][0];
+            value.Should().Be(999);
+            string value2 = dynamicDict["key"][1];
+            value2.Should().Be("Value");
+            object[] value3 = dynamicDict["key"][2]["key"][0];
+            value3.Should().Equal(new object[] { 1, 2, 3 });
+            string value4 = dynamicDict["key"][2]["key"][1]["key"];
+            value4.Should().Be("value");
+        }
+        {
+            dynamic dynamicDict = type.Value4;
+
+            long value = dynamicDict["key"][0];
+            value.Should().Be(999);
+            string value2 = dynamicDict["key"][1];
+            value2.Should().Be("Value");
+            object[] value3 = dynamicDict["key"][2]["key"][0];
+            value3.Should().Equal(new object[] { 1, 2, 3 });
+            string value4 = dynamicDict["key"][2]["key"][1]["key"];
+            value4.Should().Be("value");
+        }
+        {
+            dynamic dynamicDict = type.Value5;
+
+            long value = dynamicDict["key"][0];
+            value.Should().Be(999);
+            string value2 = dynamicDict["key"][1];
+            value2.Should().Be("Value");
+            object[] value3 = dynamicDict["key"][2]["key"][0];
+            value3.Should().Equal(new object[] { 1, 2, 3 });
+            string value4 = dynamicDict["key"][2]["key"][1]["key"];
+            value4.Should().Be("value");
+        }
+        {
+            dynamic dynamicDict = type.Value6;
+
+            long value = dynamicDict["key"][0];
+            value.Should().Be(999);
+            string value2 = dynamicDict["key"][1];
+            value2.Should().Be("Value");
+            object[] value3 = dynamicDict["key"][2]["key"][0];
+            value3.Should().Equal(new object[] { 1, 2, 3 });
+            string value4 = dynamicDict["key"][2]["key"][1]["key"];
+            value4.Should().Be("value");
+        }
+
+    }
+}
+
+public class TypeDictionaryTest3
+{
+    [Fact]
+    public void Serialize()
+    {
+        var dict = new Dictionary<long, string>()
+        {
+            [123] = "Value",
+            [-1] = "Value",
+            [123456789] = "Value",
+        };
+
+        var type = new TypeDictionary3() { Value = dict };
+        using var bytes = CsTomlSerializer.Serialize(type);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = {123 = \"Value\", -1 = \"Value\", 123456789 = \"Value\"}");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().Should().Equal(expected);
+    }
+
+    [Fact]
+    public void Deserialize()
+    {
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = {123 = \"Value\", -1 = \"Value2\", 123456789 = \"Value3\" }");
+        writer.Flush();
+
+        var type = CsTomlSerializer.Deserialize<TypeDictionary3>(buffer.WrittenSpan);
+        var dynamicDict = type.Value;
+
+        string value = dynamicDict[123];
+        value.Should().Be("Value");
+        string value2 = dynamicDict[-1];
+        value2.Should().Be("Value2");
+        string value3 = dynamicDict[123456789];
+        value3.Should().Be("Value3");
     }
 }
 

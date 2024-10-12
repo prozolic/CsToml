@@ -42,6 +42,10 @@ internal sealed class BuildinFormatterResolver : ITomlValueFormatterResolver
         { typeof(ReadOnlyCollection<>), typeof(ReadOnlyCollectionFormatter<>) },
         { typeof(BlockingCollection<>), typeof(BlockingCollectionFormatter<>) },
         { typeof(PriorityQueue<,>), typeof(PriorityQueueFormatter<,>) },
+        { typeof(Dictionary<,>), typeof(DictionaryFormatter<,>) },
+        { typeof(ReadOnlyDictionary<,>), typeof(ReadOnlyDictionaryFormatter<,>) },
+        { typeof(SortedDictionary<,>), typeof(SortedDictionaryFormatter<,>) },
+        { typeof(ConcurrentDictionary<,>), typeof(ConcurrentDictionaryFormatter<,>) },
 
         { typeof(IEnumerable<>), typeof(IEnumerableFormatter<>) },
         { typeof(ICollection<>),  typeof(ICollectionFormatter<>) },
@@ -50,6 +54,8 @@ internal sealed class BuildinFormatterResolver : ITomlValueFormatterResolver
         { typeof(IReadOnlyList<>),  typeof(IReadOnlyListFormatter<>) },
         { typeof(ISet<>),  typeof(ISetFormatter<>) },
         { typeof(IReadOnlySet<>),  typeof(IReadOnlySetFormatter<>) },
+        { typeof(IDictionary<,>),typeof(IDictionaryFormatter<,>) },
+        { typeof(IReadOnlyDictionary<,>),typeof(IReadOnlyDictionaryFormatter<,>) },
 
         { typeof(KeyValuePair<,>),  typeof(KeyValuePairFormatter<,>) },
         { typeof(Tuple<>),  typeof(TupleFormatter<>) },
@@ -164,9 +170,6 @@ internal sealed class BuildinFormatterResolver : ITomlValueFormatterResolver
         DefaultFormatterCache<List<TimeOnly>>.Formatter = new ListFormatter<TimeOnly>();
         DefaultFormatterCache<List<char>>.Formatter = new ListFormatter<char>();
         DefaultFormatterCache<List<string>>.Formatter = new ListFormatter<string>();
-
-        DefaultFormatterCache<Dictionary<string, object?>>.Formatter = new DictionaryFormatter();
-        DefaultFormatterCache<IDictionary<string, object?>>.Formatter = new IDictionaryFormatter();
 
         DefaultFormatterCache<ArrayList>.Formatter = ArrayListFormatter.Instance;
     }

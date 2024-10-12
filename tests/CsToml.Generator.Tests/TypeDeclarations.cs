@@ -239,6 +239,35 @@ internal partial class TypeDictionary
 }
 
 [TomlSerializedObject]
+internal partial class TypeDictionary2
+{
+    [TomlValueOnSerialized()]
+    public Dictionary<object, object> Value { get; set; }
+
+    [TomlValueOnSerialized()]
+    public ReadOnlyDictionary<object, object> Value2 { get; set; }
+
+    [TomlValueOnSerialized()]
+    public SortedDictionary<object, object> Value3 { get; set; }
+
+    [TomlValueOnSerialized()]
+    public ConcurrentDictionary<object, object> Value4 { get; set; }
+
+    [TomlValueOnSerialized()]
+    public IDictionary<object, object> Value5 { get; set; }
+
+    [TomlValueOnSerialized()]
+    public IReadOnlyDictionary<object, object> Value6 { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class TypeDictionary3
+{
+    [TomlValueOnSerialized()]
+    public Dictionary<long, string> Value { get; set; }
+}
+
+[TomlSerializedObject]
 internal partial class TypeArrayOfTable
 {
     [TomlValueOnSerialized]

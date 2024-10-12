@@ -599,7 +599,14 @@ internal static class ExceptionHelper
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ThrowSerializationFailed(Type type)
     {
-        ThrowException($@"Serialization failed because the value ({type}) is null.");
+        ThrowException($@"Cannot serialize to {type}.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowSerializationFailedAsKey(Type type)
+    {
+        ThrowException($@"Cannot serialize to {type} as a key.");
     }
 
     internal static void ThrowDeserializationFailed(Type type)

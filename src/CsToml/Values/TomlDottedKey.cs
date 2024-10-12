@@ -8,7 +8,7 @@ using System.Text.Unicode;
 namespace CsToml.Values;
 
 [DebuggerDisplay("{Utf16String}")]
-internal sealed class TomlDottedKey :
+internal sealed partial class TomlDottedKey :
     TomlValue,
     ITomlStringParser<TomlDottedKey>,
     IEquatable<TomlDottedKey?>

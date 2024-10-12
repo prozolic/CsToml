@@ -23,6 +23,8 @@ public struct TomlDocumentNode
 
     internal readonly TomlValue Value => value;
 
+    internal readonly TomlTableNode Node => node;
+
     public readonly bool HasValue => Value.HasValue || NodeCount > 0;
 
     public TomlDocumentNode this[ReadOnlySpan<char> key]

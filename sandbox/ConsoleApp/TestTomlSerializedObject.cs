@@ -3,7 +3,9 @@ using CsToml;
 using CsToml.Formatter;
 using CsToml.Formatter.Resolver;
 using System.Buffers;
+using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Numerics;
 using System.Runtime.Serialization;
@@ -26,6 +28,13 @@ public partial class EnumObject
 }
 
 [TomlSerializedObject]
+public partial class TestObject
+{
+    [TomlValueOnSerialized]
+    public BlockingCollection<int> Type { get; set; }
+}
+
+[TomlSerializedObject]
 public partial class TestTomlSerializedObject2Nest
 {
     [TomlValueOnSerialized()]
@@ -43,7 +52,7 @@ public partial class TestTomlSerializedObject3Nest
 public partial class TestTomlSerializedObject2
 {
     [TomlValueOnSerialized()]
-    public IDictionary<string, object?> Dict { get; set; }
+    public IDictionary<object, object> Dict { get; set; }
 
     [TomlValueOnSerialized()]
     public string bare_key { get; set; }
@@ -192,7 +201,8 @@ public partial class TestClass
     [TomlValueOnSerialized()]
     public KeyValuePair<DateTimeOffset, string>? KeyValuePair { get; set; }
 
-
+    [TomlValueOnSerialized()]
+    public IReadOnlyDictionary<object, object> Dict4 { get; set; }
 
     //[TomlValueOnSerialized()]
     //public long[][] array2 { get; set; }

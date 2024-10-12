@@ -1,7 +1,7 @@
 ﻿
 namespace CsToml.Formatter;
 
-internal sealed class DictionaryFormatter<TKey, TValue> : DictionaryBaseFormatter<TKey, TValue, Dictionary<TKey, TValue>, Dictionary<TKey, TValue>>
+internal sealed class IDictionaryFormatter<TKey, TValue> : DictionaryBaseFormatter<TKey, TValue, IDictionary<TKey, TValue>, Dictionary<TKey, TValue>>
     where TKey : notnull
 {
     protected override void AddValue(Dictionary<TKey, TValue> mediator, TKey key, TValue value)

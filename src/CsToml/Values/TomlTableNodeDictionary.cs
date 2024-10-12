@@ -1,8 +1,6 @@
 ﻿using CsToml.Utility;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-
 
 // -----------------------------------------------------------------------------------------------------------------------------
 // The original code for CsTomlTableNodeDictionary is from dotnet/runtime(MIT license), Please check the original license.
@@ -45,7 +43,11 @@ internal class TomlTableNodeDictionary
     private bool TryAddCore(TomlDottedKey key, int keyHashCode, TomlTableNode value)
     {
         if (buckets.Length == 0)
-            Initialize(0);
+        {
+            var capacity = HashHelpers.Primes[0];
+            entries = new Entry[capacity];
+            buckets = new int[capacity];
+        }
 
         var hashCode = keyHashCode;
         ref var bucket = ref GetBucket((uint)hashCode);
@@ -129,10 +131,14 @@ internal class TomlTableNodeDictionary
         var index = bucket - 1;
         var conflictCount = 0;
         var entries = this.entries;
-        while (true)
+
+        do
         {
             if ((uint)index > (uint)buckets.Length)
-                break;
+            {
+                value = null;
+                return false;
+            }
 
             ref var e = ref entries[index];
             if (e.hashCode == hashCode && e.key.Equals(key))
@@ -142,23 +148,11 @@ internal class TomlTableNodeDictionary
             }
 
             index = e.next;
-            if (++conflictCount > (uint)buckets.Length)
-            {
-                break;
-            }
         }
+        while (++conflictCount <= (uint)buckets.Length);
+
         value = null;
         return false;
-    }
-
-    private void Initialize(int capacity)
-    {
-        capacity = HashHelpers.GetPrime(capacity);
-        var newEntrys = new Entry[capacity];
-        var newBuckets = new int[capacity];
-
-        entries = newEntrys;
-        buckets = newBuckets;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

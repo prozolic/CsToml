@@ -1,7 +1,8 @@
-﻿
+﻿using System.Collections.ObjectModel;
+
 namespace CsToml.Formatter;
 
-internal sealed class DictionaryFormatter<TKey, TValue> : DictionaryBaseFormatter<TKey, TValue, Dictionary<TKey, TValue>, Dictionary<TKey, TValue>>
+internal sealed class ReadOnlyDictionaryFormatter<TKey, TValue> : DictionaryBaseFormatter<TKey, TValue, ReadOnlyDictionary<TKey, TValue>, Dictionary<TKey, TValue>>
     where TKey : notnull
 {
     protected override void AddValue(Dictionary<TKey, TValue> mediator, TKey key, TValue value)
@@ -9,9 +10,9 @@ internal sealed class DictionaryFormatter<TKey, TValue> : DictionaryBaseFormatte
         mediator.Add(key, value);
     }
 
-    protected override Dictionary<TKey, TValue> Complete(Dictionary<TKey, TValue> dictionary)
+    protected override ReadOnlyDictionary<TKey, TValue> Complete(Dictionary<TKey, TValue> dicitonary)
     {
-        return dictionary;
+        return dicitonary.AsReadOnly();
     }
 
     protected override Dictionary<TKey, TValue> CreateMediator(int capacity)
@@ -19,3 +20,4 @@ internal sealed class DictionaryFormatter<TKey, TValue> : DictionaryBaseFormatte
         return new Dictionary<TKey, TValue>(capacity);
     }
 }
+
