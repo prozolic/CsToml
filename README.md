@@ -196,9 +196,9 @@ These types can be serialized/deserialize by default.
 * `Uri`, `Version`, `Guid`, `Type`, `Nullable`, `StringBuilder`
 * `T[]`, `Memory<>`, `ReadOnlyMemory<>`
 * `List<>`, `Stack<>`, `HashSet<>`, `SortedSet<>`, `Queue<>`, `PriorityQueue<,>`, `LinkedList<>`, `ReadOnlyCollection<>`, `BlockingCollection<>`
-* `ConcurrentQueue<>`, `ConcurrentStack<>`, `ConcurrentBag<>`
+* `ConcurrentQueue<>`, `ConcurrentStack<>`, `ConcurrentBag<>`, `ConcurrentDictionary<>`
 * `IEnumerable<>`, `ICollection<>`, `IReadOnlyCollection<>`, `IList<>`, `IReadOnlyList<>`, `ISet<>`, `IReadOnlySet<>`
-* `Dictionary<string, object?>`, `IDictionary<string, object?>`
+* `Dictionary<>`, `ReadOnlyDictionary<>`, `SortedDictionary<>`, `IDictionary<>`, `IReadOnlyDictionary<>`
 * `ArrayList`
 * `KeyValuePair<>`, `Tuple<,...>`, `ValueTuple<,...>`
 
