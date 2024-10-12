@@ -270,7 +270,7 @@ internal sealed class PrimitiveObjectFormatter : ITomlValueFormatter<object>
 
         if (target is ICollection collection)
         {
-            var formatter = PrimitiveObjectFormatter.Instance;
+            var formatter = options.Resolver.GetFormatter<object>();
             writer.BeginArray();
             var en = collection.GetEnumerator();
             using var _ = en as IDisposable;
