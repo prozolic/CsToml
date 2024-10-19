@@ -1,12 +1,9 @@
-﻿using CsToml.Formatter;
+﻿
 using CsToml.Utility;
 using System.Buffers;
-using System.Diagnostics;
-using System.Text;
 
 namespace CsToml;
 
-[DebuggerDisplay("{DebugValue}")]
 public sealed class ByteMemoryResult : IDisposable
 {
     public int Length { get; }
@@ -18,9 +15,6 @@ public sealed class ByteMemoryResult : IDisposable
     public Span<byte> ByteSpan => Owner.Memory.Span[..Length];
 
     public Memory<byte> ByteMemory => Owner.Memory[..Length];
-
-    internal string DebugValue
-        => Utf8Helper.ToUtf16(ByteSpan);
 
     internal ByteMemoryResult(IMemoryOwner<byte> owner, int length)
     {
@@ -45,6 +39,9 @@ public sealed class ByteMemoryResult : IDisposable
             IsRent = false;
         }
     }
+
+    public override string ToString()
+        => Utf8Helper.ToUtf16(ByteSpan);
 
     public void Dispose()
         => Return();
