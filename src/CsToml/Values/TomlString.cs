@@ -7,48 +7,9 @@ using System.Text.Unicode;
 namespace CsToml.Values;
 
 [DebuggerDisplay("{Utf16String}")]
-internal sealed partial class TomlString : TomlValue, ITomlStringParser<TomlString>
+internal sealed class TomlUnquotedString(string value) : TomlString(value)
 {
-    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-    private string utf16String;
-
-    public override bool HasValue => true;
-
-    [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
-    public CsTomlStringType TomlStringType { get; }
-
-    [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
-    public string Value => utf16String;
-
-    [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
-    public string Utf16String => utf16String;
-
-    public TomlString(string value, CsTomlStringType type = CsTomlStringType.Basic)
-    {
-        TomlStringType = type;
-        utf16String = value;
-    }
-
-    public override bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
-    {
-        if (destination.Length < Value.Length)
-        {
-            charsWritten = 0;
-            return false;
-        }
-        Value.TryCopyTo(destination);
-        charsWritten = Value.Length;
-        return true;
-    }
-
-    public override string ToString(string? format, IFormatProvider? formatProvider)
-        => GetString();
-
-    public override bool TryFormat(Span<byte> utf8Destination, out int bytesWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
-    {
-        var status = Utf8.FromUtf16(Utf16String.AsSpan(), utf8Destination, out var bytesRead, out bytesWritten, replaceInvalidSequences: false);
-        return status == OperationStatus.Done;
-    }
+    public new static readonly TomlUnquotedString Empty = new TomlUnquotedString(string.Empty);
 
     internal override bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
@@ -56,29 +17,33 @@ internal sealed partial class TomlString : TomlValue, ITomlStringParser<TomlStri
         try
         {
             Utf8Helper.FromUtf16(bufferWriter, Utf16String.AsSpan());
-
-
-            switch (TomlStringType)
+            if (value.Length > 0)
             {
-                case CsTomlStringType.Basic:
-                    return ToTomlBasicString(ref writer, bufferWriter.WrittenSpan);
-                case CsTomlStringType.MultiLineBasic:
-                    return ToTomlMultiLineBasicString(ref writer, bufferWriter.WrittenSpan);
-                case CsTomlStringType.Literal:
-                    return ToTomlLiteralString(ref writer, bufferWriter.WrittenSpan);
-                case CsTomlStringType.MultiLineLiteral:
-                    return ToTomlMultiLineLiteralString(ref writer, bufferWriter.WrittenSpan);
-                case CsTomlStringType.Unquoted:
-                    {
-                        if (Value.Length > 0)
-                        {
-                            writer.WriteBytes(bufferWriter.WrittenSpan);
-                            return true;
-                        }
-                        break;
-                    }
+                writer.WriteBytes(bufferWriter.WrittenSpan);
+                return true;
             }
+
             return false;
+        }
+        finally
+        {
+            RecycleArrayPoolBufferWriter<byte>.Return(bufferWriter);
+        }
+    }
+}
+
+[DebuggerDisplay("{Utf16String}")]
+internal sealed class TomlBasicString(string value) : TomlString(value)
+{
+    public new static readonly TomlBasicString Empty = new TomlBasicString(string.Empty);
+
+    internal override bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+    {
+        var bufferWriter = RecycleArrayPoolBufferWriter<byte>.Rent();
+        try
+        {
+            Utf8Helper.FromUtf16(bufferWriter, Utf16String.AsSpan());
+            return ToTomlBasicString(ref writer, bufferWriter.WrittenSpan);
         }
         finally
         {
@@ -135,6 +100,27 @@ internal sealed partial class TomlString : TomlValue, ITomlStringParser<TomlStri
         return true;
     }
 
+}
+
+[DebuggerDisplay("{Utf16String}")]
+internal sealed class TomlMultiLineBasicString(string value) : TomlString(value)
+{
+    public new static readonly TomlMultiLineBasicString Empty = new TomlMultiLineBasicString(string.Empty);
+
+    internal override bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+    {
+        var bufferWriter = RecycleArrayPoolBufferWriter<byte>.Rent();
+        try
+        {
+            Utf8Helper.FromUtf16(bufferWriter, Utf16String.AsSpan());
+            return ToTomlMultiLineBasicString(ref writer, bufferWriter.WrittenSpan);
+        }
+        finally
+        {
+            RecycleArrayPoolBufferWriter<byte>.Return(bufferWriter);
+        }
+    }
+
     internal static bool ToTomlMultiLineBasicString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> byteSpan)
         where TBufferWriter : IBufferWriter<byte>
     {
@@ -183,6 +169,27 @@ internal sealed partial class TomlString : TomlValue, ITomlStringParser<TomlStri
         return true;
     }
 
+}
+
+[DebuggerDisplay("{Utf16String}")]
+internal sealed class TomlLiteralString(string value) : TomlString(value)
+{
+    public new static readonly TomlLiteralString Empty = new TomlLiteralString(string.Empty);
+
+    internal override bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+    {
+        var bufferWriter = RecycleArrayPoolBufferWriter<byte>.Rent();
+        try
+        {
+            Utf8Helper.FromUtf16(bufferWriter, Utf16String.AsSpan());
+            return ToTomlLiteralString(ref writer, bufferWriter.WrittenSpan);
+        }
+        finally
+        {
+            RecycleArrayPoolBufferWriter<byte>.Return(bufferWriter);
+        }
+    }
+
     internal static bool ToTomlLiteralString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> byteSpan)
         where TBufferWriter : IBufferWriter<byte>
     {
@@ -192,13 +199,67 @@ internal sealed partial class TomlString : TomlValue, ITomlStringParser<TomlStri
         return true;
     }
 
+}
+
+[DebuggerDisplay("{Utf16String}")]
+internal sealed class TomlMultiLineLiteralString(string value) : TomlString(value)
+{
+    public new static readonly TomlMultiLineLiteralString Empty = new TomlMultiLineLiteralString(string.Empty);
+
+    internal override bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+    {
+        var bufferWriter = RecycleArrayPoolBufferWriter<byte>.Rent();
+        try
+        {
+            Utf8Helper.FromUtf16(bufferWriter, Utf16String.AsSpan());
+            return ToTomlMultiLineLiteralString(ref writer, bufferWriter.WrittenSpan);
+        }
+        finally
+        {
+            RecycleArrayPoolBufferWriter<byte>.Return(bufferWriter);
+        }
+    }
+
     internal static bool ToTomlMultiLineLiteralString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> byteSpan)
-         where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IBufferWriter<byte>
     {
         writer.WriteBytes("'''"u8);
         writer.WriteBytes(byteSpan);
         writer.WriteBytes("'''"u8);
         return true;
+    }
+}
+
+[DebuggerDisplay("{Utf16String}")]
+internal abstract partial class TomlString(string value) : TomlValue, ITomlStringParser<TomlString>
+{
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private readonly string value = value;
+
+    public override bool HasValue => true;
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
+    public string Utf16String => value;
+
+    public override bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
+    {
+        if (destination.Length < value.Length)
+        {
+            charsWritten = 0;
+            return false;
+        }
+        value.TryCopyTo(destination);
+        charsWritten = value.Length;
+        return true;
+    }
+
+    public override string ToString(string? format, IFormatProvider? formatProvider)
+        => GetString();
+
+    public override bool TryFormat(Span<byte> utf8Destination, out int bytesWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
+    {
+        var status = Utf8.FromUtf16(Utf16String.AsSpan(), utf8Destination, out var bytesRead, out bytesWritten, replaceInvalidSequences: false);
+        return status == OperationStatus.Done;
     }
 }
 

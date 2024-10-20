@@ -479,13 +479,13 @@ internal ref struct CsTomlReader
                 return ReadDoubleQuoteMultiLineString();
             case 6: // first(3) + end(3) = 6 
                 Advance(6);
-                return new TomlString(string.Empty, CsTomlStringType.MultiLineBasic);
+                return TomlMultiLineBasicString.Empty;
             case 7: // first(3) + one adjacent mark(1) + end(3) = 7
                 Advance(7);
-                return new TomlString("\"", CsTomlStringType.MultiLineBasic);
+                return new TomlMultiLineBasicString("\"");
             case 8: // first(3) + two adjacent mark(2) + end(3) = 8
                 Advance(8);
-                return new TomlString("\"\"", CsTomlStringType.MultiLineBasic);
+                return new TomlMultiLineBasicString("\"\"");
         }
 
         return ExceptionHelper.NotReturnThrow<TomlString>(ExceptionHelper.ThrowThreeOrMoreQuotationMarks);
@@ -714,13 +714,13 @@ internal ref struct CsTomlReader
                 return ReadSingleQuoteMultiLineString();
             case 6: // first(3) + end(3) = 6 
                 Advance(6);
-                return new TomlString(string.Empty, CsTomlStringType.MultiLineLiteral);
+                return TomlMultiLineLiteralString.Empty;
             case 7: // first(3) + one adjacent mark(1) + end(3) = 7
                 Advance(7);
-                return new TomlString("'", CsTomlStringType.MultiLineLiteral);
+                return new TomlMultiLineLiteralString("'");
             case 8: // first(3) + two adjacent mark(2) + end(3) = 8
                 Advance(8);
-                return new TomlString("''", CsTomlStringType.MultiLineLiteral);
+                return new TomlMultiLineLiteralString("''");
         }
 
         return ExceptionHelper.NotReturnThrow<TomlString>(ExceptionHelper.ThrowConsecutiveSingleQuotationMarksOf3);
@@ -978,11 +978,11 @@ internal ref struct CsTomlReader
     BREAK:
         if (fullSpan)
         {
-            return new TomlDottedKey(currentSpan[..totalLength], CsTomlStringType.Unquoted);
+            return new TomlUnquotedDottedKey(currentSpan[..totalLength]);
         }
         try
         {
-            return new TomlDottedKey(bufferWriter!.WrittenSpan, CsTomlStringType.Unquoted);
+            return new TomlUnquotedDottedKey(bufferWriter!.WrittenSpan);
         }
         finally
         {

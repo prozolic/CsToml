@@ -74,7 +74,7 @@ internal partial class TomlString
         return base.GetTimeOnly();
     }
 
-    public override object GetObject() => Value;
+    public override object GetObject() => value;
 
 }
 

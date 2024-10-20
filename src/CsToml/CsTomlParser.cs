@@ -16,6 +16,7 @@ internal enum ParserState : byte
     ArrayOfTablesHeader = 4,
     ThrowException = 5,
     ParseEnd = 6,
+    EndComment = 7
 }
 
 internal ref struct DottedKeyEnumerator
@@ -172,7 +173,7 @@ internal ref struct CsTomlParser
 
     private void ReadComment()
     {
-        CurrentState = ParserState.Comment;
+        CurrentState = CurrentState != ParserState.KeyValue ? ParserState.Comment : ParserState.EndComment;
         comment = reader.ReadComment();
     }
 

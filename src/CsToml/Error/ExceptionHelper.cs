@@ -427,6 +427,14 @@ internal static class ExceptionHelper
         ThrowException($@"Failed due to incorrect Boolean formatting.");
     }
 
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowIncorrectTomlStringFormat()
+    {
+        ThrowException($@"Failed due to incorrect String formatting.");
+    }
+
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ThrowIncorrectTomlIntegerFormat()

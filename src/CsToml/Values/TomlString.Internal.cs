@@ -48,7 +48,8 @@ internal partial class TomlString
 
     public static TomlString Parse(ReadOnlySpan<char> utf16String)
     {
-        if (utf16String.Length == 0) return new TomlString(string.Empty, CsTomlStringType.Basic);
+        if (utf16String.Length == 0)
+            return TomlBasicString.Empty;
 
         var writer = RecycleArrayPoolBufferWriter<byte>.Rent();
         try
@@ -66,52 +67,35 @@ internal partial class TomlString
     {
         if (bytes.Length == 0)
         {
-            return new TomlString(string.Empty, type);
+            switch(type)
+            {
+                case CsTomlStringType.Basic:
+                    return TomlBasicString.Empty;
+                case CsTomlStringType.MultiLineBasic:
+                    return TomlMultiLineBasicString.Empty;
+                case CsTomlStringType.Literal:
+                    return TomlLiteralString.Empty;
+                case CsTomlStringType.MultiLineLiteral:
+                    return TomlMultiLineLiteralString.Empty;
+                case CsTomlStringType.Unquoted:
+                    return TomlUnquotedString.Empty;
+            }
         }
-
-        return new TomlString(Utf8Helper.ToUtf16(bytes), type);
+        switch (type)
+        {
+            case CsTomlStringType.Basic:
+                return new TomlBasicString(Utf8Helper.ToUtf16(bytes));
+            case CsTomlStringType.MultiLineBasic:
+                return new TomlMultiLineBasicString(Utf8Helper.ToUtf16(bytes));
+            case CsTomlStringType.Literal:
+                return new TomlLiteralString(Utf8Helper.ToUtf16(bytes));
+            case CsTomlStringType.MultiLineLiteral:
+                return new TomlMultiLineLiteralString(Utf8Helper.ToUtf16(bytes));
+            case CsTomlStringType.Unquoted:
+                return new TomlUnquotedString(Utf8Helper.ToUtf16(bytes));
+        }
+        ExceptionHelper.ThrowIncorrectTomlStringFormat();
+        return default;
     }
-
-
-    //internal static string ParseUnsafe(ReadOnlySpan<byte> utf8Bytes)
-    //{
-    //    var maxBufferSize = utf8Bytes.Length * 2;
-    //    if (maxBufferSize <= 1024)
-    //    {
-    //        Span<char> bufferBytesSpan = stackalloc char[maxBufferSize];
-    //        var status = Utf8.ToUtf16(utf8Bytes, bufferBytesSpan, out var bytesRead, out var charsWritten, replaceInvalidSequences: false);
-    //        if (status != OperationStatus.Done)
-    //        {
-    //            if (status == OperationStatus.InvalidData)
-    //                ExceptionHelper.ThrowInvalidByteIncluded();
-    //            ExceptionHelper.ThrowBufferTooSmallFailed();
-    //        }
-
-    //        return new string(bufferBytesSpan[..charsWritten]);
-    //    }
-    //    else
-    //    {
-    //        var bufferWriter = RecycleArrayPoolBufferWriter<char>.Rent();
-    //        var bufferBytesSpan = bufferWriter.GetSpan(maxBufferSize);
-    //        try
-    //        {
-    //            var status = Utf8.ToUtf16(utf8Bytes, bufferBytesSpan, out var bytesRead, out var charsWritten, replaceInvalidSequences: false);
-    //            if (status != OperationStatus.Done)
-    //            {
-    //                if (status == OperationStatus.InvalidData)
-    //                    ExceptionHelper.ThrowInvalidByteIncluded();
-    //                ExceptionHelper.ThrowBufferTooSmallFailed();
-    //            }
-
-    //            bufferWriter.Advance(charsWritten);
-    //            return new string(bufferWriter.WrittenSpan);
-    //        }
-    //        finally
-    //        {
-    //            RecycleArrayPoolBufferWriter<char>.Return(bufferWriter);
-    //        }
-    //    }
-    //}
-
 }
 

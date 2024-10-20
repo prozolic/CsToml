@@ -2,6 +2,7 @@
 using CsToml.Formatter;
 using CsToml.Formatter.Resolver;
 using CsToml.Utility;
+using CsToml.Values;
 using System.Buffers;
 
 namespace CsToml;
@@ -102,6 +103,27 @@ public static class CsTomlSerializer
         }
     }
 
+    public static T DeserializeValueType<T>(ReadOnlySpan<byte> tomlText, CsTomlSerializerOptions? options = null)
+    {
+        options ??= CsTomlSerializerOptions.Default;
+        var utf8SequenceReader = new Utf8SequenceReader(tomlText);
+        var reader = new CsTomlReader(ref utf8SequenceReader);
+        TomlValue tomlValue = reader.ReadValue();
+
+        var tomlDocumentNode = new TomlDocumentNode(tomlValue);
+        return options.Resolver.GetFormatter<T>()!.Deserialize(ref tomlDocumentNode, options);
+    }
+
+    public static T DeserializeValueType<T>(ReadOnlySequence<byte> tomlSequence, CsTomlSerializerOptions? options = null)
+    {
+        options ??= CsTomlSerializerOptions.Default;
+        var utf8SequenceReader = new Utf8SequenceReader(tomlSequence);
+        var reader = new CsTomlReader(ref utf8SequenceReader);
+        TomlValue tomlValue = reader.ReadValue();
+
+        var tomlDocumentNode = new TomlDocumentNode(tomlValue);
+        return options.Resolver.GetFormatter<T>()!.Deserialize(ref tomlDocumentNode, options);
+    }
 
     public static ByteMemoryResult Serialize<T>(T target, CsTomlSerializerOptions? options = null)
         where T : ITomlSerializedObject<T>
@@ -121,6 +143,39 @@ public static class CsTomlSerializer
     public static void Serialize<TBufferWriter, T>(ref TBufferWriter bufferWriter, T target, CsTomlSerializerOptions? options = null)
         where TBufferWriter : IBufferWriter<byte>
         where T : ITomlSerializedObject<T>
+    {
+        options ??= CsTomlSerializerOptions.Default;
+        try
+        {
+            var documentWriter = new Utf8TomlDocumentWriter<TBufferWriter>(ref bufferWriter);
+            var formatter = GetFormatter<T>(null);
+            using (formatter as IDisposable)
+            {
+                formatter.Serialize(ref documentWriter, target, options);
+            }
+        }
+        catch (CsTomlException cte)
+        {
+            throw new CsTomlSerializeException("An error occurred when serializing the TOML file. Check InnerException for exception information.", cte);
+        }
+    }
+
+    public static ByteMemoryResult SerializeValueType<T>(T target, CsTomlSerializerOptions? options = null)
+    {
+        var bufferWriter = RecycleArrayPoolBufferWriter<byte>.Rent();
+        try
+        {
+            SerializeValueType(ref bufferWriter, target, options);
+            return ByteMemoryResult.Create(bufferWriter);
+        }
+        finally
+        {
+            RecycleArrayPoolBufferWriter<byte>.Return(bufferWriter);
+        }
+    }
+
+    public static void SerializeValueType<TBufferWriter, T>(ref TBufferWriter bufferWriter, T target, CsTomlSerializerOptions? options = null)
+        where TBufferWriter : IBufferWriter<byte>
     {
         options ??= CsTomlSerializerOptions.Default;
         try

@@ -16,6 +16,8 @@ public sealed class ByteMemoryResult : IDisposable
 
     public Memory<byte> ByteMemory => Owner.Memory[..Length];
 
+    internal string DebugValue => ToString();
+
     internal ByteMemoryResult(IMemoryOwner<byte> owner, int length)
     {
         Owner = owner;
