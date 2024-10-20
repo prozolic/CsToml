@@ -10,6 +10,7 @@ using System.Text;
 
 Console.WriteLine("Hello, World!");
 
+
 var testDocument = await CsTomlFileSerializer.DeserializeAsync<TomlDocument>("./../../../Toml/test_withoutBOM.toml");
 var testDocument_lf = await CsTomlFileSerializer.DeserializeAsync<TomlDocument>("./../../../Toml/test_withoutBOM_LF.toml");
 if (!testDocument.RootNode["s"u8].GetString().Equals(""))
@@ -36,6 +37,13 @@ if (!testDocument.RootNode["s5"u8].GetString().Equals(" ''"))
 if (!testDocument.RootNode["s6"u8].GetString().Equals(" ' ' '' ' ' '' ' '' ' ''   '     a ' "))
 {
 }
+
+var testDoc = CsTomlSerializer.Deserialize<TomlDocument>(@"
+[Dict]
+key.a.b.v = 123
+
+"u8);
+
 
 CsTomlFileSerializer.Serialize("serialzedTest.toml", testDocument);
 var testDocument2 = CsTomlFileSerializer.Deserialize<TomlDocument>("serialzedTest.toml");
@@ -225,12 +233,13 @@ Test();
 void Sample()
 {
     ReadOnlySpan<byte> tomlText = @"
-int = 99
-Boolean = true
-Number = -2
-Number8 = 8
-Number2 = 9
-NumOverflow    = 9223372036854775807
+#123
+int = 99  # 123
+Boolean = true # 123
+Number = -2  # 123456
+Number8 = 8 # 1256
+Number2 = 9 # 123456
+NumOverflow    = 9223372036854775807  # 123456
 """" = [-0.2]"u8;
 
 
@@ -259,7 +268,31 @@ NumOverflow    = 9223372036854775807
 
 }
 
+void Sample2()
+{
+    var tomlIntValue = CsTomlSerializer.DeserializeValueType<long>("1234"u8);
+    var tomlStringValue = CsTomlSerializer.DeserializeValueType<string>("\"\\U00000061\\U00000062\\U00000063\""u8); // abc
+    var tomlDateTimeValue = CsTomlSerializer.DeserializeValueType<DateTime>("2024-10-20T15:16:00"u8);
+    var tomlArrayValue = CsTomlSerializer.DeserializeValueType<string[]>("[ \"red\", \"yellow\", \"green\" ]"u8);
+    var tomlinlineTableValue = CsTomlSerializer.DeserializeValueType<IDictionary<string, object>>("{ x = 1, y = 2, z = \"3\" }"u8);
+    var tomlTupleValue = CsTomlSerializer.DeserializeValueType<Tuple<string, string, string>>("[ \"red\", \"yellow\", \"green\" ]"u8);
+
+    using var serializedTomlValue1 = CsTomlSerializer.SerializeValueType(tomlIntValue);
+    // 1234
+    using var serializedTomlValue2 = CsTomlSerializer.SerializeValueType(tomlStringValue);
+    // "abc"
+    using var serializedTomlValue3 = CsTomlSerializer.SerializeValueType(tomlDateTimeValue);
+    // 2024-10-20T15:16:00
+    using var serializedTomlValue4 = CsTomlSerializer.SerializeValueType(tomlArrayValue);
+    // [ "red", "yellow", "green" ]
+    using var serializedTomlValue5 = CsTomlSerializer.SerializeValueType(tomlinlineTableValue);
+    // {x = 1, y = 2, z = "3"}
+    using var serializedTomlValue6 = CsTomlSerializer.SerializeValueType(tomlTupleValue);
+    // [ "red", "yellow", "green" ]
+}
+
 Sample();
+Sample2();
 
 Console.WriteLine("END");
 

@@ -194,3 +194,60 @@ flt = 3.1415
     }
 }
 
+public class DeserializeValueTypeTest
+{
+    [Fact]
+    public void Test()
+    {
+        var tomlIntValue = CsTomlSerializer.DeserializeValueType<long>("1234"u8);
+        tomlIntValue.Should().Be(1234);
+
+        var tomlStringValue = CsTomlSerializer.DeserializeValueType<string>("\"\\U00000061\\U00000062\\U00000063\""u8);
+        tomlStringValue.Should().Be("abc");
+
+        var tomlDateTimeValue = CsTomlSerializer.DeserializeValueType<DateTime>("2024-10-20T15:16:00"u8);
+        tomlDateTimeValue.Should().Be(new DateTime(2024, 10, 20, 15, 16, 0, DateTimeKind.Local));
+
+        var tomlArrayValue = CsTomlSerializer.DeserializeValueType<string[]>("[ \"red\", \"yellow\", \"green\" ]"u8);
+        tomlArrayValue.Should().Equal(["red", "yellow", "green"]);
+
+        var tomlinlineTableValue = CsTomlSerializer.DeserializeValueType<IDictionary<string, object>>("{ x = 1, y = 2, z = \"3\" }"u8);
+        tomlinlineTableValue.Count.Should().Be(3);
+        tomlinlineTableValue["x"].Should().Be((object)1);
+        tomlinlineTableValue["y"].Should().Be((object)2);
+        tomlinlineTableValue["z"].Should().Be((object)"3");
+
+        var tomlTupleValue = CsTomlSerializer.DeserializeValueType<Tuple<string, string, string>>("[ \"red\", \"yellow\", \"green\" ]"u8);
+        tomlTupleValue.Should().Be(new Tuple<string, string, string>("red", "yellow", "green"));
+    }
+}
+
+public class SerializeValueTypeTest
+{
+    [Fact]
+    public void Test()
+    {
+        using var serializedTomlValue1 = CsTomlSerializer.SerializeValueType(123);
+        serializedTomlValue1.ByteSpan.ToArray().Should().Equal("123"u8.ToArray());
+
+        using var serializedTomlValue2 = CsTomlSerializer.SerializeValueType("abc");
+        serializedTomlValue2.ByteSpan.ToArray().Should().Equal("\"abc\""u8.ToArray());
+
+        using var serializedTomlValue3 = CsTomlSerializer.SerializeValueType(new DateTime(2024, 10, 20, 15, 16, 0, DateTimeKind.Local));
+        serializedTomlValue3.ByteSpan.ToArray().Should().Equal("2024-10-20T15:16:00"u8.ToArray());
+
+        using var serializedTomlValue4 = CsTomlSerializer.SerializeValueType<string[]>(["red", "yellow", "green"]);
+        serializedTomlValue4.ByteSpan.ToArray().Should().Equal("[ \"red\", \"yellow\", \"green\" ]"u8.ToArray());
+
+        var dict = new Dictionary<string, object>();
+        dict["x"] = 1;
+        dict["y"] = 2;
+        dict["z"] = "3";
+        using var serializedTomlValue5 = CsTomlSerializer.SerializeValueType(dict);
+        serializedTomlValue5.ByteSpan.ToArray().Should().Equal("{x = 1, y = 2, z = \"3\"}"u8.ToArray());
+
+        using var serializedTomlValue6 = CsTomlSerializer.SerializeValueType(new Tuple<string, string, string>("red", "yellow", "green"));
+        serializedTomlValue6.ByteSpan.ToArray().Should().Equal("[ \"red\", \"yellow\", \"green\" ]"u8.ToArray());
+
+    }
+}
