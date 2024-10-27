@@ -30,6 +30,7 @@ Table of Contents
 
 * [Installation](#installation)
 * [Serialize and deserialize TomlDocument](#serialize-and-deserialize-tomldocument)
+* [Serialize and deserialize TOML values only](#serialize-and-deserialize-toml-values-only)
 * [Find values from TomlDocument](#find-values-from-tomldocument)
 * [Built-in support type](#built-in-support-type)
 * [Serialize and deserialize custom classes (CsToml.Generator)](#serialize-and-deserialize-custom-classes-cstomlgenerator)
@@ -63,7 +64,6 @@ It may be used to add optional features in the future.
 
 Call `CsTomlSerializer.Serialize` to Serialize `TomlDocument`.
 You can return a ByteMemoryResult or get a utf8 byte array via `IBufferWriter<byte>`.
-
 
 ```csharp
 var tomlText = @"
@@ -104,6 +104,38 @@ catch(CsTomlSerializeException ctse)
         var e = cte.InnerException; // InnerException: 10 is a character that cannot be converted to a number.
     }
 }
+```
+
+Serialize and deserialize TOML values only
+---
+
+> [!NOTE]
+> This API has been added v1.1.5.
+
+`CsTomlSerializer.DeserializeValueType<T>` deserialize TOML values to a specified type.
+`CsTomlSerializer.SerializeValueType` serializes the value into TOML format.  
+The object can be used with the type listed in [Built-in support type](#built-in-support-type).
+
+```csharp
+var tomlIntValue = CsTomlSerializer.DeserializeValueType<long>("1234"u8);
+var tomlStringValue = CsTomlSerializer.DeserializeValueType<string>("\"\\U00000061\\U00000062\\U00000063\""u8); // abc
+var tomlDateTimeOffsetValue = CsTomlSerializer.DeserializeValueType<DateTimeOffset>("2024-10-20T15:16:00"u8);
+var tomlArrayValue = CsTomlSerializer.DeserializeValueType<string[]>("[ \"red\", \"yellow\", \"green\" ]"u8);
+var tomlinlineTableValue = CsTomlSerializer.DeserializeValueType<IDictionary<string, object>>("{ x = 1, y = 2, z = \"3\" }"u8);
+var tomlTupleValue = CsTomlSerializer.DeserializeValueType<Tuple<string,string,string>>("[ \"red\", \"yellow\", \"green\" ]"u8);
+
+using var serializedTomlValue1 = CsTomlSerializer.SerializeValueType(tomlIntValue);
+// 1234
+using var serializedTomlValue2 = CsTomlSerializer.SerializeValueType(tomlStringValue);
+// "abc"
+using var serializedTomlValue3 = CsTomlSerializer.SerializeValueType(tomlDateTimeValue);
+// 2024-10-20T15:16:00
+using var serializedTomlValue4 = CsTomlSerializer.SerializeValueType(tomlArrayValue);
+// [ "red", "yellow", "green" ]
+using var serializedTomlValue5 = CsTomlSerializer.SerializeValueType(tomlinlineTableValue);
+// {x = 1, y = 2, z = "3"}
+using var serializedTomlValue6 = CsTomlSerializer.SerializeValueType(tomlTupleValue);
+// [ "red", "yellow", "green" ]
 ```
 
 Find values from `TomlDocument`
@@ -188,7 +220,7 @@ public bool TryGetValue<T>(out T value)
 Built-in support type
 ---
 
-These types can be serialized/deserialize by default.
+These types can be serialized/deserialized by default as properties of custom classes.
 
 * .NET Built-in types(`bool`, `long`, `double`, `string` etc)
 * `DateTime`, `DateTimeOffset`, `DateOnly`, `TimeOnly`, `TimeSpan`
@@ -231,7 +263,8 @@ public partial class CsTomlClass
 
 Adding the above attributes will generate code for serialization/deserialization by [Source Generators](https://learn.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/source-generators-overview).
 Property names with `[TomlValueOnSerialized]` are used as keys in the TOML document.
-The key name can also be changed with `[TomlValueOnSerialized(aliasName)]`.
+The key name can also be changed with `[TomlValueOnSerialized(aliasName)]`.  
+See [Built-in support type](#built-in-support-type) for more information on available property types.
 
 <details><summary>Generated Code</summary>
 
