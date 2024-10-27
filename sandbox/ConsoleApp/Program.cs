@@ -266,6 +266,13 @@ NumOverflow    = 9223372036854775807  # 123456
     using var BaResult = CsTomlSerializer.Serialize(testObject);
     var testObject2 = CsTomlSerializer.Deserialize<TestObject>(BaResult.ByteSpan);
 
+    var str = new ReadOnlySequence<byte>("\"\\U00000061\\U00000062\\U00000063\""u8.ToArray());
+    var tomlStringValue = CsTomlSerializer.DeserializeValueType<string>(str);
+
+    var segment = new Segment<byte>("1"u8.ToArray());
+    var lastsegment = segment.AddNext("23"u8.ToArray());
+    var sequence = new ReadOnlySequence<byte>(segment, 0, lastsegment, lastsegment.Length);
+    var tomlIntValue = CsTomlSerializer.DeserializeValueType<string>(sequence);
 }
 
 void Sample2()
@@ -289,6 +296,7 @@ void Sample2()
     // {x = 1, y = 2, z = "3"}
     using var serializedTomlValue6 = CsTomlSerializer.SerializeValueType(tomlTupleValue);
     // [ "red", "yellow", "green" ]
+
 }
 
 Sample();
