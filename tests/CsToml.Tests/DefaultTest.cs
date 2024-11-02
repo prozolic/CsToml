@@ -194,6 +194,535 @@ flt = 3.1415
     }
 }
 
+public class TomlStringTest
+{
+    [Fact]
+    public void DeserializeAndSerialize()
+    {
+        var toml = @"
+key = ""value""
+1234 = ""value""
+""127.0.0.1"" = ""value""
+'key2' = ""value""
+"""" = ""blank"" 
+str = ""I'm a string. \""You can quote me\"". Name\tJos\u00E9\nLocation\tSF.""
+str1 = """"""
+Roses are red
+Violets are blue""""""
+regex    = '<\i\c*\s*>'
+lines  = '''
+The first newline is
+trimmed in raw strings.
+   All other whitespace
+   is preserved.
+'''
+"u8;
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(toml);
+        using var serializeText = CsTomlSerializer.Serialize(document!);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine(@"key = ""value""");
+        writer.AppendLine(@"1234 = ""value""");
+        writer.AppendLine(@"""127.0.0.1"" = ""value""");
+        writer.AppendLine(@"'key2' = ""value""");
+        writer.AppendLine(@""""" = ""blank""");
+        writer.AppendLine(@"str = ""I'm a string. \""You can quote me\"". Name\tJosé\nLocation\tSF.""");
+        writer.AppendLine(@"str1 = """"""Roses are red\r\nViolets are blue""""""");
+        writer.AppendLine(@"regex = '<\i\c*\s*>'");
+        writer.AppendLine(@"lines = '''The first newline is");
+        writer.AppendLine(@"trimmed in raw strings.");
+        writer.AppendLine(@"   All other whitespace");
+        writer.AppendLine(@"   is preserved.");
+        writer.AppendLine(@"'''");
+        writer.Flush();
+
+        buffer.ToArray().Should().Equal(serializeText.ByteSpan.ToArray());
+    }
+}
+
+public class TomlIntegerTest
+{
+    [Fact]
+    public void DeserializeAndSerialize()
+    {
+        var toml = @"
+int1 = +99
+int2 = 42
+int3 = 0
+int4 = -17
+int5 = 1_000
+int6 = 5_349_221
+int7 = 53_49_221
+int8 = 1_2_3_4_5
+int9 = 9223372036854775807
+int10 = -9223372036854775808
+hex1 = 0xDEADBEEF
+hex2 = 0xdeadbeef
+hex3 = 0xdead_beef
+oct1 = 0o01234567
+oct2 = 0o755
+bin1 = 0b11010110
+"u8;
+
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(toml);
+        using var serializeText = CsTomlSerializer.Serialize(document!);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("int1 = 99");
+        writer.AppendLine("int2 = 42");
+        writer.AppendLine("int3 = 0");
+        writer.AppendLine("int4 = -17");
+        writer.AppendLine("int5 = 1000");
+        writer.AppendLine("int6 = 5349221");
+        writer.AppendLine("int7 = 5349221");
+        writer.AppendLine("int8 = 12345");
+        writer.AppendLine("int9 = 9223372036854775807");
+        writer.AppendLine("int10 = -9223372036854775808");
+        writer.AppendLine("hex1 = 3735928559");
+        writer.AppendLine("hex2 = 3735928559");
+        writer.AppendLine("hex3 = 3735928559");
+        writer.AppendLine("oct1 = 342391");
+        writer.AppendLine("oct2 = 493");
+        writer.AppendLine("bin1 = 214");
+        writer.Flush();
+
+        buffer.ToArray().Should().Equal(serializeText.ByteSpan.ToArray());
+    }
+}
+
+public class TomlFloatTest
+{
+    [Fact]
+    public void DeserializeAndSerialize()
+    {
+        var toml = @"
+flt1 = +1.0
+flt2 = 3.1415
+flt3 = -0.01
+flt4 = 5e+22
+flt5 = 1e06
+flt6 = -2E-2
+flt7 = 6.626e-34
+flt8 = 224_617.445_991_228
+sf1 = inf
+sf2 = +inf
+sf3 = -inf
+sf4 = nan
+sf5 = +nan
+sf6 = -nan
+"u8;
+
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(toml);
+        using var serializeText = CsTomlSerializer.Serialize(document!);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("flt1 = 1.0");
+        writer.AppendLine("flt2 = 3.1415");
+        writer.AppendLine("flt3 = -0.01");
+        writer.AppendLine("flt4 = 5E+22");
+        writer.AppendLine("flt5 = 1000000.0");
+        writer.AppendLine("flt6 = -0.02");
+        writer.AppendLine("flt7 = 6.626E-34");
+        writer.AppendLine("flt8 = 224617.445991228");
+        writer.AppendLine("sf1 = inf");
+        writer.AppendLine("sf2 = inf");
+        writer.AppendLine("sf3 = -inf");
+        writer.AppendLine("sf4 = nan");
+        writer.AppendLine("sf5 = nan");
+        writer.AppendLine("sf6 = nan");
+        writer.Flush();
+
+        buffer.ToArray().Should().Equal(serializeText.ByteSpan.ToArray());
+    }
+}
+
+public class TomlBooleanTest
+{
+    [Fact]
+    public void DeserializeAndSerialize()
+    {
+        var toml = @"
+bool1 = true
+bool2 = false
+"u8;
+
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(toml);
+        using var serializeText = CsTomlSerializer.Serialize(document!);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("bool1 = true");
+        writer.AppendLine("bool2 = false");
+        writer.Flush();
+
+        buffer.ToArray().Should().Equal(serializeText.ByteSpan.ToArray());
+    }
+}
+
+public class TomlOffsetDateTimeTest
+{
+    [Fact]
+    public void DeserializeAndSerialize()
+    {
+        var toml = @"
+odt1 = 1979-05-27T07:32:00Z
+odt2 = 1979-05-27T00:32:00-07:00
+odt3 = 1979-05-27T00:32:00.999999-07:00
+odt4 = 1979-05-27T00:32:00.1Z
+odt5 = 1979-05-27T00:32:00.01Z
+odt6 = 1979-05-27T00:32:00.11Z
+odt7 = 1979-05-27T00:32:00.001Z
+odt8 = 1979-05-27T00:32:00.011Z
+odt9 = 1979-05-27T00:32:00.111Z
+odt10 = 1979-05-27T00:32:00.0001Z
+odt11 = 1979-05-27T00:32:00.0011Z
+odt12 = 1979-05-27T00:32:00.0111Z
+odt13 = 1979-05-27T00:32:00.1111Z
+odt14 = 1979-05-27T00:32:00.00001Z
+odt15 = 1979-05-27T00:32:00.00011Z
+odt16 = 1979-05-27T00:32:00.00111Z
+odt17 = 1979-05-27T00:32:00.01111Z
+odt18 = 1979-05-27T00:32:00.11111Z
+odt19 = 1979-05-27T00:32:00.000001Z
+odt20 = 1979-05-27T00:32:00.000011Z
+odt21 = 1979-05-27T00:32:00.000111Z
+odt22 = 1979-05-27T00:32:00.001111Z
+odt23 = 1979-05-27T00:32:00.011111Z
+odt24 = 1979-05-27T00:32:00.111111Z
+odt25 = 1979-05-27T00:32:00.1-07:00
+odt26 = 1979-05-27T00:32:00.01-07:00
+odt27 = 1979-05-27T00:32:00.11-07:00
+odt28 = 1979-05-27T00:32:00.001-07:00
+odt29 = 1979-05-27T00:32:00.011-07:00
+odt30 = 1979-05-27T00:32:00.111-07:00
+odt31 = 1979-05-27T00:32:00.0001-07:00
+odt32 = 1979-05-27T00:32:00.0011-07:00
+odt33 = 1979-05-27T00:32:00.0111-07:00
+odt34 = 1979-05-27T00:32:00.1111-07:00
+odt35 = 1979-05-27T00:32:00.00001-07:00
+odt36 = 1979-05-27T00:32:00.00011-07:00
+odt37 = 1979-05-27T00:32:00.00111-07:00
+odt38 = 1979-05-27T00:32:00.01111-07:00
+odt39 = 1979-05-27T00:32:00.11111-07:00
+odt40 = 1979-05-27T00:32:00.000001-07:00
+odt41 = 1979-05-27T00:32:00.000011-07:00
+odt42 = 1979-05-27T00:32:00.000111-07:00
+odt43 = 1979-05-27T00:32:00.001111-07:00
+odt44 = 1979-05-27T00:32:00.011111-07:00
+odt45 = 1979-05-27T00:32:00.111111-07:00
+"u8;
+
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(toml);
+        using var serializeText = CsTomlSerializer.Serialize(document!);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("odt1 = 1979-05-27T07:32:00Z");
+        writer.AppendLine("odt2 = 1979-05-27T00:32:00-07:00");
+        writer.AppendLine("odt3 = 1979-05-27T00:32:00.999999-07:00");
+        writer.AppendLine("odt4 = 1979-05-27T00:32:00.1Z");
+        writer.AppendLine("odt5 = 1979-05-27T00:32:00.01Z");
+        writer.AppendLine("odt6 = 1979-05-27T00:32:00.11Z");
+        writer.AppendLine("odt7 = 1979-05-27T00:32:00.001Z");
+        writer.AppendLine("odt8 = 1979-05-27T00:32:00.011Z");
+        writer.AppendLine("odt9 = 1979-05-27T00:32:00.111Z");
+        writer.AppendLine("odt10 = 1979-05-27T00:32:00.0001Z");
+        writer.AppendLine("odt11 = 1979-05-27T00:32:00.0011Z");
+        writer.AppendLine("odt12 = 1979-05-27T00:32:00.0111Z");
+        writer.AppendLine("odt13 = 1979-05-27T00:32:00.1111Z");
+        writer.AppendLine("odt14 = 1979-05-27T00:32:00.00001Z");
+        writer.AppendLine("odt15 = 1979-05-27T00:32:00.00011Z");
+        writer.AppendLine("odt16 = 1979-05-27T00:32:00.00111Z");
+        writer.AppendLine("odt17 = 1979-05-27T00:32:00.01111Z");
+        writer.AppendLine("odt18 = 1979-05-27T00:32:00.11111Z");
+        writer.AppendLine("odt19 = 1979-05-27T00:32:00.000001Z");
+        writer.AppendLine("odt20 = 1979-05-27T00:32:00.000011Z");
+        writer.AppendLine("odt21 = 1979-05-27T00:32:00.000111Z");
+        writer.AppendLine("odt22 = 1979-05-27T00:32:00.001111Z");
+        writer.AppendLine("odt23 = 1979-05-27T00:32:00.011111Z");
+        writer.AppendLine("odt24 = 1979-05-27T00:32:00.111111Z");
+        writer.AppendLine("odt25 = 1979-05-27T00:32:00.1-07:00");
+        writer.AppendLine("odt26 = 1979-05-27T00:32:00.01-07:00");
+        writer.AppendLine("odt27 = 1979-05-27T00:32:00.11-07:00");
+        writer.AppendLine("odt28 = 1979-05-27T00:32:00.001-07:00");
+        writer.AppendLine("odt29 = 1979-05-27T00:32:00.011-07:00");
+        writer.AppendLine("odt30 = 1979-05-27T00:32:00.111-07:00");
+        writer.AppendLine("odt31 = 1979-05-27T00:32:00.0001-07:00");
+        writer.AppendLine("odt32 = 1979-05-27T00:32:00.0011-07:00");
+        writer.AppendLine("odt33 = 1979-05-27T00:32:00.0111-07:00");
+        writer.AppendLine("odt34 = 1979-05-27T00:32:00.1111-07:00");
+        writer.AppendLine("odt35 = 1979-05-27T00:32:00.00001-07:00");
+        writer.AppendLine("odt36 = 1979-05-27T00:32:00.00011-07:00");
+        writer.AppendLine("odt37 = 1979-05-27T00:32:00.00111-07:00");
+        writer.AppendLine("odt38 = 1979-05-27T00:32:00.01111-07:00");
+        writer.AppendLine("odt39 = 1979-05-27T00:32:00.11111-07:00");
+        writer.AppendLine("odt40 = 1979-05-27T00:32:00.000001-07:00");
+        writer.AppendLine("odt41 = 1979-05-27T00:32:00.000011-07:00");
+        writer.AppendLine("odt42 = 1979-05-27T00:32:00.000111-07:00");
+        writer.AppendLine("odt43 = 1979-05-27T00:32:00.001111-07:00");
+        writer.AppendLine("odt44 = 1979-05-27T00:32:00.011111-07:00");
+        writer.AppendLine("odt45 = 1979-05-27T00:32:00.111111-07:00");
+        writer.Flush();
+
+        buffer.ToArray().Should().Equal(serializeText.ByteSpan.ToArray());
+    }
+}
+
+public class TomlLocalDateTimeTest
+{
+    [Fact]
+    public void DeserializeAndSerialize()
+    {
+        var toml = @"
+ldt1 = 1979-05-27T07:32:00
+ldt2 = 1979-05-27T00:32:00.123
+ldt3 = 1979-05-27T00:32:00.999999
+ldt4 = 1979-05-27T00:32:00.1
+ldt5 = 1979-05-27T00:32:00.01
+ldt6 = 1979-05-27T00:32:00.11
+ldt7 = 1979-05-27T00:32:00.001
+ldt8 = 1979-05-27T00:32:00.011
+ldt9 = 1979-05-27T00:32:00.111
+ldt10 = 1979-05-27T00:32:00.0001
+ldt11 = 1979-05-27T00:32:00.0011
+ldt12 = 1979-05-27T00:32:00.0111
+ldt13 = 1979-05-27T00:32:00.1111
+ldt14 = 1979-05-27T00:32:00.00001
+ldt15 = 1979-05-27T00:32:00.00011
+ldt16 = 1979-05-27T00:32:00.00111
+ldt17 = 1979-05-27T00:32:00.01111
+ldt18 = 1979-05-27T00:32:00.11111
+ldt19 = 1979-05-27T00:32:00.000001
+ldt20 = 1979-05-27T00:32:00.000011
+ldt21 = 1979-05-27T00:32:00.000111
+ldt22 = 1979-05-27T00:32:00.001111
+ldt23 = 1979-05-27T00:32:00.011111
+ldt24 = 1979-05-27T00:32:00.111111
+"u8;
+
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(toml);
+        using var serializeText = CsTomlSerializer.Serialize(document!);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("ldt1 = 1979-05-27T07:32:00");
+        writer.AppendLine("ldt2 = 1979-05-27T00:32:00.123");
+        writer.AppendLine("ldt3 = 1979-05-27T00:32:00.999999");
+        writer.AppendLine("ldt4 = 1979-05-27T00:32:00.1");
+        writer.AppendLine("ldt5 = 1979-05-27T00:32:00.01");
+        writer.AppendLine("ldt6 = 1979-05-27T00:32:00.11");
+        writer.AppendLine("ldt7 = 1979-05-27T00:32:00.001");
+        writer.AppendLine("ldt8 = 1979-05-27T00:32:00.011");
+        writer.AppendLine("ldt9 = 1979-05-27T00:32:00.111");
+        writer.AppendLine("ldt10 = 1979-05-27T00:32:00.0001");
+        writer.AppendLine("ldt11 = 1979-05-27T00:32:00.0011");
+        writer.AppendLine("ldt12 = 1979-05-27T00:32:00.0111");
+        writer.AppendLine("ldt13 = 1979-05-27T00:32:00.1111");
+        writer.AppendLine("ldt14 = 1979-05-27T00:32:00.00001");
+        writer.AppendLine("ldt15 = 1979-05-27T00:32:00.00011");
+        writer.AppendLine("ldt16 = 1979-05-27T00:32:00.00111");
+        writer.AppendLine("ldt17 = 1979-05-27T00:32:00.01111");
+        writer.AppendLine("ldt18 = 1979-05-27T00:32:00.11111");
+        writer.AppendLine("ldt19 = 1979-05-27T00:32:00.000001");
+        writer.AppendLine("ldt20 = 1979-05-27T00:32:00.000011");
+        writer.AppendLine("ldt21 = 1979-05-27T00:32:00.000111");
+        writer.AppendLine("ldt22 = 1979-05-27T00:32:00.001111");
+        writer.AppendLine("ldt23 = 1979-05-27T00:32:00.011111");
+        writer.AppendLine("ldt24 = 1979-05-27T00:32:00.111111");
+        writer.Flush();
+
+        buffer.ToArray().Should().Equal(serializeText.ByteSpan.ToArray());
+    }
+}
+
+public class TomlLocalDateTest
+{
+    [Fact]
+    public void DeserializeAndSerialize()
+    {
+        var toml = @"
+ld1 = 1979-05-27
+ld2 = 1979-01-01
+ld3 = 1979-12-31
+"u8;
+
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(toml);
+        using var serializeText = CsTomlSerializer.Serialize(document!);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("ld1 = 1979-05-27");
+        writer.AppendLine("ld2 = 1979-01-01");
+        writer.AppendLine("ld3 = 1979-12-31");
+        writer.Flush();
+
+        buffer.ToArray().Should().Equal(serializeText.ByteSpan.ToArray());
+    }
+}
+
+public class TomlLocalTimeTest
+{
+    [Fact]
+    public void DeserializeAndSerialize()
+    {
+        var toml = @"
+lt1 = 07:32:00
+lt2 = 00:32:00.123
+lt3 = 00:32:00.999999
+lt4 = 00:32:00.1
+lt5 = 00:32:00.01
+lt6 = 00:32:00.11
+lt7 = 00:32:00.001
+lt8 = 00:32:00.011
+lt9 = 00:32:00.111
+lt10 = 00:32:00.0001
+lt11 = 00:32:00.0011
+lt12 = 00:32:00.0111
+lt13 = 00:32:00.1111
+lt14 = 00:32:00.00001
+lt15 = 00:32:00.00011
+lt16 = 00:32:00.00111
+lt17 = 00:32:00.01111
+lt18 = 00:32:00.11111
+lt19 = 00:32:00.000001
+lt20 = 00:32:00.000011
+lt21 = 00:32:00.000111
+lt22 = 00:32:00.001111
+lt23 = 00:32:00.011111
+lt24 = 00:32:00.111111
+"u8;
+
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(toml);
+        using var serializeText = CsTomlSerializer.Serialize(document!);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("lt1 = 07:32:00");
+        writer.AppendLine("lt2 = 00:32:00.123");
+        writer.AppendLine("lt3 = 00:32:00.999999");
+        writer.AppendLine("lt4 = 00:32:00.1");
+        writer.AppendLine("lt5 = 00:32:00.01");
+        writer.AppendLine("lt6 = 00:32:00.11");
+        writer.AppendLine("lt7 = 00:32:00.001");
+        writer.AppendLine("lt8 = 00:32:00.011");
+        writer.AppendLine("lt9 = 00:32:00.111");
+        writer.AppendLine("lt10 = 00:32:00.0001");
+        writer.AppendLine("lt11 = 00:32:00.0011");
+        writer.AppendLine("lt12 = 00:32:00.0111");
+        writer.AppendLine("lt13 = 00:32:00.1111");
+        writer.AppendLine("lt14 = 00:32:00.00001");
+        writer.AppendLine("lt15 = 00:32:00.00011");
+        writer.AppendLine("lt16 = 00:32:00.00111");
+        writer.AppendLine("lt17 = 00:32:00.01111");
+        writer.AppendLine("lt18 = 00:32:00.11111");
+        writer.AppendLine("lt19 = 00:32:00.000001");
+        writer.AppendLine("lt20 = 00:32:00.000011");
+        writer.AppendLine("lt21 = 00:32:00.000111");
+        writer.AppendLine("lt22 = 00:32:00.001111");
+        writer.AppendLine("lt23 = 00:32:00.011111");
+        writer.AppendLine("lt24 = 00:32:00.111111");
+        writer.Flush();
+
+        buffer.ToArray().Should().Equal(serializeText.ByteSpan.ToArray());
+    }
+}
+
+public class TomlArrayTest
+{
+    [Fact]
+    public void DeserializeAndSerialize()
+    {
+        var toml = @"
+empty = []
+integers = [ 1, 2, 3 ]
+colors = [ ""red"", ""yellow"", ""green""]
+nested_arrays_of_ints = [[1, 2], [3, 4, 5]]
+nested_mixed_array = [[1, 2], [""a"", ""b"", ""c""]]
+string_array = [""all"", 'strings', """"""are the same"""""", '''type''']
+"u8;
+
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(toml);
+        using var serializeText = CsTomlSerializer.Serialize(document!);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("empty = [ ]");
+        writer.AppendLine("integers = [ 1, 2, 3 ]");
+        writer.AppendLine(@"colors = [ ""red"", ""yellow"", ""green"" ]");
+        writer.AppendLine("nested_arrays_of_ints = [ [ 1, 2 ], [ 3, 4, 5 ] ]");
+        writer.AppendLine(@"nested_mixed_array = [ [ 1, 2 ], [ ""a"", ""b"", ""c"" ] ]");
+        writer.AppendLine(@"string_array = [ ""all"", 'strings', """"""are the same"""""", '''type''' ]");
+        writer.Flush();
+
+        buffer.ToArray().Should().Equal(serializeText.ByteSpan.ToArray());
+    }
+}
+
+public class TomlTableTest
+{
+    [Fact]
+    public void DeserializeAndSerialize()
+    {
+        var toml = @"
+[table-1]
+key1 = ""some string""
+key2 = 123
+
+[table-2]
+key1 = ""another string""
+key2 = 456
+
+[fruit]
+apple.color = ""red""
+apple.taste.sweet = true
+
+[fruit.apple.texture]
+smooth = true
+"u8;
+
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(toml);
+        using var serializeText = CsTomlSerializer.Serialize(document!);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("[table-1]");
+        writer.AppendLine(@"key1 = ""some string""");
+        writer.AppendLine(@"key2 = 123");
+        writer.AppendLine();
+        writer.AppendLine("[table-2]");
+        writer.AppendLine(@"key1 = ""another string""");
+        writer.AppendLine(@"key2 = 456");
+        writer.AppendLine();
+        writer.AppendLine("[fruit]");
+        writer.AppendLine(@"apple.color = ""red""");
+        writer.AppendLine(@"apple.taste.sweet = true");
+        writer.AppendLine();
+        writer.AppendLine("[fruit.apple.texture]");
+        writer.AppendLine("smooth = true");
+        writer.Flush();
+
+        buffer.ToArray().Should().Equal(serializeText.ByteSpan.ToArray());
+    }
+}
+
+public class TomlInlineTableTest
+{
+    [Fact]
+    public void DeserializeAndSerialize()
+    {
+        var toml = @"
+name = { first = ""CsToml"", last = ""prozolic"" }
+point = { x = 1, y = 2 }
+animal = { type.name = ""pug"" }
+"u8;
+
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(toml);
+        using var serializeText = CsTomlSerializer.Serialize(document!);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine(@"name = { first = ""CsToml"", last = ""prozolic"" }");
+        writer.AppendLine(@"point = { x = 1, y = 2 }");
+        writer.AppendLine(@"animal = { type.name = ""pug"" }");
+        writer.Flush();
+
+        buffer.ToArray().Should().Equal(serializeText.ByteSpan.ToArray());
+    }
+}
+
+
 public class DeserializeValueTypeTest
 {
     [Fact]
@@ -248,6 +777,5 @@ public class SerializeValueTypeTest
 
         using var serializedTomlValue6 = CsTomlSerializer.SerializeValueType(new Tuple<string, string, string>("red", "yellow", "green"));
         serializedTomlValue6.ByteSpan.ToArray().Should().Equal("[ \"red\", \"yellow\", \"green\" ]"u8.ToArray());
-
     }
 }

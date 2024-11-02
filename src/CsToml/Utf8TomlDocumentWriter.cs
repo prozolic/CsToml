@@ -109,11 +109,22 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
     {
         var length = 32;
         int bytesWritten;
-        while (!value.TryFormat(writer.GetSpan(length), out bytesWritten, "G", CultureInfo.InvariantCulture))
+
+        var writtenSpan = writer.GetSpan(length);
+        while (!value.TryFormat(writtenSpan, out bytesWritten, "G", CultureInfo.InvariantCulture))
         {
             length *= 2;
+            writtenSpan = writer.GetSpan(length);
         }
         writer.Advance(bytesWritten);
+
+        // integer check
+        if (!writtenSpan.Slice(0, bytesWritten).ContainsAny(".eE"u8) )
+        {
+            var writtenSpanEx = writer.GetWrittenSpan(2);
+            writtenSpanEx[0] = TomlCodes.Symbol.DOT;
+            writtenSpanEx[1] = TomlCodes.Number.Zero;
+        }
     }
 
     public void WriteString(string? value)
@@ -129,73 +140,135 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
     public void WriteDateTimeOffset(DateTimeOffset value)
     {
         var totalMicrosecond = value.Millisecond * 1000 + value.Microsecond;
-        var totalMinutes = value.Offset.TotalMinutes; // check timezone
+        var offsetTotalMinutes = value.Offset.TotalMinutes; // check timezone
 
-        if (totalMicrosecond == 0 && totalMinutes == 0)
+        if (offsetTotalMinutes == 0)
         {
-            WriteOffsetDateTimeCore(value, "u");
-        }
-        else if (totalMicrosecond > 0 && totalMinutes != 0)
-        {
-            var length = TomlCodes.Number.DigitsDecimalUnroll4(totalMicrosecond);
-
-            switch (length)
+            if (totalMicrosecond == 0)
             {
-                case 1:
-                    WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.fzzz");
-                    break;
-                case 2:
-                    WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.ffzzz");
-                    break;
-                case 3:
-                    WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.fffzzz");
-                    break;
-                case 4:
-                    WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.ffffzzz");
-                    break;
-                case 5:
-                    WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.fffffzzz");
-                    break;
-                case 6:
-                    WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.ffffffzzz");
-                    break;
-                default:
-                    WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.ffffffzzz");
-                    break;
+                WriteOffsetDateTimeCore(value, "u");
+            }
+            else
+            {
+                if (value.Microsecond == 0)
+                {
+                    var length = TomlCodes.Number.DigitsDecimalUnroll4(value.Millisecond);
+                    switch (length)
+                    {
+                        case 1:
+                            WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.fffZ");
+                            break;
+                        case 2:
+                            if (value.Millisecond % 10 == 0)
+                                WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.ffZ");
+                            else
+                                WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.fffZ");
+                            break;
+                        case 3:
+                            if (value.Millisecond % 100 == 0)
+                                WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.fZ");
+                            else if (value.Millisecond % 10 == 0)
+                                WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.ffZ");
+                            else
+                                WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.fffZ");
+                            break;
+                        default:
+                            WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.fffZ");
+                            break;
+                    }
+                }
+                else
+                {
+                    var length = TomlCodes.Number.DigitsDecimalUnroll4(value.Microsecond);
+                    switch (length)
+                    {
+                        case 1:
+                            WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.ffffffZ");
+                            break;
+                        case 2:
+                            if (value.Microsecond % 10 == 0)
+                                WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.fffffZ");
+                            else
+                                WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.ffffffZ");
+                            break;
+                        case 3:
+                            if (value.Microsecond % 100 == 0)
+                                WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.ffffZ");
+                            else if (value.Microsecond % 10 == 0)
+                                WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.fffffZ");
+                            else
+                                WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.ffffffZ");
+                            break;
+                        default:
+                            WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.ffffffZ");
+                            break;
+                    }
+                }
             }
         }
-        else if (totalMicrosecond > 0)
+        else
         {
-            var length = TomlCodes.Number.DigitsDecimalUnroll4(totalMicrosecond);
-
-            switch (length)
+            if (totalMicrosecond == 0)
             {
-                case 1:
-                    WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.f");
-                    break;
-                case 2:
-                    WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.ff");
-                    break;
-                case 3:
-                    WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.fff");
-                    break;
-                case 4:
-                    WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.ffff");
-                    break;
-                case 5:
-                    WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.fffff");
-                    break;
-                case 6:
-                    WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.ffffff");
-                    break;
-                default:
-                    WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.ffffff");
-                    break;
+                WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:sszzz");
             }
-        }
-        else if (totalMinutes != 0)
-        {
-            WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:sszzz");
+            else
+            {
+                if (value.Microsecond == 0)
+                {
+                    var length = TomlCodes.Number.DigitsDecimalUnroll4(value.Millisecond);
+                    switch (length)
+                    {
+                        case 1:
+                            WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.fffzzz");
+                            break;
+                        case 2:
+                            if (value.Millisecond % 10 == 0)
+                                WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.ffzzz");
+                            else
+                                WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.fffzzz");
+                            break;
+                        case 3:
+                            if (value.Millisecond % 100 == 0)
+                                WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.fzzz");
+                            else if (value.Millisecond % 10 == 0)
+                                WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.ffzzz");
+                            else
+                                WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.fffzzz");
+                            break;
+                        default:
+                            WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.fffzzz");
+                            break;
+                    }
+                }
+                else
+                {
+                    var length = TomlCodes.Number.DigitsDecimalUnroll4(value.Microsecond);
+                    switch (length)
+                    {
+                        case 1:
+                            WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.ffffffzzz");
+                            break;
+                        case 2:
+                            if (value.Microsecond % 10 == 0)
+                                WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.fffffzzz");
+                            else
+                                WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.ffffffzzz");
+                            break;
+                        case 3:
+                            if (value.Microsecond % 100 == 0)
+                                WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.ffffzzz");
+                            else if (value.Microsecond % 10 == 0)
+                                WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.fffffzzz");
+                            else
+                                WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.ffffffzzz");
+                            break;
+                        default:
+                            WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.ffffffzzz");
+                            break;
+                    }
+                }
+            }
         }
     }
 
@@ -208,32 +281,59 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
         }
         else
         {
-            var length = TomlCodes.Number.DigitsDecimalUnroll4(totalMicrosecond);
-
-            switch (length)
+            if (value.Microsecond == 0)
             {
-                case 1:
-                    WriteDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.f");
-                    break;
-                case 2:
-                    WriteDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.ff");
-                    break;
-                case 3:
-                    WriteDateTimeCore( value, "yyyy-MM-ddTHH:mm:ss.fff");
-                    break;
-                case 4:
-                    WriteDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.ffff");
-                    break;
-                case 5:
-                    WriteDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.fffff");
-                    break;
-                case 6:
-                    WriteDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.ffffff");
-                    break;
-                default:
-                    WriteDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.ffffff");
-                    break;
-
+                var length = TomlCodes.Number.DigitsDecimalUnroll4(value.Millisecond);
+                switch (length)
+                {
+                    case 1:
+                        WriteDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.fff");
+                        break;
+                    case 2:
+                        if (value.Millisecond % 10 == 0)
+                            WriteDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.ff");
+                        else
+                            WriteDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.fff");
+                        break;
+                    case 3:
+                        if (value.Millisecond % 100 == 0)
+                            WriteDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.f");
+                        else if (value.Millisecond % 10 == 0)
+                            WriteDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.ff");
+                        else
+                            WriteDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.fff");
+                        break;
+                    default:
+                        WriteDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.fff");
+                        break;
+                }
+            }
+            else
+            {
+                var length = TomlCodes.Number.DigitsDecimalUnroll4(value.Microsecond);
+                switch (length)
+                {
+                    case 1:
+                        WriteDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.ffffff");
+                        break;
+                    case 2:
+                        if (value.Microsecond % 10 == 0)
+                            WriteDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.fffff");
+                        else
+                            WriteDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.ffffff");
+                        break;
+                    case 3:
+                        if (value.Microsecond % 100 == 0)
+                            WriteDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.ffff");
+                        else if (value.Microsecond % 10 == 0)
+                            WriteDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.fffff");
+                        else
+                            WriteDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.ffffff");
+                        break;
+                    default:
+                        WriteDateTimeCore(value, "yyyy-MM-ddTHH:mm:ss.ffffff");
+                        break;
+                }
             }
         }
     }
@@ -245,41 +345,67 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
 
     public void WriteTimeOnly(TimeOnly value)
     {
-        var totalMicrosecond = value.Millisecond * 100 + value.Microsecond;
+        var totalMicrosecond = value.Millisecond * 1000 + value.Microsecond;
         if (totalMicrosecond == 0)
         {
             WriteTimeOnlyCore(value, "HH:mm:ss");
         }
         else
         {
-            var length = TomlCodes.Number.DigitsDecimalUnroll4(totalMicrosecond);
-
-            switch (length)
+            if (value.Microsecond == 0)
             {
-                case 1:
-                    WriteTimeOnlyCore(value, "HH:mm:ss.f");
-                    break;
-                case 2:
-                    WriteTimeOnlyCore(value, "HH:mm:ss.ff");
-                    break;
-                case 3:
-                    WriteTimeOnlyCore(value, "HH:mm:ss.fff");
-                    break;
-                case 4:
-                    WriteTimeOnlyCore(value, "HH:mm:ss.ffff");
-                    break;
-                case 5:
-                    WriteTimeOnlyCore(value, "HH:mm:ss.fffff");
-                    break;
-                case 6:
-                    WriteTimeOnlyCore(value, "HH:mm:ss.ffffff");
-                    break;
-                default:
-                    WriteTimeOnlyCore(value, "HH:mm:ss.ffffff");
-                    break;
-
+                var length = TomlCodes.Number.DigitsDecimalUnroll4(value.Millisecond);
+                switch (length)
+                {
+                    case 1:
+                        WriteTimeOnlyCore(value, "HH:mm:ss.fff");
+                        break;
+                    case 2:
+                        if (value.Millisecond % 10 == 0)
+                            WriteTimeOnlyCore(value, "HH:mm:ss.ff");
+                        else
+                            WriteTimeOnlyCore(value, "HH:mm:ss.fff");
+                        break;
+                    case 3:
+                        if (value.Millisecond % 100 == 0)
+                            WriteTimeOnlyCore(value, "HH:mm:ss.f");
+                        else if (value.Millisecond % 10 == 0)
+                            WriteTimeOnlyCore(value, "HH:mm:ss.ff");
+                        else
+                            WriteTimeOnlyCore(value, "HH:mm:ss.fff");
+                        break;
+                    default:
+                        WriteTimeOnlyCore(value, "HH:mm:ss.fff");
+                        break;
+                }
             }
-
+            else
+            {
+                var length = TomlCodes.Number.DigitsDecimalUnroll4(value.Microsecond);
+                switch (length)
+                {
+                    case 1:
+                        WriteTimeOnlyCore(value, "HH:mm:ss.ffffff");
+                        break;
+                    case 2:
+                        if (value.Microsecond % 10 == 0)
+                            WriteTimeOnlyCore(value, "HH:mm:ss.fffff");
+                        else
+                            WriteTimeOnlyCore(value, "HH:mm:ss.ffffff");
+                        break;
+                    case 3:
+                        if (value.Microsecond % 100 == 0)
+                            WriteTimeOnlyCore(value, "HH:mm:ss.ffff");
+                        else if (value.Microsecond % 10 == 0)
+                            WriteTimeOnlyCore(value, "HH:mm:ss.fffff");
+                        else
+                            WriteTimeOnlyCore(value, "HH:mm:ss.ffffff");
+                        break;
+                    default:
+                        WriteTimeOnlyCore(value, "HH:mm:ss.ffffff");
+                        break;
+                }
+            }
         }
     }
 

@@ -52,6 +52,7 @@ internal ref struct CsTomlParser
     private ExtendableArray<TomlDottedKey> dottedKeys;
     private TomlValue? value;
     private CsTomlLineNumberException? exception;
+    private bool endComment;
 
     public readonly long LineNumber => reader.LineNumber;
 
@@ -144,7 +145,11 @@ internal ref struct CsTomlParser
                     CurrentState == ParserState.ArrayOfTablesHeader)
                 {
                     // end comment
-                    if (!TomlCodes.IsNumberSign(ch2))
+                    if (TomlCodes.IsNumberSign(ch2))
+                    {
+                        endComment = true;
+                    }
+                    else
                     {
                         ExceptionHelper.ThrowException($"There is a non-newline (or EOF) character after {CurrentState}.");
                     }
@@ -167,14 +172,14 @@ internal ref struct CsTomlParser
             reader.SkipOneLine();
         }
 
-
         return true;
     }
 
     private void ReadComment()
     {
-        CurrentState = CurrentState != ParserState.KeyValue ? ParserState.Comment : ParserState.EndComment;
+        CurrentState = endComment ? ParserState.EndComment : ParserState.Comment;
         comment = reader.ReadComment();
+        endComment = false;
     }
 
     private void ReadKeyValue()

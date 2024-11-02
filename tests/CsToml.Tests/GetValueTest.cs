@@ -1,15 +1,7 @@
 ﻿using CsToml.Error;
 using FluentAssertions;
-using FluentAssertions.Execution;
 
 namespace CsToml.Tests;
-
-public static class ActionExtensions
-{
-    public static Action? ToAction(this Action action)
-        => action;
-
-}
 
 public class GetValueTest
 {
@@ -682,4 +674,3 @@ value3 = 3
         }
     }
 }
-

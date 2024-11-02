@@ -43,10 +43,8 @@ internal sealed partial class TomlFloat(double value, TomlFloat.FloatKind kind =
                 writer.WriteBytes("-inf"u8);
                 break;
             case FloatKind.Nan:
-                writer.WriteBytes("nan"u8);
-                break;
             case FloatKind.PNan:
-                writer.WriteBytes("-nan"u8);
+                writer.WriteBytes("nan"u8);
                 break;
             default:
                 return false;
