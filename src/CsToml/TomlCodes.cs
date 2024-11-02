@@ -63,6 +63,11 @@ internal static class TomlCodes
 
         internal static int DigitsDecimalUnroll4(long value)
         {
+            // long.MinValue raises an OverflowException, so fixed support
+            // https://learn.microsoft.com/en-us/dotnet/api/system.math.abs?view=net-8.0#system-math-abs(system-int64)
+            if (value == long.MinValue)
+                return 19;
+
             var number = 1;
             value = Math.Abs(value);
 
