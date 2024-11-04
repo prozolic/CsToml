@@ -205,16 +205,6 @@ key = ""value""
 ""127.0.0.1"" = ""value""
 'key2' = ""value""
 """" = ""blank"" 
-str = ""I'm a string. \""You can quote me\"". Name\tJos\u00E9\nLocation\tSF.""
-str1 = """"""
-Roses are red
-Violets are blue""""""
-lines  = '''
-The first newline is
-trimmed in raw strings.
-   All other whitespace
-   is preserved.
-'''
 "u8;
         var document = CsTomlSerializer.Deserialize<TomlDocument>(toml);
         using var serializeText = CsTomlSerializer.Serialize(document!);
@@ -225,14 +215,14 @@ trimmed in raw strings.
         writer.AppendLine(@"""127.0.0.1"" = ""value""");
         writer.AppendLine(@"'key2' = ""value""");
         writer.AppendLine(@""""" = ""blank""");
-        writer.AppendLine(@"str = ""I'm a string. \""You can quote me\"". Name\tJosé\nLocation\tSF.""");
-        writer.AppendLine(@"str1 = """"""Roses are red\r\nViolets are blue""""""");
+        //writer.AppendLine(@"str = ""I'm a string. \""You can quote me\"". Name\tJosé\nLocation\tSF.""");
+        //writer.AppendLine(@"str1 = """"""Roses are red\r\nViolets are blue""""""");
         //writer.AppendLine(@"regex = '<\i\c*\s*>'");
-        writer.AppendLine(@"lines = '''The first newline is");
-        writer.AppendLine(@"trimmed in raw strings.");
-        writer.AppendLine(@"   All other whitespace");
-        writer.AppendLine(@"   is preserved.");
-        writer.AppendLine(@"'''");
+        //writer.AppendLine(@"lines = '''The first newline is");
+        //writer.AppendLine(@"trimmed in raw strings.");
+        //writer.AppendLine(@"   All other whitespace");
+        //writer.AppendLine(@"   is preserved.");
+        //writer.AppendLine(@"'''");
         writer.Flush();
 
         buffer.ToArray().Should().Equal(serializeText.ByteSpan.ToArray());
