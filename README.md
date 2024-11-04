@@ -17,12 +17,13 @@ For more information about TOML, visit the official website at [https://toml.io/
 
 CsToml has the following features.
 
-- [TOML v1.0.0](https://toml.io/en/v1.0.0) supported
-- Implemented in .NET 8 and C# 12.(supports .NET 8 or later. )  
+- It complies with [TOML v1.0.0](https://toml.io/en/v1.0.0).
+- .NET 8 or later supported.
+- CsToml is implemented in .NET8 (C#12).
 - Parsing is performed using byte sequence instead of `string`.
 - It is processed byte sequence directly by the API defined in `System.Buffers`(`IBufferWriter<byte>`,`ReadOnlySequence<byte>`), memory allocation is small and fast.
 - Buffers are rented from the pool(`ArrayPool<T>`), reducing the allocation.
-- All standard [TOML v1.0.0 test cases](https://github.com/toml-lang/toml-test/tree/master/tests) are passed.
+- CsToml deserializer has been tested using [the standard TOML v1.0.0 test cases](https://github.com/toml-lang/toml-test/tree/master/tests) and all have passed.
 - The serialization interface and implementation is influenced by [MemoryPack](https://github.com/Cysharp/MemoryPack) and [VYaml](https://github.com/hadashiA/VYaml).
 
 Table of Contents
