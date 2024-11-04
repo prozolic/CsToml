@@ -200,48 +200,49 @@ public class TomlStringTest
     [Fact]
     public void DeserializeAndSerialize()
     {
-        using var toml = Utf8String.CreateWriter(out var writer);
+        var toml = @"
+key = ""value""
+1234 = ""value""
+""127.0.0.1"" = ""value""
+'key2' = ""value""
+"""" = ""blank"" 
+str = ""I'm a string. \""You can quote me\"". Name\tJos\u00E9\nLocation\tSF.""
+str1 = """"""
+Roses are red
+Violets are blue""""""
+regex    = '<\i\c*\s*>'
+lines  = '''
+The first newline is
+trimmed in raw strings.
+   All other whitespace
+   is preserved.
+'''
+"u8;
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(toml);
+        using var serializeText = CsTomlSerializer.Serialize(document!);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
         writer.AppendLine(@"key = ""value""");
         writer.AppendLine(@"1234 = ""value""");
         writer.AppendLine(@"""127.0.0.1"" = ""value""");
         writer.AppendLine(@"'key2' = ""value""");
         writer.AppendLine(@""""" = ""blank""");
-        writer.AppendLine(@"str = ""I'm a string. \""You can quote me\"". Name\tJos\u00E9\nLocation\tSF.""");
-        writer.AppendLine(@"str1 = """"""");
-        writer.AppendLine(@"Roses are red");
-        writer.AppendLine(@"Violets are blue""""""");
-        writer.AppendLine(@"regex    = '<\i\c*\s*>'");
-        writer.AppendLine(@"lines  = '''");
-        writer.AppendLine(@"The first newline is");
+        writer.AppendLine(@"str = ""I'm a string. \""You can quote me\"". Name\tJosé\nLocation\tSF.""");
+        writer.AppendLine(@"str1 = """"""Roses are red\r\nViolets are blue""""""");
+        writer.AppendLine(@"regex = '<\i\c*\s*>'");
+        writer.AppendLine(@"lines = '''The first newline is");
         writer.AppendLine(@"trimmed in raw strings.");
         writer.AppendLine(@"   All other whitespace");
         writer.AppendLine(@"   is preserved.");
         writer.AppendLine(@"'''");
         writer.Flush();
 
-        var document = CsTomlSerializer.Deserialize<TomlDocument>(toml.WrittenSpan);
-        using var serializeText = CsTomlSerializer.Serialize(document!);
-
-        using var buffer = Utf8String.CreateWriter(out var writer2);
-        writer2.AppendLine(@"key = ""value""");
-        writer2.AppendLine(@"1234 = ""value""");
-        writer2.AppendLine(@"""127.0.0.1"" = ""value""");
-        writer2.AppendLine(@"'key2' = ""value""");
-        writer2.AppendLine(@""""" = ""blank""");
-        writer2.AppendLine(@"str = ""I'm a string. \""You can quote me\"". Name\tJosé\nLocation\tSF.""");
-        writer2.AppendLine(@"str1 = """"""Roses are red\r\nViolets are blue""""""");
-        writer2.AppendLine(@"regex = '<\i\c*\s*>'");
-        writer2.AppendLine(@"lines = '''The first newline is");
-        writer2.AppendLine(@"trimmed in raw strings.");
-        writer2.AppendLine(@"   All other whitespace");
-        writer2.AppendLine(@"   is preserved.");
-        writer2.AppendLine(@"'''");
-        writer2.Flush();
-
-        var expected = Encoding.UTF8.GetString(buffer.ToArray());
-        var actual = Encoding.UTF8.GetString(serializeText.ByteSpan);
+        var expected = Encoding.UTF8.GetString(buffer.ToArray()).Replace("\r\n", "\n");
+        var actual = Encoding.UTF8.GetString(serializeText.ByteSpan).Replace("\r\n", "\n");
 
         expected.Should().Be(actual);
+
+        //buffer.ToArray().Should().Equal(serializeText.ByteSpan.ToArray());
     }
 }
 
