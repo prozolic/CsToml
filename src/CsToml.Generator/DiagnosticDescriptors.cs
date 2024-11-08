@@ -45,6 +45,22 @@ internal static class DiagnosticDescriptors
         category: Category,
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor DefiningKeyMultipleTimesForProperty = new(
+        id: "CsTomlError005",
+        title: "Defining the same key multiple times for properties and aliases is invalid",
+        messageFormat: "Defining the same key multiple times for properties and aliases is invalid: {0}",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor DefiningKeyMultipleTimesForAliasName = new(
+        id: "CsTomlError006",
+        title: "Defining the same key multiple times for properties and aliases is invalid",
+        messageFormat: "Defining the same key multiple times for properties and aliases is invalid: TomlValueOnSerialized(aliasName:\"{0}\")",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
 }
 
 

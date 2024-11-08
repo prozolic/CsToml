@@ -67,8 +67,42 @@ internal sealed class TypeMeta
         }
 
         var error = false;
+        var keyTable = new HashSet<string>(StringComparer.Ordinal);
         foreach (var (property, kind, aliasName) in Members)
         {
+            if (string.IsNullOrEmpty(aliasName))
+            {
+                if (!keyTable.Contains(property.Name))
+                {
+                    keyTable.Add(property.Name);
+                }
+                else
+                {
+                    context.ReportDiagnostic(
+                        Diagnostic.Create(
+                            DiagnosticDescriptors.DefiningKeyMultipleTimesForProperty,
+                            GetPropertyLocation(property, syntax),
+                            property.Name));
+                    error = true;
+                }
+            }
+            else
+            {
+                if (!keyTable.Contains(aliasName!))
+                {
+                    keyTable.Add(aliasName!);
+                }
+                else
+                {
+                    context.ReportDiagnostic(
+                        Diagnostic.Create(
+                            DiagnosticDescriptors.DefiningKeyMultipleTimesForAliasName,
+                            GetPropertyLocation(property, syntax),
+                            aliasName));
+                    error = true;
+                }
+            }
+
             if (kind == TomlSerializationKind.Error)
             {
                 context.ReportDiagnostic(
