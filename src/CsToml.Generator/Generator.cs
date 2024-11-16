@@ -60,6 +60,9 @@ internal sealed class TomlValueOnSerializedAttribute : Attribute
 
     private string Generate(TypeMeta typeMeta)
     {
+        // Check if it belongs to the global namespace.
+        var namespaceTag = string.IsNullOrWhiteSpace(typeMeta.NameSpace) ? string.Empty : $"namespace {typeMeta.NameSpace};";
+
         var code = $$"""
 #nullable enable
 #pragma warning disable CS0219 // The variable 'variable' is assigned but its value is never used
@@ -74,7 +77,7 @@ using CsToml;
 using CsToml.Formatter;
 using CsToml.Formatter.Resolver;
 
-namespace {{typeMeta.NameSpace}};
+{{namespaceTag}}
 
 partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{{typeMeta.TypeName}}>
 {
