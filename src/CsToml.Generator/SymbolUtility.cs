@@ -89,6 +89,18 @@ internal static class SymbolUtility
                     case TypeKind.Error:
                         return TomlSerializationKind.Error;
                     case TypeKind.Class:
+                        if (CollectionMetaData.IsSystemCollectionClass(type))
+                        {
+                            if (IsElementType(type, TomlSerializationKind.Primitive))
+                            {
+                                return TomlSerializationKind.PrimitiveCollection;
+                            }
+                            return TomlSerializationKind.ArrayOfITomlSerializedObject;
+                        }
+                        if (DictionaryMetaData.IsDictionaryClass(type))
+                        {
+                            return TomlSerializationKind.Dictionary;
+                        }
                         if (CollectionMetaData.IsSystemCollections(type))
                         {
                             if (IsElementType(type, TomlSerializationKind.Primitive))

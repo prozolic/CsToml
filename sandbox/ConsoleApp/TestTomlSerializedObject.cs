@@ -1,4 +1,5 @@
 ﻿
+
 using CsToml;
 using CsToml.Formatter;
 using CsToml.Formatter.Resolver;
@@ -260,17 +261,17 @@ public partial class TestE_
 [TomlSerializedObject]
 public partial class CsTomlClass
 {
-    [TomlValueOnSerialized]
-    public string Key { get; set; }
+    //[TomlValueOnSerialized]
+    //public string Key { get; set; }
 
-    [TomlValueOnSerialized]
-    public int? Number { get; set; }
+    //[TomlValueOnSerialized]
+    //public int? Number { get; set; }
 
-    [TomlValueOnSerialized]
-    public int[] Array { get; set; }
+    //[TomlValueOnSerialized]
+    //public int[] Array { get; set; }
 
-    [TomlValueOnSerialized(aliasName: "alias")]
-    public string Value { get; set; }
+    //[TomlValueOnSerialized(aliasName: "alias")]
+    //public string Value { get; set; }
 
     [TomlValueOnSerialized]
     public TableClass Table { get; set; } = new TableClass();
@@ -285,3 +286,27 @@ public partial class TableClass
     [TomlValueOnSerialized()]
     public int Number { get; set; }
 }
+
+[TomlSerializedObject]
+public partial class TableNest
+{
+    [TomlValueOnSerialized()]
+    public string Key { get; set; }
+
+    [TomlValueOnSerialized()]
+    public int Number { get; set; }
+
+    [TomlValueOnSerialized()]
+    public TableClass Table { get; set; }
+}
+
+[TomlSerializedObject]
+public partial struct AliasName
+{
+    [TomlValueOnSerialized]
+    public string Key { get; set; }
+
+    [TomlValueOnSerialized]
+    public TableNest Table { get; set; }
+}
+

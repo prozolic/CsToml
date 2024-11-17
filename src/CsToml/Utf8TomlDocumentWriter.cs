@@ -10,8 +10,8 @@ namespace CsToml;
 public enum TomlValueState
 {
     Default,
-    Array,
-    ArrayOfTable
+    ArrayOfTable,
+    Table,
 }
 
 public ref struct Utf8TomlDocumentWriter<TBufferWriter>
@@ -21,15 +21,19 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
     private List<TomlDottedKey> dottedKeys;
     private List<(TomlValueState state, int dottedKeyIndex)> valueStates;
 
-    internal int WrittenSize => writer.WrittenSize;
+    internal readonly int WrittenSize => writer.WrittenSize;
 
-    internal (TomlValueState state, int dottedKeyIndex) CurrentState => valueStates[^1];
+    internal readonly (TomlValueState state, int dottedKeyIndex) CurrentPriviousState => valueStates[^2];
+
+    internal readonly (TomlValueState state, int dottedKeyIndex) CurrentState => valueStates[^1];
+
+    public readonly TomlValueState State => CurrentState.state;
 
     public Utf8TomlDocumentWriter(ref TBufferWriter bufferWriter)
     {
         writer = new Utf8Writer<TBufferWriter>(ref bufferWriter);
         dottedKeys = new List<TomlDottedKey>();
-        valueStates = [(TomlValueState.Default, 0)];
+        valueStates = [(TomlValueState.Default, -1)];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -51,10 +55,15 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
             var state = CurrentState.state;
             switch (state)
             {
-                case TomlValueState.Array:
                 case TomlValueState.ArrayOfTable:
                     break;
                 default:
+                    if (valueStates.Count > 1)
+                    {
+                        var priviousState = CurrentPriviousState;
+                        if (priviousState.state == TomlValueState.ArrayOfTable)
+                            return;
+                    }
                     WriteNewLine();
                     return;
             }
@@ -456,13 +465,44 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
             index = currentState.dottedKeyIndex;
         }
 
+        if (currentState.state != TomlValueState.Table)
+        {
+            if (valueStates.Count > 1)
+            {
+                index = currentState.dottedKeyIndex;
+                var keySpan = CollectionsMarshal.AsSpan(dottedKeys);
+                for (int i = index; i < keySpan.Length; i++)
+                {
+                    keySpan[i].ToTomlString(ref this);
+                    writer.Write(TomlCodes.Symbol.DOT);
+                }
+
+            }
+            else
+            {
+                var keySpan = CollectionsMarshal.AsSpan(dottedKeys);
+                for (int i = index; i < keySpan.Length; i++)
+                {
+                    keySpan[i].ToTomlString(ref this);
+                    writer.Write(TomlCodes.Symbol.DOT);
+                }
+            }
+        }
+
+        TomlDottedKey.ParseKey(key).ToTomlString(ref this);
+    }
+
+    public void WriteTableHeader(ReadOnlySpan<byte> key)
+    {
+        BeginTableHeader();
         var keySpan = CollectionsMarshal.AsSpan(dottedKeys);
-        for (int i = index; i < keySpan.Length; i++)
+        for (int i = 0; i < keySpan.Length; i++)
         {
             keySpan[i].ToTomlString(ref this);
             writer.Write(TomlCodes.Symbol.DOT);
         }
         TomlDottedKey.ParseKey(key).ToTomlString(ref this);
+        EndTableHeader();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

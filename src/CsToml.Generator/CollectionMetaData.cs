@@ -7,8 +7,6 @@ internal sealed class CollectionMetaData
 {
     private static readonly HashSet<string> CollectionFullName = new HashSet<string>();
     private static readonly HashSet<string> CollectionInterfaceFullName = new HashSet<string>();
-    private static readonly HashSet<string> DictionaryFullName = new HashSet<string>();
-    private static readonly HashSet<string> DictionaryInterfaceFullName = new HashSet<string>();
 
     static CollectionMetaData()
     {
@@ -18,10 +16,12 @@ internal sealed class CollectionMetaData
         CollectionFullName.Add("global::System.Collections.Generic.SortedSet");
         CollectionFullName.Add("global::System.Collections.Generic.Queue");
         CollectionFullName.Add("global::System.Collections.Generic.LinkedList");
-        CollectionFullName.Add("global::System.Collections.Generic.ConcurrentQueue");
-        CollectionFullName.Add("global::System.Collections.Generic.ConcurrentStack");
-        CollectionFullName.Add("global::System.Collections.Generic.ConcurrentBag");
-        CollectionFullName.Add("global::System.Collections.Generic.ReadOnlyCollection");
+        CollectionFullName.Add("global::System.Collections.Generic.PriorityQueue");
+        CollectionFullName.Add("global::System.Collections.Concurrent.ConcurrentQueue");
+        CollectionFullName.Add("global::System.Collections.Concurrent.ConcurrentStack");
+        CollectionFullName.Add("global::System.Collections.Concurrent.ConcurrentBag");
+        CollectionFullName.Add("global::System.Collections.Concurrent.BlockingCollection");
+        CollectionFullName.Add("global::System.Collections.ObjectModel.ReadOnlyCollection");
 
         CollectionInterfaceFullName.Add("global::System.Collections.IEnumerable");
         CollectionInterfaceFullName.Add("global::System.Collections.ICollection");
@@ -32,11 +32,16 @@ internal sealed class CollectionMetaData
         CollectionInterfaceFullName.Add("global::System.Collections.Generic.IReadOnlyList");
         CollectionInterfaceFullName.Add("global::System.Collections.Generic.ISet");
         CollectionInterfaceFullName.Add("global::System.Collections.Generic.IReadOnlySet");
+    }
 
-        DictionaryFullName.Add("global::System.Collections.Generic.Dictionary");
+    public static bool IsSystemCollectionClass(ITypeSymbol type)
+    {
+        if (type is not INamedTypeSymbol nameType)
+            return false;
+        if (!nameType.IsGenericType)
+            return false;
 
-        DictionaryInterfaceFullName.Add("global::System.Collections.Generic.IDictionary");
-        DictionaryInterfaceFullName.Add("global::System.Collections.Generic.IReadOnlyDictionary");
+        return CollectionFullName.Contains($"global::{nameType.ContainingNamespace.ToDisplayString()}.{nameType.Name}");
     }
 
     public static bool IsSystemCollections(ITypeSymbol type)
@@ -79,9 +84,22 @@ internal sealed class DictionaryMetaData
     static DictionaryMetaData()
     {
         DictionaryFullName.Add("global::System.Collections.Generic.Dictionary");
+        DictionaryFullName.Add("global::System.Collections.Generic.SortedDictionary");
+        DictionaryFullName.Add("global::System.Collections.Concurrent.ConcurrentDictionary");
+        DictionaryFullName.Add("global::System.Collections.ObjectModel.ReadOnlyDictionary");
 
         DictionaryInterfaceFullName.Add("global::System.Collections.Generic.IDictionary");
         DictionaryInterfaceFullName.Add("global::System.Collections.Generic.IReadOnlyDictionary");
+    }
+
+    public static bool IsDictionaryClass(ITypeSymbol type)
+    {
+        if (type is not INamedTypeSymbol nameType)
+            return false;
+        if (!nameType.IsGenericType)
+            return false;
+
+        return DictionaryFullName.Contains($"global::{nameType.ContainingNamespace.ToDisplayString()}.{nameType.Name}");
     }
 
     public static bool IsDictionary(ITypeSymbol type)
