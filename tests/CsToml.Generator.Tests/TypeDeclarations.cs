@@ -181,6 +181,7 @@ internal partial class TypeTable3
     public string Value { get; set; }
 }
 
+
 [TomlSerializedObject]
 internal partial class TypeTomlSerializedObjectList
 {
@@ -286,5 +287,58 @@ internal partial class TypeArrayOfTable
 internal partial class TypeAlias
 {
     [TomlValueOnSerialized(aliasName:"alias")]
+    public string Value { get; set; }
+}
+
+
+[TomlSerializedObject]
+internal partial class TypeTableA
+{
+    [TomlValueOnSerialized]
+    public TypeTableB TableB { get; set; }
+
+    [TomlValueOnSerialized]
+
+    public ConcurrentDictionary<int, string> Dict { get; set; }
+}
+[TomlSerializedObject]
+internal partial class TypeTableB
+{
+    [TomlValueOnSerialized]
+    public TypeTableC TableC { get; set; }
+
+    [TomlValueOnSerialized]
+    public string Value { get; set; }
+
+    [TomlValueOnSerialized]
+    public List<TypeTableE> TableECollection { get; set; }
+}
+[TomlSerializedObject]
+internal partial class TypeTableC
+{
+    [TomlValueOnSerialized]
+    public TypeTableD TableD { get; set; }
+
+    [TomlValueOnSerialized]
+    public string Value { get; set; }
+}
+[TomlSerializedObject]
+internal partial class TypeTableD
+{
+    [TomlValueOnSerialized]
+    public string Value { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class TypeTableE
+{
+    [TomlValueOnSerialized]
+    public TypeTableF TableF { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class TypeTableF
+{
+    [TomlValueOnSerialized]
     public string Value { get; set; }
 }

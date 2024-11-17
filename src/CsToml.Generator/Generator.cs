@@ -26,6 +26,7 @@ internal sealed class TomlValueOnSerializedAttribute : Attribute
     public string AliasName { get; }
 
     public TomlValueOnSerializedAttribute() {  }
+
     public TomlValueOnSerializedAttribute(string aliasName) { this.AliasName = aliasName; }
 }
 
@@ -60,6 +61,9 @@ internal sealed class TomlValueOnSerializedAttribute : Attribute
 
     private string Generate(TypeMeta typeMeta)
     {
+        // Check if it belongs to the global namespace.
+        var namespaceTag = string.IsNullOrWhiteSpace(typeMeta.NameSpace) ? string.Empty : $"namespace {typeMeta.NameSpace};";
+
         var code = $$"""
 #nullable enable
 #pragma warning disable CS0219 // The variable 'variable' is assigned but its value is never used
@@ -74,7 +78,7 @@ using CsToml;
 using CsToml.Formatter;
 using CsToml.Formatter.Resolver;
 
-namespace {{typeMeta.NameSpace}};
+{{namespaceTag}}
 
 partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{{typeMeta.TypeName}}>
 {
@@ -134,11 +138,22 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
             }
             else if (kind == TomlSerializationKind.TomlSerializedObject)
             {
-                builder.AppendLine($"        writer.PushKey({$"\"{accessName}\"u8"});");
-                builder.AppendLine($"        options.Resolver.GetFormatter<{property.Type.Name}>()!.Serialize(ref writer, target.{propertyName}, options);");
-                builder.AppendLine($"        writer.PopKey();");
+                builder.AppendLine($"        if (options.SerializeOptions.TableStyle == TomlTableStyle.Header && (writer.State == TomlValueState.Default || writer.State == TomlValueState.Table)){{");
+                builder.AppendLine($"            writer.WriteTableHeader({$"\"{accessName}\"u8"});");
+                builder.AppendLine($"            writer.WriteNewLine();");
+                builder.AppendLine($"            writer.BeginCurrentState(TomlValueState.Table);");
+                builder.AppendLine($"            writer.PushKey({$"\"{accessName}\"u8"});");
+                builder.AppendLine($"            options.Resolver.GetFormatter<{property.Type.Name}>()!.Serialize(ref writer, target.{propertyName}, options);");
+                builder.AppendLine($"            writer.PopKey();");
+                builder.AppendLine($"            writer.EndCurrentState();");
+                builder.AppendLine($"        }}");
+                builder.AppendLine($"        else{{");
+                builder.AppendLine($"            writer.PushKey({$"\"{accessName}\"u8"});");
+                builder.AppendLine($"            options.Resolver.GetFormatter<{property.Type.Name}>()!.Serialize(ref writer, target.{propertyName}, options);");
+                builder.AppendLine($"            writer.PopKey();");
+                builder.AppendLine($"        }}");
             }
-            else if (kind == TomlSerializationKind.ArrayOfITomlSerializedObject)
+            else if (kind == TomlSerializationKind.ArrayOfITomlSerializedObject || kind == TomlSerializationKind.Dictionary)
             {
                 builder.AppendLine($"        writer.WriteKey({$"\"{accessName}\"u8"});");
                 builder.AppendLine($"        writer.WriteEqual();");

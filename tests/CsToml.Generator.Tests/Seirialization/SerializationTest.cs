@@ -1,9 +1,20 @@
 ﻿using CsToml.Error;
 using FluentAssertions;
 using System.Collections;
+using System.Collections.Concurrent;
 using Utf8StringInterpolation;
 
 namespace CsToml.Generator.Tests.Seirialization;
+
+public static class Option
+{
+    public static CsTomlSerializerOptions Header { get; set; } = CsTomlSerializerOptions.Default with 
+        { 
+            SerializeOptions = SerializeOptions.Default with {
+                TableStyle = TomlTableStyle.Header
+            }
+        };
+}
 
 public class TypeZeroTest
 {
@@ -11,9 +22,16 @@ public class TypeZeroTest
     public void Serialize()
     {
         var type = new TypeZero();
-        using var bytes = CsTomlSerializer.Serialize(type);
+        {
+            using var bytes = CsTomlSerializer.Serialize(type);
 
-        bytes.ByteSpan.ToArray().Should().Equal(""u8.ToArray());
+            bytes.ByteSpan.ToArray().Should().Equal(""u8.ToArray());
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+
+            bytes.ByteSpan.ToArray().Should().Equal(""u8.ToArray());
+        }
     }
 
     [Fact]
@@ -29,16 +47,30 @@ public class TypeOneTest
     [Fact]
     public void Serialize()
     {
-        var type = new TypeOne();
-        type.Value = 999;
-        using var bytes = CsTomlSerializer.Serialize(type);
+        var type = new TypeOne
+        {
+            Value = 999
+        };
+        {
+            using var bytes = CsTomlSerializer.Serialize(type);
 
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("Value = 999");
-        writer.Flush();
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = 999");
+            writer.Flush();
 
-        var expected = buffer.ToArray();
-        bytes.ByteSpan.ToArray().Should().Equal(expected);
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = 999");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
     }
 
     [Fact]
@@ -54,18 +86,34 @@ public class TypeTwoTest
     [Fact]
     public void Serialize()
     {
-        var type = new TypeTwo();
-        type.Value = 999;
-        type.Value2 = 123;
-        using var bytes = CsTomlSerializer.Serialize(type);
+        var type = new TypeTwo
+        {
+            Value = 999,
+            Value2 = 123
+        };
 
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("Value = 999");
-        writer.AppendLine("Value2 = 123");
-        writer.Flush();
+        {
+            using var bytes = CsTomlSerializer.Serialize(type);
 
-        var expected = buffer.ToArray();
-        bytes.ByteSpan.ToArray().Should().Equal(expected);
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = 999");
+            writer.AppendLine("Value2 = 123");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = 999");
+            writer.AppendLine("Value2 = 123");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
     }
 
     [Fact]
@@ -87,18 +135,34 @@ public class TypeRecordTest
     [Fact]
     public void Serialize()
     {
-        var type = new TypeRecord();
-        type.Value = 999;
-        type.Str = "Test";
-        using var bytes = CsTomlSerializer.Serialize(type);
+        var type = new TypeRecord
+        {
+            Value = 999,
+            Str = "Test"
+        };
 
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("Value = 999");
-        writer.AppendLine("Str = \"Test\"");
-        writer.Flush();
+        {
+            using var bytes = CsTomlSerializer.Serialize(type);
 
-        var expected = buffer.ToArray();
-        bytes.ByteSpan.ToArray().Should().Equal(expected);
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = 999");
+            writer.AppendLine("Str = \"Test\"");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = 999");
+            writer.AppendLine("Str = \"Test\"");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
     }
 
     [Fact]
@@ -120,18 +184,33 @@ public class TestStructTest
     [Fact]
     public void Serialize()
     {
-        var type = new TestStruct();
-        type.Value = 999;
-        type.Str = "Test";
-        using var bytes = CsTomlSerializer.Serialize(type);
+        var type = new TestStruct
+        {
+            Value = 999,
+            Str = "Test"
+        };
+        {
+            using var bytes = CsTomlSerializer.Serialize(type);
 
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("Value = 999");
-        writer.AppendLine("Str = \"Test\"");
-        writer.Flush();
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = 999");
+            writer.AppendLine("Str = \"Test\"");
+            writer.Flush();
 
-        var expected = buffer.ToArray();
-        bytes.ByteSpan.ToArray().Should().Equal(expected);
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = 999");
+            writer.AppendLine("Str = \"Test\"");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
     }
 
     [Fact]
@@ -153,18 +232,34 @@ public class TestRecordStructTest
     [Fact]
     public void Serialize()
     {
-        var type = new TestRecordStruct();
-        type.Value = 999;
-        type.Str = "Test";
-        using var bytes = CsTomlSerializer.Serialize(type);
+        var type = new TestRecordStruct
+        {
+            Value = 999,
+            Str = "Test"
+        };
 
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("Value = 999");
-        writer.AppendLine("Str = \"Test\"");
-        writer.Flush();
+        {
+            using var bytes = CsTomlSerializer.Serialize(type);
 
-        var expected = buffer.ToArray();
-        bytes.ByteSpan.ToArray().Should().Equal(expected);
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = 999");
+            writer.AppendLine("Str = \"Test\"");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = 999");
+            writer.AppendLine("Str = \"Test\"");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
     }
 
     [Fact]
@@ -186,17 +281,31 @@ public class TypeIgnoreTest
     [Fact]
     public void Serialize()
     {
-        var type = new TypeIgnore();
-        type.Value = 999;
-        type.Str = "This is TypeIgnore";
-        using var bytes = CsTomlSerializer.Serialize(type);
+        var type = new TypeIgnore
+        {
+            Value = 999,
+            Str = "This is TypeIgnore"
+        };
+        {
+            using var bytes = CsTomlSerializer.Serialize(type);
 
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("Value = 999");
-        writer.Flush();
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = 999");
+            writer.Flush();
 
-        var expected = buffer.ToArray();
-        bytes.ByteSpan.ToArray().Should().Equal(expected);
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = 999");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
     }
 
     [Fact]
@@ -218,16 +327,31 @@ public class WithArrayTest
     [Fact]
     public void Serialize()
     {
-        var type = new WithArray();
-        type.Value = [1, 2, 3, 4, 5];
-        using var bytes = CsTomlSerializer.Serialize(type);
+        var type = new WithArray
+        {
+            Value = [1, 2, 3, 4, 5]
+        };
 
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
-        writer.Flush();
+        {
+            using var bytes = CsTomlSerializer.Serialize(type);
 
-        var expected = buffer.ToArray();
-        bytes.ByteSpan.ToArray().Should().Equal(expected);
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
     }
 
     [Fact]
@@ -247,16 +371,31 @@ public class WithArray2Test
     [Fact]
     public void Serialize()
     {
-        var type = new WithArray2();
-        type.Value = [[1,2,3],[4,5]];
-        using var bytes = CsTomlSerializer.Serialize(type);
+        var type = new WithArray2
+        {
+            Value = [[1, 2, 3], [4, 5]]
+        };
 
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("Value = [ [ 1, 2, 3 ], [ 4, 5 ] ]");
-        writer.Flush();
+        {
+            using var bytes = CsTomlSerializer.Serialize(type);
 
-        var expected = buffer.ToArray();
-        bytes.ByteSpan.ToArray().Should().Equal(expected);
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = [ [ 1, 2, 3 ], [ 4, 5 ] ]");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(type);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = [ [ 1, 2, 3 ], [ 4, 5 ] ]");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
     }
 
     [Fact]
@@ -278,31 +417,52 @@ public class TomlPrimitiveTest
     [Fact]
     public void Serialize()
     {
-        var primitive = new TomlPrimitive();
-        primitive.Str = @"I'm a string.";
-        primitive.Long = 123;
-        primitive.Float = 123.456;
-        primitive.Boolean = true;
-        primitive.OffsetDateTime = new DateTimeOffset(1979, 5, 27, 7, 32, 0, TimeSpan.Zero);
-        primitive.LocalDateTime = new DateTime(1979, 5, 27, 7, 32, 0);
-        primitive.LocalDate = new DateOnly(1979, 5, 27);
-        primitive.LocalTime = new TimeOnly(7, 32, 30);
+        var primitive = new TomlPrimitive
+        {
+            Str = @"I'm a string.",
+            Long = 123,
+            Float = 123.456,
+            Boolean = true,
+            OffsetDateTime = new DateTimeOffset(1979, 5, 27, 7, 32, 0, TimeSpan.Zero),
+            LocalDateTime = new DateTime(1979, 5, 27, 7, 32, 0),
+            LocalDate = new DateOnly(1979, 5, 27),
+            LocalTime = new TimeOnly(7, 32, 30)
+        };
 
-        using var bytes = CsTomlSerializer.Serialize(primitive);
+        {
+            using var bytes = CsTomlSerializer.Serialize(primitive);
 
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("Str = \"I'm a string.\"");
-        writer.AppendLine("Long = 123");
-        writer.AppendLine("Float = 123.456");
-        writer.AppendLine("Boolean = true");
-        writer.AppendLine("LocalDateTime = 1979-05-27T07:32:00");
-        writer.AppendLine("OffsetDateTime = 1979-05-27T07:32:00Z");
-        writer.AppendLine("LocalDate = 1979-05-27");
-        writer.AppendLine("LocalTime = 07:32:30");
-        writer.Flush();
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Str = \"I'm a string.\"");
+            writer.AppendLine("Long = 123");
+            writer.AppendLine("Float = 123.456");
+            writer.AppendLine("Boolean = true");
+            writer.AppendLine("LocalDateTime = 1979-05-27T07:32:00");
+            writer.AppendLine("OffsetDateTime = 1979-05-27T07:32:00Z");
+            writer.AppendLine("LocalDate = 1979-05-27");
+            writer.AppendLine("LocalTime = 07:32:30");
+            writer.Flush();
 
-        var expected = buffer.ToArray();
-        bytes.ByteSpan.ToArray().Should().Equal(expected);
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(primitive, Option.Header);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Str = \"I'm a string.\"");
+            writer.AppendLine("Long = 123");
+            writer.AppendLine("Float = 123.456");
+            writer.AppendLine("Boolean = true");
+            writer.AppendLine("LocalDateTime = 1979-05-27T07:32:00");
+            writer.AppendLine("OffsetDateTime = 1979-05-27T07:32:00Z");
+            writer.AppendLine("LocalDate = 1979-05-27");
+            writer.AppendLine("LocalTime = 07:32:30");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
     }
 
     [Fact]
@@ -340,14 +500,27 @@ public class NullableTypeTest
         {
             Value = 999
         };
-        using var bytes = CsTomlSerializer.Serialize(type);
 
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("Value = 999");
-        writer.Flush();
+        {
+            using var bytes = CsTomlSerializer.Serialize(type);
 
-        var expected = buffer.ToArray();
-        bytes.ByteSpan.ToArray().Should().Equal(expected);
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = 999");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = 999");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
     }
 
     [Fact]
@@ -388,21 +561,41 @@ public class WithTupleTest
             Seven = new Tuple<int, int, int, int, int, int, int>(1, 2, 3, 4, 5, 6, 7),
             Eight = new Tuple<int, int, int, int, int, int, int, Tuple<int>>(1, 2, 3, 4, 5, 6, 7, new Tuple<int>(8))
         };
-        using var bytes = CsTomlSerializer.Serialize(value);
 
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("One = 1");
-        writer.AppendLine("Two = [ 1, 2 ]");
-        writer.AppendLine("Three = [ 1, 2, 3 ]");
-        writer.AppendLine("Four = [ 1, 2, 3, 4 ]");
-        writer.AppendLine("Five = [ 1, 2, 3, 4, 5 ]");
-        writer.AppendLine("Six = [ 1, 2, 3, 4, 5, 6 ]");
-        writer.AppendLine("Seven = [ 1, 2, 3, 4, 5, 6, 7 ]");
-        writer.AppendLine("Eight = [ 1, 2, 3, 4, 5, 6, 7, 8 ]");
-        writer.Flush();
+        {
+            using var bytes = CsTomlSerializer.Serialize(value);
 
-        var expected = buffer.ToArray();
-        bytes.ByteSpan.ToArray().Should().Equal(expected);
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("One = 1");
+            writer.AppendLine("Two = [ 1, 2 ]");
+            writer.AppendLine("Three = [ 1, 2, 3 ]");
+            writer.AppendLine("Four = [ 1, 2, 3, 4 ]");
+            writer.AppendLine("Five = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("Six = [ 1, 2, 3, 4, 5, 6 ]");
+            writer.AppendLine("Seven = [ 1, 2, 3, 4, 5, 6, 7 ]");
+            writer.AppendLine("Eight = [ 1, 2, 3, 4, 5, 6, 7, 8 ]");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(value,Option.Header);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("One = 1");
+            writer.AppendLine("Two = [ 1, 2 ]");
+            writer.AppendLine("Three = [ 1, 2, 3 ]");
+            writer.AppendLine("Four = [ 1, 2, 3, 4 ]");
+            writer.AppendLine("Five = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("Six = [ 1, 2, 3, 4, 5, 6 ]");
+            writer.AppendLine("Seven = [ 1, 2, 3, 4, 5, 6, 7 ]");
+            writer.AppendLine("Eight = [ 1, 2, 3, 4, 5, 6, 7, 8 ]");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
     }
 
     [Fact]
@@ -448,21 +641,40 @@ public class WithValueTupleTest
             Seven = new ValueTuple<int, int, int, int, int, int, int>(1, 2, 3, 4, 5, 6, 7),
             Eight = new ValueTuple<int, int, int, int, int, int, int, ValueTuple<int>>(1, 2, 3, 4, 5, 6, 7, new ValueTuple<int>(8))
         };
-        using var bytes = CsTomlSerializer.Serialize(value);
+        {
+            using var bytes = CsTomlSerializer.Serialize(value);
 
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("One = 1");
-        writer.AppendLine("Two = [ 1, 2 ]");
-        writer.AppendLine("Three = [ 1, 2, 3 ]");
-        writer.AppendLine("Four = [ 1, 2, 3, 4 ]");
-        writer.AppendLine("Five = [ 1, 2, 3, 4, 5 ]");
-        writer.AppendLine("Six = [ 1, 2, 3, 4, 5, 6 ]");
-        writer.AppendLine("Seven = [ 1, 2, 3, 4, 5, 6, 7 ]");
-        writer.AppendLine("Eight = [ 1, 2, 3, 4, 5, 6, 7, 8 ]");
-        writer.Flush();
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("One = 1");
+            writer.AppendLine("Two = [ 1, 2 ]");
+            writer.AppendLine("Three = [ 1, 2, 3 ]");
+            writer.AppendLine("Four = [ 1, 2, 3, 4 ]");
+            writer.AppendLine("Five = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("Six = [ 1, 2, 3, 4, 5, 6 ]");
+            writer.AppendLine("Seven = [ 1, 2, 3, 4, 5, 6, 7 ]");
+            writer.AppendLine("Eight = [ 1, 2, 3, 4, 5, 6, 7, 8 ]");
+            writer.Flush();
 
-        var expected = buffer.ToArray();
-        bytes.ByteSpan.ToArray().Should().Equal(expected);
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(value,Option.Header);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("One = 1");
+            writer.AppendLine("Two = [ 1, 2 ]");
+            writer.AppendLine("Three = [ 1, 2, 3 ]");
+            writer.AppendLine("Four = [ 1, 2, 3, 4 ]");
+            writer.AppendLine("Five = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("Six = [ 1, 2, 3, 4, 5, 6 ]");
+            writer.AppendLine("Seven = [ 1, 2, 3, 4, 5, 6, 7 ]");
+            writer.AppendLine("Eight = [ 1, 2, 3, 4, 5, 6, 7, 8 ]");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
     }
 
     [Fact]
@@ -500,25 +712,53 @@ public class TypeTableTest
         var table = new TypeTable();
         table.Table2 = new TypeTable2();
         table.Table2.Table3 = new TypeTable3() { Value = "This is TypeTable3" };
-        using var bytes = CsTomlSerializer.Serialize(table);
 
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("Table2.Table3.Value = \"This is TypeTable3\"");
-        writer.Flush();
+        {
+            using var bytes = CsTomlSerializer.Serialize(table);
 
-        var expected = buffer.ToArray();
-        bytes.ByteSpan.ToArray().Should().Equal(expected);
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Table2.Table3.Value = \"This is TypeTable3\"");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+
+        {
+            using var bytes = CsTomlSerializer.Serialize(table, Option.Header);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("[Table2]");
+            writer.AppendLine("[Table2.Table3]");
+            writer.AppendLine("Value = \"This is TypeTable3\"");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
     }
 
     [Fact]
     public void Deserialize()
     {
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("Table2.Table3.Value = \"This is TypeTable3\"");
-        writer.Flush();
+        {
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Table2.Table3.Value = \"This is TypeTable3\"");
+            writer.Flush();
 
-        var type = CsTomlSerializer.Deserialize<TypeTable>(buffer.WrittenSpan);
-        type.Table2.Table3.Value.Should().Be("This is TypeTable3");
+            var type = CsTomlSerializer.Deserialize<TypeTable>(buffer.WrittenSpan);
+            type.Table2.Table3.Value.Should().Be("This is TypeTable3");
+        }
+        {
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("[Table2]");
+            writer.AppendLine("[Table2.Table3]");
+            writer.AppendLine("Value = \"This is TypeTable3\"");
+            writer.Flush();
+
+            var type = CsTomlSerializer.Deserialize<TypeTable>(buffer.WrittenSpan);
+            type.Table2.Table3.Value.Should().Be("This is TypeTable3");
+        }
     }
 }
 
@@ -533,14 +773,26 @@ public class TypeTomlSerializedObjectListTest
             new TypeTable2() { Table3 = new TypeTable3() { Value = "[3] This is TypeTable3" } },
             new TypeTable2() { Table3 = new TypeTable3() { Value = "[4] This is TypeTable3" } },
             new TypeTable2() { Table3 = new TypeTable3() { Value = "[5] This is TypeTable3" } }]  };
-        using var bytes = CsTomlSerializer.Serialize(type);
+        {
+            using var bytes = CsTomlSerializer.Serialize(type);
 
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("Table2 = [ {Table3.Value = \"[1] This is TypeTable3\"}, {Table3.Value = \"[2] This is TypeTable3\"}, {Table3.Value = \"[3] This is TypeTable3\"}, {Table3.Value = \"[4] This is TypeTable3\"}, {Table3.Value = \"[5] This is TypeTable3\"} ]");
-        writer.Flush();
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Table2 = [ {Table3.Value = \"[1] This is TypeTable3\"}, {Table3.Value = \"[2] This is TypeTable3\"}, {Table3.Value = \"[3] This is TypeTable3\"}, {Table3.Value = \"[4] This is TypeTable3\"}, {Table3.Value = \"[5] This is TypeTable3\"} ]");
+            writer.Flush();
 
-        var expected = buffer.ToArray();
-        bytes.ByteSpan.ToArray().Should().Equal(expected);
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Table2 = [ {Table3.Value = \"[1] This is TypeTable3\"}, {Table3.Value = \"[2] This is TypeTable3\"}, {Table3.Value = \"[3] This is TypeTable3\"}, {Table3.Value = \"[4] This is TypeTable3\"}, {Table3.Value = \"[5] This is TypeTable3\"} ]");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
     }
 
     [Fact]
@@ -576,15 +828,29 @@ public class TypeTomlSerializedObjectListTest2
             new TypeTable(){ Table2 = new TypeTable2() { Table3 = new TypeTable3() { Value = "[4] This is TypeTable3" } } },
             new TypeTable(){ Table2 = new TypeTable2() { Table3 = new TypeTable3() { Value = "[5] This is TypeTable3" } } }]
         };
-        using var bytes = CsTomlSerializer.Serialize(type);
 
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("Value = 999");
-        writer.AppendLine("Table = [ {Table2.Table3.Value = \"[1] This is TypeTable3\"}, {Table2.Table3.Value = \"[2] This is TypeTable3\"}, {Table2.Table3.Value = \"[3] This is TypeTable3\"}, {Table2.Table3.Value = \"[4] This is TypeTable3\"}, {Table2.Table3.Value = \"[5] This is TypeTable3\"} ]");
-        writer.Flush();
+        {
+            using var bytes = CsTomlSerializer.Serialize(type);
 
-        var expected = buffer.ToArray();
-        bytes.ByteSpan.ToArray().Should().Equal(expected);
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = 999");
+            writer.AppendLine("Table = [ {Table2.Table3.Value = \"[1] This is TypeTable3\"}, {Table2.Table3.Value = \"[2] This is TypeTable3\"}, {Table2.Table3.Value = \"[3] This is TypeTable3\"}, {Table2.Table3.Value = \"[4] This is TypeTable3\"}, {Table2.Table3.Value = \"[5] This is TypeTable3\"} ]");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = 999");
+            writer.AppendLine("Table = [ {Table2.Table3.Value = \"[1] This is TypeTable3\"}, {Table2.Table3.Value = \"[2] This is TypeTable3\"}, {Table2.Table3.Value = \"[3] This is TypeTable3\"}, {Table2.Table3.Value = \"[4] This is TypeTable3\"}, {Table2.Table3.Value = \"[5] This is TypeTable3\"} ]");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
     }
 
     [Fact]
@@ -624,23 +890,45 @@ public class TypeCollectionTest
             Value9 = new System.Collections.Concurrent.ConcurrentBag<int>([5, 4, 3, 2, 1]),
             Value10 = new System.Collections.ObjectModel.ReadOnlyCollection<int>([1, 2, 3, 4, 5])
         };
-        using var bytes = CsTomlSerializer.Serialize(type);
 
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
-        writer.AppendLine("Value2 = [ 1, 2, 3, 4, 5 ]");
-        writer.AppendLine("Value3 = [ 1, 2, 3, 4, 5 ]");
-        writer.AppendLine("Value4 = [ 1, 2, 3, 4, 5 ]");
-        writer.AppendLine("Value5 = [ 1, 2, 3, 4, 5 ]");
-        writer.AppendLine("Value6 = [ 1, 2, 3, 4, 5 ]");
-        writer.AppendLine("Value7 = [ 1, 2, 3, 4, 5 ]");
-        writer.AppendLine("Value8 = [ 1, 2, 3, 4, 5 ]");
-        writer.AppendLine("Value9 = [ 1, 2, 3, 4, 5 ]");
-        writer.AppendLine("Value10 = [ 1, 2, 3, 4, 5 ]");
-        writer.Flush();
+        {
+            using var bytes = CsTomlSerializer.Serialize(type);
 
-        var expected = buffer.ToArray();
-        bytes.ByteSpan.ToArray().Should().Equal(expected);
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("Value2 = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("Value3 = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("Value4 = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("Value5 = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("Value6 = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("Value7 = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("Value8 = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("Value9 = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("Value10 = [ 1, 2, 3, 4, 5 ]");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("Value2 = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("Value3 = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("Value4 = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("Value5 = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("Value6 = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("Value7 = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("Value8 = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("Value9 = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("Value10 = [ 1, 2, 3, 4, 5 ]");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
     }
 
     [Fact]
@@ -690,34 +978,68 @@ public class TypeArrayOfTablesTest
             }
         };
 
-        using var bytes = CsTomlSerializer.Serialize(type);
+        {
+            using var bytes = CsTomlSerializer.Serialize(type);
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Header.Table2 = [ {Table3.Value = \"[1] This is TypeTable3\"}, {Table3.Value = \"[2] This is TypeTable3\"}, {Table3.Value = \"[3] This is TypeTable3\"} ]");
+            writer.Flush();
 
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("Header.Table2 = [ {Table3.Value = \"[1] This is TypeTable3\"}, {Table3.Value = \"[2] This is TypeTable3\"}, {Table3.Value = \"[3] This is TypeTable3\"} ]");
-        writer.Flush();
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("[Header]");
+            writer.AppendLine("Table2 = [ {Table3.Value = \"[1] This is TypeTable3\"}, {Table3.Value = \"[2] This is TypeTable3\"}, {Table3.Value = \"[3] This is TypeTable3\"} ]");
+            writer.Flush();
 
-        var expected = buffer.ToArray();
-        bytes.ByteSpan.ToArray().Should().Equal(expected);
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
     }
 
     [Fact]
     public void Deserialize()
     {
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("[[Header.Table2]]");
-        writer.AppendLine("Table3.Value = \"[1] This is TypeTable3\"");
-        writer.AppendLine();
-        writer.AppendLine("[[Header.Table2]]");
-        writer.AppendLine("Table3.Value = \"[2] This is TypeTable3\"");
-        writer.AppendLine();
-        writer.AppendLine("[[Header.Table2]]");
-        writer.AppendLine("Table3.Value = \"[3] This is TypeTable3\"");
-        writer.Flush();
+        {
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("[[Header.Table2]]");
+            writer.AppendLine("Table3.Value = \"[1] This is TypeTable3\"");
+            writer.AppendLine();
+            writer.AppendLine("[[Header.Table2]]");
+            writer.AppendLine("Table3.Value = \"[2] This is TypeTable3\"");
+            writer.AppendLine();
+            writer.AppendLine("[[Header.Table2]]");
+            writer.AppendLine("Table3.Value = \"[3] This is TypeTable3\"");
+            writer.Flush();
 
-        var type = CsTomlSerializer.Deserialize<TypeArrayOfTable>(buffer.WrittenSpan);
-        type.Header.Table2[0].Table3.Value.Should().Be("[1] This is TypeTable3");
-        type.Header.Table2[1].Table3.Value.Should().Be("[2] This is TypeTable3");
-        type.Header.Table2[2].Table3.Value.Should().Be("[3] This is TypeTable3");
+            var type = CsTomlSerializer.Deserialize<TypeArrayOfTable>(buffer.WrittenSpan);
+            type.Header.Table2[0].Table3.Value.Should().Be("[1] This is TypeTable3");
+            type.Header.Table2[1].Table3.Value.Should().Be("[2] This is TypeTable3");
+            type.Header.Table2[2].Table3.Value.Should().Be("[3] This is TypeTable3");
+        }
+        {
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Header.Table2 = [ {Table3.Value = \"[1] This is TypeTable3\"}, {Table3.Value = \"[2] This is TypeTable3\"}, {Table3.Value = \"[3] This is TypeTable3\"} ]");
+            writer.Flush();
+
+            var type = CsTomlSerializer.Deserialize<TypeArrayOfTable>(buffer.WrittenSpan);
+            type.Header.Table2[0].Table3.Value.Should().Be("[1] This is TypeTable3");
+            type.Header.Table2[1].Table3.Value.Should().Be("[2] This is TypeTable3");
+            type.Header.Table2[2].Table3.Value.Should().Be("[3] This is TypeTable3");
+        }
+        {
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("[Header]");
+            writer.AppendLine("Table2 = [ {Table3.Value = \"[1] This is TypeTable3\"}, {Table3.Value = \"[2] This is TypeTable3\"}, {Table3.Value = \"[3] This is TypeTable3\"} ]");
+            writer.Flush();
+
+            var type = CsTomlSerializer.Deserialize<TypeArrayOfTable>(buffer.WrittenSpan);
+            type.Header.Table2[0].Table3.Value.Should().Be("[1] This is TypeTable3");
+            type.Header.Table2[1].Table3.Value.Should().Be("[2] This is TypeTable3");
+            type.Header.Table2[2].Table3.Value.Should().Be("[3] This is TypeTable3");
+        }
     }
 }
 
@@ -747,14 +1069,26 @@ public class TypeDictionaryTest
         };
 
         var type = new TypeDictionary() { Value = dict };
-        using var bytes = CsTomlSerializer.Serialize(type);
+        {
+            using var bytes = CsTomlSerializer.Serialize(type);
 
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("Value = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
-        writer.Flush();
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
+            writer.Flush();
 
-        var expected = buffer.ToArray();
-        bytes.ByteSpan.ToArray().Should().Equal(expected);
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
     }
 
     [Fact]
@@ -811,19 +1145,36 @@ public class TypeDictionaryTest2
             Value5 = dict,
             Value6 = dict,
         };
-        using var bytes = CsTomlSerializer.Serialize(type);
+        {
+            using var bytes = CsTomlSerializer.Serialize(type);
 
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("Value = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
-        writer.AppendLine("Value2 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
-        writer.AppendLine("Value3 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
-        writer.AppendLine("Value4 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
-        writer.AppendLine("Value5 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
-        writer.AppendLine("Value6 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
-        writer.Flush();
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
+            writer.AppendLine("Value2 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
+            writer.AppendLine("Value3 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
+            writer.AppendLine("Value4 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
+            writer.AppendLine("Value5 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
+            writer.AppendLine("Value6 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
+            writer.Flush();
 
-        var expected = buffer.ToArray();
-        bytes.ByteSpan.ToArray().Should().Equal(expected);
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
+            writer.AppendLine("Value2 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
+            writer.AppendLine("Value3 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
+            writer.AppendLine("Value4 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
+            writer.AppendLine("Value5 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
+            writer.AppendLine("Value6 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
     }
 
     [Fact]
@@ -920,22 +1271,36 @@ public class TypeDictionaryTest3
     [Fact]
     public void Serialize()
     {
-        var dict = new Dictionary<long, string>()
+        var type = new TypeDictionary3()
         {
-            [123] = "Value",
-            [-1] = "Value",
-            [123456789] = "Value",
+            Value = new Dictionary<long, string>()
+            {
+                [123] = "Value",
+                [-1] = "Value",
+                [123456789] = "Value",
+            }
         };
 
-        var type = new TypeDictionary3() { Value = dict };
-        using var bytes = CsTomlSerializer.Serialize(type);
+        {
+            using var bytes = CsTomlSerializer.Serialize(type);
 
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("Value = {123 = \"Value\", -1 = \"Value\", 123456789 = \"Value\"}");
-        writer.Flush();
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = {123 = \"Value\", -1 = \"Value\", 123456789 = \"Value\"}");
+            writer.Flush();
 
-        var expected = buffer.ToArray();
-        bytes.ByteSpan.ToArray().Should().Equal(expected);
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = {123 = \"Value\", -1 = \"Value\", 123456789 = \"Value\"}");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
     }
 
     [Fact]
@@ -962,22 +1327,36 @@ public class TypeHashtableTest
     [Fact]
     public void Serialize()
     {
-        var dict = new Hashtable()
+        var type = new TypeHashtable()
         {
-            [123] = "Value",
-            [-1] = "Value",
-            [123456789] = "Value",
+            Value = new Hashtable()
+            {
+                [123] = "Value",
+                [-1] = "Value",
+                [123456789] = "Value",
+            }
         };
 
-        var type = new TypeHashtable() { Value = dict };
-        using var bytes = CsTomlSerializer.Serialize(type);
+        {
+            using var bytes = CsTomlSerializer.Serialize(type);
 
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("Value = {123 = \"Value\", 123456789 = \"Value\", -1 = \"Value\"}");
-        writer.Flush();
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = {123 = \"Value\", 123456789 = \"Value\", -1 = \"Value\"}");
+            writer.Flush();
 
-        var expected = buffer.ToArray();
-        bytes.ByteSpan.ToArray().Should().Equal(expected);
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = {123 = \"Value\", 123456789 = \"Value\", -1 = \"Value\"}");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
     }
 
     [Fact]
@@ -1004,14 +1383,27 @@ public class TypeAliasTest
     public void Serialize()
     {
         var type = new TypeAlias() { Value = "This is TypeAlias" };
-        using var bytes = CsTomlSerializer.Serialize(type);
 
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("alias = \"This is TypeAlias\"");
-        writer.Flush();
+        {
+            using var bytes = CsTomlSerializer.Serialize(type);
 
-        var expected = buffer.ToArray();
-        bytes.ByteSpan.ToArray().Should().Equal(expected);
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("alias = \"This is TypeAlias\"");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("alias = \"This is TypeAlias\"");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
     }
 
     [Fact]
@@ -1020,4 +1412,117 @@ public class TypeAliasTest
         var type = CsTomlSerializer.Deserialize<TypeAlias>("alias = \"This is TypeAlias\""u8);
         type.Value.Should().Be("This is TypeAlias");
     }
+}
+
+
+public class TypeTableATest
+{
+    [Fact]
+    public void Serialize()
+    {
+        var tableA = new TypeTableA
+        {
+            Dict = new ConcurrentDictionary<int, string>()
+            {
+                [1] = "2",
+                [3] = "4",
+            },
+            TableB = new TypeTableB()
+            {
+                Value = "This is TypeTableB",
+                TableC = new TypeTableC
+                {
+                    Value = "This is TypeTableC",
+                    TableD = new TypeTableD() { Value = "This is TypeTableD" }
+                },
+                TableECollection = [
+                    new TypeTableE(){ TableF = new TypeTableF() { Value = "[1] This is TypeTableF" } },
+                    new TypeTableE(){ TableF = new TypeTableF() { Value = "[2] This is TypeTableF" } },
+                    new TypeTableE(){ TableF = new TypeTableF() { Value = "[3] This is TypeTableF" } }
+                ],
+            }
+        };
+
+        {
+            using var bytes = CsTomlSerializer.Serialize(tableA);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Dict = {1 = \"2\", 3 = \"4\"}");
+            writer.AppendLine("TableB.Value = \"This is TypeTableB\"");
+            writer.AppendLine("TableB.TableECollection = [ {TableF.Value = \"[1] This is TypeTableF\"}, {TableF.Value = \"[2] This is TypeTableF\"}, {TableF.Value = \"[3] This is TypeTableF\"} ]");
+            writer.AppendLine("TableB.TableC.Value = \"This is TypeTableC\"");
+            writer.AppendLine("TableB.TableC.TableD.Value = \"This is TypeTableD\"");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(tableA, Option.Header);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Dict = {1 = \"2\", 3 = \"4\"}");
+            writer.AppendLine("[TableB]");
+            writer.AppendLine("Value = \"This is TypeTableB\"");
+            writer.AppendLine("TableECollection = [ {TableF.Value = \"[1] This is TypeTableF\"}, {TableF.Value = \"[2] This is TypeTableF\"}, {TableF.Value = \"[3] This is TypeTableF\"} ]");
+            writer.AppendLine("[TableB.TableC]");
+            writer.AppendLine("Value = \"This is TypeTableC\"");
+            writer.AppendLine("[TableB.TableC.TableD]");
+            writer.AppendLine("Value = \"This is TypeTableD\"");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+    }
+
+    [Fact]
+    public void Deserialize()
+    {
+        {
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Dict = {1 = \"2\", 3 = \"4\"}");
+            writer.AppendLine("TableB.Value = \"This is TypeTableB\"");
+            writer.AppendLine("TableB.TableECollection = [ {TableF.Value = \"[1] This is TypeTableF\"}, {TableF.Value = \"[2] This is TypeTableF\"}, {TableF.Value = \"[3] This is TypeTableF\"} ]");
+            writer.AppendLine("TableB.TableC.Value = \"This is TypeTableC\"");
+            writer.AppendLine("TableB.TableC.TableD.Value = \"This is TypeTableD\"");
+            writer.Flush();
+
+            var tableA = CsTomlSerializer.Deserialize<TypeTableA>(buffer.WrittenSpan);
+
+            tableA.Dict.Count.Should().Be(2);
+            tableA.Dict[1].Should().Be("2");
+            tableA.Dict[3].Should().Be("4");
+            tableA.TableB.Value.Should().Be("This is TypeTableB");
+            tableA.TableB.TableC.Value.Should().Be("This is TypeTableC");
+            tableA.TableB.TableC.TableD.Value.Should().Be("This is TypeTableD");
+            tableA.TableB.TableECollection.Count.Should().Be(3);
+            tableA.TableB.TableECollection[0].TableF.Value.Should().Be("[1] This is TypeTableF");
+            tableA.TableB.TableECollection[1].TableF.Value.Should().Be("[2] This is TypeTableF");
+            tableA.TableB.TableECollection[2].TableF.Value.Should().Be("[3] This is TypeTableF");
+        }
+        {
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Dict = {1 = \"2\", 3 = \"4\"}");
+            writer.AppendLine("TableB.Value = \"This is TypeTableB\"");
+            writer.AppendLine("TableB.TableECollection = [ {TableF.Value = \"[1] This is TypeTableF\"}, {TableF.Value = \"[2] This is TypeTableF\"}, {TableF.Value = \"[3] This is TypeTableF\"} ]");
+            writer.AppendLine("TableB.TableC.Value = \"This is TypeTableC\"");
+            writer.AppendLine("TableB.TableC.TableD.Value = \"This is TypeTableD\"");
+            writer.Flush();
+
+            var tableA = CsTomlSerializer.Deserialize<TypeTableA>(buffer.WrittenSpan);
+
+            tableA.Dict.Count.Should().Be(2);
+            tableA.Dict[1].Should().Be("2");
+            tableA.Dict[3].Should().Be("4");
+            tableA.TableB.Value.Should().Be("This is TypeTableB");
+            tableA.TableB.TableC.Value.Should().Be("This is TypeTableC");
+            tableA.TableB.TableC.TableD.Value.Should().Be("This is TypeTableD");
+            tableA.TableB.TableECollection.Count.Should().Be(3);
+            tableA.TableB.TableECollection[0].TableF.Value.Should().Be("[1] This is TypeTableF");
+            tableA.TableB.TableECollection[1].TableF.Value.Should().Be("[2] This is TypeTableF");
+            tableA.TableB.TableECollection[2].TableF.Value.Should().Be("[3] This is TypeTableF");
+        }
+    }
+
 }

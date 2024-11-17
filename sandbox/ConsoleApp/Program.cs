@@ -5,11 +5,71 @@ using CsToml.Error;
 using CsToml.Extensions;
 using System.Buffers;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Text;
 
 Console.WriteLine("Hello, World!");
 
+var option = CsTomlSerializerOptions.Default with
+{
+    SerializeOptions = SerializeOptions.Default with
+    {
+        TableStyle = TomlTableStyle.Default
+    }
+};
+
+var table = new TypeTable();
+table.Dict = new ConcurrentDictionary<int, string>()
+{
+    [2] = "1",
+    [3] = "4",
+};
+table.Table2 = new TypeTable2() { Test = "Test", Table2 = [
+            new TypeTable22(){ Table3 = new TypeTable33() { Value = "[1] This is TypeTable3" } },
+            new TypeTable22(){ Table3 = new TypeTable33() { Value = "[2] This is TypeTable3" } },
+            new TypeTable22(){ Table3 = new TypeTable33() { Value = "[3] This is TypeTable3" } }
+        ]
+};
+table.Table2.Table3 = new TypeTable3() { Value = "Test" };
+table.Table2.Table3.Table4 = new TypeTable4() { Value = "This is TypeTable3" };
+
+using var bytes = CsTomlSerializer.Serialize(table);
+var ______1 = CsTomlSerializer.Deserialize<TypeTable>(bytes.ByteSpan);
+
+var type = new TypeArrayOfTable()
+{
+    Header = new TypeTomlSerializedObjectList()
+    {
+        Table2 = [
+            new TypeTable22(){ Table3 = new TypeTable33() { Value = "[1] This is TypeTable3" } },
+            new TypeTable22(){ Table3 = new TypeTable33() { Value = "[2] This is TypeTable3" } },
+            new TypeTable22(){ Table3 = new TypeTable33() { Value = "[3] This is TypeTable3" } }
+        ],
+    }
+};
+
+using var bytes2 = CsTomlSerializer.Serialize(type);
+var ______3 = CsTomlSerializer.Deserialize<TypeArrayOfTable>(bytes2.ByteSpan);
+
+
+var dummy = new AliasName();
+dummy.Key = "key";
+dummy.Table = new TableNest() { 
+    Key = "KEY", 
+    Number = 123,
+    Table = new TableClass() 
+    { 
+        Key = "TableClass", 
+        Number = 1234 
+    }
+};
+
+var dummyToml = CsTomlSerializer.Serialize(dummy, option);
+var dummyDoc = CsTomlSerializer.Deserialize<AliasName>(dummyToml.ByteSpan);
+var dummyDoc2 = CsTomlSerializer.Deserialize<AliasName>("Key = \"key\"\r\n[Table]\r\nKey = \"KEY\"\r\nNumber = 123\r\n[Table.Table]\r\nKey = \"KEY\"\r\nNumber = 123\r\n"u8);
+using var ______ = CsTomlSerializer.Serialize(dummyDoc);
+using var ______2 = CsTomlSerializer.Serialize(dummyDoc2);
 
 var testDocument = await CsTomlFileSerializer.DeserializeAsync<TomlDocument>("./../../../Toml/test_withoutBOM.toml");
 var testDocument_lf = await CsTomlFileSerializer.DeserializeAsync<TomlDocument>("./../../../Toml/test_withoutBOM_LF.toml");
@@ -242,10 +302,11 @@ Number2 = 9 # 123456
 NumOverflow    = 9223372036854775807  # 123456
 """" = [-0.2]"u8;
 
+    var value = new CsTomlClass() { Table = new TableClass() { Key = "kEY", Number = 456 } };
+    using var serializedText = CsTomlSerializer.Serialize<CsTomlClass>(value);
 
     var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
-    var value = CsTomlSerializer.Deserialize<CsTomlClass>(tomlText);
-    using var serializedText = CsTomlSerializer.Serialize(document);
+    using var serializedText2 = CsTomlSerializer.Serialize(document);
 
     // Key = "value"
     // Number = 123
@@ -255,7 +316,7 @@ NumOverflow    = 9223372036854775807  # 123456
     // [Table]
     // Key = "value"
     // Number = 123
-    var serializedTomlText = Encoding.UTF8.GetString(serializedText.ByteSpan);
+    var serializedTomlText = Encoding.UTF8.GetString(serializedText2.ByteSpan);
 
     var testObject = new TestObject();
     testObject.Type = new System.Collections.Concurrent.BlockingCollection<int>();
@@ -304,3 +365,68 @@ Sample2();
 
 Console.WriteLine("END");
 
+[TomlSerializedObject]
+internal partial class TypeTable
+{
+    [TomlValueOnSerialized]
+    public TypeTable2 Table2 { get; set; }
+
+    [TomlValueOnSerialized]
+
+    public ConcurrentDictionary<int, string> Dict { get; set; }
+}
+[TomlSerializedObject]
+internal partial class TypeTable2
+{
+    [TomlValueOnSerialized]
+    public TypeTable3 Table3 { get; set; }
+
+    [TomlValueOnSerialized]
+    public string Test { get; set; }
+
+    [TomlValueOnSerialized]
+    public List<TypeTable22> Table2 { get; set; }
+}
+[TomlSerializedObject]
+internal partial class TypeTable3
+{
+    [TomlValueOnSerialized]
+    public TypeTable4 Table4 { get; set; }
+
+    [TomlValueOnSerialized]
+    public string Value { get; set; }
+}
+[TomlSerializedObject]
+internal partial class TypeTable4
+{
+    [TomlValueOnSerialized]
+    public string Value { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class TypeArrayOfTable
+{
+    [TomlValueOnSerialized]
+    public TypeTomlSerializedObjectList Header { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class TypeTomlSerializedObjectList
+{
+    [TomlValueOnSerialized]
+    public List<TypeTable22> Table2 { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class TypeTable22
+{
+    [TomlValueOnSerialized]
+    public TypeTable33 Table3 { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class TypeTable33
+{
+    [TomlValueOnSerialized]
+    public string Value { get; set; }
+}
