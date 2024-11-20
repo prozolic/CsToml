@@ -9,6 +9,8 @@ namespace CsToml;
 
 public static class CsTomlSerializer
 {
+    private static readonly CsTomlSerializerOptions DefaultOptions = CsTomlSerializerOptions.Default with { SerializeOptions = new ()};
+
     [ThreadStatic]
     private static TomlDocumentFormatter? DocumentFormatter;
 
@@ -58,7 +60,7 @@ public static class CsTomlSerializer
     public static T Deserialize<T>(ReadOnlySpan<byte> tomlText, CsTomlSerializerOptions? options = null)
         where T : ITomlSerializedObject<T>
     {
-        options ??= CsTomlSerializerOptions.Default;
+        options ??= DefaultOptions;
 
         var document = new TomlDocument();
         var reader = new Utf8SequenceReader(tomlText);
@@ -82,7 +84,7 @@ public static class CsTomlSerializer
     public static T Deserialize<T>(ReadOnlySequence<byte> tomlSequence, CsTomlSerializerOptions? options = null)
         where T : ITomlSerializedObject<T>
     {
-        options ??= CsTomlSerializerOptions.Default;
+        options ??= DefaultOptions;
 
         var document = new TomlDocument();
         var reader = new Utf8SequenceReader(tomlSequence);
@@ -103,9 +105,52 @@ public static class CsTomlSerializer
         }
     }
 
+    public static T Deserialize<T>(Stream stream, CsTomlSerializerOptions? options = null) where T : ITomlSerializedObject<T>
+    {
+        if (stream is MemoryStream memoryStream && memoryStream.TryGetBuffer(out var arraySegment))
+        {
+            memoryStream.Seek(arraySegment.Count, SeekOrigin.Current);
+            return CsTomlSerializer.Deserialize<T>(arraySegment.Array, options);
+        }
+
+        using ByteBufferSegmentWriter bufferWriter = new ByteBufferSegmentWriter();
+        while (true)
+        {
+            int length = stream.Read(bufferWriter.GetSpan(65536));
+            if (length == 0)
+            {
+                break;
+            }
+            bufferWriter.Advance(length);
+        }
+        return Deserialize<T>(bufferWriter.CreateReadOnlySequence(), options);
+    }
+
+    public static async ValueTask<T> DeserializeAsync<T>(Stream stream, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
+        where T : ITomlSerializedObject<T>
+    {
+        if (stream is MemoryStream memoryStream && memoryStream.TryGetBuffer(out var arraySegment))
+        {
+            memoryStream.Seek(arraySegment.Count, SeekOrigin.Current);
+            return CsTomlSerializer.Deserialize<T>(arraySegment.Array, options);
+        }
+
+        using ByteBufferSegmentWriter bufferWriter = new ByteBufferSegmentWriter();
+        while (true)
+        {
+            int length = await stream.ReadAsync(bufferWriter.GetMemory(65536), cancellationToken: cancellationToken).ConfigureAwait(configureAwait);
+            if (length == 0)
+            {
+                break;
+            }
+            bufferWriter.Advance(length);
+        }
+        return Deserialize<T>(bufferWriter.CreateReadOnlySequence(), options);
+    }
+
     public static T DeserializeValueType<T>(ReadOnlySpan<byte> tomlText, CsTomlSerializerOptions? options = null)
     {
-        options ??= CsTomlSerializerOptions.Default;
+        options ??= DefaultOptions;
         var utf8SequenceReader = new Utf8SequenceReader(tomlText);
         var reader = new CsTomlReader(ref utf8SequenceReader);
         TomlValue tomlValue = reader.ReadValue();
@@ -116,7 +161,7 @@ public static class CsTomlSerializer
 
     public static T DeserializeValueType<T>(ReadOnlySequence<byte> tomlSequence, CsTomlSerializerOptions? options = null)
     {
-        options ??= CsTomlSerializerOptions.Default;
+        options ??= DefaultOptions;
         var utf8SequenceReader = new Utf8SequenceReader(tomlSequence);
         var reader = new CsTomlReader(ref utf8SequenceReader);
         TomlValue tomlValue = reader.ReadValue();
@@ -140,11 +185,11 @@ public static class CsTomlSerializer
         }
     }
 
-    public static void Serialize<TBufferWriter, T>(ref TBufferWriter bufferWriter, T target, CsTomlSerializerOptions? options = null)
+    public static void Serialize<TBufferWriter, T>(ref TBufferWriter bufferWriter, T? target, CsTomlSerializerOptions? options = null)
         where TBufferWriter : IBufferWriter<byte>
         where T : ITomlSerializedObject<T>
     {
-        options ??= CsTomlSerializerOptions.Default;
+        options ??= DefaultOptions;
         try
         {
             var documentWriter = new Utf8TomlDocumentWriter<TBufferWriter>(ref bufferWriter);
@@ -158,6 +203,30 @@ public static class CsTomlSerializer
         {
             throw new CsTomlSerializeException("An error occurred when serializing the TOML file. Check InnerException for exception information.", cte);
         }
+    }
+
+    public static void Serialize<T>(Stream stream, T? value, CsTomlSerializerOptions? options = null)
+        where T : ITomlSerializedObject<T>
+    {
+        using var bufferWriter = new ByteBufferSegmentWriter();
+        var tempWriter = bufferWriter;
+        Serialize<ByteBufferSegmentWriter, T>(ref tempWriter, value, options);
+
+        var streamByteWriter = new StreamByteWriter(stream);
+        bufferWriter.WriteTo(streamByteWriter.ByteWriter);
+    }
+
+    public static async ValueTask SerializeAsync<T>(Stream stream, T? value, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
+        where T : ITomlSerializedObject<T>
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        using var bufferWriter = new ByteBufferSegmentWriter();
+        var tempWriter = bufferWriter;
+        Serialize<ByteBufferSegmentWriter, T>(ref tempWriter, value, options);
+
+        var streamByteWriter = new StreamByteWriter(stream);
+        await bufferWriter.WriteToAsync(streamByteWriter.ByteWriter, configureAwait, cancellationToken);
     }
 
     public static ByteMemoryResult SerializeValueType<T>(T target, CsTomlSerializerOptions? options = null)
@@ -177,7 +246,7 @@ public static class CsTomlSerializer
     public static void SerializeValueType<TBufferWriter, T>(ref TBufferWriter bufferWriter, T target, CsTomlSerializerOptions? options = null)
         where TBufferWriter : IBufferWriter<byte>
     {
-        options ??= CsTomlSerializerOptions.Default;
+        options ??= DefaultOptions;
         try
         {
             var documentWriter = new Utf8TomlDocumentWriter<TBufferWriter>(ref bufferWriter);

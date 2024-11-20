@@ -1,14 +1,14 @@
 ﻿
 using System.Buffers;
 
-namespace CsToml.Extensions.Utility;
+namespace CsToml.Utility;
 
-internal class ByteSequenceSegment : ReadOnlySequenceSegment<byte>
+internal sealed class ByteSequenceSegment : ReadOnlySequenceSegment<byte>
 {
     public int Length => Memory.Length;
 
     public ByteSequenceSegment()
-    {}
+    { }
 
     public ByteSequenceSegment(ReadOnlyMemory<byte> memory)
         => Memory = memory;

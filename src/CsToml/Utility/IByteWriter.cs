@@ -1,6 +1,5 @@
-﻿using Microsoft.Win32.SafeHandles;
-
-namespace CsToml.Extensions.Utility;
+﻿
+namespace CsToml.Utility;
 
 internal interface IByteWriter
 {
@@ -11,27 +10,25 @@ internal interface IByteWriter
     void Flush();
 }
 
-internal sealed class RandomAccessFileWriter(SafeFileHandle handle) : IByteWriter
+
+internal sealed class StreamByteWriter(Stream stream) : IByteWriter
 {
-    private SafeFileHandle handle = handle;
-    private long written = 0;
+    private readonly Stream stream = stream;
 
     public IByteWriter ByteWriter => this;
 
     void IByteWriter.Write(ReadOnlySpan<byte> bytes)
     {
-        RandomAccess.Write(handle, bytes, written);
-        written += bytes.Length;
+        stream.Write(bytes);
     }
 
     async ValueTask IByteWriter.WriteAsync(ReadOnlyMemory<byte> bytes, bool configureAwait, CancellationToken cancellationToken)
     {
-        await RandomAccess.WriteAsync(handle, bytes, written, cancellationToken).ConfigureAwait(configureAwait);
-        written += bytes.Length;
+        await stream.WriteAsync(bytes, cancellationToken).ConfigureAwait(configureAwait);
     }
 
     void IByteWriter.Flush()
     {
-        RandomAccess.FlushToDisk(handle);
+        stream.Flush();
     }
 }
