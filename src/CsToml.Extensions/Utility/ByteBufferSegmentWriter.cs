@@ -29,6 +29,9 @@ internal sealed class ByteBufferSegmentWriter  : IBufferWriter<byte>, IDisposabl
         public readonly Span<byte> GetSpan()
             => buffer.AsSpan(written);
 
+        public readonly Memory<byte> GetMemory()
+            => buffer.AsMemory(written);
+
         public void Advance(int count)
             => written += count;
 
@@ -61,7 +64,23 @@ internal sealed class ByteBufferSegmentWriter  : IBufferWriter<byte>, IDisposabl
 
     public Memory<byte> GetMemory(int sizeHint = 0)
     {
-        throw new NotSupportedException();
+        if (sizeHint > currentSegment.FreeSize)
+        {
+            segments.Add(currentSegment);
+
+            if (sizeHint > segmentSize)
+            {
+                currentSegment = new ByteBufferSegment(sizeHint);
+                segmentSize = currentSegment.BufferSize;
+            }
+            else
+            {
+                segmentSize = Math.Min(segmentSize * 2, Array.MaxLength);
+                currentSegment = new ByteBufferSegment(segmentSize);
+            }
+        }
+
+        return currentSegment.GetMemory();
     }
 
     public Span<byte> GetSpan(int sizeHint = 0)
@@ -99,8 +118,8 @@ internal sealed class ByteBufferSegmentWriter  : IBufferWriter<byte>, IDisposabl
         written = 0;
     }
 
-    public void WriteTo<TFileWriter>(TFileWriter writer)
-        where TFileWriter : IFileWriter
+    public void WriteTo<TByteWriter>(TByteWriter writer)
+        where TByteWriter : IByteWriter
     {
         foreach (var segment in CollectionsMarshal.AsSpan(segments))
         {
@@ -118,8 +137,8 @@ internal sealed class ByteBufferSegmentWriter  : IBufferWriter<byte>, IDisposabl
         }
     }
 
-    public async ValueTask WriteToAsync<TFileWriter>(TFileWriter writer, bool configureAwait, CancellationToken cancellationToken)
-        where TFileWriter : IFileWriter
+    public async ValueTask WriteToAsync<TByteWriter>(TByteWriter writer, bool configureAwait, CancellationToken cancellationToken)
+        where TByteWriter : IByteWriter
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -137,5 +156,30 @@ internal sealed class ByteBufferSegmentWriter  : IBufferWriter<byte>, IDisposabl
             await writer.WriteAsync(currentSegment.WrittenMemory, configureAwait, cancellationToken).ConfigureAwait(configureAwait);
             writer.Flush();
         }
+    }
+
+    public ReadOnlySequence<byte> CreateReadOnlySequence()
+    {
+        ByteSequenceSegment startSegment = new ByteSequenceSegment();
+        startSegment.SetRunningIndex(0);
+        startSegment.SetNext(null);
+
+        ByteSequenceSegment endSegment = startSegment;
+        foreach (var segment in CollectionsMarshal.AsSpan(segments))
+        {
+            if (segment.WrittenSize > 0)
+            {
+                startSegment.SetMemory(segment.WrittenMemory);
+                endSegment = startSegment.AddNext();
+            }
+        }
+
+        if (currentSegment.WrittenSize > 0)
+        {
+            startSegment.SetMemory(currentSegment.WrittenMemory);
+            endSegment = startSegment.AddNext();
+        }
+
+        return new ReadOnlySequence<byte>(startSegment, 0, endSegment, endSegment.Length);
     }
 }

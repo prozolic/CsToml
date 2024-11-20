@@ -112,9 +112,6 @@ public partial class CsTomlFileSerializer
         if (Path.GetExtension(tomlFilePath) != TomlExtension)
             throw new FormatException($"TOML file should use the extension .toml");
 
-        if (value == null)
-            return;
-
         var directory = new FileInfo(tomlFilePath).Directory;
         if (!directory!.Exists)
             directory.Create();
@@ -125,7 +122,7 @@ public partial class CsTomlFileSerializer
 
         using var tomlFileHandle = File.OpenHandle(tomlFilePath, FileMode.Create, FileAccess.ReadWrite, options: FileOptions.Asynchronous);
         var fileWriter = new RandomAccessFileWriter(tomlFileHandle);
-        bufferWriter.WriteTo(fileWriter.FileWriter);
+        bufferWriter.WriteTo(fileWriter.ByteWriter);
     }
 
     public static async ValueTask SerializeAsync<T>(string tomlFilePath, T? value, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
@@ -133,9 +130,6 @@ public partial class CsTomlFileSerializer
     {
         if (Path.GetExtension(tomlFilePath) != TomlExtension)
             throw new FormatException($"TOML file should use the extension .toml");
-
-        if (value == null)
-            return;
 
         var directory = new FileInfo(tomlFilePath).Directory;
         if (!directory!.Exists)
@@ -149,7 +143,7 @@ public partial class CsTomlFileSerializer
 
         using var tomlFileHandle = File.OpenHandle(tomlFilePath, FileMode.Create, FileAccess.ReadWrite, options: FileOptions.Asynchronous);
         var fileWriter = new RandomAccessFileWriter(tomlFileHandle);
-        await bufferWriter.WriteToAsync(fileWriter.FileWriter, configureAwait, cancellationToken);
+        await bufferWriter.WriteToAsync(fileWriter.ByteWriter, configureAwait, cancellationToken);
     }
 
 }

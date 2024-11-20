@@ -2,7 +2,7 @@
 
 namespace CsToml.Extensions.Utility;
 
-internal interface IFileWriter
+internal interface IByteWriter
 {
     void Write(ReadOnlySpan<byte> bytes);
 
@@ -11,26 +11,26 @@ internal interface IFileWriter
     void Flush();
 }
 
-internal sealed class RandomAccessFileWriter(SafeFileHandle handle) : IFileWriter
+internal sealed class RandomAccessFileWriter(SafeFileHandle handle) : IByteWriter
 {
     private SafeFileHandle handle = handle;
     private long written = 0;
 
-    public IFileWriter FileWriter => this;
+    public IByteWriter ByteWriter => this;
 
-    void IFileWriter.Write(ReadOnlySpan<byte> bytes)
+    void IByteWriter.Write(ReadOnlySpan<byte> bytes)
     {
         RandomAccess.Write(handle, bytes, written);
         written += bytes.Length;
     }
 
-    async ValueTask IFileWriter.WriteAsync(ReadOnlyMemory<byte> bytes, bool configureAwait, CancellationToken cancellationToken)
+    async ValueTask IByteWriter.WriteAsync(ReadOnlyMemory<byte> bytes, bool configureAwait, CancellationToken cancellationToken)
     {
         await RandomAccess.WriteAsync(handle, bytes, written, cancellationToken).ConfigureAwait(configureAwait);
         written += bytes.Length;
     }
 
-    void IFileWriter.Flush()
+    void IByteWriter.Flush()
     {
         RandomAccess.FlushToDisk(handle);
     }
