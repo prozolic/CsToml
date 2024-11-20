@@ -13,10 +13,7 @@ Console.WriteLine("Hello, World!");
 
 var option = CsTomlSerializerOptions.Default with
 {
-    SerializeOptions = SerializeOptions.Default with
-    {
-        TableStyle = TomlTableStyle.Default
-    }
+    SerializeOptions = new SerializeOptions{ TableStyle = TomlTableStyle.Default }
 };
 
 var table = new TypeTable();
@@ -70,6 +67,9 @@ var dummyDoc = CsTomlSerializer.Deserialize<AliasName>(dummyToml.ByteSpan);
 var dummyDoc2 = CsTomlSerializer.Deserialize<AliasName>("Key = \"key\"\r\n[Table]\r\nKey = \"KEY\"\r\nNumber = 123\r\n[Table.Table]\r\nKey = \"KEY\"\r\nNumber = 123\r\n"u8);
 using var ______ = CsTomlSerializer.Serialize(dummyDoc);
 using var ______2 = CsTomlSerializer.Serialize(dummyDoc2);
+
+using var fs = new FileStream("./../../../Toml/test_withoutBOM.toml", FileMode.Open, FileAccess.Read);
+var fsDoc = CsTomlSerializer.Deserialize<TomlDocument>(fs);
 
 var testDocument = await CsTomlFileSerializer.DeserializeAsync<TomlDocument>("./../../../Toml/test_withoutBOM.toml");
 var testDocument_lf = await CsTomlFileSerializer.DeserializeAsync<TomlDocument>("./../../../Toml/test_withoutBOM_LF.toml");

@@ -49,9 +49,8 @@ public partial class TomlDocument : ITomlSerializedObject<TomlDocument>
         return true;
     }
 
-    internal void Deserialize(ref Utf8SequenceReader reader, CsTomlSerializerOptions? options)
+    internal void Deserialize(ref Utf8SequenceReader reader, CsTomlSerializerOptions options)
     {
-        options ??= CsTomlSerializerOptions.Default;
         var parser = new CsTomlParser(ref reader);
 
         List<TomlString>? comments = default;

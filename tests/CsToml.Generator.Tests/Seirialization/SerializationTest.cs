@@ -9,11 +9,9 @@ namespace CsToml.Generator.Tests.Seirialization;
 public static class Option
 {
     public static CsTomlSerializerOptions Header { get; set; } = CsTomlSerializerOptions.Default with 
-        { 
-            SerializeOptions = SerializeOptions.Default with {
-                TableStyle = TomlTableStyle.Header
-            }
-        };
+    { 
+        SerializeOptions = new () { TableStyle = TomlTableStyle.Header} 
+    };
 }
 
 public class TypeZeroTest
