@@ -11,6 +11,68 @@ using System.Text;
 
 Console.WriteLine("Hello, World!");
 
+async Task Sample3()
+{
+    var tomlText = @"
+d = 1985-06-18 17:04:07+12:12
+flt7 = 6.626e-34
+str = ""string""
+int = 99
+flt = 1.0
+bool = true
+odt = 1979-05-27T07:32:00Z
+ldt = 1979-05-27T07:32:00
+ld1 = 1979-05-27
+array = [ 1, 2, 3]
+test = {key2=1979-05-27T07:32:00Z}
+
+[[ArrayOfTables]]
+value = 1
+
+[[ArrayOfTables]]
+value2 = 2
+
+[[ArrayOfTables]]
+value3 = 3
+
+"u8.ToArray();
+    var t = Task.Run(() =>
+    {
+        for (int i = 0; i < 10000; i++)
+        {
+            var _ = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
+        }
+    });
+    var t2 = Task.Run(() =>
+    {
+        for (int i = 0; i < 10000; i++)
+        {
+            var _ = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
+        }
+    });
+    var t3 = Task.Run(() =>
+    {
+        for (int i = 0; i < 10000; i++)
+        {
+            var _ = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
+        }
+    });
+    var t4 = Task.Run(() =>
+    {
+        for (int i = 0; i < 10000; i++)
+        {
+            var _ = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
+        }
+    });
+    for (int i = 0; i < 10000; i++)
+    {
+        var _ = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
+    }
+    await Task.WhenAll(t, t2, t3, t4);
+}
+
+await Sample3();
+
 var option = CsTomlSerializerOptions.Default with
 {
     SerializeOptions = new SerializeOptions{ TableStyle = TomlTableStyle.Default }

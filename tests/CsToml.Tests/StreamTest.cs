@@ -128,7 +128,7 @@ number2 = 123456
     }
 
     [Fact]
-    public async ValueTask DeserializeAsyncMemoryStreamTest()
+    public async Task DeserializeAsyncMemoryStreamTest()
     {
         var ms = new MemoryStream(tomlText);
         TomlDocument document = await CsTomlSerializer.DeserializeAsync<TomlDocument>(ms);
@@ -183,7 +183,7 @@ number2 = 123456
     }
 
     [Fact]
-    public async ValueTask SerializeAsyncMemoryStreamTest()
+    public async Task SerializeAsyncMemoryStreamTest()
     {
         TomlDocument document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
 
