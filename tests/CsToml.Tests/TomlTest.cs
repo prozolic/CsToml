@@ -93,7 +93,7 @@ public class TomlTest
     }
 
     [Theory, MemberData(nameof(ValidTomlFile))]
-    public async ValueTask ValidTestForStreamAsync(string tomlFile, string jsonFile)
+    public async Task ValidTestForStreamAsync(string tomlFile, string jsonFile)
     {
         TomlDocument document = null;
         try
