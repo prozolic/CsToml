@@ -234,6 +234,16 @@ public partial class CsTomlClass
     [TomlValueOnSerialized]
     public TableClass Table { get; set; } = new TableClass();
 }
+
+[TomlSerializedObject]
+public partial class TableClass
+{
+    [TomlValueOnSerialized]
+    public string Key { get; set; }
+
+    [TomlValueOnSerialized]
+    public int Number { get; set; }
+}
 ```
 
 Adding the above attributes will generate code for serialization/deserialization by [Source Generators](https://learn.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/source-generators-overview).
@@ -241,7 +251,7 @@ Property names with `[TomlValueOnSerialized]` are used as keys in the TOML docum
 The key name can also be changed with `[TomlValueOnSerialized(aliasName)]`.  
 See [Built-in support type](#built-in-support-type) for more information on available property types.
 
-<details><summary>Generated Code</summary>
+<details><summary>Generated Code(CsTomlClass_generated.g.cs)</summary>
 
 ```csharp
 #nullable enable
@@ -317,6 +327,60 @@ partial class CsTomlClass : ITomlSerializedObject<CsTomlClass>
     static void ITomlSerializedObjectRegister.Register()
     {
         TomlSerializedObjectFormatterResolver.Register(new TomlSerializedObjectFormatter<CsTomlClass>());
+    }
+}
+```
+
+</details>
+
+<details><summary>Generated Code(TableClass_generated.g.cs)</summary>
+
+```csharp
+#nullable enable
+#pragma warning disable CS0219 // The variable 'variable' is assigned but its value is never used
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
+#pragma warning disable CS8601 // Possible null reference assignment.
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+#pragma warning disable CS8603 // Possible null reference return.
+#pragma warning disable CS8604 // Possible null reference argument for parameter.
+#pragma warning disable CS8619 // Possible null reference assignment fix
+
+using CsToml;
+using CsToml.Formatter;
+using CsToml.Formatter.Resolver;
+
+namespace ConsoleApp;
+
+partial class TableClass : ITomlSerializedObject<TableClass>
+{
+
+    static TableClass ITomlSerializedObject<TableClass>.Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
+    {
+        var target = new TableClass();
+        var __Key__RootNode = rootNode["Key"u8];
+        target.Key = options.Resolver.GetFormatter<string>()!.Deserialize(ref __Key__RootNode, options);
+        var __Number__RootNode = rootNode["Number"u8];
+        target.Number = options.Resolver.GetFormatter<int>()!.Deserialize(ref __Number__RootNode, options);
+        return target;
+
+    }
+
+    static void ITomlSerializedObject<TableClass>.Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TableClass target, CsTomlSerializerOptions options)
+    {
+        writer.WriteKey("Key"u8);
+        writer.WriteEqual();
+        options.Resolver.GetFormatter<String>()!.Serialize(ref writer, target.Key, options);
+        writer.EndKeyValue();
+        writer.WriteKey("Number"u8);
+        writer.WriteEqual();
+        options.Resolver.GetFormatter<Int32>()!.Serialize(ref writer, target.Number, options);
+        writer.EndKeyValue();
+
+    }
+
+    static void ITomlSerializedObjectRegister.Register()
+    {
+        TomlSerializedObjectFormatterResolver.Register(new TomlSerializedObjectFormatter<TableClass>());
     }
 }
 ```
