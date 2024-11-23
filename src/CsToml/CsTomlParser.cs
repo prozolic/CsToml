@@ -56,7 +56,13 @@ internal ref struct CsTomlParser
 
     public readonly long LineNumber => reader.LineNumber;
 
-    public ParserState CurrentState { get; private set; }
+    public ParserState CurrentState 
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private set; 
+    }
 
     [DebuggerStepThrough]
     internal CsTomlParser(ref Utf8SequenceReader sequenceReader)
@@ -175,6 +181,7 @@ internal ref struct CsTomlParser
         return true;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ReadComment()
     {
         CurrentState = endComment ? ParserState.EndComment : ParserState.Comment;
@@ -182,6 +189,7 @@ internal ref struct CsTomlParser
         endComment = false;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ReadKeyValue()
     {
         CurrentState = ParserState.KeyValue;
@@ -192,6 +200,7 @@ internal ref struct CsTomlParser
         value = reader.ReadValue();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ReadTableHeader()
     {
         CurrentState = ParserState.TableHeader;
@@ -200,6 +209,7 @@ internal ref struct CsTomlParser
         value = default;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ReadArrayOfTablesHeader()
     {
         CurrentState = ParserState.ArrayOfTablesHeader;

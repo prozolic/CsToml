@@ -5,6 +5,7 @@ using CsToml.Values;
 using System;
 using System.Buffers;
 using System.Diagnostics;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -321,6 +322,17 @@ internal ref struct CsTomlReader
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SkipWhiteSpace()
     {
+        if (!TryPeek(out var ch))
+            return;
+
+        if (!TomlCodes.IsTabOrWhiteSpace(ch))
+            return;
+
+        SkipWhiteSpaceSlow();
+    }
+
+    private void SkipWhiteSpaceSlow()
+    {
         var currentSpan = sequenceReader.UnreadSpan;
         while (Peek())
         {
@@ -338,7 +350,6 @@ internal ref struct CsTomlReader
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SkipOneLine()
     {
         while (TryPeek(out var ch))

@@ -2,6 +2,7 @@
 using CsToml.Utility;
 using System.Buffers;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Text.Unicode;
 
 namespace CsToml.Values;
@@ -172,11 +173,16 @@ internal abstract partial class TomlDottedKey(ReadOnlySpan<byte> value) :
         return Equals(other.Value);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Equals(ReadOnlySpan<byte> other)
         => Value.SequenceEqual(other);
 
-    public override int GetHashCode()
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int GetHashCodeFast()
         => ByteArrayHash.ToInt32(Value);
+
+    public override int GetHashCode()
+        => GetHashCodeFast();
 }
 
 internal static class CsTomlDotKeyExtensions

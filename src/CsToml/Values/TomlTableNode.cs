@@ -17,7 +17,7 @@ internal enum NodeStatus : byte
 
 [DebuggerTypeProxy(typeof(TomlTableNodeDebugView))]
 [DebuggerDisplay("{DebuggerValue}")]
-internal class TomlTableNode
+internal sealed class TomlTableNode
 {
     internal static readonly TomlTableNode Empty = new() { Value = TomlValue.Empty};
 
@@ -25,7 +25,13 @@ internal class TomlTableNode
     private List<TomlString>? comments;
     private TomlTableNodeType nodeType = TomlTableNodeType.None;
 
-    public TomlValue? Value { get; set; }
+    public TomlValue? Value
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        set; 
+    }
 
     internal int NodeCount => nodes?.Count ?? 0;
 
@@ -139,12 +145,10 @@ internal class TomlTableNode
         Value = value;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void AddComment(IReadOnlyCollection<TomlString> comments)
     {
-        if (this.comments == null)
-        {
-            this.comments = new List<TomlString>(comments.Count);
-        }
+        this.comments ??= new List<TomlString>(comments.Count);
         this.comments.AddRange(comments);
     }
 
@@ -192,6 +196,7 @@ internal class TomlTableNode
         return newNode;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal NodeStatus TryGetOrAddChildNode(TomlDottedKey key, out TomlTableNode getOrAddChildNode)
     {
         if (nodes == null)
@@ -209,6 +214,7 @@ internal class TomlTableNode
         return NodeStatus.NewAdd;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal bool TryGetChildNode(ReadOnlySpan<byte> key, out TomlTableNode? childNode)
     {
         var nodes = this.nodes;
@@ -228,6 +234,11 @@ internal class TomlTableNode
             return true;
         }
 
+        return TryGetChildNodeSlow(nodes, key, out childNode);
+    }
+
+    private bool TryGetChildNodeSlow(TomlTableNodeDictionary nodes, ReadOnlySpan<byte> key, out TomlTableNode? childNode)
+    {
         var reader = new Utf8SequenceReader(key);
         var bufferWriter = RecycleArrayPoolBufferWriter<byte>.Rent();
         try

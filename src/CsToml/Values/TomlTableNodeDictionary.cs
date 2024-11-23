@@ -38,7 +38,7 @@ internal class TomlTableNodeDictionary
     [DebuggerStepThrough]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryAdd(TomlDottedKey key, TomlTableNode value)
-        => TryAddCore(key, key.GetHashCode(), value);
+        => TryAddCore(key, key.GetHashCodeFast(), value);
 
     private bool TryAddCore(TomlDottedKey key, int keyHashCode, TomlTableNode value)
     {
@@ -84,9 +84,10 @@ internal class TomlTableNodeDictionary
         return true;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGetValueOrAdd(TomlDottedKey key, Func<TomlTableNode> valueFactory, out TomlTableNode? existingValue, out TomlTableNode? addedValue)
     {
-        var hashCode = key.GetHashCode();
+        var hashCode = key.GetHashCodeFast();
         if (TryGetValueCore(key.Value, hashCode, out existingValue))
         {
             addedValue = null;
@@ -111,7 +112,7 @@ internal class TomlTableNodeDictionary
     [DebuggerStepThrough]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGetValue(TomlDottedKey key, out TomlTableNode? value)
-        => TryGetValueCore(key.Value, key.GetHashCode(), out value);
+        => TryGetValueCore(key.Value, key.GetHashCodeFast(), out value);
 
     [DebuggerStepThrough]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

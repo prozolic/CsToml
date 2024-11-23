@@ -63,6 +63,7 @@ public struct TomlDocumentNode
 
     public TomlDocumentNode this[ReadOnlySpan<byte> key]
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
             if (node?.TryGetChildNode(key, out var value) ?? false)
@@ -75,6 +76,7 @@ public struct TomlDocumentNode
 
     public TomlDocumentNode this[int index]
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
             if (Value.TryGetArrayValue(index, out var value))
@@ -118,6 +120,7 @@ public struct TomlDocumentNode
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly TomlValue GetTomlValue()
         => Value;
 

@@ -109,6 +109,7 @@ internal ref struct Utf8SequenceReader
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool TryPeek(long offset, out byte value)
     {
         if (Remaining <= offset)
@@ -123,6 +124,11 @@ internal ref struct Utf8SequenceReader
             return true;
         }
 
+        return TryPeekSlow(offset, out value);
+    }
+
+    private readonly bool TryPeekSlow(long offset, out byte value)
+    {
         var remainingOffset = offset;
         var nextPosition = Position;
         ReadOnlyMemory<byte> currentMemory;
