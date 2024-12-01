@@ -19,7 +19,7 @@ CsToml has the following features.
 
 - It complies with [TOML v1.0.0](https://toml.io/en/v1.0.0).
 - .NET 8 or later supported.
-- CsToml is implemented in .NET8 (C#12).
+- CsToml is implemented in .NET 8 (C# 12).
 - Parsing is performed using byte sequence instead of `string`.
 - It is processed byte sequence directly by the API defined in `System.Buffers`(`IBufferWriter<byte>`,`ReadOnlySequence<byte>`), memory allocation is small and fast.
 - Buffers are rented from the pool(`ArrayPool<T>`), reducing the allocation.
@@ -42,12 +42,12 @@ Table of Contents
 Installation
 ---
 
-This library is distributed via NuGet.  
-We target .NET 8 or later.
+This library is distributed via NuGet. We target .NET 8 or later.  
 
 > PM> Install-Package [CsToml](https://www.nuget.org/packages/CsToml/)
 
-When you install Generator, it automatically creates code to make your custom classes serializable.(learn more in our [Serialize and deserialize custom classes (CsToml.Generator)](#serialize-and-deserialize-custom-classes-cstomlgenerator))
+When you install `CsToml.Generator`, it automatically creates code to make your custom classes serializable.(learn more in our [Serialize and deserialize custom classes (CsToml.Generator)](#serialize-and-deserialize-custom-classes-cstomlgenerator)). It is basically recommended to install it together with CsToml.  
+However, this requires Roslyn 4.3.1 (Visual Studio 2022 version 17.3) or higher.
 
 > PM> Install-Package [CsToml.Generator](https://www.nuget.org/packages/CsToml.Generator/)  
 
