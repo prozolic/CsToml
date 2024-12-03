@@ -2172,7 +2172,7 @@ internal ref struct CsTomlReader
         if (!TomlCodes.IsNumber(Unsafe.Add(ref refBytes,17))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
         if (!TomlCodes.IsNumber(Unsafe.Add(ref refBytes,18))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
 
-        if (TomlCodes.IsHyphen(Unsafe.Add(ref refBytes, 19)))
+        if (TomlCodes.IsPlusOrMinusSign(Unsafe.Add(ref refBytes, 19)))
         {
             if (!TomlCodes.IsNumber(Unsafe.Add(ref refBytes,20))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
             if (!TomlCodes.IsNumber(Unsafe.Add(ref refBytes,21))) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
