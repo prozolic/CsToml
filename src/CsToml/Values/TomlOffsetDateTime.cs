@@ -30,7 +30,8 @@ internal sealed partial class TomlOffsetDateTime(DateTimeOffset value) : TomlVal
 
     public static TomlOffsetDateTime Parse(ReadOnlySpan<byte> bytes)
     {
-        if (bytes.Length < TomlCodes.DateTime.OffsetDateTimeZFormatLength) throw new ArgumentException();
+        if (bytes.Length < TomlCodes.DateTime.OffsetDateTimeZFormatLength)
+            ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
 
         if (TomlCodes.IsHyphen(bytes[4]) && TomlCodes.IsHyphen(bytes[7]) && (bytes[10] == TomlCodes.Alphabet.T || bytes[10] == TomlCodes.Alphabet.t || TomlCodes.IsTabOrWhiteSpace(bytes[10])))
         {
