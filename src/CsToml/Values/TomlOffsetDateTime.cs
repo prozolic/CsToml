@@ -49,6 +49,10 @@ internal sealed partial class TomlOffsetDateTime(DateTimeOffset value) : TomlVal
 
     private static DateTimeOffset ParseDateTimeOffset(ReadOnlySpan<byte> bytes, ReadOnlySpan<byte> offsetBytes)
     {
+        // yyyy-MM-ddTHH:mm:ss is 19 digit.
+        if (bytes.Length < TomlCodes.DateTime.LocalDateTimeFormatLength)
+            ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+
         var year = ParseDecimalByte(bytes[0]) * 1000;
         year += ParseDecimalByte(bytes[1]) * 100;
         year += ParseDecimalByte(bytes[2]) * 10;
