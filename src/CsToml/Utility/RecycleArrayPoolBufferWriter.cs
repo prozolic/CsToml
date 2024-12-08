@@ -31,14 +31,14 @@ internal sealed class RecycleArrayPoolBufferWriter<T>
     }
 }
 
-internal interface IBufferWriter2<T> : IBufferWriter<T>
-{
-    void Write(T value);
-    void Write(ReadOnlySpan<T> value);
+//internal interface IBufferWriter2<T> : IBufferWriter<T>
+//{
+//    void Write(T value);
+//    void Write(ReadOnlySpan<T> value);
 
-}
+//}
 
-internal sealed class ArrayPoolBufferWriter<T> : IBufferWriter2<T>, IDisposable
+internal sealed class ArrayPoolBufferWriter<T> : IBufferWriter<T>, IDisposable
     where T : unmanaged
 {
     private T[] buffer;
@@ -106,6 +106,7 @@ internal sealed class ArrayPoolBufferWriter<T> : IBufferWriter2<T>, IDisposable
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Return()
     {
         if (isRent)

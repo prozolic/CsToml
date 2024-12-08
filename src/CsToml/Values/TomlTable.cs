@@ -2,6 +2,7 @@
 using CsToml.Utility;
 using System.Buffers;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace CsToml.Values;
@@ -157,6 +158,7 @@ internal sealed partial class TomlTable : TomlValue
         newNode = table.RootNode;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal IDictionary<string, object?> GetDictionary()
         => node.GetDictionary();
 

@@ -1,6 +1,7 @@
 ﻿using CsToml.Utility;
 using System.Buffers;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace CsToml.Values;
@@ -17,6 +18,7 @@ internal sealed partial class TomlInlineTable : TomlValue
 
     public TomlInlineTable(){}
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal IDictionary<string, object?> GetDictionary()
         => inlineTable.GetDictionary();
 

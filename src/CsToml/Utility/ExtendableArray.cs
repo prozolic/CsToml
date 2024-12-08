@@ -21,6 +21,7 @@ internal struct ExtendableArray<T>
         isRent = true;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly ReadOnlySpan<T> AsSpan()
         => array.AsSpan(0, count);
 

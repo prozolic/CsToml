@@ -121,8 +121,8 @@ internal sealed partial class TomlOffsetDateTime(DateTimeOffset value) : TomlVal
             }
             catch (ArgumentOutOfRangeException e)
             {
-                return ExceptionHelper.NotReturnThrow<DateTimeOffset, ArgumentOutOfRangeException>(
-                    ExceptionHelper.ThrowArgumentOutOfRangeExceptionWhenCreating<DateTimeOffset>, e);
+                ExceptionHelper.ThrowArgumentOutOfRangeExceptionWhenCreating<DateTimeOffset>(e);
+                return default;
             }
         }
 

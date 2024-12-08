@@ -4,6 +4,7 @@ using CsToml.Formatter.Resolver;
 using CsToml.Utility;
 using CsToml.Values;
 using System.Buffers;
+using System.Runtime.CompilerServices;
 
 namespace CsToml;
 
@@ -18,6 +19,7 @@ public static class CsTomlSerializer
     {
         private TomlDocument? tomlDocument;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetTomlDocument(TomlDocument? tomlDocument)
         {
             this.tomlDocument = tomlDocument;

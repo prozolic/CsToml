@@ -231,7 +231,6 @@ public struct TomlDocumentNode
     public readonly bool TryGetNumber<T>(out T value) where T : struct, INumberBase<T>
         => Value.TryGetNumber<T>(out value);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGetValue<T>(out T value)
     {
         try
@@ -246,6 +245,7 @@ public struct TomlDocumentNode
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal IDictionary<string, object?> GetDictionary()
     {
         return node?.GetDictionary() ?? new Dictionary<string,object?>();

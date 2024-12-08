@@ -21,14 +21,12 @@ internal static class ExceptionHelper
     }
 
     [DoesNotReturn]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ThrowException(string argumentExceptionMessage)
     {
         throw new CsTomlException(argumentExceptionMessage);
     }
 
     [DoesNotReturn]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ThrowException(string argumentExceptionMessage, Exception? innerException)
     {
         throw new CsTomlException(argumentExceptionMessage, innerException);
