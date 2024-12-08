@@ -728,7 +728,6 @@ animal = { type.name = ""pug"" }
     }
 }
 
-
 public class DeserializeValueTypeTest
 {
     [Fact]
@@ -784,4 +783,59 @@ public class SerializeValueTypeTest
         using var serializedTomlValue6 = CsTomlSerializer.SerializeValueType(new Tuple<string, string, string>("red", "yellow", "green"));
         serializedTomlValue6.ByteSpan.ToArray().Should().Equal("[ \"red\", \"yellow\", \"green\" ]"u8.ToArray());
     }
+}
+
+public class MulitipleThreadTest
+{
+    [Fact]
+    public async Task ExecuteAsync()
+    {
+        var tomlText = @"
+str = ""value""
+int = 123
+flt = 3.1415
+boolean = true
+odt1 = 1979-05-27T07:32:00Z
+ldt1 = 1979-05-27T07:32:00
+ldt2 = 1979-05-27T00:32:00.999999
+ld1 = 1979-05-27
+lt1 = 07:32:00
+
+key = ""value""
+first.second.third = ""value""
+number = 123456
+array = [123 , ""456"", true]
+inlineTable = { key = 1 , key2 = ""value"" , key3 = [ 123, 456, 789], key4 = { key = ""inlinetable"" }}
+
+[Table.test]
+key = ""value""
+first.second.third = ""value""
+number = 123456
+
+[[arrayOfTables.test]]
+key = ""value""
+first.second.third = ""value""
+number = 123456
+
+[[arrayOfTables.test]]
+
+[[arrayOfTables.test]]
+key2 = ""value""
+first2.second2.third2 = ""value""
+number2 = 123456
+
+"u8.ToArray();
+        var numbers = Enumerable.Range(1, 10000).ToArray();
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
+        var expected = document!.ToJsonObject();
+
+        await Parallel.ForEachAsync(numbers, (number, token) =>
+        {
+            var document2 = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
+            var actual = document2!.ToJsonObject();
+            JsonNodeExtensions.DeepEqualsForTomlFormat(actual, expected).Should().BeTrue();
+            return ValueTask.CompletedTask;
+        });
+    }
+
 }
