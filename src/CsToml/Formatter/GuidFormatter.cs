@@ -54,7 +54,7 @@ internal sealed class NullableGuidFormatter : ITomlValueFormatter<Guid?>
     {
         if (target.HasValue)
         {
-            writer.WriteString(target.Value.ToString());
+            writer.WriteString(target.GetValueOrDefault().ToString());
         }
         else
         {

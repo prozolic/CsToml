@@ -48,7 +48,7 @@ internal sealed class NullableDateTimeOffsetFormatter : ITomlValueFormatter<Date
     {
         if (target.HasValue)
         {
-            writer.WriteDateTimeOffset(target.Value);
+            writer.WriteDateTimeOffset(target.GetValueOrDefault());
         }
         else
         {

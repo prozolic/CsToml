@@ -49,7 +49,7 @@ internal sealed class NullableBooleanFormatter : ITomlValueFormatter<bool?>
     {
         if (target.HasValue)
         {
-            writer.WriteBoolean(target.Value);
+            writer.WriteBoolean(target.GetValueOrDefault());
         }
         else
         {

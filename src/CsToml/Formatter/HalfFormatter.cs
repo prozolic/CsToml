@@ -48,7 +48,7 @@ internal sealed class NullableHalfFormatter : ITomlValueFormatter<Half?>
     {
         if (target.HasValue)
         {
-            writer.WriteDouble((double)target.Value);
+            writer.WriteDouble((double)target.GetValueOrDefault());
         }
         else
         {

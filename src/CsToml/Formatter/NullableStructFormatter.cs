@@ -20,7 +20,7 @@ internal sealed class NullableStructFormatter<T> : ITomlValueFormatter<T?>
     {
         if (target.HasValue)
         {
-            options.Resolver.GetFormatter<T>()!.Serialize(ref writer, target.Value, options);
+            options.Resolver.GetFormatter<T>()!.Serialize(ref writer, target.GetValueOrDefault(), options);
         }
         else
         {

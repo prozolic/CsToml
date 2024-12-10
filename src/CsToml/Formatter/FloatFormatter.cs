@@ -48,7 +48,7 @@ internal sealed class NullableFloatFormatter : ITomlValueFormatter<float?>
     {
         if (target.HasValue)
         {
-            writer.WriteDouble(target.Value);
+            writer.WriteDouble(target.GetValueOrDefault());
         }
         else
         {

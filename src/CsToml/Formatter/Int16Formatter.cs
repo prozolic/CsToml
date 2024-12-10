@@ -48,7 +48,7 @@ internal sealed class NullableInt16Formatter : ITomlValueFormatter<short?>
     {
         if (target.HasValue)
         {
-            writer.WriteInt64(target.Value);
+            writer.WriteInt64(target.GetValueOrDefault());
         }
         else
         {

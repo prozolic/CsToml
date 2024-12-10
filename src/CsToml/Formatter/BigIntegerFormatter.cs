@@ -51,7 +51,7 @@ internal sealed class NullableBigIntegerFormatter : ITomlValueFormatter<BigInteg
     {
         if (target.HasValue)
         {
-            writer.WriteInt64(checked((long)target));
+            writer.WriteInt64(checked((long)target.GetValueOrDefault()));
         }
         else
         {

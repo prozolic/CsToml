@@ -49,7 +49,7 @@ internal sealed class NullableTimeOnlyFormatter : ITomlValueFormatter<TimeOnly?>
     {
         if (target.HasValue)
         {
-            writer.WriteTimeOnly(target.Value);
+            writer.WriteTimeOnly(target.GetValueOrDefault());
         }
         else
         {

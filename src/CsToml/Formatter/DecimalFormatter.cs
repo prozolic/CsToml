@@ -128,14 +128,14 @@ internal sealed class NullableDecimalFormatter : ITomlValueFormatter<decimal?>
             {
                 var length = 64;
                 var bytesWritten = 0;
-                if (target.Value.TryFormat(bufferWriter.GetSpan(length), out bytesWritten))
+                if (target.GetValueOrDefault().TryFormat(bufferWriter.GetSpan(length), out bytesWritten))
                 {
                     bufferWriter.Advance(bytesWritten);
                     writer.WriteBytes(bufferWriter.WrittenSpan);
                 }
                 else
                 {
-                    Utf8Helper.FromUtf16(bufferWriter, target.Value.ToString(CultureInfo.InvariantCulture));
+                    Utf8Helper.FromUtf16(bufferWriter, target.GetValueOrDefault().ToString(CultureInfo.InvariantCulture));
                     writer.WriteBytes(bufferWriter.WrittenSpan);
                 }
             }

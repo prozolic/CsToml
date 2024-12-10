@@ -48,7 +48,7 @@ internal sealed class NullableDateOnlyFormatter : ITomlValueFormatter<DateOnly?>
     {
         if (target.HasValue)
         {
-            writer.WriteDateOnly(target.Value);
+            writer.WriteDateOnly(target.GetValueOrDefault());
         }
         else
         {

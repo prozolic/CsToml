@@ -48,7 +48,7 @@ internal sealed class NullableSByteFormatter : ITomlValueFormatter<sbyte?>
     {
         if (target.HasValue)
         {
-            writer.WriteInt64(target.Value);
+            writer.WriteInt64(target.GetValueOrDefault());
         }
         else
         {

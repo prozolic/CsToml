@@ -47,7 +47,7 @@ internal sealed class NullableUInt64Formatter : ITomlValueFormatter<ulong?>
     {
         if (target.HasValue)
         {
-            writer.WriteInt64(checked((long)target.Value));
+            writer.WriteInt64(checked((long)target.GetValueOrDefault()));
         }
         else
         {

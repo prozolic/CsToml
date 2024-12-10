@@ -48,7 +48,7 @@ internal sealed class NullableTimeSpanFormatter : ITomlValueFormatter<TimeSpan?>
     {
         if (target.HasValue)
         {
-            writer.WriteInt64(target.Value.Ticks);
+            writer.WriteInt64(target.GetValueOrDefault().Ticks);
         }
         else
         {

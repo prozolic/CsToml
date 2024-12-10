@@ -48,7 +48,7 @@ internal sealed class NullableDateTimeFormatter : ITomlValueFormatter<DateTime?>
     {
         if (target.HasValue)
         {
-            writer.WriteDateTime(target.Value);
+            writer.WriteDateTime(target.GetValueOrDefault());
         }
         else
         {
