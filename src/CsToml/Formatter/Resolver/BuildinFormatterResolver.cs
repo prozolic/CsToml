@@ -36,6 +36,7 @@ internal sealed class BuildinFormatterResolver : ITomlValueFormatterResolver
         { typeof(SortedSet<>), typeof(SortedSetFormatter<>) },
         { typeof(Queue<>), typeof(QueueFormatter<>) },
         { typeof(LinkedList<>), typeof(LinkedListFormatter<>) },
+        { typeof(SortedList<,>), typeof(SortedListFormatter<,>) },
         { typeof(ConcurrentQueue<>), typeof(ConcurrentQueueFormatter<>) },
         { typeof(ConcurrentStack<>), typeof(ConcurrentStackFormatter<>) },
         { typeof(ConcurrentBag<>), typeof(ConcurrentBagFormatter<>) },

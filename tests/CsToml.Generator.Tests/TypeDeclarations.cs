@@ -342,3 +342,10 @@ internal partial class TypeTableF
     [TomlValueOnSerialized]
     public string Value { get; set; }
 }
+
+[TomlSerializedObject]
+internal partial class TypeSortedList
+{
+    [TomlValueOnSerialized]
+    public SortedList<string, string> Value { get; set; }
+}

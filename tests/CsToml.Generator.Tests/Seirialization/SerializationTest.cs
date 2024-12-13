@@ -1524,3 +1524,58 @@ public class TypeTableATest
     }
 
 }
+
+
+public class TypeSortedListTest
+{
+    [Fact]
+    public void Serialize()
+    {
+        var sortedList = new SortedList<string, string>()
+        {
+            ["key"] = "value",
+            ["key2"] = "value2",
+            ["key3"] = "value3",
+        };
+
+        var type = new TypeSortedList() { Value = sortedList };
+        {
+            using var bytes = CsTomlSerializer.Serialize(type);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = [ [ \"key\", \"value\" ], [ \"key2\", \"value2\" ], [ \"key3\", \"value3\" ] ]");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = [ [ \"key\", \"value\" ], [ \"key2\", \"value2\" ], [ \"key3\", \"value3\" ] ]");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+    }
+
+    [Fact]
+    public void Deserialize()
+    {
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = [ [ \"key\", \"value\" ], [ \"key2\", \"value2\" ], [ \"key3\", \"value3\" ] ]");
+        writer.Flush();
+
+        var expected = new SortedList<string, string>()
+        {
+            ["key"] = "value",
+            ["key2"] = "value2",
+            ["key3"] = "value3",
+        };
+
+        var type = CsTomlSerializer.Deserialize<TypeSortedList>(buffer.WrittenSpan);
+        type.Value.SequenceEqual(expected).Should().BeTrue();
+    }
+}
