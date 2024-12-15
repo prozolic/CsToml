@@ -58,7 +58,7 @@ internal static class TomlCodes
                 -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 0xe0 - 0xef
                 -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 0xf0 - 0xff
             ];
-            return hexTable.At(hexNumber);
+            return hexTable[hexNumber];
         }
 
         internal static int DigitsDecimalUnroll4(long value)
@@ -176,7 +176,7 @@ internal static class TomlCodes
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
         ];
-        return escapeTable.At(rawByte);
+        return escapeTable[rawByte];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -201,7 +201,7 @@ internal static class TomlCodes
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
         ];
-        return escapeSequenceTable.At(rawByte);
+        return escapeSequenceTable[rawByte];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -226,7 +226,7 @@ internal static class TomlCodes
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
         ];
-        return barekeyTable.At(rawByte);
+        return barekeyTable[rawByte];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -323,7 +323,7 @@ internal static class TomlCodes
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
         ];
-        return numberTable.At(rawByte);
+        return numberTable[rawByte];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -348,7 +348,7 @@ internal static class TomlCodes
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
         ];
-        return binaryTable.At(rawByte);
+        return binaryTable[rawByte];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -373,7 +373,7 @@ internal static class TomlCodes
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
         ];
-        return octalTable.At(rawByte);
+        return octalTable[rawByte];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -398,7 +398,7 @@ internal static class TomlCodes
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
         ];
-        return hexTable.At(rawByte);
+        return hexTable[rawByte];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -424,7 +424,7 @@ internal static class TomlCodes
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
         ];
-        return upperHexAlphabetTable.At(rawByte);
+        return upperHexAlphabetTable[rawByte];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -450,7 +450,7 @@ internal static class TomlCodes
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
         ];
-        return lowerHexAlphabetTable.At(rawByte);
+        return lowerHexAlphabetTable[rawByte];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -476,7 +476,7 @@ internal static class TomlCodes
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
         ];
-        return alphabetTable.At(rawByte);
+        return alphabetTable[rawByte];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -501,7 +501,7 @@ internal static class TomlCodes
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
         ];
-        return upperAlphabetTable.At(rawByte);
+        return upperAlphabetTable[rawByte];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -526,7 +526,7 @@ internal static class TomlCodes
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
         ];
-        return lowerAlphabetTable.At(rawByte);
+        return lowerAlphabetTable[rawByte];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
