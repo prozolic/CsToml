@@ -2,6 +2,7 @@
 using FluentAssertions;
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
 using Utf8StringInterpolation;
 
 namespace CsToml.Generator.Tests.Seirialization;
@@ -1579,3 +1580,120 @@ public class TypeSortedListTest
         type.Value.SequenceEqual(expected).Should().BeTrue();
     }
 }
+
+#if NET9_0_OR_GREATER
+
+public class TypeOrderedDictionaryTest
+{
+    [Fact]
+    public void Serialize()
+    {
+        var dict = new OrderedDictionary<string, object?>()
+        {
+            ["key"] = new object[]
+            {
+                999,
+                "Value",
+                new OrderedDictionary<string, object?>()
+                {
+                    ["key"] = new object[]
+                    {
+                        new long[] {1, 2, 3},
+                        new OrderedDictionary<string, object?>()
+                        {
+                            ["key"] = "value"
+                        }
+                    }
+                }
+            }
+        };
+
+        var type = new TypeDictionary() { Value = dict };
+        {
+            using var bytes = CsTomlSerializer.Serialize(type);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+    }
+
+    [Fact]
+    public void Deserialize()
+    {
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]}");
+        writer.Flush();
+
+        var type = CsTomlSerializer.Deserialize<TypeOrderedDictionary>(buffer.WrittenSpan);
+        dynamic dynamicDict = type.Value;
+
+        long value = dynamicDict["key"][0];
+        value.Should().Be(999);
+        string value2 = dynamicDict["key"][1];
+        value2.Should().Be("Value");
+        object[] value3 = dynamicDict["key"][2]["key"][0];
+        value3.Should().Equal(new object[] { 1, 2, 3 });
+        string value4 = dynamicDict["key"][2]["key"][1]["key"];
+        value4.Should().Be("value");
+    }
+}
+
+public class TypeReadOnlySetFormatterTest
+{
+    [Fact]
+    public void Serialize()
+    {
+        var type = new TypeReadOnlySetFormatter
+        {
+            Value = new ReadOnlySet<long>(new HashSet<long>([1, 2, 3, 4, 5])),
+        };
+
+        {
+            using var bytes = CsTomlSerializer.Serialize(type);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+    }
+
+    [Fact]
+    public void Deserialize()
+    {
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = [1,3,5]");
+        writer.Flush();
+
+        var type = CsTomlSerializer.Deserialize<TypeReadOnlySetFormatter>(buffer.WrittenSpan);
+        type.Value.Should().Equal(new ReadOnlySet<long>(new HashSet<long>([1, 3, 5])));
+    }
+}
+
+#endif
