@@ -246,12 +246,17 @@ public struct TomlDocumentNode
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal IDictionary<string, object?> GetDictionary()
+    internal IDictionary<object, object> GetDictionary()
     {
-        return node?.GetDictionary() ?? new Dictionary<string,object?>();
+        var dict = node?.GetDictionary();
+        if (dict == null)
+        {
+            return new Dictionary<object, object>();
+        }
+        return dict;
     }
 
-    internal bool TryGetDictionary(out IDictionary<string, object?> value)
+    internal bool TryGetDictionary(out IDictionary<object, object> value)
     {
         try
         {

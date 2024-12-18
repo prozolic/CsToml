@@ -48,7 +48,7 @@ internal sealed class ArrayListFormatter : ITomlValueFormatter<ArrayList>
         }
 
         var formatter = options.Resolver.GetFormatter<object>()!;
-        formatter.Serialize(ref writer, target[0], options);
+        formatter.Serialize(ref writer, target[0]!, options);
         if (target.Count == 1)
         {
             writer.WriteSpace();
@@ -60,7 +60,7 @@ internal sealed class ArrayListFormatter : ITomlValueFormatter<ArrayList>
         {
             writer.Write(TomlCodes.Symbol.COMMA);
             writer.WriteSpace();
-            formatter.Serialize(ref writer, target[i], options);
+            formatter.Serialize(ref writer, target[i]!, options);
         }
         writer.WriteSpace();
         writer.EndArray();

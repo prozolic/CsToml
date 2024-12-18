@@ -280,7 +280,7 @@ internal sealed class PrimitiveObjectFormatter : ITomlValueFormatter<object>
                 writer.EndArray();
                 return;
             }
-            formatter.Serialize(ref writer, en.Current, options);
+            formatter!.Serialize(ref writer, en.Current, options);
             if (!en.MoveNext())
             {
                 writer.EndArray();
@@ -290,7 +290,7 @@ internal sealed class PrimitiveObjectFormatter : ITomlValueFormatter<object>
             {
                 writer.Write(TomlCodes.Symbol.COMMA);
                 writer.WriteSpace();
-                formatter.Serialize(ref writer, en.Current, options);
+                formatter!.Serialize(ref writer, en.Current, options);
 
             } while (en.MoveNext());
             writer.EndArray();

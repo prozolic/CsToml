@@ -839,3 +839,91 @@ number2 = 123456
     }
 
 }
+
+public class TomlDocumentTest
+{
+    [Fact]
+    public void Execute()
+    {
+        var tomlText = @"
+str = ""value""
+int = 123
+flt = 3.1415
+boolean = true
+odt1 = 1979-05-27T07:32:00Z
+ldt1 = 1979-05-27T07:32:00
+ldt2 = 1979-05-27T00:32:00.999999
+ld1 = 1979-05-27
+lt1 = 07:32:00
+
+key = ""value""
+first.second.third = ""value""
+number = 123456
+array = [123 , ""456"", true]
+inlineTable = { key = 1 , key2 = ""value"" , key3 = [ 123, 456, 789], key4 = { key = ""inlinetable"" }}
+
+[Table.test]
+key = ""value""
+first.second.third = ""value""
+number = 123456
+
+[[arrayOfTables.test]]
+key = ""value""
+first.second.third = ""value""
+number = 123456
+
+[[arrayOfTables.test]]
+
+[[arrayOfTables.test]]
+key2 = ""value""
+first2.second2.third2 = ""value""
+number2 = 123456
+
+"u8;
+
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText).ToDictionary<object, object>();
+        document["str"].Should().Be("value");
+        document["int"].Should().Be(123);
+        document["flt"].Should().Be(3.1415d);
+        ((bool)document["boolean"]).Should().BeTrue();
+        document["odt1"].Should().Be(new DateTimeOffset(1979, 5, 27, 7, 32, 0, TimeSpan.Zero));
+        document["ldt1"].Should().Be(new DateTime(1979, 5, 27, 7, 32, 0));
+        document["ldt2"].Should().Be(new DateTime(1979, 5, 27, 0, 32, 0, 999, 999));
+        document["ld1"].Should().Be(new DateOnly(1979, 5, 27));
+        document["lt1"].Should().Be(new TimeOnly(7, 32, 0));
+        document["key"].Should().Be("value");
+        ((IDictionary<object, object>)((IDictionary<object, object>)document["first"])["second"])["third"].Should().Be("value");
+        document["number"].Should().Be(123456);
+        ((object[])document["array"])[0].Should().Be(123);
+        ((object[])document["array"])[1].Should().Be("456");
+        ((bool)((object[])document["array"])[2]).Should().BeTrue();
+
+        var inlineTable = (IDictionary<object, object>)document["inlineTable"];
+        inlineTable["key"].Should().Be(1);
+        inlineTable["key2"].Should().Be("value");
+        ((object[])inlineTable["key3"])[0].Should().Be(123);
+        ((object[])inlineTable["key3"])[1].Should().Be(456);
+        ((object[])inlineTable["key3"])[2].Should().Be(789);
+        ((IDictionary<object, object>)inlineTable["key4"])["key"].Should().Be("inlinetable");
+
+        var table = (IDictionary<object, object>)document["Table"];
+        var test = (IDictionary<object, object>)table["test"];
+        test["key"].Should().Be("value");
+        ((IDictionary<object, object>)((IDictionary<object, object>)test["first"])["second"])["third"].Should().Be("value");
+        test["number"].Should().Be(123456);
+        ((object[])inlineTable["key3"])[0].Should().Be(123);
+        ((object[])inlineTable["key3"])[1].Should().Be(456);
+        ((object[])inlineTable["key3"])[2].Should().Be(789);
+        ((IDictionary<object, object>)inlineTable["key4"])["key"].Should().Be("inlinetable");
+
+        var arrayOfTables = (IDictionary<object, object>)document["arrayOfTables"];
+        var testArray = (object[])arrayOfTables["test"];
+
+        ((IDictionary<object, object>)testArray[0])["key"].Should().Be("value");
+        ((IDictionary<object, object>)((IDictionary<object, object>)((IDictionary<object, object>)testArray[0])["first"])["second"])["third"].Should().Be("value");
+        ((IDictionary<object, object>)testArray[0])["number"].Should().Be(123456);
+        ((IDictionary<object, object>)testArray[2])["key2"].Should().Be("value");
+        ((IDictionary<object, object>)((IDictionary<object, object>)((IDictionary<object, object>)testArray[2])["first2"])["second2"])["third2"].Should().Be("value");
+        ((IDictionary<object, object>)testArray[2])["number2"].Should().Be(123456);
+    }
+}

@@ -42,6 +42,9 @@ public partial class TomlDocument : ITomlSerializedObject<TomlDocument>
         LineNumber = 0;
     }
 
+    public IDictionary<TKey, TValue> ToDictionary<TKey, TValue>() where TKey : notnull
+        => RootNode.GetValue<IDictionary<TKey, TValue>>();
+
     internal bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
         where TBufferWriter : IBufferWriter<byte>
     {
