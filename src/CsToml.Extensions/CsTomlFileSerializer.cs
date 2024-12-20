@@ -10,7 +10,6 @@ public partial class CsTomlFileSerializer
     private static readonly string TomlExtension = ".toml";
 
     public static T Deserialize<T>(string tomlFilePath, CsTomlSerializerOptions? options = null)
-        where T : ITomlSerializedObject<T>
     {
         if (Path.GetExtension(tomlFilePath) != TomlExtension)
             throw new FormatException($"TOML files should use the extension .toml");
@@ -59,7 +58,6 @@ public partial class CsTomlFileSerializer
     }
 
     public static async ValueTask<T> DeserializeAsync<T>(string tomlFilePath, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
-        where T : ITomlSerializedObject<T>
     {
         if (Path.GetExtension(tomlFilePath) != TomlExtension)
             throw new FormatException($"TOML files should use the extension .toml");
@@ -107,7 +105,6 @@ public partial class CsTomlFileSerializer
     }
 
     public static void Serialize<T>(string tomlFilePath, T? value, CsTomlSerializerOptions? options = null)
-        where T : ITomlSerializedObject<T>
     {
         if (Path.GetExtension(tomlFilePath) != TomlExtension)
             throw new FormatException($"TOML file should use the extension .toml");
@@ -126,7 +123,6 @@ public partial class CsTomlFileSerializer
     }
 
     public static async ValueTask SerializeAsync<T>(string tomlFilePath, T? value, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
-    where T : ITomlSerializedObject<T>
     {
         if (Path.GetExtension(tomlFilePath) != TomlExtension)
             throw new FormatException($"TOML file should use the extension .toml");

@@ -60,7 +60,6 @@ public static class CsTomlSerializer
     }
 
     public static T Deserialize<T>(ReadOnlySpan<byte> tomlText, CsTomlSerializerOptions? options = null)
-        where T : ITomlSerializedObject<T>
     {
         options ??= DefaultOptions;
 
@@ -84,7 +83,6 @@ public static class CsTomlSerializer
     }
 
     public static T Deserialize<T>(ReadOnlySequence<byte> tomlSequence, CsTomlSerializerOptions? options = null)
-        where T : ITomlSerializedObject<T>
     {
         options ??= DefaultOptions;
 
@@ -107,7 +105,7 @@ public static class CsTomlSerializer
         }
     }
 
-    public static T Deserialize<T>(Stream stream, CsTomlSerializerOptions? options = null) where T : ITomlSerializedObject<T>
+    public static T Deserialize<T>(Stream stream, CsTomlSerializerOptions? options = null)
     {
         if (stream is MemoryStream memoryStream && memoryStream.TryGetBuffer(out var arraySegment))
         {
@@ -129,7 +127,6 @@ public static class CsTomlSerializer
     }
 
     public static async ValueTask<T> DeserializeAsync<T>(Stream stream, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
-        where T : ITomlSerializedObject<T>
     {
         if (stream is MemoryStream memoryStream && memoryStream.TryGetBuffer(out var arraySegment))
         {
@@ -173,7 +170,6 @@ public static class CsTomlSerializer
     }
 
     public static ByteMemoryResult Serialize<T>(T target, CsTomlSerializerOptions? options = null)
-        where T : ITomlSerializedObject<T>
     {
         var bufferWriter = RecycleArrayPoolBufferWriter<byte>.Rent();
         try
@@ -189,7 +185,6 @@ public static class CsTomlSerializer
 
     public static void Serialize<TBufferWriter, T>(ref TBufferWriter bufferWriter, T? target, CsTomlSerializerOptions? options = null)
         where TBufferWriter : IBufferWriter<byte>
-        where T : ITomlSerializedObject<T>
     {
         options ??= DefaultOptions;
         try
@@ -208,7 +203,6 @@ public static class CsTomlSerializer
     }
 
     public static void Serialize<T>(Stream stream, T? value, CsTomlSerializerOptions? options = null)
-        where T : ITomlSerializedObject<T>
     {
         using var bufferWriter = new ByteBufferSegmentWriter();
         var tempWriter = bufferWriter;
@@ -219,7 +213,6 @@ public static class CsTomlSerializer
     }
 
     public static async ValueTask SerializeAsync<T>(Stream stream, T? value, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
-        where T : ITomlSerializedObject<T>
     {
         cancellationToken.ThrowIfCancellationRequested();
 
