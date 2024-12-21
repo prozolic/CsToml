@@ -269,7 +269,7 @@ internal sealed class TomlTableNode
         }
     }
 
-    public IDictionary<string, object?> GetDictionary()
+    public IDictionary<object, object> GetDictionary()
     {
         if (this.NodeCount == 0)
         {
@@ -281,11 +281,11 @@ internal sealed class TomlTableNode
             {
                 return inlineTable.GetDictionary();
             }
-            return new Dictionary<string, object?>();
+            return new Dictionary<object, object>();
         }
         else
         {
-            var dictionary = new Dictionary<string, object?>(this.NodeCount);
+            var dictionary = new Dictionary<object, object>(this.NodeCount);
 
             foreach ((var key, var node) in KeyValuePairs)
             {
@@ -306,7 +306,7 @@ internal sealed class TomlTableNode
         }
     }
 
-    public bool TryGetDictionary(out IDictionary<string, object?> value)
+    public bool TryGetDictionary(out IDictionary<object, object> value)
     {
         try
         {

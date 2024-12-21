@@ -349,3 +349,21 @@ internal partial class TypeSortedList
     [TomlValueOnSerialized]
     public SortedList<string, string> Value { get; set; }
 }
+
+#if NET9_0_OR_GREATER
+
+[TomlSerializedObject]
+internal partial class TypeOrderedDictionary
+{
+    [TomlValueOnSerialized]
+    public OrderedDictionary<string, object?> Value { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class TypeReadOnlySetFormatter
+{
+    [TomlValueOnSerialized]
+    public ReadOnlySet<long> Value { get; set; }
+}
+
+#endif

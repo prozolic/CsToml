@@ -19,7 +19,7 @@ internal sealed partial class TomlInlineTable : TomlValue
     public TomlInlineTable(){}
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal IDictionary<string, object?> GetDictionary()
+    internal IDictionary<object, object> GetDictionary()
         => inlineTable.GetDictionary();
 
     internal override bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
