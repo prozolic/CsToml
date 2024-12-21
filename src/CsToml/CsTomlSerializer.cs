@@ -10,7 +10,7 @@ namespace CsToml;
 
 public static class CsTomlSerializer
 {
-    private static readonly CsTomlSerializerOptions DefaultOptions = CsTomlSerializerOptions.Default with { SerializeOptions = new ()};
+    private static readonly CsTomlSerializerOptions DefaultOptions = CsTomlSerializerOptions.Default with { SerializeOptions = new() };
 
     [ThreadStatic]
     private static TomlDocumentFormatter? DocumentFormatter;
@@ -183,7 +183,7 @@ public static class CsTomlSerializer
         }
     }
 
-    public static void Serialize<TBufferWriter, T>(ref TBufferWriter bufferWriter, T? target, CsTomlSerializerOptions? options = null)
+    public static void Serialize<TBufferWriter, T>(ref TBufferWriter bufferWriter, T target, CsTomlSerializerOptions? options = null)
         where TBufferWriter : IBufferWriter<byte>
     {
         options ??= DefaultOptions;
@@ -202,7 +202,7 @@ public static class CsTomlSerializer
         }
     }
 
-    public static void Serialize<T>(Stream stream, T? value, CsTomlSerializerOptions? options = null)
+    public static void Serialize<T>(Stream stream, T value, CsTomlSerializerOptions? options = null)
     {
         using var bufferWriter = new ByteBufferSegmentWriter();
         var tempWriter = bufferWriter;
@@ -212,7 +212,7 @@ public static class CsTomlSerializer
         bufferWriter.WriteTo(streamByteWriter.ByteWriter);
     }
 
-    public static async ValueTask SerializeAsync<T>(Stream stream, T? value, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
+    public static async ValueTask SerializeAsync<T>(Stream stream, T value, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 

@@ -1,7 +1,7 @@
 ﻿using CsToml.Debugger;
 using CsToml.Error;
-using CsToml.Values.Internal;
 using CsToml.Utility;
+using CsToml.Values.Internal;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -19,8 +19,9 @@ internal enum NodeStatus : byte
 [DebuggerDisplay("{DebuggerValue}")]
 internal sealed class TomlTableNode
 {
-    internal static readonly TomlTableNode Empty = new() { Value = TomlValue.Empty};
+    internal static readonly TomlTableNode Empty = new() { Value = TomlValue.Empty };
 
+    private static readonly Func<TomlTableNode> createGroupingPropertyNodeInvoke = CreateGroupingPropertyNode;
     private readonly TomlTableNodeDictionary? nodes;
     private List<TomlString>? comments;
     private TomlTableNodeType nodeType = TomlTableNodeType.None;
@@ -30,7 +31,7 @@ internal sealed class TomlTableNode
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        set; 
+        set;
     }
 
     internal int NodeCount => nodes?.Count ?? 0;
@@ -45,7 +46,7 @@ internal sealed class TomlTableNode
 
     internal object DebuggerValue => (Value?.HasValue ?? false ? Value : nodes)!;
 
-    internal bool IsGroupingProperty 
+    internal bool IsGroupingProperty
     {
         get => (nodeType & TomlTableNodeType.GroupingProperty) == TomlTableNodeType.GroupingProperty;
         set
@@ -61,7 +62,7 @@ internal sealed class TomlTableNode
         }
     }
 
-    internal bool IsTableHeader 
+    internal bool IsTableHeader
     {
         get => (nodeType & TomlTableNodeType.TableHeaderProperty) == TomlTableNodeType.TableHeaderProperty;
         set
@@ -93,7 +94,7 @@ internal sealed class TomlTableNode
         }
     }
 
-    internal bool IsArrayOfTablesHeader 
+    internal bool IsArrayOfTablesHeader
     {
         get => (nodeType & TomlTableNodeType.ArrayOfTablesHeaderProperty) == TomlTableNodeType.ArrayOfTablesHeaderProperty;
         set
@@ -128,19 +129,19 @@ internal sealed class TomlTableNode
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static TomlTableNode CreateGroupingPropertyNode()
     {
-        return new TomlTableNode() 
-        { 
+        return new TomlTableNode()
+        {
             IsGroupingProperty = true,
             Value = TomlValue.Empty
         };
     }
 
-    private TomlTableNode()
+    internal TomlTableNode()
     {
         nodes = new();
     }
 
-    private TomlTableNode(TomlValue value)
+    internal TomlTableNode(TomlValue value)
     {
         Value = value;
     }
@@ -204,7 +205,7 @@ internal sealed class TomlTableNode
             getOrAddChildNode = Empty;
             return NodeStatus.Empty;
         }
-        if (nodes.TryGetValueOrAdd(key, CreateGroupingPropertyNode, out var existingNode, out var newNode))
+        if (nodes.TryGetValueOrAdd(key, createGroupingPropertyNodeInvoke, out var existingNode, out var newNode))
         {
             getOrAddChildNode = existingNode!;
             return NodeStatus.Existed;

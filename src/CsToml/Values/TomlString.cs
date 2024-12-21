@@ -17,7 +17,7 @@ internal sealed class TomlUnquotedString(string value) : TomlString(value)
         try
         {
             Utf8Helper.FromUtf16(bufferWriter, Utf16String.AsSpan());
-            if (value.Length > 0)
+            if (Utf16String.Length > 0)
             {
                 writer.WriteBytes(bufferWriter.WrittenSpan);
                 return true;

@@ -11,7 +11,7 @@ namespace CsToml.Values;
 internal sealed partial class TomlTable : TomlValue
 {
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-    private readonly TomlTableNode node = TomlTableNode.CreateGroupingPropertyNode();
+    private readonly TomlTableNode node = new() { IsGroupingProperty = true, Value = TomlValue.Empty };
 
     public override bool HasValue => true;
 
@@ -47,7 +47,7 @@ internal sealed partial class TomlTable : TomlValue
                 node.IsTableHeader = true;
                 continue;
             }
-            
+
             if (childNode!.IsArrayOfTablesHeaderDefinitionPosition)
             {
                 var tableHeaderArrayValue = (childNode!.Value as TomlArray)?.LastValue;
