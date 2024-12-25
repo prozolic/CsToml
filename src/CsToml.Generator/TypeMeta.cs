@@ -1,5 +1,6 @@
 ﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis;
+using System.Collections.Immutable;
 
 namespace CsToml.Generator;
 
@@ -8,7 +9,7 @@ internal sealed class TypeMeta
     private INamedTypeSymbol symbol;
     private TypeDeclarationSyntax syntax;
 
-    public (IPropertySymbol, TomlSerializationKind, string?)[] Members { get; }
+    public IReadOnlyCollection<(IPropertySymbol, TomlSerializationKind, string?)> Members { get; }
     public string NameSpace { get; }
     public TomlSerializedObjectType Type { get; }
     public string TypeName { get; }
@@ -24,8 +25,9 @@ internal sealed class TypeMeta
             string.Empty :
             $"{symbol.ContainingNamespace}";
 
-        Members = symbol.GetProperties().FilterMembers();
-        Array.Sort(Members, static (x, y) => x.Item2 - y.Item2);
+        var members = symbol.GetProperties().FilterMembers();
+        Array.Sort(members, static (x, y) => x.Item2 - y.Item2);
+        Members = members;
 
         TypeName = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
         FullTypeName = symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
@@ -112,7 +114,91 @@ internal sealed class TypeMeta
                         symbol!.Name));
                 error = true;
             }
+        }
 
+        return !error;
+    }
+
+    private Location GetPropertyLocation(IPropertySymbol propertySymbol, TypeDeclarationSyntax syntax)
+    {
+        return propertySymbol.Locations.FirstOrDefault() ?? syntax.Identifier.GetLocation();
+    }
+}
+
+internal sealed class ConstructorMeta
+{
+    private INamedTypeSymbol symbol;
+    private TypeDeclarationSyntax syntax;
+    private readonly List<(IMethodSymbol, ImmutableArray<IParameterSymbol>)> instanceConstructors;
+
+    public bool IsImplicitlyDeclared { get; }
+    public bool IncludeParameterless { get; }
+    public bool IsParameterlessOnly { get; }
+    public IReadOnlyList<(IMethodSymbol ctor, ImmutableArray<IParameterSymbol> parameters)> InstanceConstructors => instanceConstructors;
+    public IReadOnlyList<IParameterSymbol> ConstructorParameters { get; }
+    public IReadOnlyList<IPropertySymbol> ConstructorParameterProperties { get; }
+    public IReadOnlyList<IPropertySymbol> MembersOfObjectInitialisers { get; }
+
+    public ConstructorMeta(INamedTypeSymbol symbol, TypeDeclarationSyntax syntax, TypeMeta typeMeta)
+    {
+        this.symbol = symbol;
+        this.syntax = syntax;
+
+        var instanceConstructors = new List<(IMethodSymbol ctor, ImmutableArray<IParameterSymbol> parameters)>(symbol.InstanceConstructors.Length);
+        foreach (var constructor in symbol.InstanceConstructors.Where(c => c is IMethodSymbol and { DeclaredAccessibility: Accessibility.Public}))
+        {
+            if (constructor.Parameters.Any(p => p.Type.MetadataName == symbol.MetadataName))
+            {
+                continue;
+            }
+
+            instanceConstructors.Add((constructor, constructor.Parameters));
+        }
+        this.instanceConstructors = instanceConstructors;
+
+        // except the default constructor for a class or struct.
+        IsImplicitlyDeclared = instanceConstructors.All(c => c.ctor.IsImplicitlyDeclared);
+        IncludeParameterless = instanceConstructors.Any(c => c.parameters.Length == 0);
+        IsParameterlessOnly = instanceConstructors.Count == 1 && IncludeParameterless;
+
+        IParameterSymbol[] constructorParameters = [];
+        foreach (var constructor in this.InstanceConstructors)
+        {
+            if (constructor.parameters.All(p => typeMeta.Members.Any(m => m.Item1.Type.Equals(p.Type, SymbolEqualityComparer.Default) && m.Item1.Name.Equals(p.Name, StringComparison.OrdinalIgnoreCase))))
+            {
+                if ((constructorParameters?.Length ?? 0) <= constructor.parameters.Length)
+                {
+                    constructorParameters = [.. constructor.parameters];
+                }
+            }
+        }
+        this.ConstructorParameters = constructorParameters!;
+
+        var constructorParameterProperties = new List<IPropertySymbol>();
+        var membersOfObjectInitialisers = new List<IPropertySymbol>();
+        foreach (var member in typeMeta.Members)
+        {
+            if (!ConstructorParameters.Any(c => c.Type.Equals(member.Item1.Type, SymbolEqualityComparer.Default) && c.Name.Equals(member.Item1.Name, StringComparison.OrdinalIgnoreCase)))
+            {
+                membersOfObjectInitialisers.Add(member.Item1);
+            }
+        }
+        foreach (var member in constructorParameters!)
+        {
+            var property = typeMeta.Members.FirstOrDefault(m => m.Item1.Type.Equals(member.Type, SymbolEqualityComparer.Default) && m.Item1.Name.Equals(member.Name, StringComparison.OrdinalIgnoreCase));
+            constructorParameterProperties.Add(property.Item1);
+        }
+
+        this.MembersOfObjectInitialisers = membersOfObjectInitialisers;
+        this.ConstructorParameterProperties = constructorParameterProperties;
+    }
+
+    public bool Validate(SourceProductionContext context)
+    {
+        var error = false;
+
+        foreach (var property in MembersOfObjectInitialisers)
+        {
             if (property.IsReadOnly)
             {
                 context.ReportDiagnostic(
@@ -121,13 +207,35 @@ internal sealed class TypeMeta
                         GetPropertyLocation(property, syntax),
                         symbol!.Name));
                 error = true;
+                continue;
             }
+
+            if (property.SetMethod!.DeclaredAccessibility == Accessibility.Private)
+            {
+                context.ReportDiagnostic(
+                Diagnostic.Create(
+                    DiagnosticDescriptors.MustBePublicOrInit,
+                    GetPropertyLocation(property, syntax),
+                    symbol!.Name));
+                error = true;
+            }
+
+        }
+
+        if (ConstructorParameters.Count == 0 && !IncludeParameterless)
+        {
+            context.ReportDiagnostic(
+                Diagnostic.Create(
+                    DiagnosticDescriptors.NoConstructor,
+                    syntax.Identifier.GetLocation(),
+                    symbol!.Name));
+            error = true;
         }
 
         return !error;
     }
 
-    public Location GetPropertyLocation(IPropertySymbol propertySymbol, TypeDeclarationSyntax syntax)
+    private Location GetPropertyLocation(IPropertySymbol propertySymbol, TypeDeclarationSyntax syntax)
     {
         return propertySymbol.Locations.FirstOrDefault() ?? syntax.Identifier.GetLocation();
     }

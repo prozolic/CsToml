@@ -350,6 +350,236 @@ internal partial class TypeSortedList
     public SortedList<string, string> Value { get; set; }
 }
 
+[TomlSerializedObject]
+internal partial class Constructor
+{
+    public Constructor()
+    {}
+
+    [TomlValueOnSerialized]
+    public string Str { get; set; }
+
+    [TomlValueOnSerialized]
+    public long Long { get; set; }
+
+    [TomlValueOnSerialized]
+    public double Float { get; set; }
+
+    [TomlValueOnSerialized]
+    public bool Boolean { get; set; }
+}
+
+
+[TomlSerializedObject]
+internal partial class Constructor2(string str, double floatValue)
+{
+    [TomlValueOnSerialized]
+    public string Str { get; set; } = str;
+
+    [TomlValueOnSerialized]
+    public long IntValue { get; set; }
+
+    [TomlValueOnSerialized]
+    public double FloatValue { get; set; } = floatValue;
+
+    [TomlValueOnSerialized]
+    public bool BooleanValue { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class Constructor3(string str, long intValue, double floatValue, bool booleanValue)
+{
+    [TomlValueOnSerialized]
+    public string Str { get; set; } = str;
+
+    [TomlValueOnSerialized]
+    public long IntValue { get; set; } = intValue;
+
+    [TomlValueOnSerialized]
+    public double FloatValue { get; set; } = floatValue;
+
+    [TomlValueOnSerialized]
+    public bool BooleanValue { get; set; } = booleanValue;
+}
+
+[TomlSerializedObject]
+internal partial class Constructor4
+{
+    public Constructor4() { }
+
+    public Constructor4(string str, long intValue)
+    {
+        Str = str;
+        IntValue = intValue;
+    }
+
+    public Constructor4(string str,double floatValue, long intValue)
+    {
+        Str = str;
+        IntValue = intValue;
+    }
+    public Constructor4(bool booleanValue, string str, double floatValue, long intValue)
+    {
+        Str = str;
+        IntValue = intValue;
+        FloatValue = floatValue;
+        BooleanValue = booleanValue;
+    }
+
+        [TomlValueOnSerialized]
+    public string Str { get; set; }
+
+    [TomlValueOnSerialized]
+    public long IntValue { get; set; }
+
+    [TomlValueOnSerialized]
+    public double FloatValue { get; set; }
+
+    [TomlValueOnSerialized]
+    public bool BooleanValue { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class Constructor5
+{
+    public Constructor5() { }
+
+    public Constructor5(string str2, long intValue2) // parameter name is different
+    {
+        Str = str2;
+        IntValue = intValue2;
+    }
+
+    public Constructor5(bool booleanValue, string str, float floatValue) // parameter type is different
+    {
+        Str = str;
+        FloatValue = floatValue;
+        BooleanValue = booleanValue;
+    }
+
+    [TomlValueOnSerialized]
+    public string Str { get; set; }
+
+    [TomlValueOnSerialized]
+    public long IntValue { get; set; }
+
+    [TomlValueOnSerialized]
+    public double FloatValue { get; set; }
+
+    [TomlValueOnSerialized]
+    public bool BooleanValue { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class Constructor6
+{
+    internal Constructor6() { }
+
+    public Constructor6(string str, long intValue)
+    {
+        Str = str;
+        IntValue = intValue;
+    }
+
+    [TomlValueOnSerialized]
+    public string Str { get; set; }
+
+    [TomlValueOnSerialized]
+    public long IntValue { get; set; }
+
+    [TomlValueOnSerialized]
+    public double FloatValue { get; set; }
+
+    [TomlValueOnSerialized]
+    public bool BooleanValue { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class Constructor7
+{
+    public Constructor7(string str, long intValue)
+    {
+        Str = str;
+        IntValue = intValue;
+    }
+
+    [TomlValueOnSerialized]
+    public string Str { get; }
+
+    [TomlValueOnSerialized]
+    public long IntValue { get;}
+}
+
+[TomlSerializedObject]
+internal partial class Constructor8
+{
+    public Constructor8(string str, long intValue)
+    {
+        Str = str;
+        IntValue = intValue;
+    }
+
+    [TomlValueOnSerialized]
+    public string Str { get; }
+
+    [TomlValueOnSerialized]
+    public long IntValue { get; }
+
+    [TomlValueOnSerialized]
+    public double FloatValue { get; set; }
+
+    [TomlValueOnSerialized]
+    public bool BooleanValue { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class Init
+{
+    [TomlValueOnSerialized]
+    public string Str { get; init; }
+
+    [TomlValueOnSerialized]
+    public long IntValue { get; init; }
+
+    [TomlValueOnSerialized]
+    public double FloatValue { get; init; }
+
+    [TomlValueOnSerialized]
+    public bool BooleanValue { get; init; }
+}
+
+[TomlSerializedObject]
+internal partial class Init2
+{
+    [TomlValueOnSerialized]
+    public string Str { get; set; }
+
+    [TomlValueOnSerialized]
+    public long IntValue { get; init; }
+
+    [TomlValueOnSerialized]
+    public double FloatValue { get; set; }
+
+    [TomlValueOnSerialized]
+    public bool BooleanValue { get; init; }
+}
+
+[TomlSerializedObject]
+internal partial class ConstructorAndInit(long intValue, double floatValue)
+{
+    [TomlValueOnSerialized]
+    public string Str { get; set; }
+
+    [TomlValueOnSerialized]
+    public long IntValue { get; init; } = intValue;
+
+    [TomlValueOnSerialized]
+    public double FloatValue { get; set; } = floatValue;
+
+    [TomlValueOnSerialized]
+    public bool BooleanValue { get; init; }
+}
+
 #if NET9_0_OR_GREATER
 
 [TomlSerializedObject]

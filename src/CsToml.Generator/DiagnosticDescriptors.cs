@@ -39,7 +39,7 @@ internal static class DiagnosticDescriptors
         isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor MustBeSetter = new(
-        id: "CsTomlError004",
+        id: "CsTomlError005",
         title: "CsToml serializable property must be setter",
         messageFormat: "CsToml serializable property must be setter: {0}",
         category: Category,
@@ -47,7 +47,7 @@ internal static class DiagnosticDescriptors
         isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor DefiningKeyMultipleTimesForProperty = new(
-        id: "CsTomlError005",
+        id: "CsTomlError006",
         title: "Defining the same key multiple times for properties and aliases is invalid",
         messageFormat: "Defining the same key multiple times for properties and aliases is invalid: {0}",
         category: Category,
@@ -55,9 +55,25 @@ internal static class DiagnosticDescriptors
         isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor DefiningKeyMultipleTimesForAliasName = new(
-        id: "CsTomlError006",
+        id: "CsTomlError007",
         title: "Defining the same key multiple times for properties and aliases is invalid",
         messageFormat: "Defining the same key multiple times for properties and aliases is invalid: TomlValueOnSerialized(aliasName:\"{0}\")",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor MustBePublicOrInit = new(
+        id: "CsTomlError008",
+        title: "CsToml serializable setter's property must be public or init accessor",
+        messageFormat: "CsToml serializable setter's property must be public in scope: {0}",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor NoConstructor = new(
+        id: "CsTomlError009",
+        title: "There is no constructor that can bind",
+        messageFormat: "There is no constructor that can bind: {0}",
         category: Category,
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);

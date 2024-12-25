@@ -53,13 +53,15 @@ internal sealed class TomlValueOnSerializedAttribute : Attribute
         var typeNode = (TypeDeclarationSyntax)syntaxContext.TargetNode;
 
         var typeMeta = new TypeMeta(symbol, typeNode);
-        if (!typeMeta.Validate(context))
+        var constructorMeta = new ConstructorMeta(symbol, typeNode, typeMeta);
+
+        if (!(typeMeta.Validate(context) && constructorMeta.Validate(context)))
             return;
 
-        context.AddSource($"{typeMeta.TypeName}_generated.g.cs", Generate(typeMeta));
+        context.AddSource($"{typeMeta.TypeName}_generated.g.cs", Generate(typeMeta, constructorMeta));
     }
 
-    private string Generate(TypeMeta typeMeta)
+    private string Generate(TypeMeta typeMeta, ConstructorMeta constructorMeta)
     {
         // Check if it belongs to the global namespace.
         var namespaceTag = string.IsNullOrWhiteSpace(typeMeta.NameSpace) ? string.Empty : $"namespace {typeMeta.NameSpace};";
@@ -85,7 +87,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
 
     static {{typeMeta.TypeName}} ITomlSerializedObject<{{typeMeta.TypeName}}>.Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
-{{GenerateDeserializePart(typeMeta)}}
+{{GenerateDeserializePart(typeMeta, constructorMeta)}}
     }
 
     static void ITomlSerializedObject<{{typeMeta.TypeName}}>.Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, {{typeMeta.TypeName}} target, CsTomlSerializerOptions options)
@@ -103,10 +105,9 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
         return code;
     }
 
-    private string GenerateDeserializePart(TypeMeta typeMeta)
+    private string GenerateDeserializePart(TypeMeta typeMeta, ConstructorMeta constructorMeta)
     {
         var builder = new StringBuilder();
-        builder.AppendLine($"        var target = new {typeMeta.TypeName}();");
 
         foreach (var (property, kind, aliasName) in typeMeta.Members)
         {
@@ -114,10 +115,57 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
             var propertyName = property.Name;
 
             builder.AppendLine($"        var __{propertyName}__RootNode = rootNode[{$"\"{accessName}\"u8"}];");
-            builder.AppendLine($"        target.{propertyName} = options.Resolver.GetFormatter<{property.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>()!.Deserialize(ref __{propertyName}__RootNode, options);");
+            builder.AppendLine($"        var __{propertyName}__ = options.Resolver.GetFormatter<{property.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>()!.Deserialize(ref __{propertyName}__RootNode, options);");
         }
 
-        builder.AppendLine($"        return target;");
+        builder.AppendLine();
+
+        if (constructorMeta.IsImplicitlyDeclared || constructorMeta.IsParameterlessOnly || (constructorMeta.ConstructorParameters.Count == 0 && constructorMeta.IncludeParameterless))
+        {
+            builder.AppendLine($"        var target = new {typeMeta.TypeName}(){{");
+            foreach (var (property, kind, aliasName) in typeMeta.Members)
+            {
+                var propertyName = property.Name;
+                builder.AppendLine($"            {propertyName} = __{propertyName}__,");
+            }
+            builder.AppendLine($"        }};");
+            builder.AppendLine();
+            builder.AppendLine($"        return target;");
+        }
+        else
+        {
+            builder.Append($"        var target = new {typeMeta.TypeName}(");
+
+            for (var i = 0; i < constructorMeta.ConstructorParameterProperties.Count; i++)
+            {
+                var p = constructorMeta.ConstructorParameterProperties[i];
+                var propertyName = p.Name;
+                builder.Append($"__{propertyName}__");
+                if (i < constructorMeta.ConstructorParameters.Count - 1)
+                {
+                    builder.Append(", ");
+                }
+            }
+            builder.Append($")");
+
+            if (constructorMeta.MembersOfObjectInitialisers.Count > 0)
+            {
+                builder.AppendLine($"{{");
+                foreach (var property in constructorMeta.MembersOfObjectInitialisers)
+                {
+                    var propertyName = property.Name;
+                    builder.AppendLine($"            {propertyName} = __{propertyName}__,");
+                }
+                builder.AppendLine($"        }};");
+            }
+            else
+            {
+                builder.AppendLine(";");
+            }
+            builder.AppendLine($"        return target;");
+
+        }
+
         return builder.ToString();
     }
 
