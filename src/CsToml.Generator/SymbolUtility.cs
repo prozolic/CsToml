@@ -1,7 +1,4 @@
-﻿using CsToml.Generator.Internal;
-using Microsoft.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Text;
+﻿using Microsoft.CodeAnalysis;
 
 namespace CsToml.Generator;
 internal static class SymbolUtility

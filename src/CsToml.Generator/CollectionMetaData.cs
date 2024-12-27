@@ -17,6 +17,7 @@ internal sealed class CollectionMetaData
         CollectionFullName.Add("global::System.Collections.Generic.Queue");
         CollectionFullName.Add("global::System.Collections.Generic.LinkedList");
         CollectionFullName.Add("global::System.Collections.Generic.PriorityQueue");
+        CollectionFullName.Add("global::System.Collections.Generic.SortedList");
         CollectionFullName.Add("global::System.Collections.Concurrent.ConcurrentQueue");
         CollectionFullName.Add("global::System.Collections.Concurrent.ConcurrentStack");
         CollectionFullName.Add("global::System.Collections.Concurrent.ConcurrentBag");
@@ -61,19 +62,6 @@ internal sealed class CollectionMetaData
             return CollectionFullName.Contains(fullInterfaceName) || CollectionInterfaceFullName.Contains(fullInterfaceName);
         });
     }
-
-    public static bool FromArray(ITypeSymbol type)
-    {
-        if (type is IArrayTypeSymbol)
-            return true;
-        if (type is INamedTypeSymbol nameType)
-        {
-            var fullName = $"global::{nameType.ContainingNamespace.ToDisplayString()}.{nameType.Name}";
-            return CollectionInterfaceFullName.Contains(fullName);
-        }
-        return false;
-    }
-
 }
 
 internal sealed class DictionaryMetaData
