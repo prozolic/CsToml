@@ -1581,6 +1581,453 @@ public class TypeSortedListTest
     }
 }
 
+public class ConstructorTest
+{
+    [Fact]
+    public void Serialize()
+    {
+        var primitive = new Constructor
+        {
+            Str = @"I'm a string.",
+            Long = 123,
+            Float = 123.456,
+            Boolean = true,
+        };
+
+        using var bytes = CsTomlSerializer.Serialize(primitive);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Str = \"I'm a string.\"");
+        writer.AppendLine("Long = 123");
+        writer.AppendLine("Float = 123.456");
+        writer.AppendLine("Boolean = true");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().Should().Equal(expected);
+    }
+
+    [Fact]
+    public void Deserialize()
+    {
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Str = \"I'm a string.\"");
+        writer.AppendLine("Long = 123");
+        writer.AppendLine("Float = 123.456");
+        writer.AppendLine("Boolean = true");
+        writer.Flush();
+
+        var primitive = CsTomlSerializer.Deserialize<Constructor>(buffer.WrittenSpan);
+        primitive.Str.Should().Be("I'm a string.");
+        primitive.Long.Should().Be(123);
+        primitive.Float.Should().Be(123.456);
+        primitive.Boolean.Should().BeTrue();
+    }
+}
+
+public class Constructor2Test
+{
+    [Fact]
+    public void Serialize()
+    {
+        var primitive = new Constructor2("I'm a string.", 123.456)
+        {
+            IntValue = 123,
+            BooleanValue = true,
+        };
+        using var bytes = CsTomlSerializer.Serialize(primitive);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Str = \"I'm a string.\"");
+        writer.AppendLine("IntValue = 123");
+        writer.AppendLine("FloatValue = 123.456");
+        writer.AppendLine("BooleanValue = true");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().Should().Equal(expected);
+    }
+
+    [Fact]
+    public void Deserialize()
+    {
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Str = \"I'm a string.\"");
+        writer.AppendLine("IntValue = 123");
+        writer.AppendLine("FloatValue = 123.456");
+        writer.AppendLine("BooleanValue = true");
+        writer.Flush();
+
+        var primitive = CsTomlSerializer.Deserialize<Constructor3>(buffer.WrittenSpan);
+        primitive.Str.Should().Be("I'm a string.");
+        primitive.IntValue.Should().Be(123);
+        primitive.FloatValue.Should().Be(123.456);
+        primitive.BooleanValue.Should().BeTrue();
+    }
+}
+
+
+
+public class Constructor3Test
+{
+    [Fact]
+    public void Serialize()
+    {
+        var primitive = new Constructor3("I'm a string.", 123, 123.456, true);
+        using var bytes = CsTomlSerializer.Serialize(primitive);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Str = \"I'm a string.\"");
+        writer.AppendLine("IntValue = 123");
+        writer.AppendLine("FloatValue = 123.456");
+        writer.AppendLine("BooleanValue = true");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().Should().Equal(expected);
+    }
+
+    [Fact]
+    public void Deserialize()
+    {
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Str = \"I'm a string.\"");
+        writer.AppendLine("IntValue = 123");
+        writer.AppendLine("FloatValue = 123.456");
+        writer.AppendLine("BooleanValue = true");
+        writer.Flush();
+
+        var primitive = CsTomlSerializer.Deserialize<Constructor3>(buffer.WrittenSpan);
+        primitive.Str.Should().Be("I'm a string.");
+        primitive.IntValue.Should().Be(123);
+        primitive.FloatValue.Should().Be(123.456);
+        primitive.BooleanValue.Should().BeTrue();
+    }
+}
+
+public class Constructor4Test
+{
+    [Fact]
+    public void Serialize()
+    {
+        var primitive = new Constructor4(true, "I'm a string.", 123.456, 123);
+        using var bytes = CsTomlSerializer.Serialize(primitive);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Str = \"I'm a string.\"");
+        writer.AppendLine("IntValue = 123");
+        writer.AppendLine("FloatValue = 123.456");
+        writer.AppendLine("BooleanValue = true");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().Should().Equal(expected);
+    }
+
+    [Fact]
+    public void Deserialize()
+    {
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Str = \"I'm a string.\"");
+        writer.AppendLine("IntValue = 123");
+        writer.AppendLine("FloatValue = 123.456");
+        writer.AppendLine("BooleanValue = true");
+        writer.Flush();
+
+        var primitive = CsTomlSerializer.Deserialize<Constructor4>(buffer.WrittenSpan);
+        primitive.Str.Should().Be("I'm a string.");
+        primitive.IntValue.Should().Be(123);
+        primitive.FloatValue.Should().Be(123.456);
+        primitive.BooleanValue.Should().BeTrue();
+    }
+}
+
+public class Constructor5Test
+{
+    [Fact]
+    public void Serialize()
+    {
+        var primitive = new Constructor5()
+        {
+            Str = @"I'm a string.",
+            IntValue = 123,
+            FloatValue = 123.456,
+            BooleanValue = true,
+        };
+        using var bytes = CsTomlSerializer.Serialize(primitive);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Str = \"I'm a string.\"");
+        writer.AppendLine("IntValue = 123");
+        writer.AppendLine("FloatValue = 123.456");
+        writer.AppendLine("BooleanValue = true");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().Should().Equal(expected);
+    }
+
+    [Fact]
+    public void Deserialize()
+    {
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Str = \"I'm a string.\"");
+        writer.AppendLine("IntValue = 123");
+        writer.AppendLine("FloatValue = 123.456");
+        writer.AppendLine("BooleanValue = true");
+        writer.Flush();
+
+        var primitive = CsTomlSerializer.Deserialize<Constructor5>(buffer.WrittenSpan);
+        primitive.Str.Should().Be("I'm a string.");
+        primitive.IntValue.Should().Be(123);
+        primitive.FloatValue.Should().Be(123.456);
+        primitive.BooleanValue.Should().BeTrue();
+    }
+}
+
+public class Constructor6Test
+{
+    [Fact]
+    public void Serialize()
+    {
+        var primitive = new Constructor6()
+        {
+            Str = @"I'm a string.",
+            IntValue = 123,
+            FloatValue = 123.456,
+            BooleanValue = true,
+        };
+        using var bytes = CsTomlSerializer.Serialize(primitive);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Str = \"I'm a string.\"");
+        writer.AppendLine("IntValue = 123");
+        writer.AppendLine("FloatValue = 123.456");
+        writer.AppendLine("BooleanValue = true");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().Should().Equal(expected);
+    }
+
+    [Fact]
+    public void Deserialize()
+    {
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Str = \"I'm a string.\"");
+        writer.AppendLine("IntValue = 123");
+        writer.AppendLine("FloatValue = 123.456");
+        writer.AppendLine("BooleanValue = true");
+        writer.Flush();
+
+        var primitive = CsTomlSerializer.Deserialize<Constructor6>(buffer.WrittenSpan);
+        primitive.Str.Should().Be("I'm a string.");
+        primitive.IntValue.Should().Be(123);
+        primitive.FloatValue.Should().Be(123.456);
+        primitive.BooleanValue.Should().BeTrue();
+    }
+}
+
+public class Constructor7Test
+{
+    [Fact]
+    public void Serialize()
+    {
+        var primitive = new Constructor7("I'm a string.", 123);
+        using var bytes = CsTomlSerializer.Serialize(primitive);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Str = \"I'm a string.\"");
+        writer.AppendLine("IntValue = 123");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().Should().Equal(expected);
+    }
+
+    [Fact]
+    public void Deserialize()
+    {
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Str = \"I'm a string.\"");
+        writer.AppendLine("IntValue = 123");
+        writer.Flush();
+
+        var primitive = CsTomlSerializer.Deserialize<Constructor7>(buffer.WrittenSpan);
+        primitive.Str.Should().Be("I'm a string.");
+        primitive.IntValue.Should().Be(123);
+    }
+}
+
+public class Constructor8Test
+{
+    [Fact]
+    public void Serialize()
+    {
+        var primitive = new Constructor8("I'm a string.", 123)
+        {
+            FloatValue = 123.456,
+            BooleanValue = true,
+        };
+        using var bytes = CsTomlSerializer.Serialize(primitive);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Str = \"I'm a string.\"");
+        writer.AppendLine("IntValue = 123");
+        writer.AppendLine("FloatValue = 123.456");
+        writer.AppendLine("BooleanValue = true");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().Should().Equal(expected);
+    }
+
+    [Fact]
+    public void Deserialize()
+    {
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Str = \"I'm a string.\"");
+        writer.AppendLine("IntValue = 123");
+        writer.AppendLine("FloatValue = 123.456");
+        writer.AppendLine("BooleanValue = true");
+        writer.Flush();
+
+        var primitive = CsTomlSerializer.Deserialize<Constructor8>(buffer.WrittenSpan);
+        primitive.Str.Should().Be("I'm a string.");
+        primitive.IntValue.Should().Be(123);
+        primitive.FloatValue.Should().Be(123.456);
+        primitive.BooleanValue.Should().BeTrue();
+    }
+}
+
+
+public class InitTest
+{
+    [Fact]
+    public void Serialize()
+    {
+        var primitive = new Init()
+        {
+            Str = @"I'm a string.",
+            IntValue = 123,
+            FloatValue = 123.456,
+            BooleanValue = true,
+        };
+        using var bytes = CsTomlSerializer.Serialize(primitive);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Str = \"I'm a string.\"");
+        writer.AppendLine("IntValue = 123");
+        writer.AppendLine("FloatValue = 123.456");
+        writer.AppendLine("BooleanValue = true");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().Should().Equal(expected);
+    }
+
+    [Fact]
+    public void Deserialize()
+    {
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Str = \"I'm a string.\"");
+        writer.AppendLine("IntValue = 123");
+        writer.AppendLine("FloatValue = 123.456");
+        writer.AppendLine("BooleanValue = true");
+        writer.Flush();
+
+        var primitive = CsTomlSerializer.Deserialize<Init>(buffer.WrittenSpan);
+        primitive.Str.Should().Be("I'm a string.");
+        primitive.IntValue.Should().Be(123);
+        primitive.FloatValue.Should().Be(123.456);
+        primitive.BooleanValue.Should().BeTrue();
+    }
+}
+
+public class Init2Test
+{
+    [Fact]
+    public void Serialize()
+    {
+        var primitive = new Init2()
+        {
+            Str = @"I'm a string.",
+            IntValue = 123,
+            FloatValue = 123.456,
+            BooleanValue = true,
+        };
+        using var bytes = CsTomlSerializer.Serialize(primitive);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Str = \"I'm a string.\"");
+        writer.AppendLine("IntValue = 123");
+        writer.AppendLine("FloatValue = 123.456");
+        writer.AppendLine("BooleanValue = true");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().Should().Equal(expected);
+    }
+
+    [Fact]
+    public void Deserialize()
+    {
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Str = \"I'm a string.\"");
+        writer.AppendLine("IntValue = 123");
+        writer.AppendLine("FloatValue = 123.456");
+        writer.AppendLine("BooleanValue = true");
+        writer.Flush();
+
+        var primitive = CsTomlSerializer.Deserialize<Init2>(buffer.WrittenSpan);
+        primitive.Str.Should().Be("I'm a string.");
+        primitive.IntValue.Should().Be(123);
+        primitive.FloatValue.Should().Be(123.456);
+        primitive.BooleanValue.Should().BeTrue();
+    }
+}
+
+public class ConstructorAndInitTest
+{
+    [Fact]
+    public void Serialize()
+    {
+        var primitive = new ConstructorAndInit(123, 123.456)
+        {
+            Str = @"I'm a string.",
+            BooleanValue = true,
+        };
+        using var bytes = CsTomlSerializer.Serialize(primitive);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Str = \"I'm a string.\"");
+        writer.AppendLine("IntValue = 123");
+        writer.AppendLine("FloatValue = 123.456");
+        writer.AppendLine("BooleanValue = true");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().Should().Equal(expected);
+    }
+
+    [Fact]
+    public void Deserialize()
+    {
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Str = \"I'm a string.\"");
+        writer.AppendLine("IntValue = 123");
+        writer.AppendLine("FloatValue = 123.456");
+        writer.AppendLine("BooleanValue = true");
+        writer.Flush();
+
+        var primitive = CsTomlSerializer.Deserialize<ConstructorAndInit>(buffer.WrittenSpan);
+        primitive.Str.Should().Be("I'm a string.");
+        primitive.IntValue.Should().Be(123);
+        primitive.FloatValue.Should().Be(123.456);
+        primitive.BooleanValue.Should().BeTrue();
+    }
+}
+
 #if NET9_0_OR_GREATER
 
 public class TypeOrderedDictionaryTest
