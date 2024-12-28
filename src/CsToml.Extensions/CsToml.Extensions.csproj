@@ -11,7 +11,7 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>TOML,serializer,parser,writer,reader</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <VersionPrefix>1.2.0</VersionPrefix>
+    <VersionPrefix>1.3.0</VersionPrefix>
   </PropertyGroup>
 
   <ItemGroup>
