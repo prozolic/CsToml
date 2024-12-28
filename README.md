@@ -8,12 +8,20 @@
 [![CsToml.Generator](https://img.shields.io/nuget/v/CsToml.Generator?label=nuget%20CsToml.Generator
 )](https://www.nuget.org/packages/CsToml.Generator/)
 
-CsToml is TOML Parser/Serializer for .NET.  
+CsToml is Fast and low memory allocation TOML Parser/Serializer for .NET.  
 For more information about TOML, visit the official website at [https://toml.io/en/](https://toml.io/en/)
 
 > [!NOTE]
-> The official release version is v1.1.0 or higher.  
-> Less than v1.1.0 is deprecated due to incompatible APIs.
+> The official release version is v1.1.0 or higher. Less than v1.1.0 is deprecated due to incompatible APIs.
+
+![80 values with table and array of tables](https://github.com/user-attachments/assets/2f38c653-28ce-43e5-a615-9fa61637525d)
+
+> This benchmark parses a string (string) into a TOML object. I used [Tommy](https://github.com/dezhidki/Tommy), [Tomlet](https://github.com/SamboyCoding/Tomlet) and [Tomlyn](https://github.com/xoofx/Tomlyn) for comparison. `CsToml` includes additional `UTF8.GetBytes` calls. This benchmark code is [sandbox/Benchmark](https://github.com/prozolic/CsToml/blob/main/sandbox/Benchmark/ParseBenchmark.cs).
+
+![Deserialize TestTomlSerializedObject (9 values with table and array of tables)](https://github.com/user-attachments/assets/10ff18d6-3209-43c9-87e2-37c91e987733)
+![Serialize TestTomlSerializedObject (9 values with table and array of tables)](https://github.com/user-attachments/assets/374780e9-ec12-4f53-a390-cabe1085aa65)
+
+> This benchmark convert custom class to string and string to custom class. I used [Tomlet](https://github.com/SamboyCoding/Tomlet) and [Tomlyn](https://github.com/xoofx/Tomlyn) for comparison. `CsToml` includes additional `UTF8.GetBytes` calls. This benchmark code is [sandbox/Benchmark Deserialization](https://github.com/prozolic/CsToml/blob/main/sandbox/Benchmark/ClassDeserializationBenchmark.cs), [sandbox/Benchmark Serialization](https://github.com/prozolic/CsToml/blob/main/sandbox/Benchmark/ClassSerializationBenchmark.cs).
 
 CsToml has the following features.
 
@@ -30,7 +38,7 @@ Table of Contents
 
 * [Installation](#installation)
 * [Serialize and deserialize TOML sequence (Parse TOML sequence)](#serialize-and-deserialize-toml-sequence-parse-toml-sequence)
-* [Serialize and deserialize custom classes (CsToml.Generator)](#serialize-and-deserialize-custom-classes-cstomlgenerator)
+* [Serialize and deserialize custom class/struct/record/record struct (CsToml.Generator)](#serialize-and-deserialize-custom-classstructrecordrecord-struct-cstomlgenerator)
 * [Built-in support type](#built-in-support-type)
 * [Deserialize API](#deserialize-api)
 * [Serialize API](#serialize-api)
@@ -84,11 +92,10 @@ var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
 using var result = CsTomlSerializer.Serialize(document);
 ```
 
-Serialize and deserialize custom classes (`CsToml.Generator`)
+Serialize and deserialize custom `class`/`struct`/`record`/`record struct` (`CsToml.Generator`)
 ---
 
-Define the class to be serialized and assign the `[TomlSerializedObject]` and `[TomlValueOnSerialized]` attribute and the partial keyword.
-`[TomlValueOnSerialized]` can only be given to read-write (they have both a get and a set accessor) properties.
+Define the `class`, `struct`, `record` and `record struct` to be serialized and assign the `[TomlSerializedObject]` Attribute and the partial keyword.  
 
 ```csharp
 [TomlSerializedObject]
@@ -121,9 +128,7 @@ public partial class TableClass
 }
 ```
 
-Adding the above attributes will generate code for serialization/deserialization by [Source Generators](https://learn.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/source-generators-overview).
-Property names with `[TomlValueOnSerialized]` are used as keys in the TOML document.
-The key name can also be changed with `[TomlValueOnSerialized(aliasName)]`.  
+Adding the above attributes will generate code for serialization/deserialization by [Source Generators](https://learn.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/source-generators-overview).  
 See [Built-in support type](#built-in-support-type) for more information on available property types.
 
 <details><summary>Generated Code(CsTomlClass_generated.g.cs)</summary>
@@ -149,17 +154,25 @@ partial class CsTomlClass : ITomlSerializedObject<CsTomlClass>
 
     static CsTomlClass ITomlSerializedObject<CsTomlClass>.Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
-        var target = new CsTomlClass();
         var __Key__RootNode = rootNode["Key"u8];
-        target.Key = options.Resolver.GetFormatter<string>()!.Deserialize(ref __Key__RootNode, options);
+        var __Key__ = options.Resolver.GetFormatter<string>()!.Deserialize(ref __Key__RootNode, options);
         var __Value__RootNode = rootNode["alias"u8];
-        target.Value = options.Resolver.GetFormatter<string>()!.Deserialize(ref __Value__RootNode, options);
+        var __Value__ = options.Resolver.GetFormatter<string>()!.Deserialize(ref __Value__RootNode, options);
         var __Array__RootNode = rootNode["Array"u8];
-        target.Array = options.Resolver.GetFormatter<int[]>()!.Deserialize(ref __Array__RootNode, options);
+        var __Array__ = options.Resolver.GetFormatter<int[]>()!.Deserialize(ref __Array__RootNode, options);
         var __Number__RootNode = rootNode["Number"u8];
-        target.Number = options.Resolver.GetFormatter<int?>()!.Deserialize(ref __Number__RootNode, options);
+        var __Number__ = options.Resolver.GetFormatter<int?>()!.Deserialize(ref __Number__RootNode, options);
         var __Table__RootNode = rootNode["Table"u8];
-        target.Table = options.Resolver.GetFormatter<global::ConsoleApp.TableClass>()!.Deserialize(ref __Table__RootNode, options);
+        var __Table__ = options.Resolver.GetFormatter<global::ConsoleApp.TableClass>()!.Deserialize(ref __Table__RootNode, options);
+
+        var target = new CsTomlClass(){
+            Key = __Key__,
+            Value = __Value__,
+            Array = __Array__,
+            Number = __Number__,
+            Table = __Table__,
+        };
+
         return target;
 
     }
@@ -231,11 +244,16 @@ partial class TableClass : ITomlSerializedObject<TableClass>
 
     static TableClass ITomlSerializedObject<TableClass>.Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
-        var target = new TableClass();
         var __Key__RootNode = rootNode["Key"u8];
-        target.Key = options.Resolver.GetFormatter<string>()!.Deserialize(ref __Key__RootNode, options);
+        var __Key__ = options.Resolver.GetFormatter<string>()!.Deserialize(ref __Key__RootNode, options);
         var __Number__RootNode = rootNode["Number"u8];
-        target.Number = options.Resolver.GetFormatter<int>()!.Deserialize(ref __Number__RootNode, options);
+        var __Number__ = options.Resolver.GetFormatter<int>()!.Deserialize(ref __Number__RootNode, options);
+
+        var target = new TableClass(){
+            Key = __Key__,
+            Number = __Number__,
+        };
+
         return target;
 
     }
@@ -288,6 +306,129 @@ using var serializedText = CsTomlSerializer.Serialize(value);
 // Table.Number = 123
 var serializedTomlText = Encoding.UTF8.GetString(serializedText.ByteSpan);
 ```
+
+### Properties
+
+`[TomlValueOnSerialized]`serializes public instance properties.
+Property names with `[TomlValueOnSerialized]` are used as keys in the TOML document.
+
+```csharp
+[TomlSerializedObject]
+public partial class CsTomlClass
+{
+    [TomlValueOnSerialized]
+    public string Key { get; set; }
+}
+```
+
+This is serialized as follows:
+
+```csharp
+Key = "value"
+```
+
+The key name can also be changed with `[TomlValueOnSerialized(aliasName)]`.  
+
+```csharp
+[TomlSerializedObject]
+public partial class CsTomlClass
+{
+    [TomlValueOnSerialized(aliasName: "alias")]
+    public string Key { get; set; }
+}
+```
+
+This is serialized as follows:
+
+```csharp
+alias = "value"
+```
+
+In `CsToml.Generator` v1.3.0 and later versions, read-only properties, or those that have no setter either private or public, can also be deserialized.
+
+
+```csharp
+[TomlSerializedObject]
+internal partial class TypeTable(long intValue, string strValue)
+{
+    [TomlValueOnSerialized]
+    public long IntValue { get; } = intValue;
+
+    [TomlValueOnSerialized]
+    public string StrValue { get; private set; } = strValue;
+}
+```
+
+### Constructors
+
+`CsToml.Generator` supports both parameterized and non-parameterized constructors. The choice of constructor is subject to the following rules.
+
+* Non-public constructors are ignored.
+* If there is no explicit constructor, use parameterless.
+* If there is one parameterless/parameterized constructor, use it.
+* If there is more than one constructor, the parameterized constructor with the most matching parameters is automatically selected.
+* The condition for a parameterized constructor is that all parameter names must match the corresponding member names (case-insensitive).
+
+
+```csharp
+[TomlSerializedObject]
+internal partial class Constructor(string str) // Parameterized constructors are available.
+{
+    [TomlValueOnSerialized]
+    public string Str { get; set; } = str;
+}
+
+[TomlSerializedObject]
+internal partial class Constructor2
+{
+    public Constructor2(string str, long intValue)
+    {
+        Str = str;
+        IntValue = intValue;
+    }
+
+    // Use this parameterized constructor.
+    public Constructor2(bool booleanValue, string str, double floatValue, long intValue)
+    {
+        Str = str;
+        IntValue = intValue;
+        FloatValue = floatValue;
+        BooleanValue = booleanValue;
+    }
+
+    [TomlValueOnSerialized]
+    public string Str { get; set; }
+
+    [TomlValueOnSerialized]
+    public long IntValue { get; set; }
+
+    [TomlValueOnSerialized]
+    public double FloatValue { get; set; }
+
+    [TomlValueOnSerialized]
+    public bool BooleanValue { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class Constructor3
+{
+    // Use this parameterized constructor.
+    public Constructor3(string str, long intValue)
+    {
+        Str = str;
+        IntValue = intValue;
+    }
+
+    [TomlValueOnSerialized]
+    public string Str { get; }
+
+    [TomlValueOnSerialized]
+    public long IntValue { get;}
+}
+```
+
+
+### `CsTomlSerializerOptions.TableStyle`
 
 It can also serialize to TOML table format by setting `CsTomlSerializerOptions.TableStyle` to `TomlTableStyle.Header`.
 You can create custom `CsTomlSerializerOptions` using `CsTomlSerializerOptions.Default` and a with expression.
@@ -516,7 +657,7 @@ var arrayOfTables2 = document!.RootNode["arrayOfTables"u8][1]["number"u8].GetStr
 var tuple = document!.RootNode["array"u8].GetValue<Tuple<long, string, long>>(); // Tuple<long, string, long>(1, "2", 3)
 ```
 
-The APIs for accessing and casting values are called `TomlValue` and `TomlDocumentNode`.
+To retrieve primitive values from `omlDocumentNode` and `TomlValue`, call the following API.
 If an API with the `Get` prefix fails, an `CsTomlException` is thrown and a value is returned if it was successful.
 If an API with the `TryGet` prefix fails, false is returned and the value is set to the argument of the out parameter if it was successful.
 `CanGetValue` can be used to see which Toml value types can be converted.
@@ -584,7 +725,7 @@ await CsTomlFileSerializer.SerializeAsync("test.toml", document);
 UnitTest
 ---
 
-Please note that we are using the TOML files located in the [‘tests/’ directory of the ‘toml-test repository (MIT License)’](https://github.com/toml-lang/toml-test/tree/master/tests) for some of our unit tests.
+Please note that we are using the TOML files located in the ['tests/' directory of the ‘toml-test repository (MIT License)’](https://github.com/toml-lang/toml-test/tree/master/tests) for some of our unit tests.
 
 License
 ---
