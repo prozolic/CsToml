@@ -5,7 +5,10 @@ using BenchmarkDotNet.Running;
 Console.WriteLine("Hello, World!");
 
 var switcher = new BenchmarkSwitcher(new[] {
-    typeof(ClassDeserializationBenchmark),
+    typeof(ClassDeserializationBenchmark),  // custom class serialization
+    typeof(ClassSerializationBenchmark),    // custom class deserialization
+    typeof(DefaultParseBenchmark),          // default TOML deserialization
+    typeof(ParseFromFileBenchmark),         // toml file deserialization
     typeof(StringOnlyParseBenchmark),
     typeof(IntOnlyParseBenchmark),
     typeof(FloatOnlyParseBenchmark),
@@ -18,8 +21,6 @@ var switcher = new BenchmarkSwitcher(new[] {
     typeof(TableOnlyParseBenchmark),
     typeof(InlineTableOnlyParseBenchmark),
     typeof(ArrayOfTableOnlyParseBenchmark),
-    typeof(DefaultParseBenchmark),
-    typeof(ParseFromFileBenchmark)
 });
 switcher.Run(["Release", "--filter", "*"]);
 

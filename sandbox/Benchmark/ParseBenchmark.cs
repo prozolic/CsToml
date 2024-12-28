@@ -12,7 +12,6 @@ public class DefaultParseBenchmark
 {
     private static readonly string TestTomlFilePath = "./../../../../../../../Toml/test.toml";
 #pragma warning disable CS8618
-    private static byte[] tomlText;
     private static string tomlUtf16Text;
 #pragma warning restore CS8618
 
@@ -20,31 +19,30 @@ public class DefaultParseBenchmark
     public void GlobalSetup()
     {
         tomlUtf16Text = File.ReadAllText(TestTomlFilePath);
-        tomlText = Encoding.UTF8.GetBytes(tomlUtf16Text);
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark(Baseline = true)]
-    public void CsTomlDeserialize()
+    public void CsToml_Parse()
     {
-        var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(Encoding.UTF8.GetBytes(tomlUtf16Text));
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]
-    public void TommyParse()
+    public void Tommy_Parse()
     {
         using var reader = new StringReader(tomlUtf16Text);
         var table = Tommy.TOML.Parse(reader);
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]
-    public void TomletParse()
+    public void Tomlet_Parse()
     {
         var parser = new Tomlet.TomlParser();
         var document = parser.Parse(tomlUtf16Text);
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]
-    public void TomlynParse()
+    public void Tomlyn_Parse()
     {
         var document = Tomlyn.Toml.ToModel(tomlUtf16Text);
     }
