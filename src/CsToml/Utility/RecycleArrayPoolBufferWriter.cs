@@ -7,23 +7,23 @@ using System.Runtime.InteropServices;
 
 namespace CsToml.Utility;
 
-internal sealed class RecycleArrayPoolBufferWriter<T>
+internal static class RecycleArrayPoolBufferWriter<T>
     where T : unmanaged
 {
     private static readonly ConcurrentQueue<ArrayPoolBufferWriter<T>> writerQueue = new();
 
-    private RecycleArrayPoolBufferWriter() { }
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ArrayPoolBufferWriter<T> Rent(int initialCapacity = 1024)
     {
         if (writerQueue.TryDequeue(out var buffer))
         {
-            buffer.Reserve(initialCapacity);
+            buffer.ReserveDangerous(initialCapacity);
             return buffer;
         }
         return new ArrayPoolBufferWriter<T>(initialCapacity);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Return(ArrayPoolBufferWriter<T> buffer)
     {
         buffer.Return();
@@ -31,27 +31,19 @@ internal sealed class RecycleArrayPoolBufferWriter<T>
     }
 }
 
-//internal interface IBufferWriter2<T> : IBufferWriter<T>
-//{
-//    void Write(T value);
-//    void Write(ReadOnlySpan<T> value);
-
-//}
 
 internal sealed class ArrayPoolBufferWriter<T> : IBufferWriter<T>, IDisposable
     where T : unmanaged
 {
-    private T[] buffer;
+    private T[] buffer = [];
     private int index;
-    private bool isRent = true;
 
     public ReadOnlySpan<T> WrittenSpan => buffer.AsSpan(0, index);
 
     public ArrayPoolBufferWriter(int initialCapacity)
     {
-        buffer = ArrayPool<T>.Shared.Rent(initialCapacity);
+        ReserveDangerous(initialCapacity);
         index = 0;
-        isRent = true;
     }
 
     public void Advance(int count)
@@ -107,15 +99,17 @@ internal sealed class ArrayPoolBufferWriter<T> : IBufferWriter<T>, IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void ReserveDangerous(int sizeHint)
+    {
+        buffer = ArrayPool<T>.Shared.Rent(sizeHint);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Return()
     {
-        if (isRent)
-        {
-            isRent = false;
-            index = 0;
-            ArrayPool<T>.Shared.Return(buffer);
-            buffer = [];
-        }
+        index = 0;
+        ArrayPool<T>.Shared.Return(buffer);
+        buffer = [];
     }
 
     public void Dispose()
@@ -131,7 +125,7 @@ internal sealed class ArrayPoolBufferWriter<T> : IBufferWriter<T>, IDisposable
         }
 
         var newBuffer = ArrayPool<T>.Shared.Rent(Math.Min(newSize, Array.MaxLength));
-        if (isRent)
+        if (buffer.Length > 0)
         {
             var byteCount = Unsafe.SizeOf<T>() * index;
             ref var source = ref Unsafe.As<T, byte>(ref MemoryMarshal.GetArrayDataReference(buffer)!);
@@ -142,7 +136,6 @@ internal sealed class ArrayPoolBufferWriter<T> : IBufferWriter<T>, IDisposable
         }
 
         buffer = newBuffer;
-        isRent = true;
     }
 
     private static int CalculateBufferSize(int capacity)
