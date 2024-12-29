@@ -101,15 +101,6 @@ internal sealed class DictionaryMetaData
 
         return DictionaryFullName.Contains(fullName) || DictionaryInterfaceFullName.Contains(fullName);
     }
-
-    public static bool VerifyKeyValueType(ImmutableArray<ITypeSymbol> typeSymbols)
-    {
-        if (typeSymbols.Length != 2)
-            return false;
-
-        // key = string, value = object
-        return typeSymbols[0].Name.Equals("String") && typeSymbols[1].Name.Equals("Object");
-    }
 }
 
 internal sealed class TomlSerializedObjectMetaData
