@@ -5,15 +5,15 @@ using System.Collections;
 namespace CsToml.Formatter;
 
 
-internal sealed class BitArrayFormatter : ITomlValueFormatter<BitArray>
+internal sealed class BitArrayFormatter : ITomlValueFormatter<BitArray?>
 {
     public static readonly BitArrayFormatter Instance = new BitArrayFormatter();
 
-    public BitArray Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
+    public BitArray? Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
         if (!rootNode.HasValue)
         {
-            return default!;
+            return default;
         }
 
         if (rootNode.TryGetArray(out var value))
@@ -29,10 +29,10 @@ internal sealed class BitArrayFormatter : ITomlValueFormatter<BitArray>
         }
 
         ExceptionHelper.ThrowDeserializationFailed(typeof(BitArray));
-        return default!;
+        return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, BitArray target, CsTomlSerializerOptions options)
+    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, BitArray? target, CsTomlSerializerOptions options)
         where TBufferWriter : IBufferWriter<byte>
     {
         if (target == null)

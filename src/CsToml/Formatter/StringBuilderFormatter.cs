@@ -5,15 +5,15 @@ using System.Text;
 
 namespace CsToml.Formatter;
 
-internal sealed class StringBuilderFormatter : ITomlValueFormatter<StringBuilder>
+internal sealed class StringBuilderFormatter : ITomlValueFormatter<StringBuilder?>
 {
     public static readonly StringBuilderFormatter Instance = new StringBuilderFormatter();
 
-    public StringBuilder Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
+    public StringBuilder? Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
         if (!rootNode.HasValue)
         {
-            return default!;
+            return default;
         }
 
         if (rootNode.TryGetString(out var value))
@@ -22,10 +22,10 @@ internal sealed class StringBuilderFormatter : ITomlValueFormatter<StringBuilder
         }
 
         ExceptionHelper.ThrowDeserializationFailed(typeof(StringBuilder));
-        return default!;
+        return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, StringBuilder target, CsTomlSerializerOptions options)
+    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, StringBuilder? target, CsTomlSerializerOptions options)
         where TBufferWriter : IBufferWriter<byte>
     {
         if (target != null)

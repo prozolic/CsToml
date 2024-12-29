@@ -3,15 +3,15 @@ using System.Buffers;
 
 namespace CsToml.Formatter;
 
-internal sealed class UriFormatter : ITomlValueFormatter<Uri>
+internal sealed class UriFormatter : ITomlValueFormatter<Uri?>
 {
     public static readonly UriFormatter Instance = new UriFormatter();
 
-    public Uri Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
+    public Uri? Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
         if (!rootNode.HasValue)
         {
-            return default!;
+            return default;
         }
 
         if (rootNode.TryGetString(out var value))
@@ -19,12 +19,19 @@ internal sealed class UriFormatter : ITomlValueFormatter<Uri>
             return new Uri(value, UriKind.RelativeOrAbsolute);
         }
         ExceptionHelper.ThrowDeserializationFailed(typeof(Uri));
-        return default!;
+        return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Uri target, CsTomlSerializerOptions options)
+    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Uri? target, CsTomlSerializerOptions options)
         where TBufferWriter : IBufferWriter<byte>
     {
-        writer.WriteString(target.OriginalString);
+        if (target != null)
+        {
+            writer.WriteString(target?.OriginalString);
+        }
+        else
+        {
+            ExceptionHelper.ThrowSerializationFailed(typeof(Uri));
+        }
     }
 }

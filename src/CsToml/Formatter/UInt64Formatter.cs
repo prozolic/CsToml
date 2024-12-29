@@ -51,7 +51,7 @@ internal sealed class NullableUInt64Formatter : ITomlValueFormatter<ulong?>
         }
         else
         {
-            ExceptionHelper.ThrowSerializationFailed(typeof(long?));
+            ExceptionHelper.ThrowSerializationFailed(typeof(ulong?));
         }
     }
 }
