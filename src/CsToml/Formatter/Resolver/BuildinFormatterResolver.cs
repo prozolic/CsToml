@@ -117,7 +117,7 @@ internal sealed class BuildinFormatterResolver : ITomlValueFormatterResolver
         DefaultFormatterCache<DateOnly?>.Formatter = NullableDateOnlyFormatter.Instance;
         DefaultFormatterCache<TimeOnly>.Formatter = TimeOnlyFormatter.Instance;
         DefaultFormatterCache<TimeOnly?>.Formatter = NullableTimeOnlyFormatter.Instance;
-        DefaultFormatterCache<string>.Formatter = NullableStringFormatter.Instance;
+        DefaultFormatterCache<string?>.Formatter = NullableStringFormatter.Instance;
         DefaultFormatterCache<decimal>.Formatter = DecimalFormatter.Instance;
         DefaultFormatterCache<decimal?>.Formatter = NullableDecimalFormatter.Instance;
         DefaultFormatterCache<Half>.Formatter = HalfFormatter.Instance;

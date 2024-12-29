@@ -580,6 +580,17 @@ internal partial class ConstructorAndInit(long intValue, double floatValue)
     public bool BooleanValue { get; init; }
 }
 
+[TomlSerializedObject]
+internal partial class NullableReferenceTypes
+{
+    [TomlValueOnSerialized]
+    public string Str { get; set; }
+
+    [TomlValueOnSerialized]
+    public string? NullableStr { get; set; }
+
+}
+
 #if NET9_0_OR_GREATER
 
 [TomlSerializedObject]
