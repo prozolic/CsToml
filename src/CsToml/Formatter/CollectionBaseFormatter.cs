@@ -4,14 +4,14 @@ using System.Buffers;
 
 namespace CsToml.Formatter;
 
-internal abstract class CollectionBaseFormatter<TCollection, TElement, TMediator> : ITomlValueFormatter<TCollection>
+internal abstract class CollectionBaseFormatter<TCollection, TElement, TMediator> : ITomlValueFormatter<TCollection?>
     where TCollection : IEnumerable<TElement>
 {
-    public TCollection Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
+    public TCollection? Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
         if (!rootNode.HasValue)
         {
-            return default!;
+            return default;
         }
 
         if (rootNode.TryGetArray(out var value))
@@ -28,10 +28,10 @@ internal abstract class CollectionBaseFormatter<TCollection, TElement, TMediator
         }
 
         ExceptionHelper.ThrowDeserializationFailed(typeof(TCollection));
-        return default!;
+        return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TCollection target, CsTomlSerializerOptions options) 
+    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TCollection? target, CsTomlSerializerOptions options) 
         where TBufferWriter : IBufferWriter<byte>
     {
         if (target == null)

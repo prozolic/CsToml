@@ -411,6 +411,192 @@ public class WithArray2Test
     }
 }
 
+public class WithNullableArrayTest
+{
+    [Fact]
+    public void Serialize()
+    {
+        var type = new WithNullableArray
+        {
+            Value = [1, 2, 3, 4, 5]
+        };
+
+        {
+            using var bytes = CsTomlSerializer.Serialize(type);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+    }
+
+    [Fact]
+    public void Deserialize()
+    {
+        var nullableValue = CsTomlSerializer.Deserialize<WithNullableArray>(""u8);
+        nullableValue.Value.Should().BeNull();
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = [1,3,5]");
+        writer.Flush();
+
+        var type = CsTomlSerializer.Deserialize<WithNullableArray>(buffer.WrittenSpan);
+        type.Value.Should().Equal([1, 3, 5]);
+    }
+}
+
+public class WithNullableArray2Test
+{
+    [Fact]
+    public void Serialize()
+    {
+        var type = new WithNullableArray2
+        {
+            Value = [1, 2, 3, 4, 5]
+        };
+
+        {
+            using var bytes = CsTomlSerializer.Serialize(type);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+    }
+
+    [Fact]
+    public void Deserialize()
+    {
+        var nullableValue = CsTomlSerializer.Deserialize<WithNullableArray2>(""u8);
+        nullableValue.Value.Should().BeNull();
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = [1,3,5]");
+        writer.Flush();
+
+        var type = CsTomlSerializer.Deserialize<WithNullableArray>(buffer.WrittenSpan);
+        type.Value.Should().Equal([1, 3, 5]);
+    }
+}
+
+public class WithCollectionTest
+{
+    [Fact]
+    public void Serialize()
+    {
+        var type = new WithCollection
+        {
+            Value = [1, 2, 3, 4, 5]
+        };
+
+        {
+            using var bytes = CsTomlSerializer.Serialize(type);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+    }
+
+    [Fact]
+    public void Deserialize()
+    {
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = [1,3,5]");
+        writer.Flush();
+
+        var type = CsTomlSerializer.Deserialize<WithCollection>(buffer.WrittenSpan);
+        type.Value.Should().Equal([1, 3, 5]);
+    }
+}
+
+public class WithNullableCollectionTest
+{
+    [Fact]
+    public void Serialize()
+    {
+        var type = new WithNullableCollection
+        {
+            Value = [1, 2, 3, 4, 5]
+        };
+
+        {
+            using var bytes = CsTomlSerializer.Serialize(type);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().Should().Equal(expected);
+        }
+    }
+
+    [Fact]
+    public void Deserialize()
+    {
+        var nullableValue = CsTomlSerializer.Deserialize<WithNullableCollection>(""u8);
+        nullableValue.Value.Should().BeNull();
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = [1,3,5]");
+        writer.Flush();
+
+        var type = CsTomlSerializer.Deserialize<WithNullableCollection>(buffer.WrittenSpan);
+        type.Value.Should().Equal([1, 3, 5]);
+    }
+}
+
+
 public class TomlPrimitiveTest
 {
     [Fact]
@@ -2036,6 +2222,51 @@ public class NullableReferenceTypesTest
         var types = CsTomlSerializer.Deserialize<NullableReferenceTypes>(""u8);
         types.Str.Should().BeNull();
         types.NullableStr.Should().BeNull();
+        types.Uri.Should().BeNull();
+        types.NullableUri.Should().BeNull();
+        types.Version.Should().BeNull();
+        types.NullableVersion.Should().BeNull();
+        types.StringBuilder.Should().BeNull();
+        types.NullableStringBuilder.Should().BeNull();
+        types.Type.Should().BeNull();
+        types.NullableType.Should().BeNull();
+        types.BitArray.Should().BeNull();
+        types.NullableBitArray.Should().BeNull();
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Str = \"I'm a string.\"");
+        writer.AppendLine("NullableStr = \"I'm a string.\"");
+        writer.AppendLine("Uri = 'https://github.com/prozolic/CsToml'");
+        writer.AppendLine("NullableUri = 'https://github.com/prozolic/CsToml'");
+        writer.AppendLine("Version = \"1.3.1\"");
+        writer.AppendLine("NullableVersion = \"1.3.1\"");
+        writer.AppendLine("StringBuilder = \"I'm a StringBuilder.\"");
+        writer.AppendLine("NullableStringBuilder = \"I'm a StringBuilder.\"");
+        writer.AppendLine("Type = \"System.String\"");
+        writer.AppendLine("NullableType = \"System.String\"");
+        writer.AppendLine("BitArray = [true, false, true]");
+        writer.AppendLine("NullableBitArray = [true, false, true]");
+        writer.Flush();
+
+        var types2 = CsTomlSerializer.Deserialize<NullableReferenceTypes>(buffer.WrittenSpan);
+        types2.Str.Should().Be("I'm a string.");
+        types2.NullableStr!.Should().Be("I'm a string.");
+        types2.Uri.Should().Be(new Uri("https://github.com/prozolic/CsToml"));
+        types2.NullableUri!.Should().Be(new Uri("https://github.com/prozolic/CsToml"));
+        types2.Version.Should().Be(new Version("1.3.1"));
+        types2.NullableVersion!.Should().Be(new Version("1.3.1"));
+        types2.StringBuilder.ToString().Should().Be("I'm a StringBuilder.");
+        types2.NullableStringBuilder!.ToString().Should().Be("I'm a StringBuilder.");
+        types2.Type.Should().Be(typeof(string));
+        types2.NullableType!.Should().Be(typeof(string));
+        types2.BitArray[0].Should().BeTrue();
+        types2.BitArray[1].Should().BeFalse();
+        types2.BitArray[2].Should().BeTrue();
+        types2.BitArray.Length.Should().Be(3);
+        types2.NullableBitArray![0].Should().BeTrue();
+        types2.NullableBitArray![1].Should().BeFalse();
+        types2.NullableBitArray![2].Should().BeTrue();
+        types2.NullableBitArray!.Length.Should().Be(3);
     }
 }
 

@@ -3,6 +3,7 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.Text;
 
 namespace CsToml.Generator.Tests;
 
@@ -78,6 +79,34 @@ internal partial class WithArray2
 {
     [TomlValueOnSerialized]
     public long[][] Value { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class WithNullableArray
+{
+    [TomlValueOnSerialized]
+    public long[]? Value { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class WithNullableArray2
+{
+    [TomlValueOnSerialized]
+    public long?[]? Value { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class WithCollection
+{
+    [TomlValueOnSerialized]
+    public List<long> Value { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class WithNullableCollection
+{
+    [TomlValueOnSerialized]
+    public List<long>? Value { get; set; }
 }
 
 [TomlSerializedObject]
@@ -589,6 +618,35 @@ internal partial class NullableReferenceTypes
     [TomlValueOnSerialized]
     public string? NullableStr { get; set; }
 
+    [TomlValueOnSerialized]
+    public Uri Uri { get; set; }
+
+    [TomlValueOnSerialized]
+    public Uri? NullableUri { get; set; }
+
+    [TomlValueOnSerialized]
+    public Version Version { get; set; }
+
+    [TomlValueOnSerialized]
+    public Version? NullableVersion { get; set; }
+
+    [TomlValueOnSerialized]
+    public StringBuilder StringBuilder { get; set; }
+
+    [TomlValueOnSerialized]
+    public StringBuilder? NullableStringBuilder { get; set; }
+
+    [TomlValueOnSerialized]
+    public Type Type { get; set; }
+
+    [TomlValueOnSerialized]
+    public Type? NullableType { get; set; }
+
+    [TomlValueOnSerialized]
+    public BitArray BitArray { get; set; }
+
+    [TomlValueOnSerialized]
+    public BitArray? NullableBitArray { get; set; }
 }
 
 #if NET9_0_OR_GREATER

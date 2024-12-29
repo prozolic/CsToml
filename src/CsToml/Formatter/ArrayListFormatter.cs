@@ -5,15 +5,15 @@ using System.Collections;
 
 namespace CsToml.Formatter;
 
-internal sealed class ArrayListFormatter : ITomlValueFormatter<ArrayList>
+internal sealed class ArrayListFormatter : ITomlValueFormatter<ArrayList?>
 {
     public static readonly ArrayListFormatter Instance = new ArrayListFormatter();
 
-    public ArrayList Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
+    public ArrayList? Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
         if (!rootNode.HasValue)
         {
-            return default!;
+            return default;
         }
 
         if (rootNode.TryGetArray(out var value))
@@ -29,10 +29,10 @@ internal sealed class ArrayListFormatter : ITomlValueFormatter<ArrayList>
         }
 
         ExceptionHelper.ThrowDeserializationFailed(typeof(ArrayList));
-        return default!;
+        return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ArrayList target, CsTomlSerializerOptions options) where TBufferWriter : IBufferWriter<byte>
+    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ArrayList? target, CsTomlSerializerOptions options) where TBufferWriter : IBufferWriter<byte>
     {
         if (target == null)
         {

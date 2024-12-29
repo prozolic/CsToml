@@ -4,13 +4,13 @@ using System.Buffers;
 
 namespace CsToml.Formatter;
 
-internal abstract class ArrayBaseFormatter<TArray, TElement> : ITomlValueFormatter<TArray>
+internal abstract class ArrayBaseFormatter<TArray, TElement> : ITomlValueFormatter<TArray?>
 {
-    public TArray Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
+    public TArray? Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
         if (!rootNode.HasValue)
         {
-            return default!;
+            return default;
         }
 
         if (rootNode.TryGetArray(out var value))
@@ -27,10 +27,10 @@ internal abstract class ArrayBaseFormatter<TArray, TElement> : ITomlValueFormatt
         }
 
         ExceptionHelper.ThrowDeserializationFailed(typeof(TArray));
-        return default!;
+        return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TArray target, CsTomlSerializerOptions options) where TBufferWriter : IBufferWriter<byte>
+    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TArray? target, CsTomlSerializerOptions options) where TBufferWriter : IBufferWriter<byte>
     {
         if (target == null)
         {
