@@ -2028,6 +2028,17 @@ public class ConstructorAndInitTest
     }
 }
 
+public class NullableReferenceTypesTest
+{
+    [Fact]
+    public void Deserialize()
+    {
+        var types = CsTomlSerializer.Deserialize<NullableReferenceTypes>(""u8);
+        types.Str.Should().BeNull();
+        types.NullableStr.Should().BeNull();
+    }
+}
+
 #if NET9_0_OR_GREATER
 
 public class TypeOrderedDictionaryTest
