@@ -2,6 +2,7 @@
 
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Text;
 
@@ -330,6 +331,7 @@ internal partial class TypeTableA
 
     public ConcurrentDictionary<int, string> Dict { get; set; }
 }
+
 [TomlSerializedObject]
 internal partial class TypeTableB
 {
@@ -351,6 +353,7 @@ internal partial class TypeTableC
     [TomlValueOnSerialized]
     public string Value { get; set; }
 }
+
 [TomlSerializedObject]
 internal partial class TypeTableD
 {
@@ -647,6 +650,31 @@ internal partial class NullableReferenceTypes
 
     [TomlValueOnSerialized]
     public BitArray? NullableBitArray { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class TypeImmutable
+{
+    [TomlValueOnSerialized]
+    public ImmutableArray<int> ImmutableArray { get; set; }
+
+    [TomlValueOnSerialized]
+    public ImmutableList<int> ImmutableList { get; set; }
+
+    [TomlValueOnSerialized]
+    public ImmutableHashSet<int> ImmutableHashSet { get; set; }
+
+    [TomlValueOnSerialized] 
+    public ImmutableSortedSet<int> ImmutableSortedSet { get; set; }
+
+    [TomlValueOnSerialized]
+    public ImmutableQueue<int> ImmutableQueue { get; set; }
+
+    [TomlValueOnSerialized]
+    public ImmutableDictionary<string, object?> ImmutableDictionary { get; set; }
+
+    [TomlValueOnSerialized]
+    public ImmutableSortedDictionary<string, object?> ImmutableSortedDictionary { get; set; }
 }
 
 #if NET9_0_OR_GREATER

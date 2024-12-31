@@ -1,6 +1,7 @@
 ﻿
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Numerics;
 using System.Text;
@@ -47,6 +48,15 @@ internal sealed class BuildinFormatterResolver : ITomlValueFormatterResolver
         { typeof(ReadOnlyDictionary<,>), typeof(ReadOnlyDictionaryFormatter<,>) },
         { typeof(SortedDictionary<,>), typeof(SortedDictionaryFormatter<,>) },
         { typeof(ConcurrentDictionary<,>), typeof(ConcurrentDictionaryFormatter<,>) },
+
+        { typeof(ImmutableArray<>), typeof(ImmutableArrayFormatter<>) },
+        { typeof(ImmutableList<>), typeof(ImmutableListFormatter<>) },
+        { typeof(ImmutableStack<>), typeof(ImmutableStackFormatter<>) },
+        { typeof(ImmutableQueue<>), typeof(ImmutableQueueFormatter<>)},
+        { typeof(ImmutableHashSet<>), typeof(ImmutableHashSetFormatter<>) },
+        { typeof(ImmutableSortedSet<>), typeof(ImmutableSortedSetFormatter<>) },
+        { typeof(ImmutableDictionary<,>), typeof(ImmutableDictionaryFormatter<,>) },
+        { typeof(ImmutableSortedDictionary<,>), typeof(ImmutableSortedDictionaryFormatter<,>) },
 
         { typeof(IEnumerable<>), typeof(IEnumerableFormatter<>) },
         { typeof(ICollection<>),  typeof(ICollectionFormatter<>) },
