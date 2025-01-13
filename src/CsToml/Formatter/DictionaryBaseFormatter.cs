@@ -1,7 +1,7 @@
 ﻿using CsToml.Error;
+using CsToml.Utility;
 using CsToml.Values;
 using System.Buffers;
-using System.Runtime.CompilerServices;
 
 namespace CsToml.Formatter;
 
@@ -82,43 +82,43 @@ internal abstract class DictionaryBaseFormatter<TKey, TValue, TDicitonary, TMedi
                 switch (jumpCode)
                 {
                     case 0:
-                        writer.WriteBoolean(Unsafe.As<TKey, bool>(ref refKey));
+                        writer.WriteBoolean(UnsafeHelper.BitCast<TKey, bool>(refKey));
                         break;
                     case 1:
-                        writer.WriteInt64(Unsafe.As<TKey, byte>(ref refKey));
+                        writer.WriteInt64(UnsafeHelper.BitCast<TKey, byte>(refKey));
                         break;
                     case 2:
-                        writer.WriteInt64(Unsafe.As<TKey, sbyte>(ref refKey));
+                        writer.WriteInt64(UnsafeHelper.BitCast<TKey, sbyte>(refKey));
                         break;
                     case 3:
-                        writer.WriteInt64(Unsafe.As<TKey, char>(ref refKey));
+                        writer.WriteInt64(UnsafeHelper.BitCast<TKey, char>(refKey));
                         break;
                     case 4:
-                        writer.WriteInt64(Unsafe.As<TKey, short>(ref refKey));
+                        writer.WriteInt64(UnsafeHelper.BitCast<TKey, short>(refKey));
                         break;
                     case 5:
-                        writer.WriteInt64(Unsafe.As<TKey, int>(ref refKey));
+                        writer.WriteInt64(UnsafeHelper.BitCast<TKey, int>(refKey));
                         break;
                     case 6:
-                        writer.WriteInt64(Unsafe.As<TKey, long>(ref refKey));
+                        writer.WriteInt64(UnsafeHelper.BitCast<TKey, long>(refKey));
                         break;
                     case 7:
-                        writer.WriteInt64(Unsafe.As<TKey, ushort>(ref refKey));
+                        writer.WriteInt64(UnsafeHelper.BitCast<TKey, ushort>(refKey));
                         break;
                     case 8:
-                        writer.WriteInt64(Unsafe.As<TKey, uint>(ref refKey));
+                        writer.WriteInt64(UnsafeHelper.BitCast<TKey, uint>(refKey));
                         break;
                     case 9:
-                        writer.WriteInt64(checked(Unsafe.As<TKey, long>(ref refKey)));
+                        writer.WriteInt64(checked(UnsafeHelper.BitCast<TKey, long>(refKey)));
                         break;
                     case 10:
                         writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                        writer.WriteDouble(Unsafe.As<TKey, float>(ref refKey));
+                        writer.WriteDouble(UnsafeHelper.BitCast<TKey, float>(refKey));
                         writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
                         break;
                     case 11:
                         writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                        writer.WriteDouble(Unsafe.As<TKey, double>(ref refKey));
+                        writer.WriteDouble(UnsafeHelper.BitCast<TKey, double>(refKey));
                         writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
                         break;
                     case 12:
@@ -127,22 +127,22 @@ internal abstract class DictionaryBaseFormatter<TKey, TValue, TDicitonary, TMedi
                         break;
                     case 13:
                         writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                        writer.WriteDateTime(Unsafe.As<TKey, DateTime>(ref refKey));
+                        writer.WriteDateTime(UnsafeHelper.BitCast<TKey, DateTime>(refKey));
                         writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
                         break;
                     case 14:
                         writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                        writer.WriteDateTimeOffset(Unsafe.As<TKey, DateTimeOffset>(ref refKey));
+                        writer.WriteDateTimeOffset(UnsafeHelper.BitCast<TKey, DateTimeOffset>(refKey));
                         writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
                         break;
                     case 15:
                         writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                        writer.WriteDateOnly(Unsafe.As<TKey, DateOnly>(ref refKey));
+                        writer.WriteDateOnly(UnsafeHelper.BitCast<TKey, DateOnly>(refKey));
 
                         break;
                     case 16:
                         writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                        writer.WriteTimeOnly(Unsafe.As<TKey, TimeOnly>(ref refKey));
+                        writer.WriteTimeOnly(UnsafeHelper.BitCast<TKey, TimeOnly>(refKey));
                         writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
                         break;
                 }
@@ -173,43 +173,43 @@ internal abstract class DictionaryBaseFormatter<TKey, TValue, TDicitonary, TMedi
                     switch (jumpCode)
                     {
                         case 0:
-                            writer.WriteBoolean(Unsafe.As<TKey, bool>(ref refKey));
+                            writer.WriteBoolean(UnsafeHelper.BitCast<TKey, bool>(refKey));
                             break;
                         case 1:
-                            writer.WriteInt64(Unsafe.As<TKey, byte>(ref refKey));
+                            writer.WriteInt64(UnsafeHelper.BitCast<TKey, byte>(refKey));
                             break;
                         case 2:
-                            writer.WriteInt64(Unsafe.As<TKey, sbyte>(ref refKey));
+                            writer.WriteInt64(UnsafeHelper.BitCast<TKey, sbyte>(refKey));
                             break;
                         case 3:
-                            writer.WriteInt64(Unsafe.As<TKey, char>(ref refKey));
+                            writer.WriteInt64(UnsafeHelper.BitCast<TKey, char>(refKey));
                             break;
                         case 4:
-                            writer.WriteInt64(Unsafe.As<TKey, short>(ref refKey));
+                            writer.WriteInt64(UnsafeHelper.BitCast<TKey, short>(refKey));
                             break;
                         case 5:
-                            writer.WriteInt64(Unsafe.As<TKey, int>(ref refKey));
+                            writer.WriteInt64(UnsafeHelper.BitCast<TKey, int>(refKey));
                             break;
                         case 6:
-                            writer.WriteInt64(Unsafe.As<TKey, long>(ref refKey));
+                            writer.WriteInt64(UnsafeHelper.BitCast<TKey, long>(refKey));
                             break;
                         case 7:
-                            writer.WriteInt64(Unsafe.As<TKey, ushort>(ref refKey));
+                            writer.WriteInt64(UnsafeHelper.BitCast<TKey, ushort>(refKey));
                             break;
                         case 8:
-                            writer.WriteInt64(Unsafe.As<TKey, uint>(ref refKey));
+                            writer.WriteInt64(UnsafeHelper.BitCast<TKey, uint>(refKey));
                             break;
                         case 9:
-                            writer.WriteInt64(checked(Unsafe.As<TKey, long>(ref refKey)));
+                            writer.WriteInt64(checked(UnsafeHelper.BitCast<TKey, long>(refKey)));
                             break;
                         case 10:
                             writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                            writer.WriteDouble(Unsafe.As<TKey, float>(ref refKey));
+                            writer.WriteDouble(UnsafeHelper.BitCast<TKey, float>(refKey));
                             writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
                             break;
                         case 11:
                             writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                            writer.WriteDouble(Unsafe.As<TKey, double>(ref refKey));
+                            writer.WriteDouble(UnsafeHelper.BitCast<TKey, double>(refKey));
                             writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
                             break;
                         case 12:
@@ -218,22 +218,22 @@ internal abstract class DictionaryBaseFormatter<TKey, TValue, TDicitonary, TMedi
                             break;
                         case 13:
                             writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                            writer.WriteDateTime(Unsafe.As<TKey, DateTime>(ref refKey));
+                            writer.WriteDateTime(UnsafeHelper.BitCast<TKey, DateTime>(refKey));
                             writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
                             break;
                         case 14:
                             writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                            writer.WriteDateTimeOffset(Unsafe.As<TKey, DateTimeOffset>(ref refKey));
+                            writer.WriteDateTimeOffset(UnsafeHelper.BitCast<TKey, DateTimeOffset>(refKey));
                             writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
                             break;
                         case 15:
                             writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                            writer.WriteDateOnly(Unsafe.As<TKey, DateOnly>(ref refKey));
+                            writer.WriteDateOnly(UnsafeHelper.BitCast<TKey, DateOnly>(refKey));
 
                             break;
                         case 16:
                             writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                            writer.WriteTimeOnly(Unsafe.As<TKey, TimeOnly>(ref refKey));
+                            writer.WriteTimeOnly(UnsafeHelper.BitCast<TKey, TimeOnly>(refKey));
                             writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
                             break;
                     }
