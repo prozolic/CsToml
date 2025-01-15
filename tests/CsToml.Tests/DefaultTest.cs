@@ -1,7 +1,5 @@
 ﻿
 using CsToml.Error;
-using FluentAssertions;
-using FluentAssertions.Execution;
 using System.Text;
 using Utf8StringInterpolation;
 
@@ -55,40 +53,40 @@ number2 = 123456
     public void BasicTest()
     {
         var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
-        document!.RootNode["str"u8].GetString().Should().Be("value");
-        document!.RootNode["int"u8].GetInt64().Should().Be(123);
-        document!.RootNode["flt"u8].GetDouble().Should().Be(3.1415d);
-        document!.RootNode["boolean"u8].GetBool().Should().BeTrue();
-        document!.RootNode["odt1"u8].GetDateTimeOffset().Should().Be(new DateTimeOffset(1979, 5, 27, 7, 32, 0, TimeSpan.Zero));
-        document!.RootNode["ldt1"u8].GetDateTimeOffset().Should().Be(new DateTime(1979, 5, 27, 7, 32, 0));
-        document!.RootNode["ldt2"u8].GetDateTimeOffset().Should().Be(new DateTime(1979, 5, 27, 0, 32, 0, 999, 999));
-        document!.RootNode["ld1"u8].GetDateOnly().Should().Be(new DateOnly(1979, 5, 27));
-        document!.RootNode["lt1"u8].GetTimeOnly().Should().Be(new TimeOnly(7, 32, 0));
-        document!.RootNode["key"u8].GetString().Should().Be("value");
-        document!.RootNode["first"u8]["second"u8]["third"u8].GetString().Should().Be("value");
-        document!.RootNode["number"u8].GetInt64().Should().Be(123456);
+        document!.RootNode["str"u8].GetString().ShouldBe("value");
+        document!.RootNode["int"u8].GetInt64().ShouldBe(123);
+        document!.RootNode["flt"u8].GetDouble().ShouldBe(3.1415d);
+        document!.RootNode["boolean"u8].GetBool().ShouldBeTrue();
+        document!.RootNode["odt1"u8].GetDateTimeOffset().ShouldBe(new DateTimeOffset(1979, 5, 27, 7, 32, 0, TimeSpan.Zero));
+        document!.RootNode["ldt1"u8].GetDateTimeOffset().ShouldBe(new DateTime(1979, 5, 27, 7, 32, 0));
+        document!.RootNode["ldt2"u8].GetDateTimeOffset().ShouldBe(new DateTime(1979, 5, 27, 0, 32, 0, 999, 999));
+        document!.RootNode["ld1"u8].GetDateOnly().ShouldBe(new DateOnly(1979, 5, 27));
+        document!.RootNode["lt1"u8].GetTimeOnly().ShouldBe(new TimeOnly(7, 32, 0));
+        document!.RootNode["key"u8].GetString().ShouldBe("value");
+        document!.RootNode["first"u8]["second"u8]["third"u8].GetString().ShouldBe("value");
+        document!.RootNode["number"u8].GetInt64().ShouldBe(123456);
         var arrayValue = document!.RootNode["array"u8]!.GetArray();
-        arrayValue.Count.Should().Be(3);
-        arrayValue[0].GetInt64().Should().Be(123);
-        arrayValue[1].GetString().Should().Be("456");
-        arrayValue[2].GetBool().Should().BeTrue();
-        document!.RootNode["inlineTable"u8]["key"u8].GetInt64().Should().Be(1);
-        document!.RootNode["inlineTable"u8]["key2"u8].GetString().Should().Be("value");
-        document!.RootNode["inlineTable"u8]["key3"u8][0].GetInt64().Should().Be(123);
-        document!.RootNode["inlineTable"u8]["key3"u8][1].GetInt64().Should().Be(456);
-        document!.RootNode["inlineTable"u8]["key3"u8][2].GetInt64().Should().Be(789);
-        document!.RootNode["inlineTable"u8]["key4"u8]["key"u8].GetString().Should().Be("inlinetable");
-        document!.RootNode["Table"u8]["test"u8]["key"u8].GetString().Should().Be("value");
-        document!.RootNode["Table"u8]["test"u8]["first"u8]["second"u8]["third"u8].GetString().Should().Be("value");
-        document!.RootNode["Table"u8]["test"u8]["number"u8].GetInt64().Should().Be(123456);
-        document!.RootNode["arrayOfTables"u8]["test"u8][0]["key"u8].GetString().Should().Be("value");
-        document!.RootNode["arrayOfTables"u8]["test"u8][0]["first"u8]["second"u8]["third"u8].GetString().Should().Be("value");
-        document!.RootNode["arrayOfTables"u8]["test"u8][0]["number"u8].GetInt64().Should().Be(123456);
-        document!.RootNode["arrayOfTables"u8]["test"u8][2]["key2"u8].GetString().Should().Be("value");
-        document!.RootNode["arrayOfTables"u8]["test"u8][2]["first2"u8]["second2"u8]["third2"u8].GetString().Should().Be("value");
-        document!.RootNode["arrayOfTables"u8]["test"u8][2]["number2"u8].GetInt64().Should().Be(123456);
+        arrayValue.Count.ShouldBe(3);
+        arrayValue[0].GetInt64().ShouldBe(123);
+        arrayValue[1].GetString().ShouldBe("456");
+        arrayValue[2].GetBool().ShouldBeTrue();
+        document!.RootNode["inlineTable"u8]["key"u8].GetInt64().ShouldBe(1);
+        document!.RootNode["inlineTable"u8]["key2"u8].GetString().ShouldBe("value");
+        document!.RootNode["inlineTable"u8]["key3"u8][0].GetInt64().ShouldBe(123);
+        document!.RootNode["inlineTable"u8]["key3"u8][1].GetInt64().ShouldBe(456);
+        document!.RootNode["inlineTable"u8]["key3"u8][2].GetInt64().ShouldBe(789);
+        document!.RootNode["inlineTable"u8]["key4"u8]["key"u8].GetString().ShouldBe("inlinetable");
+        document!.RootNode["Table"u8]["test"u8]["key"u8].GetString().ShouldBe("value");
+        document!.RootNode["Table"u8]["test"u8]["first"u8]["second"u8]["third"u8].GetString().ShouldBe("value");
+        document!.RootNode["Table"u8]["test"u8]["number"u8].GetInt64().ShouldBe(123456);
+        document!.RootNode["arrayOfTables"u8]["test"u8][0]["key"u8].GetString().ShouldBe("value");
+        document!.RootNode["arrayOfTables"u8]["test"u8][0]["first"u8]["second"u8]["third"u8].GetString().ShouldBe("value");
+        document!.RootNode["arrayOfTables"u8]["test"u8][0]["number"u8].GetInt64().ShouldBe(123456);
+        document!.RootNode["arrayOfTables"u8]["test"u8][2]["key2"u8].GetString().ShouldBe("value");
+        document!.RootNode["arrayOfTables"u8]["test"u8][2]["first2"u8]["second2"u8]["third2"u8].GetString().ShouldBe("value");
+        document!.RootNode["arrayOfTables"u8]["test"u8][2]["number2"u8].GetInt64().ShouldBe(123456);
         // failed
-        document!.RootNode["failed"u8].HasValue.Should().BeFalse();
+        document!.RootNode["failed"u8].HasValue.ShouldBeFalse();
 
         using var serializeText = CsTomlSerializer.Serialize(document!);
 
@@ -128,7 +126,7 @@ number2 = 123456
         writer.AppendLine("number2 = 123456");
         writer.Flush();
 
-        buffer.ToArray().Should().Equal(serializeText.ByteSpan.ToArray());
+        buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
 
     }
 
@@ -137,61 +135,62 @@ number2 = 123456
     {
         //TomlDocumentNode[ReadOnlySpan<char> key]
         var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
-        document!.RootNode["str"].GetString().Should().Be("value");
-        document!.RootNode["int"].GetInt64().Should().Be(123);
-        document!.RootNode["flt"].GetDouble().Should().Be(3.1415d);
-        document!.RootNode["boolean"].GetBool().Should().BeTrue();
-        document!.RootNode["odt1"].GetDateTimeOffset().Should().Be(new DateTimeOffset(1979, 5, 27, 7, 32, 0, TimeSpan.Zero));
-        document!.RootNode["ldt1"].GetDateTimeOffset().Should().Be(new DateTime(1979, 5, 27, 7, 32, 0));
-        document!.RootNode["ldt2"].GetDateTimeOffset().Should().Be(new DateTime(1979, 5, 27, 0, 32, 0, 999, 999));
-        document!.RootNode["ld1"].GetDateOnly().Should().Be(new DateOnly(1979, 5, 27));
-        document!.RootNode["lt1"].GetTimeOnly().Should().Be(new TimeOnly(7, 32, 0));
-        document!.RootNode["key"].GetString().Should().Be("value");
-        document!.RootNode["first"]["second"]["third"].GetString().Should().Be("value");
-        document!.RootNode["number"].GetInt64().Should().Be(123456);
+        document!.RootNode["str"].GetString().ShouldBe("value");
+        document!.RootNode["int"].GetInt64().ShouldBe(123);
+        document!.RootNode["flt"].GetDouble().ShouldBe(3.1415d);
+        document!.RootNode["boolean"].GetBool().ShouldBeTrue();
+        document!.RootNode["odt1"].GetDateTimeOffset().ShouldBe(new DateTimeOffset(1979, 5, 27, 7, 32, 0, TimeSpan.Zero));
+        document!.RootNode["ldt1"].GetDateTimeOffset().ShouldBe(new DateTime(1979, 5, 27, 7, 32, 0));
+        document!.RootNode["ldt2"].GetDateTimeOffset().ShouldBe(new DateTime(1979, 5, 27, 0, 32, 0, 999, 999));
+        document!.RootNode["ld1"].GetDateOnly().ShouldBe(new DateOnly(1979, 5, 27));
+        document!.RootNode["lt1"].GetTimeOnly().ShouldBe(new TimeOnly(7, 32, 0));
+        document!.RootNode["key"].GetString().ShouldBe("value");
+        document!.RootNode["first"]["second"]["third"].GetString().ShouldBe("value");
+        document!.RootNode["number"].GetInt64().ShouldBe(123456);
         var arrayValue = document!.RootNode["array"]!.GetArray();
-        arrayValue.Count.Should().Be(3);
-        arrayValue[0].GetInt64().Should().Be(123);
-        arrayValue[1].GetString().Should().Be("456");
-        arrayValue[2].GetBool().Should().BeTrue();
-        document!.RootNode["inlineTable"]["key"].GetInt64().Should().Be(1);
-        document!.RootNode["inlineTable"]["key2"].GetString().Should().Be("value");
-        document!.RootNode["inlineTable"]["key3"][0].GetInt64().Should().Be(123);
-        document!.RootNode["inlineTable"]["key3"][1].GetInt64().Should().Be(456);
-        document!.RootNode["inlineTable"]["key3"][2].GetInt64().Should().Be(789);
-        document!.RootNode["inlineTable"]["key4"]["key"].GetString().Should().Be("inlinetable");
-        document!.RootNode["Table"]["test"]["key"].GetString().Should().Be("value");
-        document!.RootNode["Table"]["test"]["first"]["second"]["third"].GetString().Should().Be("value");
-        document!.RootNode["Table"]["test"]["number"].GetInt64().Should().Be(123456);
-        document!.RootNode["arrayOfTables"]["test"][0]["key"].GetString().Should().Be("value");
-        document!.RootNode["arrayOfTables"]["test"][0]["first"]["second"]["third"].GetString().Should().Be("value");
-        document!.RootNode["arrayOfTables"]["test"][0]["number"].GetInt64().Should().Be(123456);
-        document!.RootNode["arrayOfTables"]["test"][2]["key2"].GetString().Should().Be("value");
-        document!.RootNode["arrayOfTables"]["test"][2]["first2"]["second2"]["third2"].GetString().Should().Be("value");
-        document!.RootNode["arrayOfTables"]["test"][2]["number2"].GetInt64().Should().Be(123456);
+        arrayValue.Count.ShouldBe(3);
+        arrayValue[0].GetInt64().ShouldBe(123);
+        arrayValue[1].GetString().ShouldBe("456");
+        arrayValue[2].GetBool().ShouldBeTrue();
+        document!.RootNode["inlineTable"]["key"].GetInt64().ShouldBe(1);
+        document!.RootNode["inlineTable"]["key2"].GetString().ShouldBe("value");
+        document!.RootNode["inlineTable"]["key3"][0].GetInt64().ShouldBe(123);
+        document!.RootNode["inlineTable"]["key3"][1].GetInt64().ShouldBe(456);
+        document!.RootNode["inlineTable"]["key3"][2].GetInt64().ShouldBe(789);
+        document!.RootNode["inlineTable"]["key4"]["key"].GetString().ShouldBe("inlinetable");
+        document!.RootNode["Table"]["test"]["key"].GetString().ShouldBe("value");
+        document!.RootNode["Table"]["test"]["first"]["second"]["third"].GetString().ShouldBe("value");
+        document!.RootNode["Table"]["test"]["number"].GetInt64().ShouldBe(123456);
+        document!.RootNode["arrayOfTables"]["test"][0]["key"].GetString().ShouldBe("value");
+        document!.RootNode["arrayOfTables"]["test"][0]["first"]["second"]["third"].GetString().ShouldBe("value");
+        document!.RootNode["arrayOfTables"]["test"][0]["number"].GetInt64().ShouldBe(123456);
+        document!.RootNode["arrayOfTables"]["test"][2]["key2"].GetString().ShouldBe("value");
+        document!.RootNode["arrayOfTables"]["test"][2]["first2"]["second2"]["third2"].GetString().ShouldBe("value");
+        document!.RootNode["arrayOfTables"]["test"][2]["number2"].GetInt64().ShouldBe(123456);
         // failed
-        document!.RootNode["failed"].HasValue.Should().BeFalse();
+        document!.RootNode["failed"].HasValue.ShouldBeFalse();
     }
 
     [Fact]
     public void ThrowTest()
     {
-        var toml = @"
+        Should.Throw<CsTomlSerializeException>(() =>
+        {
+            var toml = @"
 str = ""value""
 intError 
 flt = 3.1415
 "u8;
-
-        try
-        {
-            var document = CsTomlSerializer.Deserialize<TomlDocument>(toml);
-        }
-        catch(CsTomlSerializeException ctse)
-        {
-            ctse.Exceptions!.Count.Should().Be(1);
-            return;
-        }
-        Execute.Assertion.FailWith("No CsTomlSerializeException is thrown.");
+            try
+            {
+                var document = CsTomlSerializer.Deserialize<TomlDocument>(toml);
+            }
+            catch (CsTomlSerializeException ctse)
+            {
+                ctse.Exceptions!.Count.ShouldBe(1);
+                throw;
+            }
+        });
     }
 }
 
@@ -240,9 +239,9 @@ trimmed in raw strings.
         var expected = Encoding.UTF8.GetString(buffer.ToArray()).Replace("\r\n", "\n");
         var actual = Encoding.UTF8.GetString(serializeText.ByteSpan).Replace("\r\n", "\n");
 
-        expected.Should().Be(actual);
+        expected.ShouldBe(actual);
 
-        //buffer.ToArray().Should().Equal(serializeText.ByteSpan.ToArray());
+        //buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
 }
 
@@ -292,7 +291,7 @@ bin1 = 0b11010110
         writer.AppendLine("bin1 = 214");
         writer.Flush();
 
-        buffer.ToArray().Should().Equal(serializeText.ByteSpan.ToArray());
+        buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
 }
 
@@ -338,7 +337,7 @@ sf6 = -nan
         writer.AppendLine("sf6 = nan");
         writer.Flush();
 
-        buffer.ToArray().Should().Equal(serializeText.ByteSpan.ToArray());
+        buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
 }
 
@@ -360,7 +359,7 @@ bool2 = false
         writer.AppendLine("bool2 = false");
         writer.Flush();
 
-        buffer.ToArray().Should().Equal(serializeText.ByteSpan.ToArray());
+        buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
 }
 
@@ -468,7 +467,7 @@ odt45 = 1979-05-27T00:32:00.111111-07:00
         writer.AppendLine("odt45 = 1979-05-27T00:32:00.111111-07:00");
         writer.Flush();
 
-        buffer.ToArray().Should().Equal(serializeText.ByteSpan.ToArray());
+        buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
 }
 
@@ -534,7 +533,7 @@ ldt24 = 1979-05-27T00:32:00.111111
         writer.AppendLine("ldt24 = 1979-05-27T00:32:00.111111");
         writer.Flush();
 
-        buffer.ToArray().Should().Equal(serializeText.ByteSpan.ToArray());
+        buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
 }
 
@@ -558,7 +557,7 @@ ld3 = 1979-12-31
         writer.AppendLine("ld3 = 1979-12-31");
         writer.Flush();
 
-        buffer.ToArray().Should().Equal(serializeText.ByteSpan.ToArray());
+        buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
 }
 
@@ -624,7 +623,7 @@ lt24 = 00:32:00.111111
         writer.AppendLine("lt24 = 00:32:00.111111");
         writer.Flush();
 
-        buffer.ToArray().Should().Equal(serializeText.ByteSpan.ToArray());
+        buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
 }
 
@@ -654,7 +653,7 @@ string_array = [""all"", 'strings', """"""are the same"""""", '''type''']
         writer.AppendLine(@"string_array = [ ""all"", 'strings', """"""are the same"""""", '''type''' ]");
         writer.Flush();
 
-        buffer.ToArray().Should().Equal(serializeText.ByteSpan.ToArray());
+        buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
 }
 
@@ -700,7 +699,7 @@ smooth = true
         writer.AppendLine("smooth = true");
         writer.Flush();
 
-        buffer.ToArray().Should().Equal(serializeText.ByteSpan.ToArray());
+        buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
 }
 
@@ -724,7 +723,7 @@ animal = { type.name = ""pug"" }
         writer.AppendLine(@"animal = { type.name = ""pug"" }");
         writer.Flush();
 
-        buffer.ToArray().Should().Equal(serializeText.ByteSpan.ToArray());
+        buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
 }
 
@@ -734,25 +733,25 @@ public class DeserializeValueTypeTest
     public void Test()
     {
         var tomlIntValue = CsTomlSerializer.DeserializeValueType<long>("1234"u8);
-        tomlIntValue.Should().Be(1234);
+        tomlIntValue.ShouldBe(1234);
 
         var tomlStringValue = CsTomlSerializer.DeserializeValueType<string>("\"\\U00000061\\U00000062\\U00000063\""u8);
-        tomlStringValue.Should().Be("abc");
+        tomlStringValue.ShouldBe("abc");
 
         var tomlDateTimeValue = CsTomlSerializer.DeserializeValueType<DateTime>("2024-10-20T15:16:00"u8);
-        tomlDateTimeValue.Should().Be(new DateTime(2024, 10, 20, 15, 16, 0, DateTimeKind.Local));
+        tomlDateTimeValue.ShouldBe(new DateTime(2024, 10, 20, 15, 16, 0, DateTimeKind.Local));
 
         var tomlArrayValue = CsTomlSerializer.DeserializeValueType<string[]>("[ \"red\", \"yellow\", \"green\" ]"u8);
-        tomlArrayValue.Should().Equal(["red", "yellow", "green"]);
+        tomlArrayValue.ShouldBe(["red", "yellow", "green"]);
 
         var tomlinlineTableValue = CsTomlSerializer.DeserializeValueType<IDictionary<string, object>>("{ x = 1, y = 2, z = \"3\" }"u8);
-        tomlinlineTableValue.Count.Should().Be(3);
-        tomlinlineTableValue["x"].Should().Be((object)1);
-        tomlinlineTableValue["y"].Should().Be((object)2);
-        tomlinlineTableValue["z"].Should().Be((object)"3");
+        tomlinlineTableValue.Count.ShouldBe(3);
+        tomlinlineTableValue["x"].ShouldBe((object)1);
+        tomlinlineTableValue["y"].ShouldBe((object)2);
+        tomlinlineTableValue["z"].ShouldBe((object)"3");
 
         var tomlTupleValue = CsTomlSerializer.DeserializeValueType<Tuple<string, string, string>>("[ \"red\", \"yellow\", \"green\" ]"u8);
-        tomlTupleValue.Should().Be(new Tuple<string, string, string>("red", "yellow", "green"));
+        tomlTupleValue.ShouldBe(new Tuple<string, string, string>("red", "yellow", "green"));
     }
 }
 
@@ -762,26 +761,26 @@ public class SerializeValueTypeTest
     public void Test()
     {
         using var serializedTomlValue1 = CsTomlSerializer.SerializeValueType(123);
-        serializedTomlValue1.ByteSpan.ToArray().Should().Equal("123"u8.ToArray());
+        serializedTomlValue1.ByteSpan.ToArray().ShouldBe("123"u8.ToArray());
 
         using var serializedTomlValue2 = CsTomlSerializer.SerializeValueType("abc");
-        serializedTomlValue2.ByteSpan.ToArray().Should().Equal("\"abc\""u8.ToArray());
+        serializedTomlValue2.ByteSpan.ToArray().ShouldBe("\"abc\""u8.ToArray());
 
         using var serializedTomlValue3 = CsTomlSerializer.SerializeValueType(new DateTime(2024, 10, 20, 15, 16, 0, DateTimeKind.Local));
-        serializedTomlValue3.ByteSpan.ToArray().Should().Equal("2024-10-20T15:16:00"u8.ToArray());
+        serializedTomlValue3.ByteSpan.ToArray().ShouldBe("2024-10-20T15:16:00"u8.ToArray());
 
         using var serializedTomlValue4 = CsTomlSerializer.SerializeValueType<string[]>(["red", "yellow", "green"]);
-        serializedTomlValue4.ByteSpan.ToArray().Should().Equal("[ \"red\", \"yellow\", \"green\" ]"u8.ToArray());
+        serializedTomlValue4.ByteSpan.ToArray().ShouldBe("[ \"red\", \"yellow\", \"green\" ]"u8.ToArray());
 
         var dict = new Dictionary<string, object>();
         dict["x"] = 1;
         dict["y"] = 2;
         dict["z"] = "3";
         using var serializedTomlValue5 = CsTomlSerializer.SerializeValueType(dict);
-        serializedTomlValue5.ByteSpan.ToArray().Should().Equal("{x = 1, y = 2, z = \"3\"}"u8.ToArray());
+        serializedTomlValue5.ByteSpan.ToArray().ShouldBe("{x = 1, y = 2, z = \"3\"}"u8.ToArray());
 
         using var serializedTomlValue6 = CsTomlSerializer.SerializeValueType(new Tuple<string, string, string>("red", "yellow", "green"));
-        serializedTomlValue6.ByteSpan.ToArray().Should().Equal("[ \"red\", \"yellow\", \"green\" ]"u8.ToArray());
+        serializedTomlValue6.ByteSpan.ToArray().ShouldBe("[ \"red\", \"yellow\", \"green\" ]"u8.ToArray());
     }
 }
 
@@ -833,7 +832,7 @@ number2 = 123456
         {
             var document2 = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
             var actual = document2!.ToJsonObject();
-            JsonNodeExtensions.DeepEqualsForTomlFormat(actual, expected).Should().BeTrue();
+            JsonNodeExtensions.DeepEqualsForTomlFormat(actual, expected).ShouldBeTrue();
             return ValueTask.CompletedTask;
         });
     }
@@ -882,49 +881,49 @@ number2 = 123456
 "u8;
 
         var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText).ToDictionary<object, object>();
-        document["str"].Should().Be("value");
-        document["int"].Should().Be(123);
-        document["flt"].Should().Be(3.1415d);
-        ((bool)document["boolean"]).Should().BeTrue();
-        document["odt1"].Should().Be(new DateTimeOffset(1979, 5, 27, 7, 32, 0, TimeSpan.Zero));
-        document["ldt1"].Should().Be(new DateTime(1979, 5, 27, 7, 32, 0));
-        document["ldt2"].Should().Be(new DateTime(1979, 5, 27, 0, 32, 0, 999, 999));
-        document["ld1"].Should().Be(new DateOnly(1979, 5, 27));
-        document["lt1"].Should().Be(new TimeOnly(7, 32, 0));
-        document["key"].Should().Be("value");
-        ((IDictionary<object, object>)((IDictionary<object, object>)document["first"])["second"])["third"].Should().Be("value");
-        document["number"].Should().Be(123456);
-        ((object[])document["array"])[0].Should().Be(123);
-        ((object[])document["array"])[1].Should().Be("456");
-        ((bool)((object[])document["array"])[2]).Should().BeTrue();
+        document["str"].ShouldBe("value");
+        document["int"].ShouldBe(123);
+        document["flt"].ShouldBe(3.1415d);
+        ((bool)document["boolean"]).ShouldBeTrue();
+        document["odt1"].ShouldBe(new DateTimeOffset(1979, 5, 27, 7, 32, 0, TimeSpan.Zero));
+        document["ldt1"].ShouldBe(new DateTime(1979, 5, 27, 7, 32, 0));
+        document["ldt2"].ShouldBe(new DateTime(1979, 5, 27, 0, 32, 0, 999, 999));
+        document["ld1"].ShouldBe(new DateOnly(1979, 5, 27));
+        document["lt1"].ShouldBe(new TimeOnly(7, 32, 0));
+        document["key"].ShouldBe("value");
+        ((IDictionary<object, object>)((IDictionary<object, object>)document["first"])["second"])["third"].ShouldBe("value");
+        document["number"].ShouldBe(123456);
+        ((object[])document["array"])[0].ShouldBe(123);
+        ((object[])document["array"])[1].ShouldBe("456");
+        ((bool)((object[])document["array"])[2]).ShouldBeTrue();
 
         var inlineTable = (IDictionary<object, object>)document["inlineTable"];
-        inlineTable["key"].Should().Be(1);
-        inlineTable["key2"].Should().Be("value");
-        ((object[])inlineTable["key3"])[0].Should().Be(123);
-        ((object[])inlineTable["key3"])[1].Should().Be(456);
-        ((object[])inlineTable["key3"])[2].Should().Be(789);
-        ((IDictionary<object, object>)inlineTable["key4"])["key"].Should().Be("inlinetable");
+        inlineTable["key"].ShouldBe(1);
+        inlineTable["key2"].ShouldBe("value");
+        ((object[])inlineTable["key3"])[0].ShouldBe(123);
+        ((object[])inlineTable["key3"])[1].ShouldBe(456);
+        ((object[])inlineTable["key3"])[2].ShouldBe(789);
+        ((IDictionary<object, object>)inlineTable["key4"])["key"].ShouldBe("inlinetable");
 
         var table = (IDictionary<object, object>)document["Table"];
         var test = (IDictionary<object, object>)table["test"];
-        test["key"].Should().Be("value");
-        ((IDictionary<object, object>)((IDictionary<object, object>)test["first"])["second"])["third"].Should().Be("value");
-        test["number"].Should().Be(123456);
-        ((object[])inlineTable["key3"])[0].Should().Be(123);
-        ((object[])inlineTable["key3"])[1].Should().Be(456);
-        ((object[])inlineTable["key3"])[2].Should().Be(789);
-        ((IDictionary<object, object>)inlineTable["key4"])["key"].Should().Be("inlinetable");
+        test["key"].ShouldBe("value");
+        ((IDictionary<object, object>)((IDictionary<object, object>)test["first"])["second"])["third"].ShouldBe("value");
+        test["number"].ShouldBe(123456);
+        ((object[])inlineTable["key3"])[0].ShouldBe(123);
+        ((object[])inlineTable["key3"])[1].ShouldBe(456);
+        ((object[])inlineTable["key3"])[2].ShouldBe(789);
+        ((IDictionary<object, object>)inlineTable["key4"])["key"].ShouldBe("inlinetable");
 
         var arrayOfTables = (IDictionary<object, object>)document["arrayOfTables"];
         var testArray = (object[])arrayOfTables["test"];
 
-        ((IDictionary<object, object>)testArray[0])["key"].Should().Be("value");
-        ((IDictionary<object, object>)((IDictionary<object, object>)((IDictionary<object, object>)testArray[0])["first"])["second"])["third"].Should().Be("value");
-        ((IDictionary<object, object>)testArray[0])["number"].Should().Be(123456);
-        ((IDictionary<object, object>)testArray[2])["key2"].Should().Be("value");
-        ((IDictionary<object, object>)((IDictionary<object, object>)((IDictionary<object, object>)testArray[2])["first2"])["second2"])["third2"].Should().Be("value");
-        ((IDictionary<object, object>)testArray[2])["number2"].Should().Be(123456);
+        ((IDictionary<object, object>)testArray[0])["key"].ShouldBe("value");
+        ((IDictionary<object, object>)((IDictionary<object, object>)((IDictionary<object, object>)testArray[0])["first"])["second"])["third"].ShouldBe("value");
+        ((IDictionary<object, object>)testArray[0])["number"].ShouldBe(123456);
+        ((IDictionary<object, object>)testArray[2])["key2"].ShouldBe("value");
+        ((IDictionary<object, object>)((IDictionary<object, object>)((IDictionary<object, object>)testArray[2])["first2"])["second2"])["third2"].ShouldBe("value");
+        ((IDictionary<object, object>)testArray[2])["number2"].ShouldBe(123456);
     }
 }
 
@@ -970,48 +969,48 @@ number2 = 123456
 "u8;
 
         var document = (IDictionary<object, object>)CsTomlSerializer.Deserialize<dynamic>(tomlText);
-        document["str"].Should().Be("value");
-        document["int"].Should().Be(123);
-        document["flt"].Should().Be(3.1415d);
-        ((bool)document["boolean"]).Should().BeTrue();
-        document["odt1"].Should().Be(new DateTimeOffset(1979, 5, 27, 7, 32, 0, TimeSpan.Zero));
-        document["ldt1"].Should().Be(new DateTime(1979, 5, 27, 7, 32, 0));
-        document["ldt2"].Should().Be(new DateTime(1979, 5, 27, 0, 32, 0, 999, 999));
-        document["ld1"].Should().Be(new DateOnly(1979, 5, 27));
-        document["lt1"].Should().Be(new TimeOnly(7, 32, 0));
-        document["key"].Should().Be("value");
-        ((IDictionary<object, object>)((IDictionary<object, object>)document["first"])["second"])["third"].Should().Be("value");
-        document["number"].Should().Be(123456);
-        ((object[])document["array"])[0].Should().Be(123);
-        ((object[])document["array"])[1].Should().Be("456");
-        ((bool)((object[])document["array"])[2]).Should().BeTrue();
+        document["str"].ShouldBe("value");
+        document["int"].ShouldBe(123);
+        document["flt"].ShouldBe(3.1415d);
+        ((bool)document["boolean"]).ShouldBeTrue();
+        document["odt1"].ShouldBe(new DateTimeOffset(1979, 5, 27, 7, 32, 0, TimeSpan.Zero));
+        document["ldt1"].ShouldBe(new DateTime(1979, 5, 27, 7, 32, 0));
+        document["ldt2"].ShouldBe(new DateTime(1979, 5, 27, 0, 32, 0, 999, 999));
+        document["ld1"].ShouldBe(new DateOnly(1979, 5, 27));
+        document["lt1"].ShouldBe(new TimeOnly(7, 32, 0));
+        document["key"].ShouldBe("value");
+        ((IDictionary<object, object>)((IDictionary<object, object>)document["first"])["second"])["third"].ShouldBe("value");
+        document["number"].ShouldBe(123456);
+        ((object[])document["array"])[0].ShouldBe(123);
+        ((object[])document["array"])[1].ShouldBe("456");
+        ((bool)((object[])document["array"])[2]).ShouldBeTrue();
 
         var inlineTable = (IDictionary<object, object>)document["inlineTable"];
-        inlineTable["key"].Should().Be(1);
-        inlineTable["key2"].Should().Be("value");
-        ((object[])inlineTable["key3"])[0].Should().Be(123);
-        ((object[])inlineTable["key3"])[1].Should().Be(456);
-        ((object[])inlineTable["key3"])[2].Should().Be(789);
-        ((IDictionary<object, object>)inlineTable["key4"])["key"].Should().Be("inlinetable");
+        inlineTable["key"].ShouldBe(1);
+        inlineTable["key2"].ShouldBe("value");
+        ((object[])inlineTable["key3"])[0].ShouldBe(123);
+        ((object[])inlineTable["key3"])[1].ShouldBe(456);
+        ((object[])inlineTable["key3"])[2].ShouldBe(789);
+        ((IDictionary<object, object>)inlineTable["key4"])["key"].ShouldBe("inlinetable");
 
         var table = (IDictionary<object, object>)document["Table"];
         var test = (IDictionary<object, object>)table["test"];
-        test["key"].Should().Be("value");
-        ((IDictionary<object, object>)((IDictionary<object, object>)test["first"])["second"])["third"].Should().Be("value");
-        test["number"].Should().Be(123456);
-        ((object[])inlineTable["key3"])[0].Should().Be(123);
-        ((object[])inlineTable["key3"])[1].Should().Be(456);
-        ((object[])inlineTable["key3"])[2].Should().Be(789);
-        ((IDictionary<object, object>)inlineTable["key4"])["key"].Should().Be("inlinetable");
+        test["key"].ShouldBe("value");
+        ((IDictionary<object, object>)((IDictionary<object, object>)test["first"])["second"])["third"].ShouldBe("value");
+        test["number"].ShouldBe(123456);
+        ((object[])inlineTable["key3"])[0].ShouldBe(123);
+        ((object[])inlineTable["key3"])[1].ShouldBe(456);
+        ((object[])inlineTable["key3"])[2].ShouldBe(789);
+        ((IDictionary<object, object>)inlineTable["key4"])["key"].ShouldBe("inlinetable");
 
         var arrayOfTables = (IDictionary<object, object>)document["arrayOfTables"];
         var testArray = (object[])arrayOfTables["test"];
 
-        ((IDictionary<object, object>)testArray[0])["key"].Should().Be("value");
-        ((IDictionary<object, object>)((IDictionary<object, object>)((IDictionary<object, object>)testArray[0])["first"])["second"])["third"].Should().Be("value");
-        ((IDictionary<object, object>)testArray[0])["number"].Should().Be(123456);
-        ((IDictionary<object, object>)testArray[2])["key2"].Should().Be("value");
-        ((IDictionary<object, object>)((IDictionary<object, object>)((IDictionary<object, object>)testArray[2])["first2"])["second2"])["third2"].Should().Be("value");
-        ((IDictionary<object, object>)testArray[2])["number2"].Should().Be(123456);
+        ((IDictionary<object, object>)testArray[0])["key"].ShouldBe("value");
+        ((IDictionary<object, object>)((IDictionary<object, object>)((IDictionary<object, object>)testArray[0])["first"])["second"])["third"].ShouldBe("value");
+        ((IDictionary<object, object>)testArray[0])["number"].ShouldBe(123456);
+        ((IDictionary<object, object>)testArray[2])["key2"].ShouldBe("value");
+        ((IDictionary<object, object>)((IDictionary<object, object>)((IDictionary<object, object>)testArray[2])["first2"])["second2"])["third2"].ShouldBe("value");
+        ((IDictionary<object, object>)testArray[2])["number2"].ShouldBe(123456);
     }
 }

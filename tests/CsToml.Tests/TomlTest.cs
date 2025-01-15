@@ -1,7 +1,5 @@
 using CsToml.Error;
 using CsToml.Extensions;
-using FluentAssertions;
-using FluentAssertions.Execution;
 using System.Text.Json.Nodes;
 
 namespace CsToml.Tests;
@@ -31,19 +29,19 @@ public class TomlTest
         {
             foreach(var ce in ctse.Exceptions!)
             {
-                Execute.Assertion.FailWith($"TomlFile:{tomlFile} Message:{ce}");
+                Should.Throw<CsTomlSerializeException>(static () => {}, $"TomlFile:{tomlFile} Message:{ce}");
             }
         }
         catch (Exception e)
         {
-            Execute.Assertion.FailWith($"TomlFile:{tomlFile} Message:{e}");
+            Should.Throw<Exception>(static () => { }, $"TomlFile:{tomlFile} Message:{e}");
         }
 
         var jsonNode = JsonNode.Parse(File.ReadAllText(jsonFile))!;
         var tomlDocumentJsonNode = document!.ToJsonObject();
 
-        JsonNodeExtensions.DeepEqualsForTomlFormat(jsonNode, tomlDocumentJsonNode).Should().BeTrue();
-        //JsonNode.DeepEquals(tomlDocumentJsonNode, jsonNode).Should().BeTrue();
+        JsonNodeExtensions.DeepEqualsForTomlFormat(jsonNode, tomlDocumentJsonNode).ShouldBeTrue();
+        //JsonNode.DeepEquals(tomlDocumentJsonNode, jsonNode).ShouldBeTrue();
     }
 
     [Theory, MemberData(nameof(InvalidTomlFile))]
@@ -59,9 +57,10 @@ public class TomlTest
         }
         catch (Exception e)
         {
-            Execute.Assertion.FailWith($"TomlFile:{tomlFile} Message:{e}");
+            Should.Throw<Exception>(static () => { }, $"TomlFile:{tomlFile} Message:{e}");
         }
-        Execute.Assertion.FailWith($"TomlFile:{tomlFile} Message:Incorrect syntax was not detected.");
+
+        Should.Throw<Exception>(static () => { }, $"TomlFile:{tomlFile} Message:Incorrect syntax was not detected.");
     }
 
     [Theory, MemberData(nameof(ValidTomlFile))]
@@ -77,19 +76,19 @@ public class TomlTest
         {
             foreach (var ce in ctse.Exceptions!)
             {
-                Execute.Assertion.FailWith($"TomlFile:{tomlFile} Message:{ce}");
+                Should.Throw<CsTomlSerializeException>(static () => { }, $"TomlFile:{tomlFile} Message:{ce}");
             }
         }
         catch (Exception e)
         {
-            Execute.Assertion.FailWith($"TomlFile:{tomlFile} Message:{e}");
+            Should.Throw<Exception>(static () => { }, $"TomlFile:{tomlFile} Message:{e}");
         }
 
         var jsonNode = JsonNode.Parse(File.ReadAllText(jsonFile))!;
         var tomlDocumentJsonNode = document!.ToJsonObject();
 
-        JsonNodeExtensions.DeepEqualsForTomlFormat(jsonNode, tomlDocumentJsonNode).Should().BeTrue();
-        //JsonNode.DeepEquals(tomlDocumentJsonNode, jsonNode).Should().BeTrue();
+        JsonNodeExtensions.DeepEqualsForTomlFormat(jsonNode, tomlDocumentJsonNode).ShouldBeTrue();
+        //JsonNode.DeepEquals(tomlDocumentJsonNode, jsonNode).ShouldBeTrue();
     }
 
     [Theory, MemberData(nameof(ValidTomlFile))]
@@ -105,19 +104,19 @@ public class TomlTest
         {
             foreach (var ce in ctse.Exceptions!)
             {
-                Execute.Assertion.FailWith($"TomlFile:{tomlFile} Message:{ce}");
+                Should.Throw<CsTomlSerializeException>(static () => { }, $"TomlFile:{tomlFile} Message:{ce}");
             }
         }
         catch (Exception e)
         {
-            Execute.Assertion.FailWith($"TomlFile:{tomlFile} Message:{e}");
+            Should.Throw<Exception>(static () => { }, $"TomlFile:{tomlFile} Message:{e}");
         }
 
         var jsonNode = JsonNode.Parse(File.ReadAllText(jsonFile))!;
         var tomlDocumentJsonNode = document!.ToJsonObject();
 
-        JsonNodeExtensions.DeepEqualsForTomlFormat(jsonNode, tomlDocumentJsonNode).Should().BeTrue();
-        //JsonNode.DeepEquals(tomlDocumentJsonNode, jsonNode).Should().BeTrue();
+        JsonNodeExtensions.DeepEqualsForTomlFormat(jsonNode, tomlDocumentJsonNode).ShouldBeTrue();
+        //JsonNode.DeepEquals(tomlDocumentJsonNode, jsonNode).ShouldBeTrue();
     }
 
     [Theory, MemberData(nameof(InvalidTomlFile))]
@@ -134,9 +133,9 @@ public class TomlTest
         }
         catch (Exception e)
         {
-            Execute.Assertion.FailWith($"TomlFile:{tomlFile} Message:{e}");
+            Should.Throw<Exception>(static () => { }, $"TomlFile:{tomlFile} Message:{e}");
         }
-        Execute.Assertion.FailWith($"TomlFile:{tomlFile} Message:Incorrect syntax was not detected.");
+        Should.Throw<Exception>(static () => { }, $"TomlFile:{tomlFile} Message:Incorrect syntax was not detected.");
     }
 
     public static IEnumerable<object[]> ValidTomlFile()
@@ -172,7 +171,6 @@ public class TomlTest
             if (tomlFile.Exists && tomlFile.Extension == TomlExtension && directoryName == InvalidDirectory)
             {
                 yield return new object[] { Path.Combine(TomlTestDirectoryPath, file) };
-
             }
         }
     }
