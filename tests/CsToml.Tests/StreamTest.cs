@@ -1,5 +1,4 @@
 ﻿
-using FluentAssertions;
 using Utf8StringInterpolation;
 
 namespace CsToml.Tests;
@@ -91,40 +90,40 @@ number2 = 123456
         var ms = new MemoryStream(tomlText);
         TomlDocument document = CsTomlSerializer.Deserialize<TomlDocument>(ms);
 
-        document!.RootNode["str"u8].GetString().Should().Be("value");
-        document!.RootNode["int"u8].GetInt64().Should().Be(123);
-        document!.RootNode["flt"u8].GetDouble().Should().Be(3.1415d);
-        document!.RootNode["boolean"u8].GetBool().Should().BeTrue();
-        document!.RootNode["odt1"u8].GetDateTimeOffset().Should().Be(new DateTimeOffset(1979, 5, 27, 7, 32, 0, TimeSpan.Zero));
-        document!.RootNode["ldt1"u8].GetDateTimeOffset().Should().Be(new DateTime(1979, 5, 27, 7, 32, 0));
-        document!.RootNode["ldt2"u8].GetDateTimeOffset().Should().Be(new DateTime(1979, 5, 27, 0, 32, 0, 999, 999));
-        document!.RootNode["ld1"u8].GetDateOnly().Should().Be(new DateOnly(1979, 5, 27));
-        document!.RootNode["lt1"u8].GetTimeOnly().Should().Be(new TimeOnly(7, 32, 0));
-        document!.RootNode["key"u8].GetString().Should().Be("value");
-        document!.RootNode["first"u8]["second"u8]["third"u8].GetString().Should().Be("value");
-        document!.RootNode["number"u8].GetInt64().Should().Be(123456);
+        document!.RootNode["str"u8].GetString().ShouldBe("value");
+        document!.RootNode["int"u8].GetInt64().ShouldBe(123);
+        document!.RootNode["flt"u8].GetDouble().ShouldBe(3.1415d);
+        document!.RootNode["boolean"u8].GetBool().ShouldBeTrue();
+        document!.RootNode["odt1"u8].GetDateTimeOffset().ShouldBe(new DateTimeOffset(1979, 5, 27, 7, 32, 0, TimeSpan.Zero));
+        document!.RootNode["ldt1"u8].GetDateTimeOffset().ShouldBe(new DateTime(1979, 5, 27, 7, 32, 0));
+        document!.RootNode["ldt2"u8].GetDateTimeOffset().ShouldBe(new DateTime(1979, 5, 27, 0, 32, 0, 999, 999));
+        document!.RootNode["ld1"u8].GetDateOnly().ShouldBe(new DateOnly(1979, 5, 27));
+        document!.RootNode["lt1"u8].GetTimeOnly().ShouldBe(new TimeOnly(7, 32, 0));
+        document!.RootNode["key"u8].GetString().ShouldBe("value");
+        document!.RootNode["first"u8]["second"u8]["third"u8].GetString().ShouldBe("value");
+        document!.RootNode["number"u8].GetInt64().ShouldBe(123456);
         var arrayValue = document!.RootNode["array"u8]!.GetArray();
-        arrayValue.Count.Should().Be(3);
-        arrayValue[0].GetInt64().Should().Be(123);
-        arrayValue[1].GetString().Should().Be("456");
-        arrayValue[2].GetBool().Should().BeTrue();
-        document!.RootNode["inlineTable"u8]["key"u8].GetInt64().Should().Be(1);
-        document!.RootNode["inlineTable"u8]["key2"u8].GetString().Should().Be("value");
-        document!.RootNode["inlineTable"u8]["key3"u8][0].GetInt64().Should().Be(123);
-        document!.RootNode["inlineTable"u8]["key3"u8][1].GetInt64().Should().Be(456);
-        document!.RootNode["inlineTable"u8]["key3"u8][2].GetInt64().Should().Be(789);
-        document!.RootNode["inlineTable"u8]["key4"u8]["key"u8].GetString().Should().Be("inlinetable");
-        document!.RootNode["Table"u8]["test"u8]["key"u8].GetString().Should().Be("value");
-        document!.RootNode["Table"u8]["test"u8]["first"u8]["second"u8]["third"u8].GetString().Should().Be("value");
-        document!.RootNode["Table"u8]["test"u8]["number"u8].GetInt64().Should().Be(123456);
-        document!.RootNode["arrayOfTables"u8]["test"u8][0]["key"u8].GetString().Should().Be("value");
-        document!.RootNode["arrayOfTables"u8]["test"u8][0]["first"u8]["second"u8]["third"u8].GetString().Should().Be("value");
-        document!.RootNode["arrayOfTables"u8]["test"u8][0]["number"u8].GetInt64().Should().Be(123456);
-        document!.RootNode["arrayOfTables"u8]["test"u8][2]["key2"u8].GetString().Should().Be("value");
-        document!.RootNode["arrayOfTables"u8]["test"u8][2]["first2"u8]["second2"u8]["third2"u8].GetString().Should().Be("value");
-        document!.RootNode["arrayOfTables"u8]["test"u8][2]["number2"u8].GetInt64().Should().Be(123456);
+        arrayValue.Count.ShouldBe(3);
+        arrayValue[0].GetInt64().ShouldBe(123);
+        arrayValue[1].GetString().ShouldBe("456");
+        arrayValue[2].GetBool().ShouldBeTrue();
+        document!.RootNode["inlineTable"u8]["key"u8].GetInt64().ShouldBe(1);
+        document!.RootNode["inlineTable"u8]["key2"u8].GetString().ShouldBe("value");
+        document!.RootNode["inlineTable"u8]["key3"u8][0].GetInt64().ShouldBe(123);
+        document!.RootNode["inlineTable"u8]["key3"u8][1].GetInt64().ShouldBe(456);
+        document!.RootNode["inlineTable"u8]["key3"u8][2].GetInt64().ShouldBe(789);
+        document!.RootNode["inlineTable"u8]["key4"u8]["key"u8].GetString().ShouldBe("inlinetable");
+        document!.RootNode["Table"u8]["test"u8]["key"u8].GetString().ShouldBe("value");
+        document!.RootNode["Table"u8]["test"u8]["first"u8]["second"u8]["third"u8].GetString().ShouldBe("value");
+        document!.RootNode["Table"u8]["test"u8]["number"u8].GetInt64().ShouldBe(123456);
+        document!.RootNode["arrayOfTables"u8]["test"u8][0]["key"u8].GetString().ShouldBe("value");
+        document!.RootNode["arrayOfTables"u8]["test"u8][0]["first"u8]["second"u8]["third"u8].GetString().ShouldBe("value");
+        document!.RootNode["arrayOfTables"u8]["test"u8][0]["number"u8].GetInt64().ShouldBe(123456);
+        document!.RootNode["arrayOfTables"u8]["test"u8][2]["key2"u8].GetString().ShouldBe("value");
+        document!.RootNode["arrayOfTables"u8]["test"u8][2]["first2"u8]["second2"u8]["third2"u8].GetString().ShouldBe("value");
+        document!.RootNode["arrayOfTables"u8]["test"u8][2]["number2"u8].GetInt64().ShouldBe(123456);
         // failed
-        document!.RootNode["failed"u8].HasValue.Should().BeFalse();
+        document!.RootNode["failed"u8].HasValue.ShouldBeFalse();
     }
 
     [Fact]
@@ -133,40 +132,40 @@ number2 = 123456
         var ms = new MemoryStream(tomlText);
         TomlDocument document = await CsTomlSerializer.DeserializeAsync<TomlDocument>(ms);
 
-        document!.RootNode["str"u8].GetString().Should().Be("value");
-        document!.RootNode["int"u8].GetInt64().Should().Be(123);
-        document!.RootNode["flt"u8].GetDouble().Should().Be(3.1415d);
-        document!.RootNode["boolean"u8].GetBool().Should().BeTrue();
-        document!.RootNode["odt1"u8].GetDateTimeOffset().Should().Be(new DateTimeOffset(1979, 5, 27, 7, 32, 0, TimeSpan.Zero));
-        document!.RootNode["ldt1"u8].GetDateTimeOffset().Should().Be(new DateTime(1979, 5, 27, 7, 32, 0));
-        document!.RootNode["ldt2"u8].GetDateTimeOffset().Should().Be(new DateTime(1979, 5, 27, 0, 32, 0, 999, 999));
-        document!.RootNode["ld1"u8].GetDateOnly().Should().Be(new DateOnly(1979, 5, 27));
-        document!.RootNode["lt1"u8].GetTimeOnly().Should().Be(new TimeOnly(7, 32, 0));
-        document!.RootNode["key"u8].GetString().Should().Be("value");
-        document!.RootNode["first"u8]["second"u8]["third"u8].GetString().Should().Be("value");
-        document!.RootNode["number"u8].GetInt64().Should().Be(123456);
+        document!.RootNode["str"u8].GetString().ShouldBe("value");
+        document!.RootNode["int"u8].GetInt64().ShouldBe(123);
+        document!.RootNode["flt"u8].GetDouble().ShouldBe(3.1415d);
+        document!.RootNode["boolean"u8].GetBool().ShouldBeTrue();
+        document!.RootNode["odt1"u8].GetDateTimeOffset().ShouldBe(new DateTimeOffset(1979, 5, 27, 7, 32, 0, TimeSpan.Zero));
+        document!.RootNode["ldt1"u8].GetDateTimeOffset().ShouldBe(new DateTime(1979, 5, 27, 7, 32, 0));
+        document!.RootNode["ldt2"u8].GetDateTimeOffset().ShouldBe(new DateTime(1979, 5, 27, 0, 32, 0, 999, 999));
+        document!.RootNode["ld1"u8].GetDateOnly().ShouldBe(new DateOnly(1979, 5, 27));
+        document!.RootNode["lt1"u8].GetTimeOnly().ShouldBe(new TimeOnly(7, 32, 0));
+        document!.RootNode["key"u8].GetString().ShouldBe("value");
+        document!.RootNode["first"u8]["second"u8]["third"u8].GetString().ShouldBe("value");
+        document!.RootNode["number"u8].GetInt64().ShouldBe(123456);
         var arrayValue = document!.RootNode["array"u8]!.GetArray();
-        arrayValue.Count.Should().Be(3);
-        arrayValue[0].GetInt64().Should().Be(123);
-        arrayValue[1].GetString().Should().Be("456");
-        arrayValue[2].GetBool().Should().BeTrue();
-        document!.RootNode["inlineTable"u8]["key"u8].GetInt64().Should().Be(1);
-        document!.RootNode["inlineTable"u8]["key2"u8].GetString().Should().Be("value");
-        document!.RootNode["inlineTable"u8]["key3"u8][0].GetInt64().Should().Be(123);
-        document!.RootNode["inlineTable"u8]["key3"u8][1].GetInt64().Should().Be(456);
-        document!.RootNode["inlineTable"u8]["key3"u8][2].GetInt64().Should().Be(789);
-        document!.RootNode["inlineTable"u8]["key4"u8]["key"u8].GetString().Should().Be("inlinetable");
-        document!.RootNode["Table"u8]["test"u8]["key"u8].GetString().Should().Be("value");
-        document!.RootNode["Table"u8]["test"u8]["first"u8]["second"u8]["third"u8].GetString().Should().Be("value");
-        document!.RootNode["Table"u8]["test"u8]["number"u8].GetInt64().Should().Be(123456);
-        document!.RootNode["arrayOfTables"u8]["test"u8][0]["key"u8].GetString().Should().Be("value");
-        document!.RootNode["arrayOfTables"u8]["test"u8][0]["first"u8]["second"u8]["third"u8].GetString().Should().Be("value");
-        document!.RootNode["arrayOfTables"u8]["test"u8][0]["number"u8].GetInt64().Should().Be(123456);
-        document!.RootNode["arrayOfTables"u8]["test"u8][2]["key2"u8].GetString().Should().Be("value");
-        document!.RootNode["arrayOfTables"u8]["test"u8][2]["first2"u8]["second2"u8]["third2"u8].GetString().Should().Be("value");
-        document!.RootNode["arrayOfTables"u8]["test"u8][2]["number2"u8].GetInt64().Should().Be(123456);
+        arrayValue.Count.ShouldBe(3);
+        arrayValue[0].GetInt64().ShouldBe(123);
+        arrayValue[1].GetString().ShouldBe("456");
+        arrayValue[2].GetBool().ShouldBeTrue();
+        document!.RootNode["inlineTable"u8]["key"u8].GetInt64().ShouldBe(1);
+        document!.RootNode["inlineTable"u8]["key2"u8].GetString().ShouldBe("value");
+        document!.RootNode["inlineTable"u8]["key3"u8][0].GetInt64().ShouldBe(123);
+        document!.RootNode["inlineTable"u8]["key3"u8][1].GetInt64().ShouldBe(456);
+        document!.RootNode["inlineTable"u8]["key3"u8][2].GetInt64().ShouldBe(789);
+        document!.RootNode["inlineTable"u8]["key4"u8]["key"u8].GetString().ShouldBe("inlinetable");
+        document!.RootNode["Table"u8]["test"u8]["key"u8].GetString().ShouldBe("value");
+        document!.RootNode["Table"u8]["test"u8]["first"u8]["second"u8]["third"u8].GetString().ShouldBe("value");
+        document!.RootNode["Table"u8]["test"u8]["number"u8].GetInt64().ShouldBe(123456);
+        document!.RootNode["arrayOfTables"u8]["test"u8][0]["key"u8].GetString().ShouldBe("value");
+        document!.RootNode["arrayOfTables"u8]["test"u8][0]["first"u8]["second"u8]["third"u8].GetString().ShouldBe("value");
+        document!.RootNode["arrayOfTables"u8]["test"u8][0]["number"u8].GetInt64().ShouldBe(123456);
+        document!.RootNode["arrayOfTables"u8]["test"u8][2]["key2"u8].GetString().ShouldBe("value");
+        document!.RootNode["arrayOfTables"u8]["test"u8][2]["first2"u8]["second2"u8]["third2"u8].GetString().ShouldBe("value");
+        document!.RootNode["arrayOfTables"u8]["test"u8][2]["number2"u8].GetInt64().ShouldBe(123456);
         // failed
-        document!.RootNode["failed"u8].HasValue.Should().BeFalse();
+        document!.RootNode["failed"u8].HasValue.ShouldBeFalse();
     }
 
     [Fact]
@@ -179,7 +178,7 @@ number2 = 123456
 
         var buffer = ms.ToArray();
 
-        buffer.Should().Equal(expectedtomlText);
+        buffer.ShouldBe(expectedtomlText);
     }
 
     [Fact]
@@ -191,7 +190,7 @@ number2 = 123456
         await CsTomlSerializer.SerializeAsync(ms, document);
 
         var buffer = ms.ToArray();
-        buffer.Should().Equal(expectedtomlText);
+        buffer.ShouldBe(expectedtomlText);
     }
 
 }

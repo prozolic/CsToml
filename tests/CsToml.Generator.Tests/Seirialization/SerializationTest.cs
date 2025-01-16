@@ -1,5 +1,5 @@
 ﻿using CsToml.Error;
-using FluentAssertions;
+using Shouldly;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
@@ -26,12 +26,13 @@ public class TypeZeroTest
         {
             using var bytes = CsTomlSerializer.Serialize(type);
 
-            bytes.ByteSpan.ToArray().Should().Equal(""u8.ToArray());
+
+            bytes.ByteSpan.ToArray().ShouldBe(""u8.ToArray());
         }
         {
             using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
 
-            bytes.ByteSpan.ToArray().Should().Equal(""u8.ToArray());
+            bytes.ByteSpan.ToArray().ShouldBe(""u8.ToArray());
         }
     }
 
@@ -39,7 +40,7 @@ public class TypeZeroTest
     public void Deserialize()
     {
         var type = CsTomlSerializer.Deserialize<TypeZero>(""u8);
-        type.Should().NotBeNull();
+        type.ShouldNotBeNull();
     }
 }
 
@@ -60,7 +61,7 @@ public class TypeOneTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
         {
             using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
@@ -70,7 +71,7 @@ public class TypeOneTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
     }
 
@@ -78,7 +79,7 @@ public class TypeOneTest
     public void Deserialize()
     {
         var type = CsTomlSerializer.Deserialize<TypeOne>(@"Value = 999"u8);
-        type.Value.Should().Be(999);
+        type.Value.ShouldBe(999);
     }
 }
 
@@ -102,7 +103,7 @@ public class TypeTwoTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
         {
             using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
@@ -113,7 +114,7 @@ public class TypeTwoTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
     }
 
@@ -126,8 +127,8 @@ public class TypeTwoTest
         writer.Flush();
 
         var type = CsTomlSerializer.Deserialize<TypeTwo>(buffer.WrittenSpan);
-        type.Value.Should().Be(999);
-        type.Value2.Should().Be(123);
+        type.Value.ShouldBe(999);
+        type.Value2.ShouldBe(123);
     }
 }
 
@@ -151,7 +152,7 @@ public class TypeRecordTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
         {
             using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
@@ -162,7 +163,7 @@ public class TypeRecordTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
     }
 
@@ -175,8 +176,8 @@ public class TypeRecordTest
         writer.Flush();
 
         var type = CsTomlSerializer.Deserialize<TypeRecord>(buffer.WrittenSpan);
-        type.Value.Should().Be(999);
-        type.Str.Should().Be("Test");
+        type.Value.ShouldBe(999);
+        type.Str.ShouldBe("Test");
     }
 }
 
@@ -199,7 +200,7 @@ public class TestStructTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
         {
             using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
@@ -210,7 +211,7 @@ public class TestStructTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
     }
 
@@ -223,8 +224,8 @@ public class TestStructTest
         writer.Flush();
 
         var type = CsTomlSerializer.Deserialize<TestStruct>(buffer.WrittenSpan);
-        type.Value.Should().Be(999);
-        type.Str.Should().Be("Test");
+        type.Value.ShouldBe(999);
+        type.Str.ShouldBe("Test");
     }
 }
 
@@ -248,7 +249,7 @@ public class TestRecordStructTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
         {
             using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
@@ -259,7 +260,7 @@ public class TestRecordStructTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
     }
 
@@ -272,8 +273,8 @@ public class TestRecordStructTest
         writer.Flush();
 
         var type = CsTomlSerializer.Deserialize<TestRecordStruct>(buffer.WrittenSpan);
-        type.Value.Should().Be(999);
-        type.Str.Should().Be("Test");
+        type.Value.ShouldBe(999);
+        type.Str.ShouldBe("Test");
     }
 }
 
@@ -295,7 +296,7 @@ public class TypeIgnoreTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
         {
             using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
@@ -305,7 +306,7 @@ public class TypeIgnoreTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
     }
 
@@ -318,8 +319,8 @@ public class TypeIgnoreTest
         writer.Flush();
 
         var type = CsTomlSerializer.Deserialize<TypeIgnore>(buffer.WrittenSpan);
-        type.Value.Should().Be(999);
-        type.Str.Should().BeNull();
+        type.Value.ShouldBe(999);
+        type.Str.ShouldBeNull();
     }
 }
 
@@ -341,7 +342,7 @@ public class WithArrayTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
         {
             using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
@@ -351,7 +352,7 @@ public class WithArrayTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
     }
 
@@ -363,7 +364,7 @@ public class WithArrayTest
         writer.Flush();
 
         var type = CsTomlSerializer.Deserialize<WithArray>(buffer.WrittenSpan);
-        type.Value.Should().Equal([1, 3, 5]);
+        type.Value.ShouldBe([1, 3, 5]);
     }
 }
 
@@ -385,7 +386,7 @@ public class WithArray2Test
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
         {
             using var bytes = CsTomlSerializer.Serialize(type);
@@ -395,7 +396,7 @@ public class WithArray2Test
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
     }
 
@@ -407,9 +408,9 @@ public class WithArray2Test
         writer.Flush();
 
         var type = CsTomlSerializer.Deserialize<WithArray2>(buffer.WrittenSpan);
-        type.Value[0].Should().Equal([1, 2, 3]);
-        type.Value[1].Should().Equal([4, 5]);
-        type.Value.Length.Should().Be(2);
+        type.Value[0].ShouldBe([1, 2, 3]);
+        type.Value[1].ShouldBe([4, 5]);
+        type.Value.Length.ShouldBe(2);
     }
 }
 
@@ -431,7 +432,7 @@ public class WithNullableArrayTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
         {
             using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
@@ -441,7 +442,7 @@ public class WithNullableArrayTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
     }
 
@@ -449,14 +450,14 @@ public class WithNullableArrayTest
     public void Deserialize()
     {
         var nullableValue = CsTomlSerializer.Deserialize<WithNullableArray>(""u8);
-        nullableValue.Value.Should().BeNull();
+        nullableValue.Value.ShouldBeNull();
 
         using var buffer = Utf8String.CreateWriter(out var writer);
         writer.AppendLine("Value = [1,3,5]");
         writer.Flush();
 
         var type = CsTomlSerializer.Deserialize<WithNullableArray>(buffer.WrittenSpan);
-        type.Value.Should().Equal([1, 3, 5]);
+        type.Value.ShouldBe([1, 3, 5]);
     }
 }
 
@@ -478,7 +479,7 @@ public class WithNullableArray2Test
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
         {
             using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
@@ -488,7 +489,7 @@ public class WithNullableArray2Test
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
     }
 
@@ -496,14 +497,14 @@ public class WithNullableArray2Test
     public void Deserialize()
     {
         var nullableValue = CsTomlSerializer.Deserialize<WithNullableArray2>(""u8);
-        nullableValue.Value.Should().BeNull();
+        nullableValue.Value.ShouldBeNull();
 
         using var buffer = Utf8String.CreateWriter(out var writer);
         writer.AppendLine("Value = [1,3,5]");
         writer.Flush();
 
         var type = CsTomlSerializer.Deserialize<WithNullableArray>(buffer.WrittenSpan);
-        type.Value.Should().Equal([1, 3, 5]);
+        type.Value.ShouldBe([1, 3, 5]);
     }
 }
 
@@ -525,7 +526,7 @@ public class WithCollectionTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
         {
             using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
@@ -535,7 +536,7 @@ public class WithCollectionTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
     }
 
@@ -547,7 +548,7 @@ public class WithCollectionTest
         writer.Flush();
 
         var type = CsTomlSerializer.Deserialize<WithCollection>(buffer.WrittenSpan);
-        type.Value.Should().Equal([1, 3, 5]);
+        type.Value.ShouldBe([1, 3, 5]);
     }
 }
 
@@ -569,7 +570,7 @@ public class WithNullableCollectionTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
         {
             using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
@@ -579,7 +580,7 @@ public class WithNullableCollectionTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
     }
 
@@ -587,14 +588,14 @@ public class WithNullableCollectionTest
     public void Deserialize()
     {
         var nullableValue = CsTomlSerializer.Deserialize<WithNullableCollection>(""u8);
-        nullableValue.Value.Should().BeNull();
+        nullableValue.Value.ShouldBeNull();
 
         using var buffer = Utf8String.CreateWriter(out var writer);
         writer.AppendLine("Value = [1,3,5]");
         writer.Flush();
 
         var type = CsTomlSerializer.Deserialize<WithNullableCollection>(buffer.WrittenSpan);
-        type.Value.Should().Equal([1, 3, 5]);
+        type.Value.ShouldBe([1, 3, 5]);
     }
 }
 
@@ -631,7 +632,7 @@ public class TomlPrimitiveTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
         {
             using var bytes = CsTomlSerializer.Serialize(primitive, Option.Header);
@@ -648,7 +649,7 @@ public class TomlPrimitiveTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
     }
 
@@ -667,14 +668,14 @@ public class TomlPrimitiveTest
         writer.Flush();
 
         var primitive = CsTomlSerializer.Deserialize<TomlPrimitive>(buffer.WrittenSpan);
-        primitive.Str.Should().Be("I'm a string.");
-        primitive.Long.Should().Be(123);
-        primitive.Float.Should().Be(123.456);
-        primitive.Boolean.Should().BeTrue();
-        primitive.OffsetDateTime.Should().Be(new DateTimeOffset(1979, 5, 27, 7, 32, 0, TimeSpan.Zero));
-        primitive.LocalDateTime.Should().Be(new DateTime(1979, 5, 27, 7, 32, 0));
-        primitive.LocalDate.Should().Be(new DateOnly(1979, 5, 27));
-        primitive.LocalTime.Should().Be(new TimeOnly(7, 32, 30));
+        primitive.Str.ShouldBe("I'm a string.");
+        primitive.Long.ShouldBe(123);
+        primitive.Float.ShouldBe(123.456);
+        primitive.Boolean.ShouldBeTrue();
+        primitive.OffsetDateTime.ShouldBe(new DateTimeOffset(1979, 5, 27, 7, 32, 0, TimeSpan.Zero));
+        primitive.LocalDateTime.ShouldBe(new DateTime(1979, 5, 27, 7, 32, 0));
+        primitive.LocalDate.ShouldBe(new DateOnly(1979, 5, 27));
+        primitive.LocalTime.ShouldBe(new TimeOnly(7, 32, 30));
     }
 }
 
@@ -696,7 +697,7 @@ public class NullableTypeTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
         {
             using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
@@ -706,7 +707,7 @@ public class NullableTypeTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
     }
 
@@ -714,21 +715,21 @@ public class NullableTypeTest
     public void SerializeNull()
     {
         var throwAction = () => { using var bytes = CsTomlSerializer.Serialize(new NullableType()); };
-        throwAction.Should().Throw<CsTomlException>();
+        throwAction.ShouldThrow<CsTomlException>();
     }
 
     [Fact]
     public void Deserialize()
     {
         var type = CsTomlSerializer.Deserialize<NullableType>(@"Value = 999"u8);
-        type.Value.Should().Be(999);
+        type.Value.ShouldBe(999);
     }
 
     [Fact]
     public void DeserializeNull()
     {
         var type = CsTomlSerializer.Deserialize<NullableType>(@""u8);
-        type.Value.Should().BeNull();
+        type.Value.ShouldBeNull();
     }
 }
 
@@ -764,7 +765,7 @@ public class WithTupleTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
         {
             using var bytes = CsTomlSerializer.Serialize(value,Option.Header);
@@ -781,7 +782,7 @@ public class WithTupleTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
     }
 
@@ -800,14 +801,14 @@ public class WithTupleTest
         writer.Flush();
 
         var type = CsTomlSerializer.Deserialize<WithTuple>(buffer.WrittenSpan);
-        type.One.Should().Be(new Tuple<int>(1));
-        type.Two.Should().Be(new Tuple<int, int>(1, 2));
-        type.Three.Should().Be(new Tuple<int, int, int>(1, 2, 3));
-        type.Four.Should().Be(new Tuple<int, int, int, int>(1, 2, 3, 4));
-        type.Five.Should().Be(new Tuple<int, int, int, int, int>(1, 2, 3, 4, 5));
-        type.Six.Should().Be(new Tuple<int, int, int, int, int, int>(1, 2, 3, 4, 5, 6));
-        type.Seven.Should().Be(new Tuple<int, int, int, int, int, int, int>(1, 2, 3, 4, 5, 6, 7));
-        type.Eight.Should().Be(new Tuple<int, int, int, int, int, int, int, Tuple<int>>(1, 2, 3, 4, 5, 6, 7, new Tuple<int>(8)));
+        type.One.ShouldBe(new Tuple<int>(1));
+        type.Two.ShouldBe(new Tuple<int, int>(1, 2));
+        type.Three.ShouldBe(new Tuple<int, int, int>(1, 2, 3));
+        type.Four.ShouldBe(new Tuple<int, int, int, int>(1, 2, 3, 4));
+        type.Five.ShouldBe(new Tuple<int, int, int, int, int>(1, 2, 3, 4, 5));
+        type.Six.ShouldBe(new Tuple<int, int, int, int, int, int>(1, 2, 3, 4, 5, 6));
+        type.Seven.ShouldBe(new Tuple<int, int, int, int, int, int, int>(1, 2, 3, 4, 5, 6, 7));
+        type.Eight.ShouldBe(new Tuple<int, int, int, int, int, int, int, Tuple<int>>(1, 2, 3, 4, 5, 6, 7, new Tuple<int>(8)));
     }
 
 }
@@ -843,7 +844,7 @@ public class WithValueTupleTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
         {
             using var bytes = CsTomlSerializer.Serialize(value,Option.Header);
@@ -860,7 +861,7 @@ public class WithValueTupleTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
     }
 
@@ -879,14 +880,14 @@ public class WithValueTupleTest
         writer.Flush();
 
         var type = CsTomlSerializer.Deserialize<WithValueTuple>(buffer.WrittenSpan);
-        type.One.Should().Be(new ValueTuple<int>(1));
-        type.Two.Should().Be(new ValueTuple<int, int>(1, 2));
-        type.Three.Should().Be(new ValueTuple<int, int, int>(1, 2, 3));
-        type.Four.Should().Be(new ValueTuple<int, int, int, int>(1, 2, 3, 4));
-        type.Five.Should().Be(new ValueTuple<int, int, int, int, int>(1, 2, 3, 4, 5));
-        type.Six.Should().Be(new ValueTuple<int, int, int, int, int, int>(1, 2, 3, 4, 5, 6));
-        type.Seven.Should().Be(new ValueTuple<int, int, int, int, int, int, int>(1, 2, 3, 4, 5, 6, 7));
-        type.Eight.Should().Be(new ValueTuple<int, int, int, int, int, int, int, ValueTuple<int>>(1, 2, 3, 4, 5, 6, 7, new ValueTuple<int>(8)));
+        type.One.ShouldBe(new ValueTuple<int>(1));
+        type.Two.ShouldBe(new ValueTuple<int, int>(1, 2));
+        type.Three.ShouldBe(new ValueTuple<int, int, int>(1, 2, 3));
+        type.Four.ShouldBe(new ValueTuple<int, int, int, int>(1, 2, 3, 4));
+        type.Five.ShouldBe(new ValueTuple<int, int, int, int, int>(1, 2, 3, 4, 5));
+        type.Six.ShouldBe(new ValueTuple<int, int, int, int, int, int>(1, 2, 3, 4, 5, 6));
+        type.Seven.ShouldBe(new ValueTuple<int, int, int, int, int, int, int>(1, 2, 3, 4, 5, 6, 7));
+        type.Eight.ShouldBe(new ValueTuple<int, int, int, int, int, int, int, ValueTuple<int>>(1, 2, 3, 4, 5, 6, 7, new ValueTuple<int>(8)));
     }
 
 }
@@ -908,7 +909,7 @@ public class TypeTableTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
 
         {
@@ -921,7 +922,7 @@ public class TypeTableTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
     }
 
@@ -934,7 +935,7 @@ public class TypeTableTest
             writer.Flush();
 
             var type = CsTomlSerializer.Deserialize<TypeTable>(buffer.WrittenSpan);
-            type.Table2.Table3.Value.Should().Be("This is TypeTable3");
+            type.Table2.Table3.Value.ShouldBe("This is TypeTable3");
         }
         {
             using var buffer = Utf8String.CreateWriter(out var writer);
@@ -944,7 +945,7 @@ public class TypeTableTest
             writer.Flush();
 
             var type = CsTomlSerializer.Deserialize<TypeTable>(buffer.WrittenSpan);
-            type.Table2.Table3.Value.Should().Be("This is TypeTable3");
+            type.Table2.Table3.Value.ShouldBe("This is TypeTable3");
         }
     }
 }
@@ -968,7 +969,7 @@ public class TypeTomlSerializedObjectListTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
         {
             using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
@@ -978,7 +979,7 @@ public class TypeTomlSerializedObjectListTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
     }
 
@@ -990,12 +991,12 @@ public class TypeTomlSerializedObjectListTest
         writer.Flush();
 
         var type = CsTomlSerializer.Deserialize<TypeTomlSerializedObjectList>(buffer.WrittenSpan);
-        type.Table2.Count.Should().Be(5);
-        type.Table2[0].Table3.Value.Should().Be("[1] This is TypeTable3");
-        type.Table2[1].Table3.Value.Should().Be("[2] This is TypeTable3");
-        type.Table2[2].Table3.Value.Should().Be("[3] This is TypeTable3");
-        type.Table2[3].Table3.Value.Should().Be("[4] This is TypeTable3");
-        type.Table2[4].Table3.Value.Should().Be("[5] This is TypeTable3");
+        type.Table2.Count.ShouldBe(5);
+        type.Table2[0].Table3.Value.ShouldBe("[1] This is TypeTable3");
+        type.Table2[1].Table3.Value.ShouldBe("[2] This is TypeTable3");
+        type.Table2[2].Table3.Value.ShouldBe("[3] This is TypeTable3");
+        type.Table2[3].Table3.Value.ShouldBe("[4] This is TypeTable3");
+        type.Table2[4].Table3.Value.ShouldBe("[5] This is TypeTable3");
 
     }
 }
@@ -1025,7 +1026,7 @@ public class TypeTomlSerializedObjectListTest2
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
         {
             using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
@@ -1036,7 +1037,7 @@ public class TypeTomlSerializedObjectListTest2
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
     }
 
@@ -1049,12 +1050,12 @@ public class TypeTomlSerializedObjectListTest2
         writer.Flush();
 
         var type = CsTomlSerializer.Deserialize<TypeTomlSerializedObjectList2>(buffer.WrittenSpan);
-        type.Table.Count.Should().Be(5);
-        type.Table[0].Table2.Table3.Value.Should().Be("[1] This is TypeTable3");
-        type.Table[1].Table2.Table3.Value.Should().Be("[2] This is TypeTable3");
-        type.Table[2].Table2.Table3.Value.Should().Be("[3] This is TypeTable3");
-        type.Table[3].Table2.Table3.Value.Should().Be("[4] This is TypeTable3");
-        type.Table[4].Table2.Table3.Value.Should().Be("[5] This is TypeTable3");
+        type.Table.Count.ShouldBe(5);
+        type.Table[0].Table2.Table3.Value.ShouldBe("[1] This is TypeTable3");
+        type.Table[1].Table2.Table3.Value.ShouldBe("[2] This is TypeTable3");
+        type.Table[2].Table2.Table3.Value.ShouldBe("[3] This is TypeTable3");
+        type.Table[3].Table2.Table3.Value.ShouldBe("[4] This is TypeTable3");
+        type.Table[4].Table2.Table3.Value.ShouldBe("[5] This is TypeTable3");
 
     }
 }
@@ -1095,7 +1096,7 @@ public class TypeCollectionTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
         {
             using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
@@ -1114,7 +1115,7 @@ public class TypeCollectionTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
     }
 
@@ -1135,16 +1136,18 @@ public class TypeCollectionTest
         writer.Flush();
 
         var type = CsTomlSerializer.Deserialize<TypeCollection>(buffer.WrittenSpan);
-        type.Value.Should().Equal([1, 2, 3, 4, 5]);
-        type.Value2.Should().Equal([1, 2, 3, 4, 5]);
-        type.Value3.Should().Equal([1, 2, 3, 4, 5]);
-        type.Value4.Should().Equal([1, 2, 3, 4, 5]);
-        type.Value5.Should().Equal([1, 2, 3, 4, 5]);
-        type.Value6.Should().Equal([1, 2, 3, 4, 5]);
-        type.Value7.Should().Equal([1, 2, 3, 4, 5]);
-        type.Value8.Should().Equal([1, 2, 3, 4, 5]);
-        type.Value9.Should().Equal([1, 2, 3, 4, 5]);
-        type.Value10.Should().Equal([1, 2, 3, 4, 5]);
+
+        int[] expected = [1, 2, 3, 4, 5];
+        type.Value.ShouldBe(expected);
+        type.Value2.ShouldBe(expected);
+        type.Value3.ShouldBe(expected);
+        type.Value4.ShouldBe(expected);
+        type.Value5.ShouldBe(expected);
+        type.Value6.ShouldBe(expected);
+        type.Value7.ShouldBe(expected);
+        type.Value8.ShouldBe(expected);
+        type.Value9.ShouldBe(expected);
+        type.Value10.ShouldBe(expected);
     }
 }
 
@@ -1172,7 +1175,7 @@ public class TypeArrayOfTablesTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
         {
             using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
@@ -1182,7 +1185,7 @@ public class TypeArrayOfTablesTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
     }
 
@@ -1202,9 +1205,9 @@ public class TypeArrayOfTablesTest
             writer.Flush();
 
             var type = CsTomlSerializer.Deserialize<TypeArrayOfTable>(buffer.WrittenSpan);
-            type.Header.Table2[0].Table3.Value.Should().Be("[1] This is TypeTable3");
-            type.Header.Table2[1].Table3.Value.Should().Be("[2] This is TypeTable3");
-            type.Header.Table2[2].Table3.Value.Should().Be("[3] This is TypeTable3");
+            type.Header.Table2[0].Table3.Value.ShouldBe("[1] This is TypeTable3");
+            type.Header.Table2[1].Table3.Value.ShouldBe("[2] This is TypeTable3");
+            type.Header.Table2[2].Table3.Value.ShouldBe("[3] This is TypeTable3");
         }
         {
             using var buffer = Utf8String.CreateWriter(out var writer);
@@ -1212,9 +1215,9 @@ public class TypeArrayOfTablesTest
             writer.Flush();
 
             var type = CsTomlSerializer.Deserialize<TypeArrayOfTable>(buffer.WrittenSpan);
-            type.Header.Table2[0].Table3.Value.Should().Be("[1] This is TypeTable3");
-            type.Header.Table2[1].Table3.Value.Should().Be("[2] This is TypeTable3");
-            type.Header.Table2[2].Table3.Value.Should().Be("[3] This is TypeTable3");
+            type.Header.Table2[0].Table3.Value.ShouldBe("[1] This is TypeTable3");
+            type.Header.Table2[1].Table3.Value.ShouldBe("[2] This is TypeTable3");
+            type.Header.Table2[2].Table3.Value.ShouldBe("[3] This is TypeTable3");
         }
         {
             using var buffer = Utf8String.CreateWriter(out var writer);
@@ -1223,9 +1226,9 @@ public class TypeArrayOfTablesTest
             writer.Flush();
 
             var type = CsTomlSerializer.Deserialize<TypeArrayOfTable>(buffer.WrittenSpan);
-            type.Header.Table2[0].Table3.Value.Should().Be("[1] This is TypeTable3");
-            type.Header.Table2[1].Table3.Value.Should().Be("[2] This is TypeTable3");
-            type.Header.Table2[2].Table3.Value.Should().Be("[3] This is TypeTable3");
+            type.Header.Table2[0].Table3.Value.ShouldBe("[1] This is TypeTable3");
+            type.Header.Table2[1].Table3.Value.ShouldBe("[2] This is TypeTable3");
+            type.Header.Table2[2].Table3.Value.ShouldBe("[3] This is TypeTable3");
         }
     }
 }
@@ -1264,7 +1267,7 @@ public class TypeDictionaryTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
         {
             using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
@@ -1274,7 +1277,7 @@ public class TypeDictionaryTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
     }
 
@@ -1289,13 +1292,13 @@ public class TypeDictionaryTest
         dynamic dynamicDict = type.Value;
 
         long value = dynamicDict["key"][0];
-        value.Should().Be(999);
+        value.ShouldBe(999);
         string value2 = dynamicDict["key"][1];
-        value2.Should().Be("Value");
+        value2.ShouldBe("Value");
         object[] value3 = dynamicDict["key"][2]["key"][0];
-        value3.Should().Equal(new object[] { 1, 2, 3 });
+        value3.ShouldBe(new object[] { 1, 2, 3 });
         string value4 = dynamicDict["key"][2]["key"][1]["key"];
-        value4.Should().Be("value");
+        value4.ShouldBe("value");
     }
 }
 
@@ -1345,7 +1348,7 @@ public class TypeDictionaryTest2
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
         {
             using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
@@ -1360,7 +1363,7 @@ public class TypeDictionaryTest2
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
     }
 
@@ -1381,73 +1384,73 @@ public class TypeDictionaryTest2
             dynamic dynamicDict = type.Value;
 
             long value = dynamicDict["key"][0];
-            value.Should().Be(999);
+            value.ShouldBe(999);
             string value2 = dynamicDict["key"][1];
-            value2.Should().Be("Value");
+            value2.ShouldBe("Value");
             object[] value3 = dynamicDict["key"][2]["key"][0];
-            value3.Should().Equal(new object[] { 1, 2, 3 });
+            value3.ShouldBe(new object[] { 1, 2, 3 });
             string value4 = dynamicDict["key"][2]["key"][1]["key"];
-            value4.Should().Be("value");
+            value4.ShouldBe("value");
         }
         {
             dynamic dynamicDict = type.Value2;
 
             long value = dynamicDict["key"][0];
-            value.Should().Be(999);
+            value.ShouldBe(999);
             string value2 = dynamicDict["key"][1];
-            value2.Should().Be("Value");
+            value2.ShouldBe("Value");
             object[] value3 = dynamicDict["key"][2]["key"][0];
-            value3.Should().Equal(new object[] { 1, 2, 3 });
+            value3.ShouldBe(new object[] { 1, 2, 3 });
             string value4 = dynamicDict["key"][2]["key"][1]["key"];
-            value4.Should().Be("value");
+            value4.ShouldBe("value");
         }
         {
             dynamic dynamicDict = type.Value3;
 
             long value = dynamicDict["key"][0];
-            value.Should().Be(999);
+            value.ShouldBe(999);
             string value2 = dynamicDict["key"][1];
-            value2.Should().Be("Value");
+            value2.ShouldBe("Value");
             object[] value3 = dynamicDict["key"][2]["key"][0];
-            value3.Should().Equal(new object[] { 1, 2, 3 });
+            value3.ShouldBe(new object[] { 1, 2, 3 });
             string value4 = dynamicDict["key"][2]["key"][1]["key"];
-            value4.Should().Be("value");
+            value4.ShouldBe("value");
         }
         {
             dynamic dynamicDict = type.Value4;
 
             long value = dynamicDict["key"][0];
-            value.Should().Be(999);
+            value.ShouldBe(999);
             string value2 = dynamicDict["key"][1];
-            value2.Should().Be("Value");
+            value2.ShouldBe("Value");
             object[] value3 = dynamicDict["key"][2]["key"][0];
-            value3.Should().Equal(new object[] { 1, 2, 3 });
+            value3.ShouldBe(new object[] { 1, 2, 3 });
             string value4 = dynamicDict["key"][2]["key"][1]["key"];
-            value4.Should().Be("value");
+            value4.ShouldBe("value");
         }
         {
             dynamic dynamicDict = type.Value5;
 
             long value = dynamicDict["key"][0];
-            value.Should().Be(999);
+            value.ShouldBe(999);
             string value2 = dynamicDict["key"][1];
-            value2.Should().Be("Value");
+            value2.ShouldBe("Value");
             object[] value3 = dynamicDict["key"][2]["key"][0];
-            value3.Should().Equal(new object[] { 1, 2, 3 });
+            value3.ShouldBe(new object[] { 1, 2, 3 });
             string value4 = dynamicDict["key"][2]["key"][1]["key"];
-            value4.Should().Be("value");
+            value4.ShouldBe("value");
         }
         {
             dynamic dynamicDict = type.Value6;
 
             long value = dynamicDict["key"][0];
-            value.Should().Be(999);
+            value.ShouldBe(999);
             string value2 = dynamicDict["key"][1];
-            value2.Should().Be("Value");
+            value2.ShouldBe("Value");
             object[] value3 = dynamicDict["key"][2]["key"][0];
-            value3.Should().Equal(new object[] { 1, 2, 3 });
+            value3.ShouldBe(new object[] { 1, 2, 3 });
             string value4 = dynamicDict["key"][2]["key"][1]["key"];
-            value4.Should().Be("value");
+            value4.ShouldBe("value");
         }
 
     }
@@ -1476,7 +1479,7 @@ public class TypeDictionaryTest3
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
         {
             using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
@@ -1486,7 +1489,7 @@ public class TypeDictionaryTest3
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
     }
 
@@ -1501,11 +1504,11 @@ public class TypeDictionaryTest3
         var dynamicDict = type.Value;
 
         string value = dynamicDict[123];
-        value.Should().Be("Value");
+        value.ShouldBe("Value");
         string value2 = dynamicDict[-1];
-        value2.Should().Be("Value2");
+        value2.ShouldBe("Value2");
         string value3 = dynamicDict[123456789];
-        value3.Should().Be("Value3");
+        value3.ShouldBe("Value3");
     }
 }
 
@@ -1532,7 +1535,7 @@ public class TypeHashtableTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
         {
             using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
@@ -1542,7 +1545,7 @@ public class TypeHashtableTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
     }
 
@@ -1555,11 +1558,11 @@ public class TypeHashtableTest
 
         var type = CsTomlSerializer.Deserialize<TypeHashtable>(buffer.WrittenSpan);
         string value = (string)type.Value["123"]!;
-        value.Should().Be("Value");
+        value.ShouldBe("Value");
         string value2 = (string)type.Value["-1"]!;
-        value2.Should().Be("Value2");
+        value2.ShouldBe("Value2");
         string value3 = (string)type.Value["123456789"]!;
-        value3.Should().Be("Value3");
+        value3.ShouldBe("Value3");
     }
 }
 
@@ -1579,7 +1582,7 @@ public class TypeAliasTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
         {
             using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
@@ -1589,7 +1592,7 @@ public class TypeAliasTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
     }
 
@@ -1597,7 +1600,7 @@ public class TypeAliasTest
     public void Deserialize()
     {
         var type = CsTomlSerializer.Deserialize<TypeAlias>("alias = \"This is TypeAlias\""u8);
-        type.Value.Should().Be("This is TypeAlias");
+        type.Value.ShouldBe("This is TypeAlias");
     }
 }
 
@@ -1642,7 +1645,7 @@ public class TypeTableATest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
         {
             using var bytes = CsTomlSerializer.Serialize(tableA, Option.Header);
@@ -1659,7 +1662,7 @@ public class TypeTableATest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
     }
 
@@ -1677,16 +1680,16 @@ public class TypeTableATest
 
             var tableA = CsTomlSerializer.Deserialize<TypeTableA>(buffer.WrittenSpan);
 
-            tableA.Dict.Count.Should().Be(2);
-            tableA.Dict[1].Should().Be("2");
-            tableA.Dict[3].Should().Be("4");
-            tableA.TableB.Value.Should().Be("This is TypeTableB");
-            tableA.TableB.TableC.Value.Should().Be("This is TypeTableC");
-            tableA.TableB.TableC.TableD.Value.Should().Be("This is TypeTableD");
-            tableA.TableB.TableECollection.Count.Should().Be(3);
-            tableA.TableB.TableECollection[0].TableF.Value.Should().Be("[1] This is TypeTableF");
-            tableA.TableB.TableECollection[1].TableF.Value.Should().Be("[2] This is TypeTableF");
-            tableA.TableB.TableECollection[2].TableF.Value.Should().Be("[3] This is TypeTableF");
+            tableA.Dict.Count.ShouldBe(2);
+            tableA.Dict[1].ShouldBe("2");
+            tableA.Dict[3].ShouldBe("4");
+            tableA.TableB.Value.ShouldBe("This is TypeTableB");
+            tableA.TableB.TableC.Value.ShouldBe("This is TypeTableC");
+            tableA.TableB.TableC.TableD.Value.ShouldBe("This is TypeTableD");
+            tableA.TableB.TableECollection.Count.ShouldBe(3);
+            tableA.TableB.TableECollection[0].TableF.Value.ShouldBe("[1] This is TypeTableF");
+            tableA.TableB.TableECollection[1].TableF.Value.ShouldBe("[2] This is TypeTableF");
+            tableA.TableB.TableECollection[2].TableF.Value.ShouldBe("[3] This is TypeTableF");
         }
         {
             using var buffer = Utf8String.CreateWriter(out var writer);
@@ -1699,16 +1702,16 @@ public class TypeTableATest
 
             var tableA = CsTomlSerializer.Deserialize<TypeTableA>(buffer.WrittenSpan);
 
-            tableA.Dict.Count.Should().Be(2);
-            tableA.Dict[1].Should().Be("2");
-            tableA.Dict[3].Should().Be("4");
-            tableA.TableB.Value.Should().Be("This is TypeTableB");
-            tableA.TableB.TableC.Value.Should().Be("This is TypeTableC");
-            tableA.TableB.TableC.TableD.Value.Should().Be("This is TypeTableD");
-            tableA.TableB.TableECollection.Count.Should().Be(3);
-            tableA.TableB.TableECollection[0].TableF.Value.Should().Be("[1] This is TypeTableF");
-            tableA.TableB.TableECollection[1].TableF.Value.Should().Be("[2] This is TypeTableF");
-            tableA.TableB.TableECollection[2].TableF.Value.Should().Be("[3] This is TypeTableF");
+            tableA.Dict.Count.ShouldBe(2);
+            tableA.Dict[1].ShouldBe("2");
+            tableA.Dict[3].ShouldBe("4");
+            tableA.TableB.Value.ShouldBe("This is TypeTableB");
+            tableA.TableB.TableC.Value.ShouldBe("This is TypeTableC");
+            tableA.TableB.TableC.TableD.Value.ShouldBe("This is TypeTableD");
+            tableA.TableB.TableECollection.Count.ShouldBe(3);
+            tableA.TableB.TableECollection[0].TableF.Value.ShouldBe("[1] This is TypeTableF");
+            tableA.TableB.TableECollection[1].TableF.Value.ShouldBe("[2] This is TypeTableF");
+            tableA.TableB.TableECollection[2].TableF.Value.ShouldBe("[3] This is TypeTableF");
         }
     }
 
@@ -1736,7 +1739,7 @@ public class TypeSortedListTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
         {
             using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
@@ -1746,7 +1749,7 @@ public class TypeSortedListTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
     }
 
@@ -1765,7 +1768,7 @@ public class TypeSortedListTest
         };
 
         var type = CsTomlSerializer.Deserialize<TypeSortedList>(buffer.WrittenSpan);
-        type.Value.SequenceEqual(expected).Should().BeTrue();
+        type.Value.SequenceEqual(expected).ShouldBeTrue();
     }
 }
 
@@ -1792,7 +1795,7 @@ public class ConstructorTest
         writer.Flush();
 
         var expected = buffer.ToArray();
-        bytes.ByteSpan.ToArray().Should().Equal(expected);
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
     [Fact]
@@ -1806,10 +1809,10 @@ public class ConstructorTest
         writer.Flush();
 
         var primitive = CsTomlSerializer.Deserialize<Constructor>(buffer.WrittenSpan);
-        primitive.Str.Should().Be("I'm a string.");
-        primitive.Long.Should().Be(123);
-        primitive.Float.Should().Be(123.456);
-        primitive.Boolean.Should().BeTrue();
+        primitive.Str.ShouldBe("I'm a string.");
+        primitive.Long.ShouldBe(123);
+        primitive.Float.ShouldBe(123.456);
+        primitive.Boolean.ShouldBeTrue();
     }
 }
 
@@ -1833,7 +1836,7 @@ public class Constructor2Test
         writer.Flush();
 
         var expected = buffer.ToArray();
-        bytes.ByteSpan.ToArray().Should().Equal(expected);
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
     [Fact]
@@ -1847,10 +1850,10 @@ public class Constructor2Test
         writer.Flush();
 
         var primitive = CsTomlSerializer.Deserialize<Constructor3>(buffer.WrittenSpan);
-        primitive.Str.Should().Be("I'm a string.");
-        primitive.IntValue.Should().Be(123);
-        primitive.FloatValue.Should().Be(123.456);
-        primitive.BooleanValue.Should().BeTrue();
+        primitive.Str.ShouldBe("I'm a string.");
+        primitive.IntValue.ShouldBe(123);
+        primitive.FloatValue.ShouldBe(123.456);
+        primitive.BooleanValue.ShouldBeTrue();
     }
 }
 
@@ -1872,7 +1875,7 @@ public class Constructor3Test
         writer.Flush();
 
         var expected = buffer.ToArray();
-        bytes.ByteSpan.ToArray().Should().Equal(expected);
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
     [Fact]
@@ -1886,10 +1889,10 @@ public class Constructor3Test
         writer.Flush();
 
         var primitive = CsTomlSerializer.Deserialize<Constructor3>(buffer.WrittenSpan);
-        primitive.Str.Should().Be("I'm a string.");
-        primitive.IntValue.Should().Be(123);
-        primitive.FloatValue.Should().Be(123.456);
-        primitive.BooleanValue.Should().BeTrue();
+        primitive.Str.ShouldBe("I'm a string.");
+        primitive.IntValue.ShouldBe(123);
+        primitive.FloatValue.ShouldBe(123.456);
+        primitive.BooleanValue.ShouldBeTrue();
     }
 }
 
@@ -1909,7 +1912,7 @@ public class Constructor4Test
         writer.Flush();
 
         var expected = buffer.ToArray();
-        bytes.ByteSpan.ToArray().Should().Equal(expected);
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
     [Fact]
@@ -1923,10 +1926,10 @@ public class Constructor4Test
         writer.Flush();
 
         var primitive = CsTomlSerializer.Deserialize<Constructor4>(buffer.WrittenSpan);
-        primitive.Str.Should().Be("I'm a string.");
-        primitive.IntValue.Should().Be(123);
-        primitive.FloatValue.Should().Be(123.456);
-        primitive.BooleanValue.Should().BeTrue();
+        primitive.Str.ShouldBe("I'm a string.");
+        primitive.IntValue.ShouldBe(123);
+        primitive.FloatValue.ShouldBe(123.456);
+        primitive.BooleanValue.ShouldBeTrue();
     }
 }
 
@@ -1952,7 +1955,7 @@ public class Constructor5Test
         writer.Flush();
 
         var expected = buffer.ToArray();
-        bytes.ByteSpan.ToArray().Should().Equal(expected);
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
     [Fact]
@@ -1966,10 +1969,10 @@ public class Constructor5Test
         writer.Flush();
 
         var primitive = CsTomlSerializer.Deserialize<Constructor5>(buffer.WrittenSpan);
-        primitive.Str.Should().Be("I'm a string.");
-        primitive.IntValue.Should().Be(123);
-        primitive.FloatValue.Should().Be(123.456);
-        primitive.BooleanValue.Should().BeTrue();
+        primitive.Str.ShouldBe("I'm a string.");
+        primitive.IntValue.ShouldBe(123);
+        primitive.FloatValue.ShouldBe(123.456);
+        primitive.BooleanValue.ShouldBeTrue();
     }
 }
 
@@ -1995,7 +1998,7 @@ public class Constructor6Test
         writer.Flush();
 
         var expected = buffer.ToArray();
-        bytes.ByteSpan.ToArray().Should().Equal(expected);
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
     [Fact]
@@ -2009,10 +2012,10 @@ public class Constructor6Test
         writer.Flush();
 
         var primitive = CsTomlSerializer.Deserialize<Constructor6>(buffer.WrittenSpan);
-        primitive.Str.Should().Be("I'm a string.");
-        primitive.IntValue.Should().Be(123);
-        primitive.FloatValue.Should().Be(123.456);
-        primitive.BooleanValue.Should().BeTrue();
+        primitive.Str.ShouldBe("I'm a string.");
+        primitive.IntValue.ShouldBe(123);
+        primitive.FloatValue.ShouldBe(123.456);
+        primitive.BooleanValue.ShouldBeTrue();
     }
 }
 
@@ -2030,7 +2033,7 @@ public class Constructor7Test
         writer.Flush();
 
         var expected = buffer.ToArray();
-        bytes.ByteSpan.ToArray().Should().Equal(expected);
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
     [Fact]
@@ -2042,8 +2045,8 @@ public class Constructor7Test
         writer.Flush();
 
         var primitive = CsTomlSerializer.Deserialize<Constructor7>(buffer.WrittenSpan);
-        primitive.Str.Should().Be("I'm a string.");
-        primitive.IntValue.Should().Be(123);
+        primitive.Str.ShouldBe("I'm a string.");
+        primitive.IntValue.ShouldBe(123);
     }
 }
 
@@ -2067,7 +2070,7 @@ public class Constructor8Test
         writer.Flush();
 
         var expected = buffer.ToArray();
-        bytes.ByteSpan.ToArray().Should().Equal(expected);
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
     [Fact]
@@ -2081,10 +2084,10 @@ public class Constructor8Test
         writer.Flush();
 
         var primitive = CsTomlSerializer.Deserialize<Constructor8>(buffer.WrittenSpan);
-        primitive.Str.Should().Be("I'm a string.");
-        primitive.IntValue.Should().Be(123);
-        primitive.FloatValue.Should().Be(123.456);
-        primitive.BooleanValue.Should().BeTrue();
+        primitive.Str.ShouldBe("I'm a string.");
+        primitive.IntValue.ShouldBe(123);
+        primitive.FloatValue.ShouldBe(123.456);
+        primitive.BooleanValue.ShouldBeTrue();
     }
 }
 
@@ -2111,7 +2114,7 @@ public class InitTest
         writer.Flush();
 
         var expected = buffer.ToArray();
-        bytes.ByteSpan.ToArray().Should().Equal(expected);
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
     [Fact]
@@ -2125,10 +2128,10 @@ public class InitTest
         writer.Flush();
 
         var primitive = CsTomlSerializer.Deserialize<Init>(buffer.WrittenSpan);
-        primitive.Str.Should().Be("I'm a string.");
-        primitive.IntValue.Should().Be(123);
-        primitive.FloatValue.Should().Be(123.456);
-        primitive.BooleanValue.Should().BeTrue();
+        primitive.Str.ShouldBe("I'm a string.");
+        primitive.IntValue.ShouldBe(123);
+        primitive.FloatValue.ShouldBe(123.456);
+        primitive.BooleanValue.ShouldBeTrue();
     }
 }
 
@@ -2154,7 +2157,7 @@ public class Init2Test
         writer.Flush();
 
         var expected = buffer.ToArray();
-        bytes.ByteSpan.ToArray().Should().Equal(expected);
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
     [Fact]
@@ -2168,10 +2171,10 @@ public class Init2Test
         writer.Flush();
 
         var primitive = CsTomlSerializer.Deserialize<Init2>(buffer.WrittenSpan);
-        primitive.Str.Should().Be("I'm a string.");
-        primitive.IntValue.Should().Be(123);
-        primitive.FloatValue.Should().Be(123.456);
-        primitive.BooleanValue.Should().BeTrue();
+        primitive.Str.ShouldBe("I'm a string.");
+        primitive.IntValue.ShouldBe(123);
+        primitive.FloatValue.ShouldBe(123.456);
+        primitive.BooleanValue.ShouldBeTrue();
     }
 }
 
@@ -2195,7 +2198,7 @@ public class ConstructorAndInitTest
         writer.Flush();
 
         var expected = buffer.ToArray();
-        bytes.ByteSpan.ToArray().Should().Equal(expected);
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
     [Fact]
@@ -2209,10 +2212,10 @@ public class ConstructorAndInitTest
         writer.Flush();
 
         var primitive = CsTomlSerializer.Deserialize<ConstructorAndInit>(buffer.WrittenSpan);
-        primitive.Str.Should().Be("I'm a string.");
-        primitive.IntValue.Should().Be(123);
-        primitive.FloatValue.Should().Be(123.456);
-        primitive.BooleanValue.Should().BeTrue();
+        primitive.Str.ShouldBe("I'm a string.");
+        primitive.IntValue.ShouldBe(123);
+        primitive.FloatValue.ShouldBe(123.456);
+        primitive.BooleanValue.ShouldBeTrue();
     }
 }
 
@@ -2222,18 +2225,18 @@ public class NullableReferenceTypesTest
     public void Deserialize()
     {
         var types = CsTomlSerializer.Deserialize<NullableReferenceTypes>(""u8);
-        types.Str.Should().BeNull();
-        types.NullableStr.Should().BeNull();
-        types.Uri.Should().BeNull();
-        types.NullableUri.Should().BeNull();
-        types.Version.Should().BeNull();
-        types.NullableVersion.Should().BeNull();
-        types.StringBuilder.Should().BeNull();
-        types.NullableStringBuilder.Should().BeNull();
-        types.Type.Should().BeNull();
-        types.NullableType.Should().BeNull();
-        types.BitArray.Should().BeNull();
-        types.NullableBitArray.Should().BeNull();
+        types.Str.ShouldBeNull();
+        types.NullableStr.ShouldBeNull();
+        types.Uri.ShouldBeNull();
+        types.NullableUri.ShouldBeNull();
+        types.Version.ShouldBeNull();
+        types.NullableVersion.ShouldBeNull();
+        types.StringBuilder.ShouldBeNull();
+        types.NullableStringBuilder.ShouldBeNull();
+        types.Type.ShouldBeNull();
+        types.NullableType.ShouldBeNull();
+        types.BitArray.ShouldBeNull();
+        types.NullableBitArray.ShouldBeNull();
 
         using var buffer = Utf8String.CreateWriter(out var writer);
         writer.AppendLine("Str = \"I'm a string.\"");
@@ -2251,24 +2254,24 @@ public class NullableReferenceTypesTest
         writer.Flush();
 
         var types2 = CsTomlSerializer.Deserialize<NullableReferenceTypes>(buffer.WrittenSpan);
-        types2.Str.Should().Be("I'm a string.");
-        types2.NullableStr!.Should().Be("I'm a string.");
-        types2.Uri.Should().Be(new Uri("https://github.com/prozolic/CsToml"));
-        types2.NullableUri!.Should().Be(new Uri("https://github.com/prozolic/CsToml"));
-        types2.Version.Should().Be(new Version("1.3.1"));
-        types2.NullableVersion!.Should().Be(new Version("1.3.1"));
-        types2.StringBuilder.ToString().Should().Be("I'm a StringBuilder.");
-        types2.NullableStringBuilder!.ToString().Should().Be("I'm a StringBuilder.");
-        types2.Type.Should().Be(typeof(string));
-        types2.NullableType!.Should().Be(typeof(string));
-        types2.BitArray[0].Should().BeTrue();
-        types2.BitArray[1].Should().BeFalse();
-        types2.BitArray[2].Should().BeTrue();
-        types2.BitArray.Length.Should().Be(3);
-        types2.NullableBitArray![0].Should().BeTrue();
-        types2.NullableBitArray![1].Should().BeFalse();
-        types2.NullableBitArray![2].Should().BeTrue();
-        types2.NullableBitArray!.Length.Should().Be(3);
+        types2.Str.ShouldBe("I'm a string.");
+        types2.NullableStr!.ShouldBe("I'm a string.");
+        types2.Uri.ShouldBe(new Uri("https://github.com/prozolic/CsToml"));
+        types2.NullableUri!.ShouldBe(new Uri("https://github.com/prozolic/CsToml"));
+        types2.Version.ShouldBe(new Version("1.3.1"));
+        types2.NullableVersion!.ShouldBe(new Version("1.3.1"));
+        types2.StringBuilder.ToString().ShouldBe("I'm a StringBuilder.");
+        types2.NullableStringBuilder!.ToString().ShouldBe("I'm a StringBuilder.");
+        types2.Type.ShouldBe(typeof(string));
+        types2.NullableType!.ShouldBe(typeof(string));
+        types2.BitArray[0].ShouldBeTrue();
+        types2.BitArray[1].ShouldBeFalse();
+        types2.BitArray[2].ShouldBeTrue();
+        types2.BitArray.Length.ShouldBe(3);
+        types2.NullableBitArray![0].ShouldBeTrue();
+        types2.NullableBitArray![1].ShouldBeFalse();
+        types2.NullableBitArray![2].ShouldBeTrue();
+        types2.NullableBitArray!.Length.ShouldBe(3);
     }
 }
 
@@ -2330,7 +2333,7 @@ public class TypeImmutableTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
         {
             using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
@@ -2346,7 +2349,7 @@ public class TypeImmutableTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
     }
 
@@ -2366,35 +2369,35 @@ public class TypeImmutableTest
         var typeImmutable = CsTomlSerializer.Deserialize<TypeImmutable>(buffer.WrittenSpan);
 
         var array = typeImmutable.ImmutableArray;
-        array.Should().Equal([1, 2, 3, 4, 5]);
+        array.ShouldBe([1, 2, 3, 4, 5]);
         var list = typeImmutable.ImmutableList;
-        list.Should().Equal([1, 2, 3, 4, 5]);
+        list.ShouldBe([1, 2, 3, 4, 5]);
         var hashset = typeImmutable.ImmutableHashSet;
-        hashset.Should().Equal([1, 2, 3, 4, 5]);
+        hashset.ShouldBe([1, 2, 3, 4, 5]);
         var queue = typeImmutable.ImmutableHashSet;
-        queue.Should().Equal([1, 2, 3, 4, 5]);
+        queue.ShouldBe([1, 2, 3, 4, 5]);
 
         {
             dynamic dict = typeImmutable.ImmutableDictionary;
             long value = dict["key"][0];
-            value.Should().Be(999);
+            value.ShouldBe(999);
             string value2 = dict["key"][1];
-            value2.Should().Be("Value");
+            value2.ShouldBe("Value");
             object[] value3 = dict["key"][2]["key"][0];
-            value3.Should().Equal(new object[] { 1, 2, 3 });
+            value3.ShouldBe(new object[] { 1, 2, 3 });
             string value4 = dict["key"][2]["key"][1]["key"];
-            value4.Should().Be("value");
+            value4.ShouldBe("value");
         }
         {
             dynamic dict = typeImmutable.ImmutableSortedDictionary;
             long value = dict["key"][0];
-            value.Should().Be(999);
+            value.ShouldBe(999);
             string value2 = dict["key"][1];
-            value2.Should().Be("Value");
+            value2.ShouldBe("Value");
             object[] value3 = dict["key"][2]["key"][0];
-            value3.Should().Equal(new object[] { 1, 2, 3 });
+            value3.ShouldBe(new object[] { 1, 2, 3 });
             string value4 = dict["key"][2]["key"][1]["key"];
-            value4.Should().Be("value");
+            value4.ShouldBe("value");
         }
     }
 }
@@ -2435,7 +2438,7 @@ public class TypeOrderedDictionaryTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
         {
             using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
@@ -2445,7 +2448,7 @@ public class TypeOrderedDictionaryTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
     }
 
@@ -2460,13 +2463,13 @@ public class TypeOrderedDictionaryTest
         dynamic dynamicDict = type.Value;
 
         long value = dynamicDict["key"][0];
-        value.Should().Be(999);
+        value.ShouldBe(999);
         string value2 = dynamicDict["key"][1];
-        value2.Should().Be("Value");
+        value2.ShouldBe("Value");
         object[] value3 = dynamicDict["key"][2]["key"][0];
-        value3.Should().Equal(new object[] { 1, 2, 3 });
+        value3.ShouldBe(new object[] { 1, 2, 3 });
         string value4 = dynamicDict["key"][2]["key"][1]["key"];
-        value4.Should().Be("value");
+        value4.ShouldBe("value");
     }
 }
 
@@ -2488,7 +2491,7 @@ public class TypeReadOnlySetFormatterTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
         {
             using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
@@ -2498,7 +2501,7 @@ public class TypeReadOnlySetFormatterTest
             writer.Flush();
 
             var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().Should().Equal(expected);
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
     }
 
@@ -2510,7 +2513,7 @@ public class TypeReadOnlySetFormatterTest
         writer.Flush();
 
         var type = CsTomlSerializer.Deserialize<TypeReadOnlySetFormatter>(buffer.WrittenSpan);
-        type.Value.Should().Equal(new ReadOnlySet<long>(new HashSet<long>([1, 3, 5])));
+        type.Value.ShouldBe(new ReadOnlySet<long>(new HashSet<long>([1, 3, 5])));
     }
 }
 
