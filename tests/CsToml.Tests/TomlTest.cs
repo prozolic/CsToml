@@ -1,6 +1,8 @@
 using CsToml.Error;
 using CsToml.Extensions;
+using System.Reflection.Metadata;
 using System.Text.Json.Nodes;
+using System.Xml.Linq;
 
 namespace CsToml.Tests;
 
@@ -20,122 +22,59 @@ public class TomlTest
     [Theory, MemberData(nameof(ValidTomlFile))]
     public void ValidTest(string tomlFile, string jsonFile)
     {
-        TomlDocument document = null;
-        try
-        {
-            document = CsTomlFileSerializer.Deserialize<TomlDocument>(tomlFile);
-        }
-        catch (CsTomlSerializeException ctse)
-        {
-            foreach(var ce in ctse.Exceptions!)
-            {
-                Should.Throw<CsTomlSerializeException>(static () => {}, $"TomlFile:{tomlFile} Message:{ce}");
-            }
-        }
-        catch (Exception e)
-        {
-            Should.Throw<Exception>(static () => { }, $"TomlFile:{tomlFile} Message:{e}");
-        }
+        Should.NotThrow(() => {
+            var document = CsTomlFileSerializer.Deserialize<TomlDocument>(tomlFile);
 
-        var jsonNode = JsonNode.Parse(File.ReadAllText(jsonFile))!;
-        var tomlDocumentJsonNode = document!.ToJsonObject();
-
-        JsonNodeExtensions.DeepEqualsForTomlFormat(jsonNode, tomlDocumentJsonNode).ShouldBeTrue();
-        //JsonNode.DeepEquals(tomlDocumentJsonNode, jsonNode).ShouldBeTrue();
+            var jsonNode = JsonNode.Parse(File.ReadAllText(jsonFile))!;
+            var tomlDocumentJsonNode = document!.ToJsonObject();
+            JsonNodeExtensions.DeepEqualsForTomlFormat(jsonNode, tomlDocumentJsonNode).ShouldBeTrue();
+        }, $"TomlFile:{tomlFile}");
     }
 
     [Theory, MemberData(nameof(InvalidTomlFile))]
     public void InvalidTest(string tomlFile)
     {
-        try
-        {
+        Should.Throw<CsTomlSerializeException>(() => {
             var document = CsTomlFileSerializer.Deserialize<TomlDocument>(tomlFile);
-        }
-        catch (CsTomlSerializeException)
-        {
-            return;
-        }
-        catch (Exception e)
-        {
-            Should.Throw<Exception>(static () => { }, $"TomlFile:{tomlFile} Message:{e}");
-        }
-
-        Should.Throw<Exception>(static () => { }, $"TomlFile:{tomlFile} Message:Incorrect syntax was not detected.");
+        }, $"TomlFile:{tomlFile}");
     }
 
     [Theory, MemberData(nameof(ValidTomlFile))]
     public void ValidTestForStream(string tomlFile, string jsonFile)
     {
-        TomlDocument document = null;
-        try
-        {
+        Should.NotThrow(() => {
             using var fs = new FileStream(tomlFile, FileMode.Open, FileAccess.Read);
-            document = CsTomlSerializer.Deserialize<TomlDocument>(fs);
-        }
-        catch (CsTomlSerializeException ctse)
-        {
-            foreach (var ce in ctse.Exceptions!)
-            {
-                Should.Throw<CsTomlSerializeException>(static () => { }, $"TomlFile:{tomlFile} Message:{ce}");
-            }
-        }
-        catch (Exception e)
-        {
-            Should.Throw<Exception>(static () => { }, $"TomlFile:{tomlFile} Message:{e}");
-        }
+            var document = CsTomlSerializer.Deserialize<TomlDocument>(fs);
 
-        var jsonNode = JsonNode.Parse(File.ReadAllText(jsonFile))!;
-        var tomlDocumentJsonNode = document!.ToJsonObject();
-
-        JsonNodeExtensions.DeepEqualsForTomlFormat(jsonNode, tomlDocumentJsonNode).ShouldBeTrue();
-        //JsonNode.DeepEquals(tomlDocumentJsonNode, jsonNode).ShouldBeTrue();
+            var jsonNode = JsonNode.Parse(File.ReadAllText(jsonFile))!;
+            var tomlDocumentJsonNode = document!.ToJsonObject();
+            JsonNodeExtensions.DeepEqualsForTomlFormat(jsonNode, tomlDocumentJsonNode).ShouldBeTrue();
+        }, $"TomlFile:{tomlFile}");
     }
 
     [Theory, MemberData(nameof(ValidTomlFile))]
     public async Task ValidTestForStreamAsync(string tomlFile, string jsonFile)
     {
-        TomlDocument document = null;
-        try
+        var task = Should.NotThrowAsync(async () =>
         {
             using var fs = new FileStream(tomlFile, FileMode.Open, FileAccess.Read);
-            document = await CsTomlSerializer.DeserializeAsync<TomlDocument>(fs);
-        }
-        catch (CsTomlSerializeException ctse)
-        {
-            foreach (var ce in ctse.Exceptions!)
-            {
-                Should.Throw<CsTomlSerializeException>(static () => { }, $"TomlFile:{tomlFile} Message:{ce}");
-            }
-        }
-        catch (Exception e)
-        {
-            Should.Throw<Exception>(static () => { }, $"TomlFile:{tomlFile} Message:{e}");
-        }
+            var document = await CsTomlSerializer.DeserializeAsync<TomlDocument>(fs);
 
-        var jsonNode = JsonNode.Parse(File.ReadAllText(jsonFile))!;
-        var tomlDocumentJsonNode = document!.ToJsonObject();
+            var jsonNode = JsonNode.Parse(File.ReadAllText(jsonFile))!;
+            var tomlDocumentJsonNode = document!.ToJsonObject();
+            JsonNodeExtensions.DeepEqualsForTomlFormat(jsonNode, tomlDocumentJsonNode).ShouldBeTrue();
+        }, $"TomlFile:{tomlFile}");
 
-        JsonNodeExtensions.DeepEqualsForTomlFormat(jsonNode, tomlDocumentJsonNode).ShouldBeTrue();
-        //JsonNode.DeepEquals(tomlDocumentJsonNode, jsonNode).ShouldBeTrue();
+        await task;
     }
 
     [Theory, MemberData(nameof(InvalidTomlFile))]
     public void InvalidTestForStream(string tomlFile)
     {
-        try
-        {
+        Should.Throw<CsTomlSerializeException>(() => {
             using var fs = new FileStream(tomlFile, FileMode.Open, FileAccess.Read);
             var document = CsTomlSerializer.Deserialize<TomlDocument>(fs);
-        }
-        catch (CsTomlSerializeException)
-        {
-            return;
-        }
-        catch (Exception e)
-        {
-            Should.Throw<Exception>(static () => { }, $"TomlFile:{tomlFile} Message:{e}");
-        }
-        Should.Throw<Exception>(static () => { }, $"TomlFile:{tomlFile} Message:Incorrect syntax was not detected.");
+        }, $"TomlFile:{tomlFile}");
     }
 
     public static IEnumerable<object[]> ValidTomlFile()
