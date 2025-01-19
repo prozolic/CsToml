@@ -10,10 +10,9 @@ internal sealed partial class TomlLocalDate(DateOnly value) : TomlValue
 
     public override bool HasValue => true;
 
-    internal override bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+    internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
         writer.WriteDateOnly(Value);
-        return true;
     }
 
     public override string ToString()

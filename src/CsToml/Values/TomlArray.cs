@@ -26,13 +26,13 @@ internal sealed partial class TomlArray(int capacity) : TomlValue, IEnumerable<T
     public TomlArray() : this(4)
     {}
 
-    internal override bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+    internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
         writer.BeginArray();
         if (Count == 0)
         {
             writer.EndArray();
-            return true;
+            return;
         }
 
         values[0].ToTomlString(ref writer);
@@ -40,7 +40,7 @@ internal sealed partial class TomlArray(int capacity) : TomlValue, IEnumerable<T
         {
             writer.WriteSpace();
             writer.EndArray();
-            return true;
+            return;
         }
 
         for (int i = 1; i < Count; i++)
@@ -51,7 +51,7 @@ internal sealed partial class TomlArray(int capacity) : TomlValue, IEnumerable<T
         }
         writer.WriteSpace();
         writer.EndArray();
-        return true;
+        return;
     }
 
     public override bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)

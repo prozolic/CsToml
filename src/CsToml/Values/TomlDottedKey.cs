@@ -10,32 +10,30 @@ namespace CsToml.Values;
 [DebuggerDisplay("{Utf16String}")]
 internal sealed class TomlUnquotedDottedKey(ReadOnlySpan<byte> value) : TomlDottedKey(value)
 {
-    internal override bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+    internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
         if (Value.Length > 0)
         {
             writer.WriteBytes(Value);
-            return true;
         }
-        return false;
     }
 }
 
 [DebuggerDisplay("{Utf16String}")]
 internal sealed class TomlBasicDottedKey(ReadOnlySpan<byte> value) : TomlDottedKey(value)
 {
-    internal override bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+    internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
-        return TomlBasicString.ToTomlBasicString(ref writer, Value);
+        TomlBasicString.ToTomlBasicString(ref writer, Value);
     }
 }
 
 [DebuggerDisplay("{Utf16String}")]
 internal sealed class TomlLiteralDottedKey(ReadOnlySpan<byte> value) : TomlDottedKey(value)
 {
-    internal override bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+    internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
-        return TomlLiteralString.ToTomlLiteralString(ref writer, Value);
+        TomlLiteralString.ToTomlLiteralString(ref writer, Value);
     }
 }
 

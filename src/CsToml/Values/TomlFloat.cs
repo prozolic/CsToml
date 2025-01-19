@@ -26,12 +26,12 @@ internal sealed partial class TomlFloat(double value, TomlFloat.FloatKind kind =
 
     internal FloatKind Kind { get; } = kind;
 
-    internal override bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+    internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
         if (Kind == FloatKind.Normal)
         {
             writer.WriteDouble(Value);
-            return true;
+            return;
         }
 
         switch(Kind)
@@ -47,9 +47,9 @@ internal sealed partial class TomlFloat(double value, TomlFloat.FloatKind kind =
                 writer.WriteBytes("nan"u8);
                 break;
             default:
-                return false;
+                return;
         }
-        return true;
+        return;
     }
 
     public override string ToString()

@@ -18,18 +18,6 @@ internal sealed partial class TomlTable : TomlValue
     [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
     internal TomlTableNode RootNode => node;
 
-    internal TomlTableNode this[ReadOnlySpan<byte> key]
-    {
-        get
-        {
-            if (RootNode.TryGetChildNode(key, out var value))
-            {
-                return value!;
-            }
-            return TomlTableNode.Empty;
-        }
-    }
-
     internal TomlTable() { }
 
     internal void AddTableHeader(ReadOnlySpan<TomlDottedKey> dotKeys, IReadOnlyCollection<TomlString>? comments, out TomlTableNode? newNode)
@@ -162,13 +150,11 @@ internal sealed partial class TomlTable : TomlValue
     internal IDictionary<object, object> GetDictionary()
         => node.GetDictionary();
 
-    internal override bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+    internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
         var keys = new List<TomlDottedKey>();
         var tableNodes = new List<TomlDottedKey>();
         ToTomlStringCore(ref writer, RootNode, keys, tableNodes);
-
-        return true;
     }
 
     private void ToTomlStringCore<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlTableNode parentNode, List<TomlDottedKey> keys, List<TomlDottedKey> tableHeaderKeys)

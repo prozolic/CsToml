@@ -22,10 +22,9 @@ internal sealed partial class TomlBoolean : TomlValue
         Value = value;
     }
 
-    internal override bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+    internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
         writer.WriteBoolean(Value);
-        return true;
     }
 
     public override string ToString()
