@@ -43,10 +43,9 @@ internal sealed partial class TomlInteger : TomlValue
         this.Value = value;
     }
 
-    internal override bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+    internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
         writer.WriteInt64(Value);
-        return true;
     }
 
     public override string ToString()

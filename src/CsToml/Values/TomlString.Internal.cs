@@ -1,8 +1,5 @@
 ﻿using CsToml.Error;
-using CsToml.Formatter;
 using CsToml.Utility;
-using System.Buffers;
-using System.Text.Unicode;
 
 namespace CsToml.Values;
 

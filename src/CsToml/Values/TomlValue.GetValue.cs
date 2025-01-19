@@ -1,10 +1,6 @@
 ﻿using CsToml.Error;
-using CsToml.Formatter.Resolver;
-using CsToml.Utility;
-using System.Buffers;
 using System.Collections.ObjectModel;
 using System.Numerics;
-using System.Text.Unicode;
 
 namespace CsToml.Values;
 

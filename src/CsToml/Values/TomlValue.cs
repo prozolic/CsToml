@@ -12,11 +12,10 @@ public abstract partial class TomlValue :
 
     public virtual bool HasValue => false;
 
-    internal virtual bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer) // Write TOML format.
+    internal virtual void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer) // Write TOML format.
         where TBufferWriter : IBufferWriter<byte>
     {
         ExceptionHelper.ThrowNotSupported(nameof(ToTomlString));
-        return false;
     }
 
     public virtual bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)

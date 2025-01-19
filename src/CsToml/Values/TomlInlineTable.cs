@@ -22,7 +22,7 @@ internal sealed partial class TomlInlineTable : TomlValue
     internal IDictionary<object, object> GetDictionary()
         => inlineTable.GetDictionary();
 
-    internal override bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+    internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
         writer.BeginInlineTable();
         writer.WriteSpace();
@@ -32,7 +32,6 @@ internal sealed partial class TomlInlineTable : TomlValue
 
         writer.WriteSpace();
         writer.EndInlineTable();
-        return false;
     }
 
     private void ToTomlStringCore<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlTableNode parentNode, List<TomlDottedKey> keys)

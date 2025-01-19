@@ -11,7 +11,7 @@ internal sealed class TomlUnquotedString(string value) : TomlString(value)
 {
     public new static readonly TomlUnquotedString Empty = new TomlUnquotedString(string.Empty);
 
-    internal override bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+    internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
         var bufferWriter = RecycleArrayPoolBufferWriter<byte>.Rent();
         try
@@ -20,10 +20,7 @@ internal sealed class TomlUnquotedString(string value) : TomlString(value)
             if (Utf16String.Length > 0)
             {
                 writer.WriteBytes(bufferWriter.WrittenSpan);
-                return true;
             }
-
-            return false;
         }
         finally
         {
@@ -37,13 +34,13 @@ internal sealed class TomlBasicString(string value) : TomlString(value)
 {
     public new static readonly TomlBasicString Empty = new TomlBasicString(string.Empty);
 
-    internal override bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+    internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
         var bufferWriter = RecycleArrayPoolBufferWriter<byte>.Rent();
         try
         {
             Utf8Helper.FromUtf16(bufferWriter, Utf16String.AsSpan());
-            return ToTomlBasicString(ref writer, bufferWriter.WrittenSpan);
+            ToTomlBasicString(ref writer, bufferWriter.WrittenSpan);
         }
         finally
         {
@@ -51,7 +48,7 @@ internal sealed class TomlBasicString(string value) : TomlString(value)
         }
     }
 
-    internal static bool ToTomlBasicString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> byteSpan)
+    internal static void ToTomlBasicString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> byteSpan)
         where TBufferWriter : IBufferWriter<byte>
     {
         writer.WriteBytes("\""u8);
@@ -97,7 +94,6 @@ internal sealed class TomlBasicString(string value) : TomlString(value)
         }
 
         writer.WriteBytes("\""u8);
-        return true;
     }
 
 }
@@ -107,13 +103,13 @@ internal sealed class TomlMultiLineBasicString(string value) : TomlString(value)
 {
     public new static readonly TomlMultiLineBasicString Empty = new TomlMultiLineBasicString(string.Empty);
 
-    internal override bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+    internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
         var bufferWriter = RecycleArrayPoolBufferWriter<byte>.Rent();
         try
         {
             Utf8Helper.FromUtf16(bufferWriter, Utf16String.AsSpan());
-            return ToTomlMultiLineBasicString(ref writer, bufferWriter.WrittenSpan);
+            ToTomlMultiLineBasicString(ref writer, bufferWriter.WrittenSpan);
         }
         finally
         {
@@ -121,7 +117,7 @@ internal sealed class TomlMultiLineBasicString(string value) : TomlString(value)
         }
     }
 
-    internal static bool ToTomlMultiLineBasicString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> byteSpan)
+    internal static void ToTomlMultiLineBasicString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> byteSpan)
         where TBufferWriter : IBufferWriter<byte>
     {
         writer.WriteBytes("\"\"\""u8);
@@ -166,7 +162,6 @@ internal sealed class TomlMultiLineBasicString(string value) : TomlString(value)
         }
 
         writer.WriteBytes("\"\"\""u8);
-        return true;
     }
 
 }
@@ -176,13 +171,13 @@ internal sealed class TomlLiteralString(string value) : TomlString(value)
 {
     public new static readonly TomlLiteralString Empty = new TomlLiteralString(string.Empty);
 
-    internal override bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+    internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
         var bufferWriter = RecycleArrayPoolBufferWriter<byte>.Rent();
         try
         {
             Utf8Helper.FromUtf16(bufferWriter, Utf16String.AsSpan());
-            return ToTomlLiteralString(ref writer, bufferWriter.WrittenSpan);
+            ToTomlLiteralString(ref writer, bufferWriter.WrittenSpan);
         }
         finally
         {
@@ -190,13 +185,12 @@ internal sealed class TomlLiteralString(string value) : TomlString(value)
         }
     }
 
-    internal static bool ToTomlLiteralString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> byteSpan)
+    internal static void ToTomlLiteralString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> byteSpan)
         where TBufferWriter : IBufferWriter<byte>
     {
         writer.WriteBytes("'"u8);
         writer.WriteBytes(byteSpan);
         writer.WriteBytes("'"u8);
-        return true;
     }
 
 }
@@ -206,27 +200,20 @@ internal sealed class TomlMultiLineLiteralString(string value) : TomlString(valu
 {
     public new static readonly TomlMultiLineLiteralString Empty = new TomlMultiLineLiteralString(string.Empty);
 
-    internal override bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+    internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
         var bufferWriter = RecycleArrayPoolBufferWriter<byte>.Rent();
         try
         {
             Utf8Helper.FromUtf16(bufferWriter, Utf16String.AsSpan());
-            return ToTomlMultiLineLiteralString(ref writer, bufferWriter.WrittenSpan);
+            writer.WriteBytes("'''"u8);
+            writer.WriteBytes(bufferWriter.WrittenSpan);
+            writer.WriteBytes("'''"u8);
         }
         finally
         {
             RecycleArrayPoolBufferWriter<byte>.Return(bufferWriter);
         }
-    }
-
-    internal static bool ToTomlMultiLineLiteralString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> byteSpan)
-        where TBufferWriter : IBufferWriter<byte>
-    {
-        writer.WriteBytes("'''"u8);
-        writer.WriteBytes(byteSpan);
-        writer.WriteBytes("'''"u8);
-        return true;
     }
 }
 
