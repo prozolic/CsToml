@@ -3,7 +3,9 @@ using CsToml.Error;
 using CsToml.Formatter.Resolver;
 using CsToml.Utility;
 using CsToml.Values;
+using CsToml.Values.Internal;
 using System.Buffers;
+using System.Collections;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Numerics;
@@ -26,6 +28,10 @@ public struct TomlDocumentNode
     internal readonly TomlTableNode Node => node;
 
     public readonly bool HasValue => Value.HasValue || NodeCount > 0;
+
+    public readonly bool HasNodeOnly => !Value.HasValue && NodeCount > 0;
+
+    public readonly bool HasValueOnly => Value.HasValue && NodeCount == 0;
 
     public TomlDocumentNode this[ReadOnlySpan<char> key]
     {
@@ -101,7 +107,7 @@ public struct TomlDocumentNode
         this.value = node.Value!;
     }
 
-    internal TomlDocumentNode(TomlValue value)
+    public TomlDocumentNode(TomlValue value)
     {
         if (value is TomlTable table)
         {
@@ -268,5 +274,58 @@ public struct TomlDocumentNode
             value = default!;
             return false;
         }
+    }
+
+
+    public NodeEnumerator GetNodeEnumerator()
+        => new NodeEnumerator(this);
+
+    public struct NodeEnumerator : IEnumerator<KeyValuePair<TomlValue, TomlDocumentNode>>
+    {
+        private TomlDocumentNode documentNode;
+        private TomlTableNodeDictionary.KeyValuePairEnumerator enumerator;
+        private KeyValuePair<TomlValue, TomlDocumentNode> current;
+
+        public NodeEnumerator(TomlDocumentNode documentNode)
+        {
+            this.documentNode = documentNode;
+            this.enumerator = documentNode.Node.KeyValuePairs;
+        }
+
+        public KeyValuePair<TomlValue, TomlDocumentNode> Current => current;
+
+        object IEnumerator.Current => current;
+
+        public readonly NodeEnumerator GetEnumerator() => this;
+
+        public bool MoveNext()
+        {
+            if (!documentNode.HasValue) return false;
+
+            if (!enumerator.MoveNext())
+            {
+                return false;
+            }
+
+            var node = enumerator.Current;
+            if (node.Value.NodeCount > 0)
+            {
+                current = new KeyValuePair<TomlValue, TomlDocumentNode>(node.Key, new TomlDocumentNode(node.Value));
+            }
+            else
+            {
+                current = new KeyValuePair<TomlValue, TomlDocumentNode>(node.Key, new TomlDocumentNode(node.Value.Value!));
+            }
+            return true;
+        }
+
+        public void Reset()
+        {
+            enumerator = documentNode.Node.KeyValuePairs;
+            current = default;
+        }
+
+        public void Dispose()
+        { }
     }
 }
