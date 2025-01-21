@@ -31,4 +31,11 @@ public static class TomlConfigurationExtensions
     {
         return builder.Add(configureSource);
     }
+
+    public static IConfigurationBuilder AddTomlStream(this IConfigurationBuilder builder, System.IO.Stream stream)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.Add<TomlStreamConfigurationSource>(s => s.Stream = stream);
+    }
 }

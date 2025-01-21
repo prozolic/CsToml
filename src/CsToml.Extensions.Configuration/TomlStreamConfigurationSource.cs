@@ -2,11 +2,8 @@
 
 namespace CsToml.Extensions.Configuration;
 
-public class TomlFileConfigurationSource : FileConfigurationSource
+public class TomlStreamConfigurationSource : StreamConfigurationSource
 {
     public override IConfigurationProvider Build(IConfigurationBuilder builder)
-    {
-        EnsureDefaults(builder);
-        return new TomlFileConfigurationProvider(this);
-    }
+        => new TomlStreamConfigurationProvider(this);
 }
