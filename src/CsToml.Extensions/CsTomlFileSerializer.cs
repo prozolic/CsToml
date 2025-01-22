@@ -28,8 +28,7 @@ public partial class CsTomlFileSerializer
             var readCount = RandomAccess.Read(handle, bytesSpan, 0);
 
             // check BOM
-            var startIndex = Utf8Helper.ContainBOM(bytesSpan) ? 3 : 0;
-            var tomlByteSpan = bytesSpan.Slice(startIndex, readCount - startIndex);
+            var tomlByteSpan = bytesSpan.Slice(0, readCount);
             return CsTomlSerializer.Deserialize<T>(tomlByteSpan, options);
         }
         else
@@ -40,9 +39,7 @@ public partial class CsTomlFileSerializer
 
             // check BOM
             var memory = tomlMemories[0];
-            var startIndex = Utf8Helper.ContainBOM(memory.Span) ? 3 : 0;
-
-            var startSegment = new ByteSequenceSegment(memory[startIndex..]);
+            var startSegment = new ByteSequenceSegment(memory);
             startSegment.SetRunningIndex(0);
             startSegment.SetNext(null);
 
@@ -76,8 +73,7 @@ public partial class CsTomlFileSerializer
             var byteMemories = bytes.AsMemory();
             var readCount = await RandomAccess.ReadAsync(handle, byteMemories, 0, cancellationToken).ConfigureAwait(configureAwait);
 
-            var startIndex = Utf8Helper.ContainBOM(byteMemories.Span) ? 3 : 0;
-            return CsTomlSerializer.Deserialize<T>(byteMemories.Span.Slice(startIndex, readCount - startIndex), options);
+            return CsTomlSerializer.Deserialize<T>(byteMemories.Span.Slice(0, readCount), options);
         }
         else
         {
@@ -87,9 +83,7 @@ public partial class CsTomlFileSerializer
 
             // check BOM
             var memory = tomlMemories[0];
-            var startIndex = Utf8Helper.ContainBOM(memory.Span) ? 3 : 0;
-
-            var startSegment = new ByteSequenceSegment(memory[startIndex..]);
+            var startSegment = new ByteSequenceSegment(memory);
             startSegment.SetRunningIndex(0);
             startSegment.SetNext(null);
 

@@ -45,7 +45,7 @@ internal ref struct Utf8SequenceReader
 
     public readonly bool IsFullSpan { get; init; }
 
-    public Utf8SequenceReader(ReadOnlySpan<byte> span)
+    public Utf8SequenceReader(ReadOnlySpan<byte> span, bool skipBom = false)
     {
         CurrentSpanIndex = 0;
         Consumed = 0;
@@ -56,9 +56,18 @@ internal ref struct Utf8SequenceReader
         CurrentSpan = span;
         moreData = span.Length > 0;
         IsFullSpan = true;
+
+        if (skipBom && Length >= 3)
+        {
+            ReadOnlySpan<byte> bom = [0xEF, 0xBB, 0xBF];
+            if(span[..3].SequenceEqual(bom))
+            {
+                Advance(3);
+            }
+        }
     }
 
-    public Utf8SequenceReader(ReadOnlySequence<byte> sequence)
+    public Utf8SequenceReader(ReadOnlySequence<byte> sequence, bool skipBom = false)
     {
         CurrentSpanIndex = 0;
         Consumed = 0;
@@ -76,6 +85,16 @@ internal ref struct Utf8SequenceReader
         {
             moreData = true;
             GetNextSpan();
+        }
+
+        if (skipBom && Length >= 3)
+        {
+            if ((TryPeek(out var ch1) && ch1 == 0xEF) && 
+                (TryPeek(1, out var ch2) && ch2 == 0xBB) && 
+                (TryPeek(2, out var ch3) && ch3 == 0xBF))
+            {
+                Advance(3);
+            }
         }
     }
 
