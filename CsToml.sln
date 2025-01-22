@@ -25,6 +25,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsToml.Extensions", "src\Cs
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsToml.Extensions.Configuration", "src\CsToml.Extensions.Configuration\CsToml.Extensions.Configuration.csproj", "{57977698-C9B4-4525-85CF-4ADE3859C920}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsToml.Extensions.Configuration.Tests", "tests\CsToml.Extensions.Configuration.Tests\CsToml.Extensions.Configuration.Tests.csproj", "{F7D81327-0320-455D-B1EB-D64E3901752E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,6 +65,10 @@ Global
 		{57977698-C9B4-4525-85CF-4ADE3859C920}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{57977698-C9B4-4525-85CF-4ADE3859C920}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{57977698-C9B4-4525-85CF-4ADE3859C920}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F7D81327-0320-455D-B1EB-D64E3901752E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F7D81327-0320-455D-B1EB-D64E3901752E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F7D81327-0320-455D-B1EB-D64E3901752E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F7D81327-0320-455D-B1EB-D64E3901752E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -76,6 +82,7 @@ Global
 		{9AEBDFED-E0B9-4C1D-94BE-B2D185DD1A2A} = {D1DA58D2-DF19-442A-B61A-BE8A473DE878}
 		{CCCC9670-6422-4583-BDC5-74D475D858A0} = {A9C74E56-F4CF-45C0-8DD4-AEF20E74E454}
 		{57977698-C9B4-4525-85CF-4ADE3859C920} = {A9C74E56-F4CF-45C0-8DD4-AEF20E74E454}
+		{F7D81327-0320-455D-B1EB-D64E3901752E} = {D1DA58D2-DF19-442A-B61A-BE8A473DE878}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D2BE6D04-CA64-4762-A4A8-413B4115D763}
