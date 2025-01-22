@@ -348,7 +348,7 @@ value3 = 3
     public void OffsetDateTimeTest()
     {
         var value = document.RootNode["odt"u8];
-        value!.GetString().ShouldBe(new DateTimeOffset(1979, 5, 27, 7, 32, 0, TimeSpan.Zero).ToString());
+        value!.GetString().ShouldBe(new DateTimeOffset(1979, 5, 27, 7, 32, 0, TimeSpan.Zero).ToString("o"));
         Assert.Throws<CsTomlException>(() => value!.GetInt64());
         Assert.Throws<CsTomlException>(() => value!.GetDouble());
         Assert.Throws<CsTomlException>(() => value!.GetBool());
@@ -369,7 +369,7 @@ value3 = 3
         var value = document.RootNode["odt"u8];
         {
             value!.TryGetString(out var v).ShouldBeTrue();
-            v.ShouldBe(new DateTimeOffset(1979, 5, 27, 7, 32, 0, TimeSpan.Zero).ToString());
+            v.ShouldBe(new DateTimeOffset(1979, 5, 27, 7, 32, 0, TimeSpan.Zero).ToString("o"));
         }
         var utcTime1 = DateTime.SpecifyKind(new DateTime(1979, 5, 27, 7, 32, 0), DateTimeKind.Utc);
         DateTimeOffset utcTime2 = utcTime1;
@@ -400,7 +400,7 @@ value3 = 3
     public void LocalDateTimeTest()
     {
         var value = document.RootNode["ldt"u8];
-        value.GetString()!.ShouldBe(new DateTime(1979, 5, 27, 7, 32, 0).ToString());
+        value.GetString()!.ShouldBe(new DateTime(1979, 5, 27, 7, 32, 0).ToString("yyyy-MM-ddTHH:mm:ss.fffffff"));
         Assert.Throws<CsTomlException>(() => value!.GetInt64());
         Assert.Throws<CsTomlException>(() => value!.GetDouble());
         Assert.Throws<CsTomlException>(() => value!.GetBool());
@@ -420,7 +420,7 @@ value3 = 3
         var value = document.RootNode["ldt"u8];
         {
             value!.TryGetString(out var v).ShouldBeTrue();
-            v.ShouldBe(new DateTime(1979, 5, 27, 7, 32, 0).ToString());
+            v.ShouldBe(new DateTime(1979, 5, 27, 7, 32, 0).ToString("yyyy-MM-ddTHH:mm:ss.fffffff"));
         }
 
         var utcTime1 = new DateTime(1979, 5, 27, 7, 32, 0);
@@ -452,7 +452,7 @@ value3 = 3
     public void LocalDateTest()
     {
         var value = document.RootNode["ld1"u8];
-        value!.GetString()!.ShouldBe(new DateOnly(1979, 5, 27).ToString());
+        value!.GetString()!.ShouldBe(new DateOnly(1979, 5, 27).ToString("yyyy-MM-dd"));
         Assert.Throws<CsTomlException>(() => value!.GetInt64());
         Assert.Throws<CsTomlException>(() => value!.GetDouble());
         Assert.Throws<CsTomlException>(() => value!.GetBool());
@@ -472,7 +472,7 @@ value3 = 3
         var value = document.RootNode["ld1"u8];
         {
             value!.TryGetString(out var v).ShouldBeTrue();
-            v.ShouldBe(new DateOnly(1979, 5, 27).ToString());
+            v.ShouldBe(new DateOnly(1979, 5, 27).ToString("yyyy-MM-dd"));
         }
         var utcTime1 = new DateTime(1979, 5, 27);
         DateTimeOffset utcTime2 = utcTime1;
@@ -500,7 +500,7 @@ value3 = 3
     public void LocalTimeTest()
     {
         var value = document.RootNode["lt1"u8];
-        value!.GetString()!.ShouldBe(new TimeOnly(7, 32, 30).ToString());
+        value!.GetString()!.ShouldBe(new TimeOnly(7, 32, 30).ToString("HH:mm:ss.fffffff"));
         Assert.Throws<CsTomlException>(() => value!.GetInt64());
         Assert.Throws<CsTomlException>(() => value!.GetDouble());
         Assert.Throws<CsTomlException>(() => value!.GetBool());
@@ -518,7 +518,7 @@ value3 = 3
         var value = document.RootNode["lt1"u8];
         {
             value!.TryGetString(out var v).ShouldBeTrue();
-            v.ShouldBe(new TimeOnly(7, 32, 30).ToString());
+            v.ShouldBe(new TimeOnly(7, 32, 30).ToString("HH:mm:ss.fffffff"));
         }
         {
             value!.TryGetTimeOnly(out var v).ShouldBeTrue();

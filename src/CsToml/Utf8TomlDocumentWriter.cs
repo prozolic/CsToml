@@ -155,7 +155,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
         {
             if (totalMicrosecond == 0)
             {
-                WriteOffsetDateTimeCore(value, "u");
+                WriteOffsetDateTimeCore(value, "yyyy-MM-ddTHH:mm:ssZ");
             }
             else
             {
@@ -427,12 +427,6 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
         {
             length *= 2;
             buffer = writer.GetSpan(length);
-        }
-
-        // ex 1979-05-27 07:32:00Z -> 1979-05-27T07:32:00Z
-        if (value.Offset == TimeSpan.Zero)
-        {
-            buffer[10] = TomlCodes.Alphabet.T;
         }
 
         writer.Advance(bytesWritten);

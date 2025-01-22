@@ -1,6 +1,7 @@
 ﻿using CsToml.Error;
 using System.Buffers.Text;
 using System.Diagnostics;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -48,17 +49,34 @@ internal sealed partial class TomlInteger : TomlValue
         writer.WriteInt64(Value);
     }
 
-    public override string ToString()
-        => GetString();
-
     public override bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
-        => Value.TryFormat(destination, out charsWritten, format, provider);
+    {
+        if (format.Length == 0 && provider == null)
+        {
+            return Value.TryFormat(destination, out charsWritten, format, CultureInfo.InvariantCulture);
+        }
+        return Value.TryFormat(destination, out charsWritten, format, provider);
+    }
 
     public override string ToString(string? format, IFormatProvider? formatProvider)
-        => Value.ToString(format, formatProvider);
+    {
+        if (string.IsNullOrEmpty(format) && formatProvider == null)
+        {
+            return ToString();
+        }
+        return Value.ToString(format, formatProvider);
+    }
 
     public override bool TryFormat(Span<byte> utf8Destination, out int bytesWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
-        => Value.TryFormat(utf8Destination, out bytesWritten, format, provider);
+    {
+        if (format.Length == 0 && provider == null)
+        {
+            return Value.TryFormat(utf8Destination, out bytesWritten, format, CultureInfo.InvariantCulture);
+        }
+        return Value.TryFormat(utf8Destination, out bytesWritten, format, provider);
+    }
+
+    public override string ToString() => Value.ToString(CultureInfo.InvariantCulture);
 
     public static TomlInteger Parse(ReadOnlySpan<byte> bytes)
     {

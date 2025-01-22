@@ -15,17 +15,34 @@ internal sealed partial class TomlLocalTime(TimeOnly value) : TomlValue
         writer.WriteTimeOnly(Value);
     }
 
-    public override string ToString()
-        => GetString();
-
     public override bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
-        => Value.TryFormat(destination, out charsWritten, format, provider);
+    {
+        if (format.Length == 0 && provider == null)
+        {
+            return Value.TryFormat(destination, out charsWritten, "HH:mm:ss.fffffff", provider);
+        }
+        return Value.TryFormat(destination, out charsWritten, format, provider);
+    }
 
     public override string ToString(string? format, IFormatProvider? formatProvider)
-        => Value.ToString(format, formatProvider);
+    {
+        if (string.IsNullOrEmpty(format) && formatProvider == null)
+        {
+            return ToString();
+        }
+        return Value.ToString(format, formatProvider);
+    }
 
     public override bool TryFormat(Span<byte> utf8Destination, out int bytesWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
-        => Value.TryFormat(utf8Destination, out bytesWritten, format, provider);
+    {
+        if (format.Length == 0 && provider == null)
+        {
+            return Value.TryFormat(utf8Destination, out bytesWritten, "HH:mm:ss.fffffff", provider);
+        }
+        return Value.TryFormat(utf8Destination, out bytesWritten, format, provider);
+    }
+
+    public override string ToString() => Value.ToString("HH:mm:ss.fffffff");
 
     public static TomlLocalTime Parse(ReadOnlySpan<byte> bytes)
     {

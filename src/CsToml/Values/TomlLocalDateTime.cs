@@ -15,17 +15,34 @@ internal sealed partial class TomlLocalDateTime(DateTime value) : TomlValue
         writer.WriteDateTime(Value);
     }
 
-    public override string ToString()
-        => GetString();
-
     public override bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
-        => Value.TryFormat(destination, out charsWritten, format, provider);
+    {
+        if (format.Length == 0 && provider == null)
+        {
+            return Value.TryFormat(destination, out charsWritten, "yyyy-MM-ddTHH:mm:ss.fffffff", provider);
+        }
+        return Value.TryFormat(destination, out charsWritten, format, provider);
+    }
 
     public override string ToString(string? format, IFormatProvider? formatProvider)
-        => Value.ToString(format, formatProvider);
+    {
+        if (string.IsNullOrEmpty(format) && formatProvider == null)
+        {
+            return ToString();
+        }
+        return Value.ToString(format, formatProvider);
+    }
 
     public override bool TryFormat(Span<byte> utf8Destination, out int bytesWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
-        => Value.TryFormat(utf8Destination, out bytesWritten, format, provider);
+    {
+        if (format.Length == 0 && provider == null)
+        {
+            return Value.TryFormat(utf8Destination, out bytesWritten, "yyyy-MM-ddTHH:mm:ss.fffffff", provider);
+        }
+        return Value.TryFormat(utf8Destination, out bytesWritten, format, provider);
+    }
+
+    public override string ToString() => Value.ToString("yyyy-MM-ddTHH:mm:ss.fffffff"); // Time zone information ('zzz') is not included.
 
     public static TomlLocalDateTime Parse(ReadOnlySpan<byte> bytes)
     {

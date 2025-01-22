@@ -7,28 +7,8 @@ using System.Diagnostics;
 namespace CsToml;
 
 [DebuggerDisplay("Toml Document = {table.RootNode.NodeCount}")]
-public partial class TomlDocument : ITomlSerializedObject<TomlDocument>
+public partial class TomlDocument
 {
-    #region ITomlSerializedObject
-
-    static void ITomlSerializedObject<TomlDocument>.Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlDocument? target, CsTomlSerializerOptions options)
-    {
-        // No registration required
-    }
-
-    static TomlDocument ITomlSerializedObject<TomlDocument>.Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
-    {
-        // No registration required
-        return default!;
-    }
-
-    static void ITomlSerializedObjectRegister.Register()
-    {
-        // No registration required
-    }
-
-    #endregion
-
     private readonly TomlTable table;
 
     public TomlDocumentNode RootNode
