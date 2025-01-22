@@ -22,7 +22,7 @@ internal sealed class TomlStreamConfigurationParser
         foreach (var element in node.GetNodeEnumerator())
         {
             isEmpty = false;
-            EnterContext(element.Key.ToString()!);
+            EnterContext(element.Key.GetString()!);
             VisitElement(element.Value);
             ExitContext();
         }
