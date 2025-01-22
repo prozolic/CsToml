@@ -3,7 +3,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace CsToml.Extensions.Configuration;
 
-internal sealed class TomlFileConfigurationParser
+internal sealed class TomlStreamConfigurationParser
 {
     private IDictionary<string, string?> data = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
     private readonly Stack<string> paths = new();
@@ -56,10 +56,6 @@ internal sealed class TomlFileConfigurationParser
             if (data.ContainsKey(key))
             {
                 throw new FormatException();
-            }
-            if (node.GetString().Equals("∞"))
-            {
-
             }
             data[key] = node.GetString();
         }

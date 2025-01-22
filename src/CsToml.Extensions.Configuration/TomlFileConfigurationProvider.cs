@@ -1,5 +1,4 @@
-﻿using CsToml.Error;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 
 namespace CsToml.Extensions.Configuration;
 
@@ -7,6 +6,6 @@ public class TomlFileConfigurationProvider(FileConfigurationSource source) : Fil
 {
     public override void Load(Stream stream)
     {
-        Data = new TomlFileConfigurationParser().Parse(stream);
+        Data = new TomlStreamConfigurationParser().Parse(stream);
     }
 }

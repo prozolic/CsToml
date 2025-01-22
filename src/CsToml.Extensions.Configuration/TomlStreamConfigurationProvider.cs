@@ -6,6 +6,6 @@ public class TomlStreamConfigurationProvider(TomlStreamConfigurationSource sourc
 {
     public override void Load(Stream stream)
     {
-        Data = new TomlFileConfigurationParser().Parse(stream);
+        Data = new TomlStreamConfigurationParser().Parse(stream);
     }
 }
