@@ -240,14 +240,15 @@ internal abstract partial class TomlString(string value) : TomlValue, ITomlStrin
         return true;
     }
 
-    public override string ToString(string? format, IFormatProvider? formatProvider)
-        => GetString();
+    public override string ToString(string? format, IFormatProvider? formatProvider) => Utf16String;
 
     public override bool TryFormat(Span<byte> utf8Destination, out int bytesWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
     {
         var status = Utf8.FromUtf16(Utf16String.AsSpan(), utf8Destination, out var bytesRead, out bytesWritten, replaceInvalidSequences: false);
         return status == OperationStatus.Done;
     }
+
+    public override string ToString() => Utf16String;
 }
 
 internal enum CsTomlStringType : byte

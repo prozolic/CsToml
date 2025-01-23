@@ -64,7 +64,7 @@ public static class CsTomlSerializer
         options ??= DefaultOptions;
 
         var document = new TomlDocument();
-        var reader = new Utf8SequenceReader(tomlText);
+        var reader = new Utf8SequenceReader(tomlText, true);
         document.Deserialize(ref reader, options);
 
         try
@@ -87,7 +87,7 @@ public static class CsTomlSerializer
         options ??= DefaultOptions;
 
         var document = new TomlDocument();
-        var reader = new Utf8SequenceReader(tomlSequence);
+        var reader = new Utf8SequenceReader(tomlSequence, true);
         document.Deserialize(ref reader, options);
 
         try
@@ -150,7 +150,7 @@ public static class CsTomlSerializer
     public static T DeserializeValueType<T>(ReadOnlySpan<byte> tomlText, CsTomlSerializerOptions? options = null)
     {
         options ??= DefaultOptions;
-        var utf8SequenceReader = new Utf8SequenceReader(tomlText);
+        var utf8SequenceReader = new Utf8SequenceReader(tomlText, true);
         var reader = new CsTomlReader(ref utf8SequenceReader);
         TomlValue tomlValue = reader.ReadValue();
 
@@ -161,7 +161,7 @@ public static class CsTomlSerializer
     public static T DeserializeValueType<T>(ReadOnlySequence<byte> tomlSequence, CsTomlSerializerOptions? options = null)
     {
         options ??= DefaultOptions;
-        var utf8SequenceReader = new Utf8SequenceReader(tomlSequence);
+        var utf8SequenceReader = new Utf8SequenceReader(tomlSequence, true);
         var reader = new CsTomlReader(ref utf8SequenceReader);
         TomlValue tomlValue = reader.ReadValue();
 

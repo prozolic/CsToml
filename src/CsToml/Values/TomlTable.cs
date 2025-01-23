@@ -341,7 +341,30 @@ internal sealed partial class TomlTable : TomlValue
     }
 
     public override string ToString(string? format, IFormatProvider? formatProvider)
-        => ToString();
+    {
+        var length = 65536; // 64K;
+        var bufferWriter = RecycleArrayPoolBufferWriter<char>.Rent();
+        try
+        {
+            var conflictCount = 0;
+            var charsWritten = 0;
+            while (!TryFormat(bufferWriter.GetSpan(length), out charsWritten, format, formatProvider))
+            {
+                if (++conflictCount >= 15)
+                {
+                    break;
+                }
+                length *= 2;
+            }
+
+            bufferWriter.Advance(charsWritten);
+            return new string(bufferWriter.WrittenSpan);
+        }
+        finally
+        {
+            RecycleArrayPoolBufferWriter<char>.Return(bufferWriter);
+        }
+    }
 
     public override bool TryFormat(Span<byte> utf8Destination, out int bytesWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
     {
@@ -370,30 +393,6 @@ internal sealed partial class TomlTable : TomlValue
         return true;
     }
 
-    public override string ToString()
-    {
-        var length = 65536; // 64K;
-        var bufferWriter = RecycleArrayPoolBufferWriter<char>.Rent();
-        try
-        {
-            var conflictCount = 0;
-            var charsWritten = 0;
-            while (!TryFormat(bufferWriter.GetSpan(length), out charsWritten))
-            {
-                if (++conflictCount >= 15)
-                {
-                    break;
-                }
-                length *= 2;
-            }
-
-            bufferWriter.Advance(charsWritten);
-            return new string(bufferWriter.WrittenSpan);
-        }
-        finally
-        {
-            RecycleArrayPoolBufferWriter<char>.Return(bufferWriter);
-        }
-    }
+    public override string ToString() => ToString(null, null);
 
 }

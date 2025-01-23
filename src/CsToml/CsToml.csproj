@@ -1,18 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <Import Project="../NuGet.props" />
+
   <PropertyGroup>
     <ImplicitUsings>enable</ImplicitUsings>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-    <Authors>prozolic</Authors>
-    <PackageTags>TOML,serializer,parser,writer,reader</PackageTags>
     <Description>TOML Serializer for .NET.</Description>
-    <Copyright>prozolic</Copyright>
-    <PackageProjectUrl>https://github.com/prozolic/CsToml</PackageProjectUrl>
-    <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>$(PackageProjectUrl)</RepositoryUrl>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <VersionPrefix>1.3.3</VersionPrefix>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PackageTags>TOML,serializer,parser,writer,reader</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

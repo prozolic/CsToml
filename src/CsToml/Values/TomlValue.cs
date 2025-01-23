@@ -37,9 +37,43 @@ public abstract partial class TomlValue :
         return false;
     }
 
-    [DebuggerDisplay("Empty")]
+    [DebuggerDisplay("{DisplayValue}")]
     private sealed class CsTomlEmpty : TomlValue
     {
+        internal static readonly string DisplayValue = "Empty value";
+
         public CsTomlEmpty() : base() { }
+
+        public override bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
+        {
+            var displayValueSpan = DisplayValue.AsSpan();
+            if (destination.Length < displayValueSpan.Length)
+            {
+                charsWritten = 0;
+                return false;
+            }
+            displayValueSpan.CopyTo(destination);
+            charsWritten = displayValueSpan.Length;
+            return true;
+        }
+
+        public override string ToString(string? format, IFormatProvider? formatProvider)
+            => DisplayValue;
+
+        public override bool TryFormat(Span<byte> utf8Destination, out int bytesWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
+        {
+            var displayValueSpan = "Empty"u8;
+            if (utf8Destination.Length < displayValueSpan.Length)
+            {
+                bytesWritten = 0;
+                return false;
+            }
+            displayValueSpan.CopyTo(utf8Destination);
+            bytesWritten = displayValueSpan.Length;
+            return true;
+        }
+
+        public override string ToString()
+            => DisplayValue;
     }
 }

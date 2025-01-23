@@ -192,7 +192,7 @@ internal class TomlTableNodeDictionary
         public TomlTableNode value;
     }
 
-    internal ref struct KeyValuePairEnumerator
+    internal struct KeyValuePairEnumerator
     {
         private readonly TomlTableNodeDictionary dictionary;
         private int index;

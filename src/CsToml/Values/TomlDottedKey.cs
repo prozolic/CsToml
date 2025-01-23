@@ -132,17 +132,13 @@ internal abstract partial class TomlDottedKey(ReadOnlySpan<byte> value) :
         }
     }
 
-    public override string ToString()
-        => Utf16String;
-
     public override bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
     {
         var status = Utf8.ToUtf16(Value, destination, out var bytesRead, out charsWritten, replaceInvalidSequences: false);
         return status == OperationStatus.Done;
     }
 
-    public override string ToString(string? format, IFormatProvider? formatProvider)
-        => GetString();
+    public override string ToString(string? format, IFormatProvider? formatProvider) => Utf16String;
 
     public override bool TryFormat(Span<byte> utf8Destination, out int bytesWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
     {
@@ -156,6 +152,8 @@ internal abstract partial class TomlDottedKey(ReadOnlySpan<byte> value) :
         bytesWritten = Value.Length;
         return true;
     }
+
+    public override string ToString() => Utf16String;
 
     public override bool Equals(object? obj)
     {

@@ -101,9 +101,6 @@ internal sealed partial class TomlArray(int capacity) : TomlValue, IEnumerable<T
     }
 
     public override string ToString(string? format, IFormatProvider? formatProvider)
-        => ToString();
-
-    public override string ToString()
     {
         var length = 1024;
         var bufferWriter = RecycleArrayPoolBufferWriter<char>.Rent();
@@ -111,7 +108,7 @@ internal sealed partial class TomlArray(int capacity) : TomlValue, IEnumerable<T
         {
             var conflictCount = 0;
             var charsWritten = 0;
-            while (!TryFormat(bufferWriter.GetSpan(length), out charsWritten))
+            while (!TryFormat(bufferWriter.GetSpan(length), out charsWritten, format.AsSpan(), formatProvider))
             {
                 if (++conflictCount >= 20)
                 {
@@ -128,6 +125,8 @@ internal sealed partial class TomlArray(int capacity) : TomlValue, IEnumerable<T
             RecycleArrayPoolBufferWriter<char>.Return(bufferWriter);
         }
     }
+
+    public override string ToString() => ToString(null, null);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Add(TomlValue tomlValue)

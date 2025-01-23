@@ -27,9 +27,6 @@ internal sealed partial class TomlBoolean : TomlValue
         writer.WriteBoolean(Value);
     }
 
-    public override string ToString()
-        => GetString();
-
     public override bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
     {
         var destinationSize = Value ? 4 : 5;
@@ -45,11 +42,7 @@ internal sealed partial class TomlBoolean : TomlValue
     }
 
     public override string ToString(string? format, IFormatProvider? formatProvider)
-    {
-        Span<char> destination = Value ? stackalloc char[4] : stackalloc char[5];
-        TryFormat(destination, out var charsWritten, format.AsSpan(), formatProvider);
-        return destination.ToString();
-    }
+        => Value ? bool.TrueString : bool.FalseString;
 
     public override bool TryFormat(Span<byte> utf8Destination, out int bytesWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
     {
@@ -82,6 +75,9 @@ internal sealed partial class TomlBoolean : TomlValue
         }
         return true;
     }
+
+    public override string ToString()
+        => Value ? bool.TrueString : bool.FalseString;
 
     public static TomlBoolean Parse(ReadOnlySpan<byte> bytes)
     {

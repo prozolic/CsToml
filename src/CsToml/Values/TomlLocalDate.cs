@@ -1,5 +1,7 @@
 ﻿using CsToml.Error;
+using System;
 using System.Diagnostics;
+using System.Globalization;
 
 namespace CsToml.Values;
 
@@ -15,17 +17,34 @@ internal sealed partial class TomlLocalDate(DateOnly value) : TomlValue
         writer.WriteDateOnly(Value);
     }
 
-    public override string ToString()
-        => GetString();
-
     public override bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
-        => Value.TryFormat(destination, out charsWritten, format, provider);
+    {
+        if (format.Length == 0 && provider == null)
+        {
+            return Value.TryFormat(destination, out charsWritten, "yyyy-MM-dd", provider);
+        }
+        return Value.TryFormat(destination, out charsWritten, format, provider);
+    }
 
     public override string ToString(string? format, IFormatProvider? formatProvider)
-        => Value.ToString(format, formatProvider);
+    {
+        if (string.IsNullOrEmpty(format) && formatProvider == null)
+        {
+            return Value.ToString("yyyy-MM-dd");
+        }
+        return Value.ToString(format, formatProvider);
+    }
 
     public override bool TryFormat(Span<byte> utf8Destination, out int bytesWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
-        => Value.TryFormat(utf8Destination, out bytesWritten, format, provider);
+    {
+        if (format.Length == 0 && provider == null)
+        {
+            return Value.TryFormat(utf8Destination, out bytesWritten, "yyyy-MM-dd", provider);
+        }
+        return Value.TryFormat(utf8Destination, out bytesWritten, format, provider);
+    }
+
+    public override string ToString() => Value.ToString("yyyy-MM-dd");
 
     public static TomlLocalDate Parse(ReadOnlySpan<byte> bytes)
     {
