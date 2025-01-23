@@ -45,6 +45,7 @@ Table of Contents
 * [Serialize and deserialize TOML values only](#serialize-and-deserialize-toml-values-only)
 * [TomlDocument class](#tomldocument-class)
 * [Extensions (CsToml.Extensions)](#extensions-cstomlextensions)
+* [Microsoft.Extensions.Configuration extensions (CsToml.Extensions.Configuration)](#microsoftextensionsconfiguration-extensions-cstomlextensionsconfiguration)
 * [UnitTest](#unittest)
 * [License](#license)
 
@@ -60,9 +61,13 @@ However, this requires Roslyn 4.3.1 (Visual Studio 2022 version 17.3) or higher.
 
 > PM> Install-Package [CsToml.Generator](https://www.nuget.org/packages/CsToml.Generator/)  
 
-Additional features are available by installing optional documents.(learn more in our [Extensions (CsToml.Extensions)](#extensions-cstomlextensions))
+If `CsToml.Extensions` is installed, you can serialize/deserialize from the TOML file path. learn more in our [Extensions (CsToml.Extensions)](#extensions-cstomlextensions)
 
 > PM> Install-Package [CsToml.Extensions](https://www.nuget.org/packages/CsToml.Extensions/)  
+
+If `CsToml.Extensions.Configuration` is installed, the TOML configuration provider is available. learn more in our [Microsoft.Extensions.Configuration extensions (CsToml.Extensions.Configuration)](#microsoftextensionsconfiguration-extensions-cstomlextensionsconfiguration)
+
+> PM> Install-Package [CsToml.Extensions.Configuration](https://www.nuget.org/packages/CsToml.Extensions.Configuration/)  
 
 Serialize and deserialize TOML sequence (Parse TOML sequence)
 ---
@@ -721,6 +726,35 @@ await CsTomlFileSerializer.SerializeAsync("test.toml", document);
 `CsTomlFileSerializer.Serialize` and `CsTomlFileSerializer.SerializeAsync` serialize the UTF8 string of `TomlDocument` to the TOML file.  
 
 `CsToml.Extensions` uses [Cysharp/NativeMemoryArray](https://github.com/Cysharp/NativeMemoryArray) as a third party library.
+
+Microsoft.Extensions.Configuration extensions (`CsToml.Extensions.Configuration`)
+---
+
+`CsToml.Extensions.Configuration` provides a configuration provider for `Microsoft.Extensions.Configuration` that reads TOML files or streams. Basically, the usage and options are the same as for [File configuration provider in .NET](https://learn.microsoft.com/en-us/dotnet/core/extensions/configuration-providers#json-configuration-provider).
+
+```csharp
+namespace CsToml.Extensions.Configuration;
+
+// ConfigurationBuilder
+var conf = new ConfigurationBuilder().AddTomlFile("test.toml").Build();
+
+// Blazor Web App 
+var builder = WebApplication.CreateBuilder(args);
+builder.Configuration.AddTomlFile("test.toml");
+var app = builder.Build();
+
+using var fs = new FileStream("test.toml", FileMode.Open);
+builder.Configuration.AddTomlStream(fs);
+```
+
+```csharp
+public static IConfigurationBuilder AddTomlFile(this IConfigurationBuilder builder, string path);
+public static IConfigurationBuilder AddTomlFile(this IConfigurationBuilder builder, string path, bool optional);
+public static IConfigurationBuilder AddTomlFile(this IConfigurationBuilder builder, string path, bool optional, bool reloadOnChange);
+public static IConfigurationBuilder AddTomlFile(this IConfigurationBuilder builder, Microsoft.Extensions.FileProviders.IFileProvider? provider, string path, bool optional, bool reloadOnChange);
+public static IConfigurationBuilder AddTomlFile(this IConfigurationBuilder builder, Action<TomlFileConfigurationSource> configureSource);
+public static IConfigurationBuilder AddTomlStream(this IConfigurationBuilder builder, System.IO.Stream stream);
+```
 
 UnitTest
 ---
