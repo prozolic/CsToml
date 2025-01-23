@@ -56,7 +56,7 @@ This library is distributed via NuGet. We target .NET 8 and .NET 9.
 
 > PM> Install-Package [CsToml](https://www.nuget.org/packages/CsToml/)
 
-When you install `CsToml.Generator`, it automatically creates code to make your custom classes serializable.(learn more in our [Serialize and deserialize custom classes (CsToml.Generator)](#serialize-and-deserialize-custom-classes-cstomlgenerator)). It is basically recommended to install it together with CsToml.  
+When you install `CsToml.Generator`, it automatically creates code to make your custom classes serializable. learn more in our [Serialize and deserialize custom class/struct/record/record struct (CsToml.Generator)](#serialize-and-deserialize-custom-classstructrecordrecord-struct-cstomlgenerator). It is basically recommended to install it together with CsToml.  
 However, this requires Roslyn 4.3.1 (Visual Studio 2022 version 17.3) or higher.
 
 > PM> Install-Package [CsToml.Generator](https://www.nuget.org/packages/CsToml.Generator/)  
@@ -730,7 +730,7 @@ await CsTomlFileSerializer.SerializeAsync("test.toml", document);
 Microsoft.Extensions.Configuration extensions (`CsToml.Extensions.Configuration`)
 ---
 
-`CsToml.Extensions.Configuration` provides a configuration provider for `Microsoft.Extensions.Configuration` that reads TOML files or streams. Basically, the usage and options are the same as for [File configuration provider in .NET](https://learn.microsoft.com/en-us/dotnet/core/extensions/configuration-providers#json-configuration-provider).
+`CsToml.Extensions.Configuration` provides a configuration provider for `Microsoft.Extensions.Configuration` that reads TOML files or streams. Basically, the usage and options are the same as for [File configuration provider in .NET](https://learn.microsoft.com/en-us/dotnet/core/extensions/configuration-providers).
 
 ```csharp
 namespace CsToml.Extensions.Configuration;
