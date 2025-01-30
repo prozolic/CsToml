@@ -32,14 +32,7 @@ public static class CsTomlSerializer
 
         public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlDocument target, CsTomlSerializerOptions options) where TBufferWriter : IBufferWriter<byte>
         {
-            try
-            {
-                target!.ToTomlString(ref writer);
-            }
-            catch (CsTomlException cte)
-            {
-                throw new CsTomlSerializeException("An error occurred when serializing the TOML file. Check InnerException for exception information.", cte);
-            }
+            target!.ToTomlString(ref writer);
         }
 
         public void Dispose()
@@ -78,7 +71,7 @@ public static class CsTomlSerializer
         }
         catch (CsTomlException cte)
         {
-            throw new CsTomlSerializeException("An error occurred when serializing the TOML file. Check InnerException for exception information.", cte);
+            throw new CsTomlSerializeException("An exception was thrown during the deserializing TOML. Check 'InnerException' property for exception information.", cte);
         }
     }
 
@@ -101,7 +94,7 @@ public static class CsTomlSerializer
         }
         catch (CsTomlException cte)
         {
-            throw new CsTomlSerializeException("An error occurred when serializing the TOML file. Check InnerException for exception information.", cte);
+            throw new CsTomlSerializeException("An exception was thrown during the deserializing TOML. Check 'InnerException' property for exception information.", cte);
         }
     }
 
@@ -198,7 +191,7 @@ public static class CsTomlSerializer
         }
         catch (CsTomlException cte)
         {
-            throw new CsTomlSerializeException("An error occurred when serializing the TOML file. Check InnerException for exception information.", cte);
+            throw new CsTomlSerializeException("An exception was thrown during the serializing TOML. Check 'InnerException' property for exception information.", cte);
         }
     }
 
@@ -253,7 +246,7 @@ public static class CsTomlSerializer
         }
         catch (CsTomlException cte)
         {
-            throw new CsTomlSerializeException("An error occurred when serializing the TOML file. Check InnerException for exception information.", cte);
+            throw new CsTomlSerializeException("An exception was thrown during the serializing TOML. Check 'InnerException' property for exception information.", cte);
         }
     }
 }

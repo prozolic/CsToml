@@ -38,29 +38,33 @@ public sealed class CsTomlLineNumberException : CsTomlException
         var handler = new DefaultInterpolatedStringHandler(0, 0);
         handler.AppendLiteral("A syntax error (");
         handler.AppendLiteral(nameof(CsTomlException));
-        handler.AppendLiteral(") occurred while parsing line ");
+        handler.AppendLiteral(") was thrown during the parsing line ");
         handler.AppendFormatted(lineNumber);
-        handler.AppendLiteral(" of the TOML file. Check InnerException for details.");
+        handler.AppendLiteral($".");
+        handler.AppendLiteral(Environment.NewLine);
+        handler.AppendFormatted(e);
         return handler.ToStringAndClear();
     }
 
     internal static string CreateExceptionMessage(Exception e, long lineNumber)
     {
         var handler = new DefaultInterpolatedStringHandler(0, 0);
-        handler.AppendLiteral("An unexpected error (");
+        handler.AppendLiteral("An unexpected exception (");
         handler.AppendLiteral(e.GetType().Name);
-        handler.AppendLiteral(") occurred while parsing line ");
+        handler.AppendLiteral(") was thrown during the parsing line ");
         handler.AppendFormatted(lineNumber);
-        handler.AppendLiteral(" of the TOML file. Check InnerException for details.");
+        handler.AppendLiteral($".");
+        handler.AppendLiteral(Environment.NewLine);
+        handler.AppendFormatted(e);
         return handler.ToStringAndClear();
     }
 }
 
 public sealed class CsTomlSerializeException : CsTomlException
 {
-    public IReadOnlyCollection<CsTomlException>? Exceptions { get; }
+    public IReadOnlyCollection<CsTomlLineNumberException>? Exceptions { get; }
 
-    internal CsTomlSerializeException(string message, IReadOnlyCollection<CsTomlException> exceptions) :
+    internal CsTomlSerializeException(string message, IReadOnlyCollection<CsTomlLineNumberException> exceptions) :
         base(message)
     {
         Exceptions = exceptions;
@@ -69,7 +73,7 @@ public sealed class CsTomlSerializeException : CsTomlException
     internal CsTomlSerializeException(string message, CsTomlException e) :
         base(message, e)
     {
-        Exceptions = [e];
+        Exceptions = [];
     }
 
 }
