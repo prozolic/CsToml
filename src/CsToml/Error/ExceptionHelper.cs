@@ -146,6 +146,13 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowUnexpectedValueFound()
+    {
+        ThrowException($@"Unexpected value found.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ThrowIncorrectTomlFormat()
     {
         ThrowException($@"Failed due to incorrect formatting.");
@@ -325,6 +332,20 @@ internal static class ExceptionHelper
     internal static void ThrowUnderscoreUsedConsecutively()
     {
         ThrowException($@"Underscores are used consecutively.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowCommasAreUsedMoreThanOnce()
+    {
+        ThrowException($@"Commas are used more than once.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowTheCommaIsDefinedFirst()
+    {
+        ThrowException($@"The comma is defined first.");
     }
 
     [DoesNotReturn]

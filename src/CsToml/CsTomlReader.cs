@@ -315,7 +315,7 @@ internal ref struct CsTomlReader
                 return ReadInlineTable();
         }
 
-        ExceptionHelper.NotReturnThrow<TomlValue>(ExceptionHelper.ThrowIncorrectTomlFormat);
+        ExceptionHelper.ThrowUnexpectedValueFound();
         return default!;
     }
 
@@ -1007,6 +1007,7 @@ internal ref struct CsTomlReader
 
         var array = new TomlArray();
         var comma = true;
+        var commaCount = 0;
         var closingBracket = false;
         while (TryPeek(out var ch))
         {
@@ -1021,8 +1022,15 @@ internal ref struct CsTomlReader
                     SkipWhiteSpace();
                     break;
                 case TomlCodes.Symbol.COMMA:
-                    if (comma) ExceptionHelper.ThrowIncorrectTomlFormat();
+                    if (comma)
+                    {
+                        if (commaCount > 0)
+                            ExceptionHelper.ThrowCommasAreUsedMoreThanOnce();
+                        else
+                            ExceptionHelper.ThrowTheCommaIsDefinedFirst();
+                    }
                     comma = true;
+                    commaCount++;
                     Advance(1);
                     break;
                 case TomlCodes.Symbol.CARRIAGE:
