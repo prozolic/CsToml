@@ -516,7 +516,7 @@ var dict2 = CsTomlSerializer.Deserialize<Dictionary<object, object>>(tomlText);
 ```
 
 If a syntax error is found during deserialization, an `CsTomlSerializeException` is thrown after deserialization.
-The contents of the thrown exception can be viewed at `CsTomlException.InnerException`.
+The contents of the thrown exception can be viewed at `CsTomlException.ParseExceptions`.
 
 ```csharp
 var tomlText = @"
@@ -526,15 +526,16 @@ number = ""Error
 
 try
 {
-    // throw CsTomlException
+    // throw CsTomlSerializeException
     var error = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
 }
-catch(CsTomlSerializeException ctse)
+catch (CsTomlSerializeException ctse)
 {
-    foreach (var cte in ctse.Exceptions)
+    foreach (var cte in ctse.ParseExceptions!)
     {
-        // A syntax error (CsTomlException) occurred while parsing line 3 of the TOML file. Check InnerException for details.
-        var e = cte.InnerException; // InnerException: 10 is a character that cannot be converted to a number.
+        // A syntax error (CsTomlException) was thrown during the parsing line 3.
+        var e = cte.InnerException;         // CsToml.Error.CsTomlException: Escape characters 13 were included.
+        var lineNumber = cte.LineNumber;
     }
 }
 ```
