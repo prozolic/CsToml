@@ -12,22 +12,22 @@ public class CsTomlException : Exception
     {}
 }
 
-public sealed class CsTomlLineNumberException : CsTomlException
+public sealed class CsTomlParseException : CsTomlException
 {
     public long LineNumber { get; } = 0;
 
-    internal CsTomlLineNumberException(string? message, long lineNumber) : base(message)
+    internal CsTomlParseException(string? message, long lineNumber) : base(message)
     {
         LineNumber = lineNumber;
     }
 
-    internal CsTomlLineNumberException(CsTomlException exception, long lineNumber)
+    internal CsTomlParseException(CsTomlException exception, long lineNumber)
         : base(CreateCsTomlExceptionMessage(exception, lineNumber), exception)
     {
         LineNumber = lineNumber;
     }
 
-    internal CsTomlLineNumberException(Exception exception, long lineNumber)
+    internal CsTomlParseException(Exception exception, long lineNumber)
         : base(CreateExceptionMessage(exception, lineNumber), exception)
     {
         LineNumber = lineNumber;
@@ -62,18 +62,18 @@ public sealed class CsTomlLineNumberException : CsTomlException
 
 public sealed class CsTomlSerializeException : CsTomlException
 {
-    public IReadOnlyCollection<CsTomlLineNumberException>? Exceptions { get; }
+    public IReadOnlyCollection<CsTomlParseException>? ParseExceptions { get; }
 
-    internal CsTomlSerializeException(string message, IReadOnlyCollection<CsTomlLineNumberException> exceptions) :
+    internal CsTomlSerializeException(string message, IReadOnlyCollection<CsTomlParseException> parseExceptions) :
         base(message)
     {
-        Exceptions = exceptions;
+        ParseExceptions = parseExceptions;
     }
 
     internal CsTomlSerializeException(string message, CsTomlException e) :
         base(message, e)
     {
-        Exceptions = [];
+        ParseExceptions = [];
     }
 
 }

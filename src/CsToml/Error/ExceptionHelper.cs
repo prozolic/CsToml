@@ -542,7 +542,7 @@ internal static class ExceptionHelper
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ThrowArgumentOutOfRangeExceptionWhenCreating<T>(ArgumentOutOfRangeException innerException)
     {
-        ThrowException($"ArgumentOutOfRangeException occurred when creating {typeof(T)}.", innerException);
+        ThrowException($"ArgumentOutOfRangeException was thrown when creating {typeof(T)}.", innerException);
     }
 
     [DoesNotReturn]

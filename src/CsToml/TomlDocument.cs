@@ -37,7 +37,7 @@ public partial class TomlDocument
         var parser = new CsTomlParser(ref reader);
 
         List<TomlString>? comments = default;
-        List<CsTomlLineNumberException>? exceptions = default;
+        List<CsTomlParseException>? exceptions = default;
         TomlTableNode? currentNode = table.RootNode;
 
         try
@@ -69,7 +69,7 @@ public partial class TomlDocument
                             break;
 
                         case ParserState.ThrowException:
-                            exceptions ??= new List<CsTomlLineNumberException>();
+                            exceptions ??= new List<CsTomlParseException>();
                             exceptions?.Add(parser.GetException()!);
                             comments?.Clear();
                             break;
@@ -80,8 +80,8 @@ public partial class TomlDocument
                 }
                 catch (CsTomlException cte)
                 {
-                    exceptions ??= new List<CsTomlLineNumberException>();
-                    exceptions?.Add(new CsTomlLineNumberException(cte, parser.LineNumber));
+                    exceptions ??= new List<CsTomlParseException>();
+                    exceptions?.Add(new CsTomlParseException(cte, parser.LineNumber));
                 }
             }
 

@@ -187,7 +187,7 @@ flt = 3.1415
             }
             catch (CsTomlSerializeException ctse)
             {
-                ctse.Exceptions!.Count.ShouldBe(1);
+                ctse.ParseExceptions!.Count.ShouldBe(1);
                 throw;
             }
         });
