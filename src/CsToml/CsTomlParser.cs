@@ -51,7 +51,7 @@ internal ref struct CsTomlParser
     private TomlValue? comment;
     private ExtendableArray<TomlDottedKey> dottedKeys;
     private TomlValue? value;
-    private CsTomlLineNumberException? exception;
+    private CsTomlParseException? exception;
     private bool endComment;
 
     public readonly long LineNumber => reader.LineNumber;
@@ -79,7 +79,7 @@ internal ref struct CsTomlParser
 
     [DebuggerStepThrough]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly CsTomlLineNumberException? GetException()
+    public readonly CsTomlParseException? GetException()
         => exception;
 
     [DebuggerStepThrough]
@@ -173,7 +173,7 @@ internal ref struct CsTomlParser
         catch (CsTomlException ce)
         {
             CurrentState = ParserState.ThrowException;
-            exception = new CsTomlLineNumberException(ce, LineNumber);
+            exception = new CsTomlParseException(ce, LineNumber);
             // Skip lines where an error is thrown.
             reader.SkipOneLine();
         }

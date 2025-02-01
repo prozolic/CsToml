@@ -246,7 +246,7 @@ try
 }
 catch(CsTomlSerializeException ctse)
 {
-    foreach (var cte in ctse.Exceptions)
+    foreach (var cte in ctse.ParseExceptions!)
     {
         // A syntax error (CsTomlException) occurred while parsing line 3 of the TOML file. Check InnerException for details.
         var e = cte.InnerException;

@@ -12,22 +12,22 @@ public class CsTomlException : Exception
     {}
 }
 
-public sealed class CsTomlLineNumberException : CsTomlException
+public sealed class CsTomlParseException : CsTomlException
 {
     public long LineNumber { get; } = 0;
 
-    internal CsTomlLineNumberException(string? message, long lineNumber) : base(message)
+    internal CsTomlParseException(string? message, long lineNumber) : base(message)
     {
         LineNumber = lineNumber;
     }
 
-    internal CsTomlLineNumberException(CsTomlException exception, long lineNumber)
+    internal CsTomlParseException(CsTomlException exception, long lineNumber)
         : base(CreateCsTomlExceptionMessage(exception, lineNumber), exception)
     {
         LineNumber = lineNumber;
     }
 
-    internal CsTomlLineNumberException(Exception exception, long lineNumber)
+    internal CsTomlParseException(Exception exception, long lineNumber)
         : base(CreateExceptionMessage(exception, lineNumber), exception)
     {
         LineNumber = lineNumber;
@@ -38,38 +38,42 @@ public sealed class CsTomlLineNumberException : CsTomlException
         var handler = new DefaultInterpolatedStringHandler(0, 0);
         handler.AppendLiteral("A syntax error (");
         handler.AppendLiteral(nameof(CsTomlException));
-        handler.AppendLiteral(") occurred while parsing line ");
+        handler.AppendLiteral(") was thrown during the parsing line ");
         handler.AppendFormatted(lineNumber);
-        handler.AppendLiteral(" of the TOML file. Check InnerException for details.");
+        handler.AppendLiteral($".");
+        handler.AppendLiteral(Environment.NewLine);
+        handler.AppendFormatted(e);
         return handler.ToStringAndClear();
     }
 
     internal static string CreateExceptionMessage(Exception e, long lineNumber)
     {
         var handler = new DefaultInterpolatedStringHandler(0, 0);
-        handler.AppendLiteral("An unexpected error (");
+        handler.AppendLiteral("An unexpected exception (");
         handler.AppendLiteral(e.GetType().Name);
-        handler.AppendLiteral(") occurred while parsing line ");
+        handler.AppendLiteral(") was thrown during the parsing line ");
         handler.AppendFormatted(lineNumber);
-        handler.AppendLiteral(" of the TOML file. Check InnerException for details.");
+        handler.AppendLiteral($".");
+        handler.AppendLiteral(Environment.NewLine);
+        handler.AppendFormatted(e);
         return handler.ToStringAndClear();
     }
 }
 
 public sealed class CsTomlSerializeException : CsTomlException
 {
-    public IReadOnlyCollection<CsTomlException>? Exceptions { get; }
+    public IReadOnlyCollection<CsTomlParseException>? ParseExceptions { get; }
 
-    internal CsTomlSerializeException(string message, IReadOnlyCollection<CsTomlException> exceptions) :
+    internal CsTomlSerializeException(string message, IReadOnlyCollection<CsTomlParseException> parseExceptions) :
         base(message)
     {
-        Exceptions = exceptions;
+        ParseExceptions = parseExceptions;
     }
 
     internal CsTomlSerializeException(string message, CsTomlException e) :
         base(message, e)
     {
-        Exceptions = [e];
+        ParseExceptions = [];
     }
 
 }
