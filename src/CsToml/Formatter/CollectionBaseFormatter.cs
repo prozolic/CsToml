@@ -1,10 +1,9 @@
 ﻿using CsToml.Error;
-using CsToml.Formatter.Resolver;
 using System.Buffers;
 
 namespace CsToml.Formatter;
 
-internal abstract class CollectionBaseFormatter<TCollection, TElement, TMediator> : ITomlValueFormatter<TCollection?>
+public abstract class CollectionBaseFormatter<TCollection, TElement, TMediator> : ITomlValueFormatter<TCollection?>
     where TCollection : IEnumerable<TElement>
 {
     public TCollection? Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)

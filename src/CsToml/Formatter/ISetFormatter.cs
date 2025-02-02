@@ -1,7 +1,7 @@
 ﻿
 namespace CsToml.Formatter;
 
-internal sealed class ISetFormatter<T> : CollectionBaseFormatter<ISet<T>, T, HashSet<T>>
+public sealed class ISetFormatter<T> : CollectionBaseFormatter<ISet<T>, T, HashSet<T>>
 {
     protected override void AddValue(HashSet<T> mediator, T element)
     {

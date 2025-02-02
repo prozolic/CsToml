@@ -3,7 +3,7 @@ using System.Buffers;
 
 namespace CsToml.Formatter;
 
-internal sealed class PriorityQueueFormatter<TElement, TPriority> : ITomlValueFormatter<PriorityQueue<TElement, TPriority>>
+public sealed class PriorityQueueFormatter<TElement, TPriority> : ITomlValueFormatter<PriorityQueue<TElement, TPriority>>
 {
     public PriorityQueue<TElement, TPriority> Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {

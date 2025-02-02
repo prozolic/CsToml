@@ -1,10 +1,9 @@
 ﻿using CsToml.Error;
-using CsToml.Formatter.Resolver;
 using System.Buffers;
 
 namespace CsToml.Formatter;
 
-internal abstract class ArrayBaseFormatter<TArray, TElement> : ITomlValueFormatter<TArray?>
+public abstract class ArrayBaseFormatter<TArray, TElement> : ITomlValueFormatter<TArray?>
 {
     public TArray? Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {

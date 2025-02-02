@@ -1,7 +1,7 @@
 ﻿
 namespace CsToml.Formatter;
 
-internal sealed class SortedListFormatter<TKey, TValue> : CollectionBaseFormatter<SortedList<TKey, TValue>, KeyValuePair<TKey, TValue>, SortedList<TKey, TValue>>
+public sealed class SortedListFormatter<TKey, TValue> : CollectionBaseFormatter<SortedList<TKey, TValue>, KeyValuePair<TKey, TValue>, SortedList<TKey, TValue>>
     where TKey : notnull
 {
     protected override void AddValue(SortedList<TKey, TValue> mediator, KeyValuePair<TKey, TValue> element)

@@ -1,7 +1,7 @@
 ﻿
 namespace CsToml.Formatter;
 
-internal sealed class IReadOnlySetFormatter<T> : CollectionBaseFormatter<IReadOnlySet<T>, T, HashSet<T>>
+public sealed class IReadOnlySetFormatter<T> : CollectionBaseFormatter<IReadOnlySet<T>, T, HashSet<T>>
 {
     protected override void AddValue(HashSet<T> mediator, T element)
     {

@@ -1,10 +1,9 @@
 ﻿using CsToml.Error;
-using CsToml.Formatter.Resolver;
 using System.Buffers;
 
 namespace CsToml.Formatter;
 
-internal sealed class NullableStructFormatter<T> : ITomlValueFormatter<T?>
+public sealed class NullableFormatter<T> : ITomlValueFormatter<T?>
     where T : struct
 {
     public T? Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)

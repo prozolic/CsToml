@@ -2,7 +2,7 @@
 
 namespace CsToml.Formatter;
 
-internal sealed class ImmutableQueueFormatter<T> : CollectionBaseFormatter<ImmutableQueue<T>, T, Queue<T>>
+public sealed class ImmutableQueueFormatter<T> : CollectionBaseFormatter<ImmutableQueue<T>, T, Queue<T>>
 {
     protected override void AddValue(Queue<T> mediator, T element)
     {

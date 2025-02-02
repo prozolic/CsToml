@@ -10,6 +10,7 @@ internal sealed class TypeMeta
     private TypeDeclarationSyntax syntax;
 
     public IReadOnlyCollection<(IPropertySymbol, TomlSerializationKind, string?)> Members { get; }
+    public ImmutableArray<(ITypeSymbol, TomlSerializationKind)> DefinedTypes { get; }
     public string NameSpace { get; }
     public TomlSerializedObjectType Type { get; }
     public string TypeName { get; }
@@ -28,6 +29,13 @@ internal sealed class TypeMeta
         var members = symbol.GetProperties().FilterMembers();
         Array.Sort(members, static (x, y) => x.Item2 - y.Item2);
         Members = members;
+
+        var typesymbols = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
+        foreach (var member in Members)
+        {
+            SearchTypeSymbol(typesymbols, member.Item1.Type);
+        }
+        DefinedTypes = typesymbols.Select(t => (t, t.GetTomlSerializationKind())).ToImmutableArray();
 
         TypeName = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
         FullTypeName = symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
@@ -122,6 +130,30 @@ internal sealed class TypeMeta
     private Location GetPropertyLocation(IPropertySymbol propertySymbol, TypeDeclarationSyntax syntax)
     {
         return propertySymbol.Locations.FirstOrDefault() ?? syntax.Identifier.GetLocation();
+    }
+
+    private void SearchTypeSymbol(HashSet<ITypeSymbol> typesymbols, ITypeSymbol rootTypeSymbol)
+    {
+        typesymbols.Add(rootTypeSymbol);
+        if (rootTypeSymbol is IArrayTypeSymbol arrayTypeSymbol)
+        {
+            var elementType = arrayTypeSymbol.ElementType;
+            SearchTypeSymbol(typesymbols, elementType);
+        }
+        else if (rootTypeSymbol is INamedTypeSymbol namedSymbol)
+        {
+            if (namedSymbol.IsGenericType)
+            {
+                foreach (var typeParameter in namedSymbol.TypeArguments)
+                {
+                    SearchTypeSymbol(typesymbols, typeParameter);
+                }
+            }
+            foreach (var propetryParameter in namedSymbol.GetProperties().FilterMembers())
+            {
+                SearchTypeSymbol(typesymbols, propetryParameter.Item1.Type);
+            }
+        }
     }
 }
 

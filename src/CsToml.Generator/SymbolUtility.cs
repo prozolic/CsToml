@@ -71,7 +71,7 @@ internal static class SymbolUtility
                 {
                     return TomlSerializationKind.PrimitiveCollection;
                 }
-                return TomlSerializationKind.ArrayOfITomlSerializedObject;
+                return TomlSerializationKind.CollectionOfITomlSerializedObject;
             default:
                 switch (type.TypeKind)
                 {
@@ -92,21 +92,9 @@ internal static class SymbolUtility
                             {
                                 return TomlSerializationKind.PrimitiveCollection;
                             }
-                            return TomlSerializationKind.ArrayOfITomlSerializedObject;
+                            return TomlSerializationKind.CollectionOfITomlSerializedObject;
                         }
                         if (DictionaryMetaData.IsDictionaryClass(type))
-                        {
-                            return TomlSerializationKind.Dictionary;
-                        }
-                        if (CollectionMetaData.IsSystemCollections(type))
-                        {
-                            if (IsElementType(type, TomlSerializationKind.Primitive))
-                            {
-                                return TomlSerializationKind.PrimitiveCollection;
-                            }
-                            return TomlSerializationKind.ArrayOfITomlSerializedObject;
-                        }
-                        if (DictionaryMetaData.IsDictionary(type))
                         {
                             return TomlSerializationKind.Dictionary;
                         }
@@ -122,7 +110,7 @@ internal static class SymbolUtility
                             {
                                 return TomlSerializationKind.PrimitiveCollection;
                             }
-                            return TomlSerializationKind.ArrayOfITomlSerializedObject;
+                            return TomlSerializationKind.CollectionOfITomlSerializedObject;
                         }
                         if (DictionaryMetaData.IsDictionary(type))
                         {
@@ -130,6 +118,17 @@ internal static class SymbolUtility
                         }
                         return TomlSerializationKind.Interface;
                     case TypeKind.Struct:
+                        switch(type.MetadataName)
+                        {
+                            case "DateTimeOffset":
+                            case "DateOnly":
+                            case "TimeOnly":
+                                return TomlSerializationKind.Primitive;
+                        }
+                        if (TomlSerializedObjectMetaData.IsTomlSerializedObject(type))
+                        {
+                            return TomlSerializationKind.TomlSerializedObject;
+                        }
                         return TomlSerializationKind.Struct;
                 }
 
@@ -144,6 +143,17 @@ internal static class SymbolUtility
             var symbolKind = GetTomlSerializationKind(arrayTypeSymbol.ElementType);
             return symbolKind == kind;
         }
+
+        //if (typeSymbol is INamedTypeSymbol namedTypeSymbol)
+        //{
+        //    var typeArguments = namedTypeSymbol.TypeArguments;
+        //    if (typeArguments.Length == 1)
+        //    {
+        //        var symbolKind = GetTomlSerializationKind(typeArguments[0]);
+        //        return symbolKind == kind;
+        //    }
+        //    return false;
+        //}
 
         return false;
     }

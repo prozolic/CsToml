@@ -4,7 +4,7 @@ using System.Collections.ObjectModel;
 
 namespace CsToml.Formatter;
 
-internal class ReadOnlySetFormatter<T> : CollectionBaseFormatter<ReadOnlySet<T>, T, HashSet<T>>
+public class ReadOnlySetFormatter<T> : CollectionBaseFormatter<ReadOnlySet<T>, T, HashSet<T>>
 {
     protected override void AddValue(HashSet<T> mediator, T element)
     {

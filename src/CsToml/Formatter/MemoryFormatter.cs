@@ -1,7 +1,7 @@
 ﻿
 namespace CsToml.Formatter;
 
-internal sealed class MemoryFormatter<T> : ArrayBaseFormatter<Memory<T>, T>
+public sealed class MemoryFormatter<T> : ArrayBaseFormatter<Memory<T>, T>
 {
     protected override ReadOnlySpan<T> AsSpan(Memory<T> array)
     {

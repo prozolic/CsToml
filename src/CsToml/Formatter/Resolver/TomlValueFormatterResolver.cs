@@ -29,10 +29,17 @@ internal sealed class TomlValueFormatterResolver : ITomlValueFormatterResolver
             }
             else
             {
-                var formatter = BuildinFormatterResolver.Instance.GetFormatter<T>();
+                var formatter = BuiltinFormatterResolver.Instance.GetFormatter<T>();
                 if (formatter != null)
                 {
                     Formatter = formatter;
+                    return;
+                }
+
+                var generalizedFormatter = GeneratedFormatterResolver.Instance.GetFormatter<T>();
+                if (generalizedFormatter != null)
+                {
+                    Formatter = generalizedFormatter;
                     return;
                 }
 

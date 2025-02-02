@@ -13,6 +13,7 @@ internal enum TomlSerializationKind
     Dictionary,
     Object,
     ArrayOfITomlSerializedObject,
+    CollectionOfITomlSerializedObject,
     TomlSerializedObject,
     Error
 }
