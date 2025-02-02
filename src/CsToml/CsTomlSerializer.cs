@@ -4,6 +4,7 @@ using CsToml.Formatter.Resolver;
 using CsToml.Utility;
 using CsToml.Values;
 using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace CsToml;
@@ -41,7 +42,7 @@ public static class CsTomlSerializer
         }
     }
 
-    private static ITomlValueFormatter<T> GetFormatter<T>(TomlDocument? tomlDocument)
+    private static ITomlValueFormatter<T> GetFormatter<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(TomlDocument? tomlDocument)
     {
         if (typeof(T) == typeof(TomlDocument))
         {
@@ -52,7 +53,7 @@ public static class CsTomlSerializer
         return TomlValueFormatterResolver.Instance.GetFormatter<T>()!;
     }
 
-    public static T Deserialize<T>(ReadOnlySpan<byte> tomlText, CsTomlSerializerOptions? options = null)
+    public static T Deserialize<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(ReadOnlySpan<byte> tomlText, CsTomlSerializerOptions? options = null)
     {
         options ??= DefaultOptions;
 
@@ -75,7 +76,7 @@ public static class CsTomlSerializer
         }
     }
 
-    public static T Deserialize<T>(ReadOnlySequence<byte> tomlSequence, CsTomlSerializerOptions? options = null)
+    public static T Deserialize<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(ReadOnlySequence<byte> tomlSequence, CsTomlSerializerOptions? options = null)
     {
         options ??= DefaultOptions;
 
@@ -98,7 +99,7 @@ public static class CsTomlSerializer
         }
     }
 
-    public static T Deserialize<T>(Stream stream, CsTomlSerializerOptions? options = null)
+    public static T Deserialize<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(Stream stream, CsTomlSerializerOptions? options = null)
     {
         if (stream is MemoryStream memoryStream && memoryStream.TryGetBuffer(out var arraySegment))
         {
@@ -119,7 +120,7 @@ public static class CsTomlSerializer
         return Deserialize<T>(bufferWriter.CreateReadOnlySequence(), options);
     }
 
-    public static async ValueTask<T> DeserializeAsync<T>(Stream stream, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
+    public static async ValueTask<T> DeserializeAsync<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(Stream stream, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
     {
         if (stream is MemoryStream memoryStream && memoryStream.TryGetBuffer(out var arraySegment))
         {
@@ -140,7 +141,7 @@ public static class CsTomlSerializer
         return Deserialize<T>(bufferWriter.CreateReadOnlySequence(), options);
     }
 
-    public static T DeserializeValueType<T>(ReadOnlySpan<byte> tomlText, CsTomlSerializerOptions? options = null)
+    public static T DeserializeValueType<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(ReadOnlySpan<byte> tomlText, CsTomlSerializerOptions? options = null)
     {
         options ??= DefaultOptions;
         var utf8SequenceReader = new Utf8SequenceReader(tomlText, true);
@@ -151,7 +152,7 @@ public static class CsTomlSerializer
         return options.Resolver.GetFormatter<T>()!.Deserialize(ref tomlDocumentNode, options);
     }
 
-    public static T DeserializeValueType<T>(ReadOnlySequence<byte> tomlSequence, CsTomlSerializerOptions? options = null)
+    public static T DeserializeValueType<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(ReadOnlySequence<byte> tomlSequence, CsTomlSerializerOptions? options = null)
     {
         options ??= DefaultOptions;
         var utf8SequenceReader = new Utf8SequenceReader(tomlSequence, true);
@@ -162,7 +163,7 @@ public static class CsTomlSerializer
         return options.Resolver.GetFormatter<T>()!.Deserialize(ref tomlDocumentNode, options);
     }
 
-    public static ByteMemoryResult Serialize<T>(T target, CsTomlSerializerOptions? options = null)
+    public static ByteMemoryResult Serialize<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(T target, CsTomlSerializerOptions? options = null)
     {
         var bufferWriter = RecycleArrayPoolBufferWriter<byte>.Rent();
         try
@@ -176,7 +177,7 @@ public static class CsTomlSerializer
         }
     }
 
-    public static void Serialize<TBufferWriter, T>(ref TBufferWriter bufferWriter, T target, CsTomlSerializerOptions? options = null)
+    public static void Serialize<TBufferWriter, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(ref TBufferWriter bufferWriter, T target, CsTomlSerializerOptions? options = null)
         where TBufferWriter : IBufferWriter<byte>
     {
         options ??= DefaultOptions;
@@ -195,7 +196,7 @@ public static class CsTomlSerializer
         }
     }
 
-    public static void Serialize<T>(Stream stream, T value, CsTomlSerializerOptions? options = null)
+    public static void Serialize<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(Stream stream, T value, CsTomlSerializerOptions? options = null)
     {
         using var bufferWriter = new ByteBufferSegmentWriter();
         var tempWriter = bufferWriter;
@@ -205,7 +206,7 @@ public static class CsTomlSerializer
         bufferWriter.WriteTo(streamByteWriter.ByteWriter);
     }
 
-    public static async ValueTask SerializeAsync<T>(Stream stream, T value, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
+    public static async ValueTask SerializeAsync<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(Stream stream, T value, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -217,7 +218,7 @@ public static class CsTomlSerializer
         await bufferWriter.WriteToAsync(streamByteWriter.ByteWriter, configureAwait, cancellationToken);
     }
 
-    public static ByteMemoryResult SerializeValueType<T>(T target, CsTomlSerializerOptions? options = null)
+    public static ByteMemoryResult SerializeValueType<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(T target, CsTomlSerializerOptions? options = null)
     {
         var bufferWriter = RecycleArrayPoolBufferWriter<byte>.Rent();
         try
@@ -231,7 +232,7 @@ public static class CsTomlSerializer
         }
     }
 
-    public static void SerializeValueType<TBufferWriter, T>(ref TBufferWriter bufferWriter, T target, CsTomlSerializerOptions? options = null)
+    public static void SerializeValueType<TBufferWriter, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(ref TBufferWriter bufferWriter, T target, CsTomlSerializerOptions? options = null)
         where TBufferWriter : IBufferWriter<byte>
     {
         options ??= DefaultOptions;
