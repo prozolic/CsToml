@@ -1,5 +1,6 @@
 ﻿using CsToml.Error;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace CsToml.Formatter.Resolver;
 
@@ -35,6 +36,10 @@ public sealed class TomlSerializedObjectFormatterResolver : ITomlValueFormatterR
     {
         return Cache<T>.Formatter;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsRegistered<T>()
+        => CacheCheck<T>.Registered;
 
     public static void Register<T>(TomlSerializedObjectFormatter<T> fomatter)
         where T : ITomlSerializedObject<T>

@@ -13,6 +13,7 @@ public partial class Generator : IIncrementalGenerator
         {
             context.AddSource("TomlSerializedObjectGenerator.cs", """
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace CsToml;
 
@@ -28,6 +29,15 @@ internal sealed class TomlValueOnSerializedAttribute : Attribute
     public TomlValueOnSerializedAttribute() {  }
 
     public TomlValueOnSerializedAttribute(string aliasName) { this.AliasName = aliasName; }
+}
+
+internal static class TomlSerializedObjectInnerRegister
+{
+    internal static void Register<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>()
+        where T : ITomlSerializedObjectRegister
+    {
+        T.Register();
+    }
 }
 
 """);
@@ -233,7 +243,14 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
             {
                 case TomlSerializationKind.Primitive:
                 case TomlSerializationKind.PrimitiveArray:
+                    continue;
                 case TomlSerializationKind.TomlSerializedObject:
+                    builder.AppendLine($$"""
+        if (!TomlSerializedObjectFormatterResolver.IsRegistered<{{type.MetadataName}}>())
+        {
+            TomlSerializedObjectInnerRegister.Register<{{type.MetadataName}}>();
+        }
+""");
                     continue;
                 case TomlSerializationKind.ArrayOfITomlSerializedObject:
                     var arrayNamedType = (IArrayTypeSymbol)type;
@@ -314,7 +331,10 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
         }
 
         var code = $$"""
-        TomlSerializedObjectFormatterResolver.Register(new TomlSerializedObjectFormatter<{{typeMeta.TypeName}}>());
+        if (!TomlSerializedObjectFormatterResolver.IsRegistered<{{typeMeta.TypeName}}>())
+        {
+            TomlSerializedObjectFormatterResolver.Register(new TomlSerializedObjectFormatter<{{typeMeta.TypeName}}>());
+        }
 
         // Register Formatter in advance.
 {{builder}}

@@ -1,6 +1,7 @@
 ﻿
 using System.Collections;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace CsToml.Formatter.Resolver;
@@ -220,6 +221,7 @@ internal sealed class BuiltinFormatterResolver : ITomlValueFormatterResolver
 
     internal static readonly BuiltinFormatterResolver Instance = new BuiltinFormatterResolver();
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ITomlValueFormatter<T>? GetFormatter<T>()
     {
         var formatter = DefaultFormatterCache<T>.Formatter;
@@ -227,4 +229,8 @@ internal sealed class BuiltinFormatterResolver : ITomlValueFormatterResolver
             return formatter;
         return null;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IsRegistered<T>()
+        => CacheCheck<T>.Registered;
 }

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
+using System.Runtime.CompilerServices;
 
 namespace CsToml.Formatter.Resolver;
 
@@ -135,12 +136,18 @@ public sealed class GeneratedFormatterResolver : ITomlValueFormatterResolver
         return null;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsRegistered<T>()
-        => CacheCheck<T>.Registered;
+    {
+        // If the static constructor in BuiltinFormatterResolver is not called, call it here.
+        if (BuiltinFormatterResolver.Instance.IsRegistered<T>()) return true;
+        return CacheCheck<T>.Registered;
+    }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Register<T>(ITomlValueFormatter<T> fomatter)
     {
-        if (CacheCheck<T>.Registered) return;
+        if (IsRegistered<T>()) return;
 
         CacheCheck<T>.Registered = true;
         GeneratedFormatterCache<T>.Formatter = fomatter;
