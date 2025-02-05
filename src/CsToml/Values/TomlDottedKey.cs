@@ -48,6 +48,8 @@ internal abstract partial class TomlDottedKey(ReadOnlySpan<byte> value) :
 
     public override bool HasValue => true;
 
+    public override TomlValueType Type => TomlValueType.Key;
+
     [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
     public ReadOnlySpan<byte> Value => bytes.AsSpan();
 

@@ -12,6 +12,8 @@ public abstract partial class TomlValue :
 
     public virtual bool HasValue => false;
 
+    public abstract TomlValueType Type { get; }
+
     internal virtual void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer) // Write TOML format.
         where TBufferWriter : IBufferWriter<byte>
     {
@@ -41,6 +43,8 @@ public abstract partial class TomlValue :
     private sealed class CsTomlEmpty : TomlValue
     {
         internal static readonly string DisplayValue = "Empty value";
+
+        public override TomlValueType Type => TomlValueType.Empty;
 
         public CsTomlEmpty() : base() { }
 

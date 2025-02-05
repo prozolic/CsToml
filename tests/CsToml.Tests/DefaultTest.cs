@@ -1,5 +1,6 @@
 ﻿
 using CsToml.Error;
+using CsToml.Values;
 using System.Text;
 using Utf8StringInterpolation;
 
@@ -243,6 +244,13 @@ trimmed in raw strings.
 
         //buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
+
+    [Fact]
+    public void ValueType()
+    {
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(@"key = ""value"""u8);
+        (document!.RootNode["key"].ValueType == TomlValueType.String).ShouldBeTrue();
+    }
 }
 
 public class TomlIntegerTest
@@ -293,6 +301,13 @@ bin1 = 0b11010110
 
         buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
+
+    [Fact]
+    public void ValueType()
+    {
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(@"int1 = +99"u8);
+        (document!.RootNode["int1"].ValueType == TomlValueType.Integer).ShouldBeTrue();
+    }
 }
 
 public class TomlFloatTest
@@ -339,6 +354,13 @@ sf6 = -nan
 
         buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
+
+    [Fact]
+    public void ValueType()
+    {
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(@"flt1 = +1.0"u8);
+        (document!.RootNode["flt1"].ValueType == TomlValueType.Float).ShouldBeTrue();
+    }
 }
 
 public class TomlBooleanTest
@@ -360,6 +382,13 @@ bool2 = false
         writer.Flush();
 
         buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
+    }
+
+    [Fact]
+    public void ValueType()
+    {
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(@"bool1 = true"u8);
+        (document!.RootNode["bool1"].ValueType == TomlValueType.Boolean).ShouldBeTrue();
     }
 }
 
@@ -469,6 +498,13 @@ odt45 = 1979-05-27T00:32:00.111111-07:00
 
         buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
+
+    [Fact]
+    public void ValueType()
+    {
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(@"odt1 = 1979-05-27T07:32:00Z"u8);
+        (document!.RootNode["odt1"].ValueType == TomlValueType.OffsetDateTime).ShouldBeTrue();
+    }
 }
 
 public class TomlLocalDateTimeTest
@@ -535,6 +571,13 @@ ldt24 = 1979-05-27T00:32:00.111111
 
         buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
+
+    [Fact]
+    public void ValueType()
+    {
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(@"ldt1 = 1979-05-27T07:32:00"u8);
+        (document!.RootNode["ldt1"].ValueType == TomlValueType.LocalDateTime).ShouldBeTrue();
+    }
 }
 
 public class TomlLocalDateTest
@@ -558,6 +601,13 @@ ld3 = 1979-12-31
         writer.Flush();
 
         buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
+    }
+
+    [Fact]
+    public void ValueType()
+    {
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(@"ld1 = 1979-05-27"u8);
+        (document!.RootNode["ld1"].ValueType == TomlValueType.LocalDate).ShouldBeTrue();
     }
 }
 
@@ -625,6 +675,13 @@ lt24 = 00:32:00.111111
 
         buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
+
+    [Fact]
+    public void ValueType()
+    {
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(@"lt1 = 07:32:00"u8);
+        (document!.RootNode["lt1"].ValueType == TomlValueType.LocalTime).ShouldBeTrue();
+    }
 }
 
 public class TomlArrayTest
@@ -654,6 +711,13 @@ string_array = [""all"", 'strings', """"""are the same"""""", '''type''']
         writer.Flush();
 
         buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
+    }
+
+    [Fact]
+    public void ValueType()
+    {
+        var document = CsTomlSerializer.Deserialize<TomlDocument>("integers = [ 1, 2, 3 ]"u8);
+        (document!.RootNode["integers"].ValueType == TomlValueType.Array).ShouldBeTrue();
     }
 }
 

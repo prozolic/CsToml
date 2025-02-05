@@ -19,6 +19,8 @@ internal sealed partial class TomlArray(int capacity) : TomlValue, IEnumerable<T
 
     public override bool HasValue => true;
 
+    public override TomlValueType Type => TomlValueType.Array;
+
     public TomlValue LastValue => Count > 0 ? values[Count - 1] : Empty;
 
     public TomlValue this[int index] => values[index];

@@ -4,7 +4,7 @@ namespace CsToml.Values;
 internal partial class TomlFloat
 {
     public override bool CanGetValue(TomlValueFeature feature)
-        => ((TomlValueFeature.String | TomlValueFeature.Int64 | TomlValueFeature.Double | TomlValueFeature.Bool | TomlValueFeature.Number | TomlValueFeature.Object) & feature) == feature;
+        => ((TomlValueFeature.String | TomlValueFeature.Int64 | TomlValueFeature.Double | TomlValueFeature.Boolean | TomlValueFeature.Number | TomlValueFeature.Object) & feature) == feature;
 
     public override string GetString() => ToString();
 

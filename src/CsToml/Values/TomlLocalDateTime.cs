@@ -10,6 +10,8 @@ internal sealed partial class TomlLocalDateTime(DateTime value) : TomlValue
 
     public override bool HasValue => true;
 
+    public override TomlValueType Type => TomlValueType.LocalDateTime;
+
     internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
         writer.WriteDateTime(Value);

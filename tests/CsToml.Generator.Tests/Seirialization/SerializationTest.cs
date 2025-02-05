@@ -1,4 +1,5 @@
 ﻿using CsToml.Error;
+using CsToml.Formatter.Resolver;
 using Shouldly;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -6,6 +7,8 @@ using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Runtime.InteropServices;
 using Utf8StringInterpolation;
+
+using CsToml.Generator.Other;
 
 namespace CsToml.Generator.Tests.Seirialization;
 
@@ -2399,6 +2402,172 @@ public class TypeImmutableTest
             string value4 = dict["key"][2]["key"][1]["key"];
             value4.ShouldBe("value");
         }
+    }
+}
+
+public class TestStructParentTest
+{
+    [Fact]
+    public void Serialize()
+    {
+        var parent = new TestStructParent()
+        {
+            Value = "I'm a string.",
+            TestStruct =  new TestStruct { Value = 0, Str = "Test" },
+            TestStructList = new List<TestStruct>()
+            {
+                new TestStruct { Value = 1, Str = "Test"},
+                new TestStruct { Value = 2, Str = "Test2"},
+                new TestStruct { Value = 3, Str = "Test3"},
+            }
+        };
+
+        {
+            using var bytes = CsTomlSerializer.Serialize(parent);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = \"I'm a string.\"");
+            writer.AppendLine("TestStructList = [ {Value = 1, Str = \"Test\"}, {Value = 2, Str = \"Test2\"}, {Value = 3, Str = \"Test3\"} ]");
+            writer.AppendLine("TestStruct.Value = 0");
+            writer.AppendLine("TestStruct.Str = \"Test\"");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(parent, options:Option.Header);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = \"I'm a string.\"");
+            writer.AppendLine("TestStructList = [ {Value = 1, Str = \"Test\"}, {Value = 2, Str = \"Test2\"}, {Value = 3, Str = \"Test3\"} ]");
+            writer.AppendLine("[TestStruct]");
+            writer.AppendLine("Value = 0");
+            writer.AppendLine("Str = \"Test\"");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
+        }
+    }
+
+    [Fact]
+    public void Deserialize()
+    {
+        {
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = \"I'm a string.\"");
+            writer.AppendLine("TestStructList = [ {Value = 1, Str = \"Test\"}, {Value = 2, Str = \"Test2\"}, {Value = 3, Str = \"Test3\"} ]");
+            writer.AppendLine("TestStruct.Value = 0");
+            writer.AppendLine("TestStruct.Str = \"Test\"");
+            writer.Flush();
+
+            var parent = CsTomlSerializer.Deserialize<TestStructParent>(buffer.WrittenSpan);
+            parent.Value.ShouldBe("I'm a string.");
+            parent.TestStructList.ShouldBe(new List<TestStruct>
+            {
+                new TestStruct { Value = 1, Str = "Test"},
+                new TestStruct { Value = 2, Str = "Test2"},
+                new TestStruct { Value = 3, Str = "Test3"},
+            });
+            parent.TestStruct.ShouldBe(new TestStruct { Value = 0, Str = "Test" });
+        }
+        {
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = \"I'm a string.\"");
+            writer.AppendLine("TestStructList = [ {Value = 1, Str = \"Test\"}, {Value = 2, Str = \"Test2\"}, {Value = 3, Str = \"Test3\"} ]");
+            writer.AppendLine("[TestStruct]");
+            writer.AppendLine("Value = 0");
+            writer.AppendLine("Str = \"Test\"");
+            writer.Flush();
+
+            var parent = CsTomlSerializer.Deserialize<TestStructParent>(buffer.WrittenSpan);
+            parent.Value.ShouldBe("I'm a string.");
+            parent.TestStructList.ShouldBe(new List<TestStruct>
+            {
+                new TestStruct { Value = 1, Str = "Test"},
+                new TestStruct { Value = 2, Str = "Test2"},
+                new TestStruct { Value = 3, Str = "Test3"},
+            });
+            parent.TestStruct.ShouldBe(new TestStruct { Value = 0, Str = "Test" });
+        }
+    }
+}
+
+public class TypeEnumTest
+{
+    [Fact]
+    public void Deserialize()
+    {
+        {
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Color = \"Red\"");
+            writer.Flush();
+
+            var type = CsTomlSerializer.Deserialize<TypeEnum>(buffer.WrittenSpan);
+            type.Color.ShouldBe(Color.Red);
+        }
+        {
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Color = \"Green\"");
+            writer.Flush();
+
+            var type = CsTomlSerializer.Deserialize<TypeEnum>(buffer.WrittenSpan);
+            type.Color.ShouldBe(Color.Green);
+        }
+    }
+
+    [Fact]
+    public void Serialize()
+    {
+        var type = new TypeEnum()
+        {
+            Color = Color.Red,
+        };
+        {
+            using var bytes = CsTomlSerializer.Serialize(type);
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Color = \"Red\"");
+            writer.Flush();
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Color = \"Red\"");
+            writer.Flush();
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
+        }
+    }
+
+}
+
+// Issue #24
+public class GeneratedFormatterResolverTest
+{
+    [Fact]
+    public void DeserializeAndSerialize()
+    {
+        GeneratedFormatterResolver.Register(new SpecialHashFormatter());
+        var entity = CsTomlSerializer.Deserialize<Entity>("Name = 12345"u8);
+        var entity2 = CsTomlSerializer.Deserialize<Entity>("Name = \"This is String\""u8);
+        entity.Name.ShouldBe(new SpecialHash(12345));
+        entity2.Name.ShouldBe(new SpecialHash(3955703026));
+
+        using var entityBytes = CsTomlSerializer.Serialize(entity);
+        using var entityBytes2 = CsTomlSerializer.Serialize(entity2);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Name = 12345");
+        writer.Flush();
+        entityBytes.ToString().ShouldBe(buffer.ToString());
+
+        using var buffer2 = Utf8String.CreateWriter(out var writer2);
+        writer2.AppendLine("Name = 3955703026");
+        writer2.Flush();
+        entityBytes2.ToString().ShouldBe(buffer2.ToString());
     }
 }
 

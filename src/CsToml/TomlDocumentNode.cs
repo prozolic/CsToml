@@ -7,6 +7,7 @@ using CsToml.Values.Internal;
 using System.Buffers;
 using System.Collections;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
@@ -29,9 +30,13 @@ public struct TomlDocumentNode
 
     public readonly bool HasValue => Value.HasValue || NodeCount > 0;
 
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public readonly bool HasNodeOnly => !Value.HasValue && NodeCount > 0;
 
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public readonly bool HasValueOnly => Value.HasValue && NodeCount == 0;
+
+    public readonly TomlValueType ValueType => Value.Type;
 
     public TomlDocumentNode this[ReadOnlySpan<char> key]
     {

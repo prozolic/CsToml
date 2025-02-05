@@ -6,7 +6,7 @@ namespace CsToml.Values;
 internal partial class TomlString
 {
     public override bool CanGetValue(TomlValueFeature feature)
-        => ((TomlValueFeature.String | TomlValueFeature.Int64 | TomlValueFeature.Double | TomlValueFeature.Bool | 
+        => ((TomlValueFeature.String | TomlValueFeature.Int64 | TomlValueFeature.Double | TomlValueFeature.Boolean | 
             TomlValueFeature.DateTime | TomlValueFeature.DateTimeOffset | TomlValueFeature.DateOnly | TomlValueFeature.TimeOnly | TomlValueFeature.Object) & feature) == feature;
 
     public override string GetString() => Utf16String;

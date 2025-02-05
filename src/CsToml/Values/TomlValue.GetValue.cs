@@ -148,7 +148,7 @@ public partial class TomlValue
 
     public bool TryGetBool(out bool value)
     {
-        if (CanGetValue(TomlValueFeature.Bool))
+        if (CanGetValue(TomlValueFeature.Boolean))
         {
             try
             {

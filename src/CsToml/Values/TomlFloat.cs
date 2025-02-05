@@ -25,6 +25,8 @@ internal sealed partial class TomlFloat(double value, TomlFloat.FloatKind kind =
 
     public override bool HasValue => true;
 
+    public override TomlValueType Type => TomlValueType.Float;
+
     internal FloatKind Kind { get; } = kind;
 
     internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
