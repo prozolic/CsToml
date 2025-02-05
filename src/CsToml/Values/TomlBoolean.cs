@@ -1,6 +1,4 @@
 ﻿using CsToml.Error;
-using CsToml.Extension;
-using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -16,6 +14,8 @@ internal sealed partial class TomlBoolean : TomlValue
     public bool Value { get; init; }
 
     public override bool HasValue => true;
+
+    public override TomlValueType Type => TomlValueType.Boolean;
 
     private TomlBoolean(bool value)
     {

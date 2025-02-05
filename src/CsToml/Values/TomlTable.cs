@@ -15,6 +15,8 @@ internal sealed partial class TomlTable : TomlValue
 
     public override bool HasValue => true;
 
+    public override TomlValueType Type => TomlValueType.Table;
+
     [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
     internal TomlTableNode RootNode => node;
 

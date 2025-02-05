@@ -1,7 +1,5 @@
 ﻿using CsToml.Error;
-using System;
 using System.Diagnostics;
-using System.Globalization;
 
 namespace CsToml.Values;
 
@@ -11,6 +9,8 @@ internal sealed partial class TomlLocalDate(DateOnly value) : TomlValue
     public DateOnly Value { get; private set; } = value;
 
     public override bool HasValue => true;
+
+    public override TomlValueType Type => TomlValueType.LocalDate;
 
     internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {

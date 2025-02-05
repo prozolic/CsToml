@@ -39,6 +39,8 @@ internal sealed partial class TomlInteger : TomlValue
 
     public override bool HasValue => true;
 
+    public override TomlValueType Type => TomlValueType.Integer;
+
     private TomlInteger(long value)
     {
         this.Value = value;

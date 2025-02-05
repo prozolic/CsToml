@@ -225,6 +225,8 @@ internal abstract partial class TomlString(string value) : TomlValue, ITomlStrin
 
     public override bool HasValue => true;
 
+    public override TomlValueType Type => TomlValueType.String;
+
     [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
     public string Utf16String => value;
 

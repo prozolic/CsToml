@@ -9,7 +9,7 @@ internal partial class TomlDottedKey
         TomlValueFeature.String | 
         TomlValueFeature.Int64 | 
         TomlValueFeature.Double | 
-        TomlValueFeature.Bool |
+        TomlValueFeature.Boolean |
         TomlValueFeature.DateTime | 
         TomlValueFeature.DateTimeOffset | 
         TomlValueFeature.DateOnly | 

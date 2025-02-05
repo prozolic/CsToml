@@ -10,6 +10,8 @@ internal sealed partial class TomlOffsetDateTime(DateTimeOffset value) : TomlVal
 
     public override bool HasValue => true;
 
+    public override TomlValueType Type => TomlValueType.OffsetDateTime;
+
     internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
         writer.WriteDateTimeOffset(Value);
