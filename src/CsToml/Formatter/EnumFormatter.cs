@@ -5,7 +5,7 @@ using System.Runtime.Serialization;
 
 namespace CsToml.Formatter;
 
-internal sealed class EnumFormatter<TEnum> : ITomlValueFormatter<TEnum>
+public sealed class EnumFormatter<TEnum> : ITomlValueFormatter<TEnum>
     where TEnum : Enum
 {
     private static readonly Dictionary<TEnum, string>? SerializedEnumTable;

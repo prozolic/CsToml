@@ -1,11 +1,9 @@
 ﻿using CsToml.Error;
-using CsToml.Formatter.Resolver;
 using System.Buffers;
-using System.Xml.Linq;
 
 namespace CsToml.Formatter;
 
-internal sealed class KeyValuePairFormatter<TKey, TValue> : ITomlValueFormatter<KeyValuePair<TKey, TValue>>
+public sealed class KeyValuePairFormatter<TKey, TValue> : ITomlValueFormatter<KeyValuePair<TKey, TValue>>
 {
     public KeyValuePair<TKey, TValue> Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {

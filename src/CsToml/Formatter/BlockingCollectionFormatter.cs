@@ -2,7 +2,7 @@
 
 namespace CsToml.Formatter;
 
-internal sealed class BlockingCollectionFormatter<T> : CollectionBaseFormatter<BlockingCollection<T>, T, BlockingCollection<T>>
+public sealed class BlockingCollectionFormatter<T> : CollectionBaseFormatter<BlockingCollection<T>, T, BlockingCollection<T>>
 {
     protected override void AddValue(BlockingCollection<T> mediator, T element)
     {

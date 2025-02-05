@@ -2,7 +2,7 @@
 
 namespace CsToml.Formatter;
 
-internal sealed class OrderedDictionaryFormatter<TKey, TValue> : DictionaryBaseFormatter<TKey, TValue, OrderedDictionary<TKey, TValue>, OrderedDictionary<TKey, TValue>>
+public sealed class OrderedDictionaryFormatter<TKey, TValue> : DictionaryBaseFormatter<TKey, TValue, OrderedDictionary<TKey, TValue>, OrderedDictionary<TKey, TValue>>
     where TKey : notnull
 {
     protected override void AddValue(OrderedDictionary<TKey, TValue> mediator, TKey key, TValue value)

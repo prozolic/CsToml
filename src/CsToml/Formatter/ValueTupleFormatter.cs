@@ -1,10 +1,9 @@
 ﻿using CsToml.Error;
-using CsToml.Formatter.Resolver;
 using System.Buffers;
 
 namespace CsToml.Formatter;
 
-internal sealed class ValueTupleFormatter<T1> : ITomlValueFormatter<ValueTuple<T1>>
+public sealed class ValueTupleFormatter<T1> : ITomlValueFormatter<ValueTuple<T1>>
 {
     public ValueTuple<T1> Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
@@ -32,7 +31,7 @@ internal sealed class ValueTupleFormatter<T1> : ITomlValueFormatter<ValueTuple<T
     }
 }
 
-internal sealed class ValueTupleFormatter<T1, T2> : ITomlValueFormatter<ValueTuple<T1, T2>>
+public sealed class ValueTupleFormatter<T1, T2> : ITomlValueFormatter<ValueTuple<T1, T2>>
 {
     public ValueTuple<T1, T2> Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
@@ -74,7 +73,7 @@ internal sealed class ValueTupleFormatter<T1, T2> : ITomlValueFormatter<ValueTup
     }
 }
 
-internal sealed class ValueTupleFormatter<T1, T2, T3> : ITomlValueFormatter<ValueTuple<T1, T2, T3>>
+public sealed class ValueTupleFormatter<T1, T2, T3> : ITomlValueFormatter<ValueTuple<T1, T2, T3>>
 {
     public ValueTuple<T1, T2, T3> Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
@@ -122,7 +121,7 @@ internal sealed class ValueTupleFormatter<T1, T2, T3> : ITomlValueFormatter<Valu
     }
 }
 
-internal sealed class ValueTupleFormatter<T1, T2, T3, T4> : ITomlValueFormatter<ValueTuple<T1, T2, T3, T4>>
+public sealed class ValueTupleFormatter<T1, T2, T3, T4> : ITomlValueFormatter<ValueTuple<T1, T2, T3, T4>>
 {
     public ValueTuple<T1, T2, T3, T4> Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
@@ -175,7 +174,7 @@ internal sealed class ValueTupleFormatter<T1, T2, T3, T4> : ITomlValueFormatter<
     }
 }
 
-internal sealed class ValueTupleFormatter<T1, T2, T3, T4, T5> : ITomlValueFormatter<ValueTuple<T1, T2, T3, T4, T5>>
+public sealed class ValueTupleFormatter<T1, T2, T3, T4, T5> : ITomlValueFormatter<ValueTuple<T1, T2, T3, T4, T5>>
 {
     public ValueTuple<T1, T2, T3, T4, T5> Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
@@ -232,7 +231,7 @@ internal sealed class ValueTupleFormatter<T1, T2, T3, T4, T5> : ITomlValueFormat
     }
 }
 
-internal sealed class ValueTupleFormatter<T1, T2, T3, T4, T5, T6> : ITomlValueFormatter<ValueTuple<T1, T2, T3, T4, T5, T6>>
+public sealed class ValueTupleFormatter<T1, T2, T3, T4, T5, T6> : ITomlValueFormatter<ValueTuple<T1, T2, T3, T4, T5, T6>>
 {
     public ValueTuple<T1, T2, T3, T4, T5, T6> Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
@@ -294,7 +293,7 @@ internal sealed class ValueTupleFormatter<T1, T2, T3, T4, T5, T6> : ITomlValueFo
     }
 }
 
-internal sealed class ValueTupleFormatter<T1, T2, T3, T4, T5, T6, T7> : ITomlValueFormatter<ValueTuple<T1, T2, T3, T4, T5, T6, T7>>
+public sealed class ValueTupleFormatter<T1, T2, T3, T4, T5, T6, T7> : ITomlValueFormatter<ValueTuple<T1, T2, T3, T4, T5, T6, T7>>
 {
     public ValueTuple<T1, T2, T3, T4, T5, T6, T7> Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
@@ -361,7 +360,7 @@ internal sealed class ValueTupleFormatter<T1, T2, T3, T4, T5, T6, T7> : ITomlVal
     }
 }
 
-internal sealed class ValueTupleFormatter<T1, T2, T3, T4, T5, T6, T7, TRest> : ITomlValueFormatter<ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest>>
+public sealed class ValueTupleFormatter<T1, T2, T3, T4, T5, T6, T7, TRest> : ITomlValueFormatter<ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest>>
     where TRest : struct
 {
     public ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)

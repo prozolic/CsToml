@@ -1,7 +1,7 @@
 ﻿
 namespace CsToml.Formatter;
 
-internal sealed class LinkedListFormatter<T> : CollectionBaseFormatter<LinkedList<T>, T, LinkedList<T>>
+public sealed class LinkedListFormatter<T> : CollectionBaseFormatter<LinkedList<T>, T, LinkedList<T>>
 {
     protected override void AddValue(LinkedList<T> mediator, T element)
     {

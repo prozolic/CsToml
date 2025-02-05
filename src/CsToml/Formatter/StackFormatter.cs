@@ -1,7 +1,7 @@
 ﻿
 namespace CsToml.Formatter;
 
-internal sealed class StackFormatter<T> : CollectionBaseFormatter<Stack<T>, T, List<T>>
+public sealed class StackFormatter<T> : CollectionBaseFormatter<Stack<T>, T, List<T>>
 {
     protected override void AddValue(List<T> mediator, T element)
     {

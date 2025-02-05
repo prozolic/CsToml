@@ -2,7 +2,7 @@
 
 namespace CsToml.Formatter;
 
-internal class ConcurrentDictionaryFormatter<TKey, TValue> : DictionaryBaseFormatter<TKey, TValue, ConcurrentDictionary<TKey, TValue>, Dictionary<TKey, TValue>>
+public class ConcurrentDictionaryFormatter<TKey, TValue> : DictionaryBaseFormatter<TKey, TValue, ConcurrentDictionary<TKey, TValue>, Dictionary<TKey, TValue>>
     where TKey : notnull
 {
     protected override void AddValue(Dictionary<TKey, TValue> mediator, TKey key, TValue value)

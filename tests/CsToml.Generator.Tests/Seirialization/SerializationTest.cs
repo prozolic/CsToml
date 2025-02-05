@@ -625,8 +625,8 @@ public class TomlPrimitiveTest
             writer.AppendLine("Long = 123");
             writer.AppendLine("Float = 123.456");
             writer.AppendLine("Boolean = true");
-            writer.AppendLine("LocalDateTime = 1979-05-27T07:32:00");
             writer.AppendLine("OffsetDateTime = 1979-05-27T07:32:00Z");
+            writer.AppendLine("LocalDateTime = 1979-05-27T07:32:00");
             writer.AppendLine("LocalDate = 1979-05-27");
             writer.AppendLine("LocalTime = 07:32:30");
             writer.Flush();
@@ -642,8 +642,8 @@ public class TomlPrimitiveTest
             writer.AppendLine("Long = 123");
             writer.AppendLine("Float = 123.456");
             writer.AppendLine("Boolean = true");
-            writer.AppendLine("LocalDateTime = 1979-05-27T07:32:00");
             writer.AppendLine("OffsetDateTime = 1979-05-27T07:32:00Z");
+            writer.AppendLine("LocalDateTime = 1979-05-27T07:32:00");
             writer.AppendLine("LocalDate = 1979-05-27");
             writer.AppendLine("LocalTime = 07:32:30");
             writer.Flush();

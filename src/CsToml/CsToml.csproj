@@ -7,6 +7,7 @@
     <Description>TOML Serializer for .NET.</Description>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PackageTags>TOML,serializer,parser,writer,reader</PackageTags>
+    <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
 
   <ItemGroup>

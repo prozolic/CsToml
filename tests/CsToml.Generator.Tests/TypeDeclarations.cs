@@ -677,6 +677,13 @@ internal partial class TypeImmutable
     public ImmutableSortedDictionary<string, object?> ImmutableSortedDictionary { get; set; }
 }
 
+[TomlSerializedObject]
+public partial class TypeMemory
+{
+    [TomlValueOnSerialized]
+    public Memory<byte> Memory { get; set; }
+}
+
 #if NET9_0_OR_GREATER
 
 [TomlSerializedObject]

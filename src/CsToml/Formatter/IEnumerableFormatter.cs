@@ -1,7 +1,7 @@
 ﻿
 namespace CsToml.Formatter;
 
-internal sealed class IEnumerableFormatter<T> : CollectionBaseFormatter<IEnumerable<T>, T, List<T>>
+public sealed class IEnumerableFormatter<T> : CollectionBaseFormatter<IEnumerable<T>, T, List<T>>
 {
     protected override void AddValue(List<T> mediator, T element)
     {

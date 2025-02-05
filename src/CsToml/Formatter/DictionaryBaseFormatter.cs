@@ -5,7 +5,7 @@ using System.Buffers;
 
 namespace CsToml.Formatter;
 
-internal abstract class DictionaryBaseFormatter<TKey, TValue, TDicitonary, TMediator> : ITomlValueFormatter<TDicitonary>
+public abstract class DictionaryBaseFormatter<TKey, TValue, TDicitonary, TMediator> : ITomlValueFormatter<TDicitonary>
     where TDicitonary : IEnumerable<KeyValuePair<TKey, TValue>>
 {
     public TDicitonary Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)

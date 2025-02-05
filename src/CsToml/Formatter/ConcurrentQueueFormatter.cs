@@ -2,7 +2,7 @@
 
 namespace CsToml.Formatter;
 
-internal sealed class ConcurrentQueueFormatter<T> : CollectionBaseFormatter<ConcurrentQueue<T>, T, ConcurrentQueue<T>>
+public sealed class ConcurrentQueueFormatter<T> : CollectionBaseFormatter<ConcurrentQueue<T>, T, ConcurrentQueue<T>>
 {
     protected override void AddValue(ConcurrentQueue<T> mediator, T element)
     {

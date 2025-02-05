@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 
 namespace CsToml.Formatter;
 
-internal sealed class PrimitiveObjectFormatter : ITomlValueFormatter<object>
+public sealed class PrimitiveObjectFormatter : ITomlValueFormatter<object>
 {
     public static readonly PrimitiveObjectFormatter Instance = new PrimitiveObjectFormatter();
 

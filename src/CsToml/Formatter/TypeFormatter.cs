@@ -1,10 +1,9 @@
 ﻿using CsToml.Error;
 using System.Buffers;
-using System.Text;
 
 namespace CsToml.Formatter;
 
-internal sealed class TypeFormatter : ITomlValueFormatter<Type?>
+public sealed class TypeFormatter : ITomlValueFormatter<Type?>
 {
     public static readonly TypeFormatter Instance = new TypeFormatter();
 

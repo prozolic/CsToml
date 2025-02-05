@@ -2,7 +2,7 @@
 
 namespace CsToml.Formatter;
 
-internal sealed class ConcurrentBagFormatter<T> : CollectionBaseFormatter<ConcurrentBag<T>, T, List<T>>
+public sealed class ConcurrentBagFormatter<T> : CollectionBaseFormatter<ConcurrentBag<T>, T, List<T>>
 {
     protected override void AddValue(List<T> mediator, T element)
     {

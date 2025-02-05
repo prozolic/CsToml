@@ -5,7 +5,7 @@ using System.Collections;
 
 namespace CsToml.Formatter;
 
-internal sealed class ArrayListFormatter : ITomlValueFormatter<ArrayList?>
+public sealed class ArrayListFormatter : ITomlValueFormatter<ArrayList?>
 {
     public static readonly ArrayListFormatter Instance = new ArrayListFormatter();
 

@@ -1,7 +1,7 @@
 ﻿
 namespace CsToml.Formatter;
 
-internal sealed class SortedSetFormatter<T> : CollectionBaseFormatter<SortedSet<T>, T, SortedSet<T>>
+public sealed class SortedSetFormatter<T> : CollectionBaseFormatter<SortedSet<T>, T, SortedSet<T>>
 {
     protected override void AddValue(SortedSet<T> mediator, T element)
     {
