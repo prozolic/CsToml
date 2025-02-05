@@ -22,6 +22,13 @@ public sealed class GeneratedFormatterResolver : ITomlValueFormatterResolver
         {
             if (CacheCheck<T>.Registered) return;
 
+            if (typeof(T).IsEnum)
+            {
+                CacheCheck<T>.Registered = true;
+                Formatter = GetEnumFormatter<T>() as ITomlValueFormatter<T>;
+                return;
+            }
+
             if (typeof(T).IsArray)
             {
                 CacheCheck<T>.Registered = true;
@@ -112,6 +119,12 @@ public sealed class GeneratedFormatterResolver : ITomlValueFormatterResolver
             return genericFormatter;
 
         return null;
+    }
+
+    private static object? GetEnumFormatter<T>()
+    {
+        var enumFormatterType = typeof(EnumFormatter<>).MakeGenericType(typeof(T));
+        return Activator.CreateInstance(enumFormatterType);
     }
 
     private static object? GetArrayFormatter<T>()

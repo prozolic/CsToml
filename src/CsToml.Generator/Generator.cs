@@ -31,7 +31,7 @@ internal sealed class TomlValueOnSerializedAttribute : Attribute
     public TomlValueOnSerializedAttribute(string aliasName) { this.AliasName = aliasName; }
 }
 
-internal static class TomlSerializedObjectInnerRegister
+internal static class StaticTomlSerializedObjectRegister
 {
     internal static void Register<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>()
         where T : ITomlSerializedObjectRegister
@@ -181,8 +181,18 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
     private string GenerateSerializePart(TypeMeta typeMeta)
     {
         var builder = new StringBuilder();
+
+        var members = typeMeta.Members;
+        var onlyTomlSerializedObject = members.Count == 1 && members.First().Item2 == TomlSerializationKind.TomlSerializedObject;
+        if (!onlyTomlSerializedObject)
+        {
+            builder.AppendLine("        writer.BeginScope();");
+        }
+
+        var memberCount = 0;
         foreach (var (property, kind, aliasName) in typeMeta.Members)
         {
+            memberCount++;
             var accessName = string.IsNullOrWhiteSpace(aliasName) ? property.Name : aliasName;
             var propertyName = property.Name;
 
@@ -190,8 +200,15 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
             {
                 builder.AppendLine($"        writer.WriteKey({$"\"{accessName}\"u8"});");
                 builder.AppendLine($"        writer.WriteEqual();");
-                builder.AppendLine($"        options.Resolver.GetFormatter<{property.Type.Name}>()!.Serialize(ref writer, target.{propertyName}, options);");
-                builder.AppendLine($"        writer.EndKeyValue();");
+                builder.AppendLine($"        options.Resolver.GetFormatter<{property.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>()!.Serialize(ref writer, target.{propertyName}, options);");
+                if (memberCount == typeMeta.Members.Count)
+                {
+                    builder.AppendLine($"        writer.EndKeyValue(true);");
+                }
+                else
+                {
+                    builder.AppendLine($"        writer.EndKeyValue();");
+                }
             }
             else if (kind == TomlSerializationKind.TomlSerializedObject)
             {
@@ -200,14 +217,14 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                 builder.AppendLine($"            writer.WriteNewLine();");
                 builder.AppendLine($"            writer.BeginCurrentState(TomlValueState.Table);");
                 builder.AppendLine($"            writer.PushKey({$"\"{accessName}\"u8"});");
-                builder.AppendLine($"            options.Resolver.GetFormatter<{property.Type.Name}>()!.Serialize(ref writer, target.{propertyName}, options);");
+                builder.AppendLine($"            options.Resolver.GetFormatter<{property.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>()!.Serialize(ref writer, target.{propertyName}, options);");
                 builder.AppendLine($"            writer.PopKey();");
                 builder.AppendLine($"            writer.EndCurrentState();");
                 builder.AppendLine($"        }}");
                 builder.AppendLine($"        else");
                 builder.AppendLine($"        {{");
                 builder.AppendLine($"            writer.PushKey({$"\"{accessName}\"u8"});");
-                builder.AppendLine($"            options.Resolver.GetFormatter<{property.Type.Name}>()!.Serialize(ref writer, target.{propertyName}, options);");
+                builder.AppendLine($"            options.Resolver.GetFormatter<{property.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>()!.Serialize(ref writer, target.{propertyName}, options);");
                 builder.AppendLine($"            writer.PopKey();");
                 builder.AppendLine($"        }}");
             }
@@ -220,17 +237,34 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                 builder.AppendLine($"        writer.BeginCurrentState(TomlValueState.ArrayOfTable);");
                 builder.AppendLine($"        options.Resolver.GetFormatter<{property.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>()!.Serialize(ref writer, target.{propertyName}, options);");
                 builder.AppendLine($"        writer.EndCurrentState();");
-                builder.AppendLine($"        writer.EndKeyValue();");
+                if (memberCount == typeMeta.Members.Count)
+                {
+                    builder.AppendLine($"        writer.EndKeyValue(true);");
+                }
+                else
+                {
+                    builder.AppendLine($"        writer.EndKeyValue();");
+                }
             }
             else
             {
                 builder.AppendLine($"        writer.WriteKey({$"\"{accessName}\"u8"});");
                 builder.AppendLine($"        writer.WriteEqual();");
                 builder.AppendLine($"        options.Resolver.GetFormatter<{property.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>()!.Serialize(ref writer, target.{propertyName}, options);");
-                builder.AppendLine($"        writer.EndKeyValue();");
+                if (memberCount == typeMeta.Members.Count)
+                {
+                    builder.AppendLine($"        writer.EndKeyValue(true);");
+                }
+                else
+                {
+                    builder.AppendLine($"        writer.EndKeyValue();");
+                }
             }
         }
-
+        if (!onlyTomlSerializedObject)
+        {
+            builder.AppendLine("        writer.EndScope();");
+        }
         return builder.ToString();
     }
 
@@ -244,11 +278,19 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                 case TomlSerializationKind.Primitive:
                 case TomlSerializationKind.PrimitiveArray:
                     continue;
+                case TomlSerializationKind.Enum:
+                    builder.AppendLine($$"""
+        if (!TomlSerializedObjectFormatterResolver.IsRegistered<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>())
+        {
+            GeneratedFormatterResolver.Register(new EnumFormatter<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>());
+        }
+""");
+                    break;
                 case TomlSerializationKind.TomlSerializedObject:
                     builder.AppendLine($$"""
-        if (!TomlSerializedObjectFormatterResolver.IsRegistered<{{type.MetadataName}}>())
+        if (!TomlSerializedObjectFormatterResolver.IsRegistered<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>())
         {
-            TomlSerializedObjectInnerRegister.Register<{{type.MetadataName}}>();
+            StaticTomlSerializedObjectRegister.Register<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>();
         }
 """);
                     continue;
@@ -257,7 +299,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                     var elementType = arrayNamedType.ElementType;
 
                     builder.AppendLine($$"""
-        if(!GeneratedFormatterResolver.IsRegistered<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>())
+        if (!GeneratedFormatterResolver.IsRegistered<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>())
         {
             GeneratedFormatterResolver.Register(new ArrayFormatter<{{elementType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>());
         }
@@ -272,7 +314,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                         formatter = formatter.Replace("TYPEPARAMETER", typeParameters);
 
                         builder.AppendLine($$"""
-        if(!GeneratedFormatterResolver.IsRegistered<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>())
+        if (!GeneratedFormatterResolver.IsRegistered<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>())
         {
             GeneratedFormatterResolver.Register(new {{formatter}}());
         }
@@ -288,7 +330,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                         dictFormatter = dictFormatter.Replace("TYPEPARAMETER", typeParameters);
 
                         builder.AppendLine($$"""
-        if(!GeneratedFormatterResolver.IsRegistered<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>())
+        if (!GeneratedFormatterResolver.IsRegistered<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>())
         {
             GeneratedFormatterResolver.Register(new {{dictFormatter}}());
         }
@@ -305,7 +347,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                         if (typeSymbol.ToDisplayString() == "T?")
                         {
                             builder.AppendLine($$"""
-        if(!GeneratedFormatterResolver.IsRegistered<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>())
+        if (!GeneratedFormatterResolver.IsRegistered<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>())
         {
             GeneratedFormatterResolver.Register(new NullableFormatter<{{namedTypeSymbol.TypeArguments[0].ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>());
         }
@@ -318,7 +360,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                             typeFormatter = typeFormatter.Replace("TYPEPARAMETER", typeParameters);
 
                             builder.AppendLine($$"""
-        if(!GeneratedFormatterResolver.IsRegistered<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>())
+        if (!GeneratedFormatterResolver.IsRegistered<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>())
         {
             GeneratedFormatterResolver.Register(new {{typeFormatter}}());
         }

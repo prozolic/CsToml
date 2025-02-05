@@ -1,7 +1,13 @@
 ﻿using CsToml;
+using CsToml.Formatter;
+using CsToml.Formatter.Resolver;
+using System.Buffers;
 using System.Text;
+using ConsoleNativeAOT;
 
 Console.WriteLine("Hello, World!");
+
+GeneratedFormatterResolver.Register(new TestStruct2Formatter()); // Custom type formatter registration.
 
 var tomlText = @"
 str = ""value""
@@ -25,6 +31,7 @@ Dict2 = {key = 10, key2 = 20, key3 = 30, key4 = 40, key5 = 50}
 Dict3 = {123 = ""Value"", -1 = ""Value"", 123456789 = ""Value""}
 TwoValueTuple = [ 1, 2 ]
 TestStructArr = [{Value = 999, Str = ""Test""}, {Value = 9999, Str = ""Test2""}]
+TestStruct2 = 12345
 
 [Table.test]
 key = ""value""
@@ -65,6 +72,8 @@ Console.WriteLine(value.Dict);
 Console.WriteLine(value.Dict2);
 Console.WriteLine(value.Dict3);
 Console.WriteLine(value.TwoValueTuple);
+Console.WriteLine(value.TestStructArr);
+Console.WriteLine(value.TestStruct2.Value);
 Console.WriteLine("CsTomlSerializer.Deserialize<TestClass> END");
 
 Console.WriteLine("CsTomlSerializer.Serialize<TestClass>");
@@ -96,26 +105,32 @@ var testClass = new TestClass()
     },
     Pair = new KeyValuePair<int, StringBuilder>(1, new StringBuilder("value")),
     TwoValueTuple = (1, 2),
-    TestStructArr = new List<TestStruct?>()
+    TestStructArr = new List<TestStruct>()
     {
-        new TestStruct() { Value = 999, Str = "Test" },
-        new TestStruct() { Value = 9999, Str = "Test2" },
+         new TestStruct() { Value = 999, Str = "Test" },
+         new TestStruct() { Value = 999, Str = "Test" },
     },
+    TestStruct2 = new TestStruct2() { Value = 12345 }
 };
 
 using var text = CsTomlSerializer.Serialize(testClass);
 Console.WriteLine(text.ToString());
 Console.WriteLine("CsTomlSerializer.Serialize<TestClass> END");
 
+var deserializedTestClass = CsTomlSerializer.Deserialize<TestClass>(text.ByteSpan);
+
+var testEnum = CsTomlSerializer.Deserialize<TestEnum>(@"color = ""Red"""u8);
+Console.WriteLine(testEnum.color);
+
 Console.WriteLine("END!");
 
 [TomlSerializedObject]
 public partial class TestClass
 {
-    [TomlValueOnSerialized] 
+    [TomlValueOnSerialized]
     public string str { get; set; }
 
-    [TomlValueOnSerialized("int")] 
+    [TomlValueOnSerialized("int")]
     public long IntValue { get; set; }
     [TomlValueOnSerialized]
     public float flt { get; set; }
@@ -138,7 +153,11 @@ public partial class TestClass
     public ValueTuple<int, int> TwoValueTuple { get; set; } = default!;
 
     [TomlValueOnSerialized]
-    public List<TestStruct?> TestStructArr { get; set; }
+    public List<TestStruct> TestStructArr { get; set; }
+
+    [TomlValueOnSerialized]
+    public TestStruct2 TestStruct2 { get; set; }
+
 }
 
 [TomlSerializedObject]
@@ -150,3 +169,36 @@ public partial struct TestStruct
     [TomlValueOnSerialized]
     public string Str { get; set; }
 }
+
+public class TestStruct2Formatter : ITomlValueFormatter<TestStruct2>
+{
+    public TestStruct2 Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
+    {
+        if (!rootNode.HasValue)
+        {
+            return default!;
+        }
+
+        if (rootNode.TryGetInt64(out var value))
+        {
+            return new TestStruct2() { Value = value };
+        }
+
+        return default;
+    }
+
+    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TestStruct2 target, CsTomlSerializerOptions options)
+        where TBufferWriter : IBufferWriter<byte>
+    {
+        writer.WriteInt64(target.Value);
+    }
+}
+
+[TomlSerializedObject]
+public partial class TestEnum
+{
+    [TomlValueOnSerialized]
+    public Color color { get; set; }
+}
+
+

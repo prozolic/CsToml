@@ -1,10 +1,15 @@
 ﻿#pragma warning disable CS8618
 
+using CsToml.Formatter;
+using CsToml.Values;
+using System.Buffers;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Text;
+
+using CsToml.Generator.Other;
 
 namespace CsToml.Generator.Tests;
 
@@ -41,13 +46,16 @@ internal partial record TypeRecord
 }
 
 [TomlSerializedObject]
-internal partial struct TestStruct
+internal partial struct TestStructParent
 {
     [TomlValueOnSerialized]
-    public int Value { get; set; }
+    public string Value { get; set; }
 
     [TomlValueOnSerialized]
-    public string Str { get; set; }
+    public TestStruct TestStruct { get; set; }
+
+    [TomlValueOnSerialized]
+    public List<TestStruct> TestStructList { get; set; }
 }
 
 [TomlSerializedObject]
@@ -205,14 +213,6 @@ internal partial class TypeTable2
 }
 
 [TomlSerializedObject]
-internal partial class TypeTable3
-{
-    [TomlValueOnSerialized]
-    public string Value { get; set; }
-}
-
-
-[TomlSerializedObject]
 internal partial class TypeTomlSerializedObjectList
 {
     [TomlValueOnSerialized]
@@ -332,18 +332,6 @@ internal partial class TypeTableA
     public ConcurrentDictionary<int, string> Dict { get; set; }
 }
 
-[TomlSerializedObject]
-internal partial class TypeTableB
-{
-    [TomlValueOnSerialized]
-    public TypeTableC TableC { get; set; }
-
-    [TomlValueOnSerialized]
-    public string Value { get; set; }
-
-    [TomlValueOnSerialized]
-    public List<TypeTableE> TableECollection { get; set; }
-}
 [TomlSerializedObject]
 internal partial class TypeTableC
 {
@@ -682,6 +670,90 @@ public partial class TypeMemory
 {
     [TomlValueOnSerialized]
     public Memory<byte> Memory { get; set; }
+}
+
+public enum Color
+{
+    Red,
+    Green,
+    Blue
+}
+
+[TomlSerializedObject]
+public partial class TypeEnum
+{
+    [TomlValueOnSerialized]
+    public Color Color { get; set; }
+}
+
+public struct SpecialHash : IEquatable<uint>, IEquatable<SpecialHash>, IEquatable<string>
+{
+    public uint Hash { get; }
+    public SpecialHash()
+    {
+    }
+
+    public SpecialHash(uint hash)
+    {
+        Hash = hash;
+    }
+
+    public SpecialHash(string unhashedStr)
+    {
+        var bytesToHash = unhashedStr.ToCharArray()
+                .Select(c => new[] { (byte)((c - (byte)c) >> 8), (byte)c })
+                .SelectMany(c => c);
+
+        Hash = 2166136261; // Fnv offset
+
+        foreach (var chunk in bytesToHash)
+        {
+            Hash ^= chunk;
+            Hash *= 16777619; // fnv prime
+        }
+    }
+
+    public readonly bool Equals(SpecialHash other) => other.Hash == Hash;
+    public readonly bool Equals(uint other) => Hash == other;
+    public readonly bool Equals(string? other) => other is not null && Hash == new SpecialHash(other).Hash;
+    public override readonly bool Equals(object? obj) => (obj is SpecialHash h && Equals(h)) || (obj is string s && Equals(s)) || (obj is uint u && Equals(u));
+    public override readonly int GetHashCode() => unchecked((int)Hash);
+}
+
+[TomlSerializedObject]
+public partial class Entity
+{
+    [TomlValueOnSerialized]
+    public SpecialHash Name { get; set; }
+}
+
+public class SpecialHashFormatter : ITomlValueFormatter<SpecialHash>
+{
+    public SpecialHash Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
+    {
+        if (!rootNode.HasValue)
+        {
+            return default!;
+        }
+
+        if (rootNode.ValueType == TomlValueType.Integer)
+        {
+            return new SpecialHash(rootNode.GetValue<uint>());
+        }
+
+        if (rootNode.ValueType == TomlValueType.String)
+        {
+            return new SpecialHash(rootNode.GetString());
+        }
+
+        return default;
+    }
+
+    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, SpecialHash target, CsTomlSerializerOptions options)
+        where TBufferWriter : IBufferWriter<byte>
+    {
+        writer.WriteInt64(target.Hash);
+    }
 }
 
 #if NET9_0_OR_GREATER
