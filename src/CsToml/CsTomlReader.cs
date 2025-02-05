@@ -1431,7 +1431,7 @@ internal ref struct CsTomlReader
 
     private bool ExistNoNewLineAndComment(int length)
     {
-        if (sequenceReader.Length <= sequenceReader.Consumed + length)
+        if (sequenceReader.Length < sequenceReader.Consumed + length)
             return false;
 
         var index = 0;
