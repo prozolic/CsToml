@@ -31,15 +31,6 @@ internal sealed class TomlValueOnSerializedAttribute : Attribute
     public TomlValueOnSerializedAttribute(string aliasName) { this.AliasName = aliasName; }
 }
 
-internal static class StaticTomlSerializedObjectRegister
-{
-    internal static void Register<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>()
-        where T : ITomlSerializedObjectRegister
-    {
-        T.Register();
-    }
-}
-
 """);
         });
 
@@ -280,17 +271,17 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                     continue;
                 case TomlSerializationKind.Enum:
                     builder.AppendLine($$"""
-        if (!TomlSerializedObjectFormatterResolver.IsRegistered<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>())
+        if (!TomlValueFormatterResolver.IsRegistered<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>())
         {
-            GeneratedFormatterResolver.Register(new EnumFormatter<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>());
+            TomlValueFormatterResolver.Register(new EnumFormatter<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>());
         }
 """);
                     break;
                 case TomlSerializationKind.TomlSerializedObject:
                     builder.AppendLine($$"""
-        if (!TomlSerializedObjectFormatterResolver.IsRegistered<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>())
+        if (!TomlValueFormatterResolver.IsRegistered<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>())
         {
-            StaticTomlSerializedObjectRegister.Register<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>();
+            TomlValueFormatterResolver.Register<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>();
         }
 """);
                     continue;
@@ -299,9 +290,9 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                     var elementType = arrayNamedType.ElementType;
 
                     builder.AppendLine($$"""
-        if (!GeneratedFormatterResolver.IsRegistered<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>())
+        if (!TomlValueFormatterResolver.IsRegistered<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>())
         {
-            GeneratedFormatterResolver.Register(new ArrayFormatter<{{elementType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>());
+            TomlValueFormatterResolver.Register(new ArrayFormatter<{{elementType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>());
         }
 """);
                     break;
@@ -314,9 +305,9 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                         formatter = formatter.Replace("TYPEPARAMETER", typeParameters);
 
                         builder.AppendLine($$"""
-        if (!GeneratedFormatterResolver.IsRegistered<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>())
+        if (!TomlValueFormatterResolver.IsRegistered<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>())
         {
-            GeneratedFormatterResolver.Register(new {{formatter}}());
+            TomlValueFormatterResolver.Register(new {{formatter}}());
         }
 """);
                     }
@@ -330,9 +321,9 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                         dictFormatter = dictFormatter.Replace("TYPEPARAMETER", typeParameters);
 
                         builder.AppendLine($$"""
-        if (!GeneratedFormatterResolver.IsRegistered<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>())
+        if (!TomlValueFormatterResolver.IsRegistered<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>())
         {
-            GeneratedFormatterResolver.Register(new {{dictFormatter}}());
+            TomlValueFormatterResolver.Register(new {{dictFormatter}}());
         }
 """);
                     }
@@ -347,9 +338,9 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                         if (typeSymbol.ToDisplayString() == "T?")
                         {
                             builder.AppendLine($$"""
-        if (!GeneratedFormatterResolver.IsRegistered<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>())
+        if (!TomlValueFormatterResolver.IsRegistered<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>())
         {
-            GeneratedFormatterResolver.Register(new NullableFormatter<{{namedTypeSymbol.TypeArguments[0].ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>());
+            TomlValueFormatterResolver.Register(new NullableFormatter<{{namedTypeSymbol.TypeArguments[0].ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>());
         }
 """);
                             break;
@@ -360,9 +351,9 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                             typeFormatter = typeFormatter.Replace("TYPEPARAMETER", typeParameters);
 
                             builder.AppendLine($$"""
-        if (!GeneratedFormatterResolver.IsRegistered<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>())
+        if (!TomlValueFormatterResolver.IsRegistered<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>())
         {
-            GeneratedFormatterResolver.Register(new {{typeFormatter}}());
+            TomlValueFormatterResolver.Register(new {{typeFormatter}}());
         }
 """);
                             break;
@@ -373,9 +364,9 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
         }
 
         var code = $$"""
-        if (!TomlSerializedObjectFormatterResolver.IsRegistered<{{typeMeta.TypeName}}>())
+        if (!TomlValueFormatterResolver.IsRegistered<{{typeMeta.TypeName}}>())
         {
-            TomlSerializedObjectFormatterResolver.Register(new TomlSerializedObjectFormatter<{{typeMeta.TypeName}}>());
+            TomlValueFormatterResolver.Register(new TomlSerializedObjectFormatter<{{typeMeta.TypeName}}>());
         }
 
         // Register Formatter in advance.

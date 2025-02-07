@@ -1,5 +1,8 @@
 ﻿
 using System.Collections;
+using System.Collections.Concurrent;
+using System.Collections.Immutable;
+using System.Collections.ObjectModel;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -8,6 +11,75 @@ namespace CsToml.Formatter.Resolver;
 
 internal sealed class BuiltinFormatterResolver : ITomlValueFormatterResolver
 {
+    internal static readonly BuiltinFormatterResolver Instance = new BuiltinFormatterResolver();
+
+    private static readonly Dictionary<Type, Type> formatterTypeTable = new()
+    {
+        { typeof(Nullable<>), typeof(NullableFormatter<>) },
+        { typeof(Memory<>),  typeof(MemoryFormatter<>) },
+        { typeof(ReadOnlyMemory<>),  typeof(ReadOnlyMemoryFormatter<>) },
+
+        { typeof(List<>), typeof(ListFormatter<>) },
+        { typeof(Stack<>), typeof(StackFormatter<>) },
+        { typeof(HashSet<>), typeof(HashSetFormatter<>) },
+        { typeof(SortedSet<>), typeof(SortedSetFormatter<>) },
+        { typeof(Queue<>), typeof(QueueFormatter<>) },
+        { typeof(LinkedList<>), typeof(LinkedListFormatter<>) },
+        { typeof(SortedList<,>), typeof(SortedListFormatter<,>) },
+        { typeof(ConcurrentQueue<>), typeof(ConcurrentQueueFormatter<>) },
+        { typeof(ConcurrentStack<>), typeof(ConcurrentStackFormatter<>) },
+        { typeof(ConcurrentBag<>), typeof(ConcurrentBagFormatter<>) },
+        { typeof(ReadOnlyCollection<>), typeof(ReadOnlyCollectionFormatter<>) },
+        { typeof(BlockingCollection<>), typeof(BlockingCollectionFormatter<>) },
+        { typeof(PriorityQueue<,>), typeof(PriorityQueueFormatter<,>) },
+        { typeof(Dictionary<,>), typeof(DictionaryFormatter<,>) },
+        { typeof(ReadOnlyDictionary<,>), typeof(ReadOnlyDictionaryFormatter<,>) },
+        { typeof(SortedDictionary<,>), typeof(SortedDictionaryFormatter<,>) },
+        { typeof(ConcurrentDictionary<,>), typeof(ConcurrentDictionaryFormatter<,>) },
+
+        { typeof(ImmutableArray<>), typeof(ImmutableArrayFormatter<>) },
+        { typeof(ImmutableList<>), typeof(ImmutableListFormatter<>) },
+        { typeof(ImmutableStack<>), typeof(ImmutableStackFormatter<>) },
+        { typeof(ImmutableQueue<>), typeof(ImmutableQueueFormatter<>)},
+        { typeof(ImmutableHashSet<>), typeof(ImmutableHashSetFormatter<>) },
+        { typeof(ImmutableSortedSet<>), typeof(ImmutableSortedSetFormatter<>) },
+        { typeof(ImmutableDictionary<,>), typeof(ImmutableDictionaryFormatter<,>) },
+        { typeof(ImmutableSortedDictionary<,>), typeof(ImmutableSortedDictionaryFormatter<,>) },
+
+        { typeof(IEnumerable<>), typeof(IEnumerableFormatter<>) },
+        { typeof(ICollection<>),  typeof(ICollectionFormatter<>) },
+        { typeof(IReadOnlyCollection<>),  typeof(IReadOnlyCollectionFormatter<>) },
+        { typeof(IList<>),  typeof(IListFormatter<>) },
+        { typeof(IReadOnlyList<>),  typeof(IReadOnlyListFormatter<>) },
+        { typeof(ISet<>),  typeof(ISetFormatter<>) },
+        { typeof(IReadOnlySet<>),  typeof(IReadOnlySetFormatter<>) },
+        { typeof(IDictionary<,>),typeof(IDictionaryFormatter<,>) },
+        { typeof(IReadOnlyDictionary<,>),typeof(IReadOnlyDictionaryFormatter<,>) },
+
+        { typeof(KeyValuePair<,>),  typeof(KeyValuePairFormatter<,>) },
+        { typeof(Tuple<>),  typeof(TupleFormatter<>) },
+        { typeof(Tuple<,>),  typeof(TupleFormatter<,>) },
+        { typeof(Tuple<,,>),  typeof(TupleFormatter<,,>) },
+        { typeof(Tuple<,,,>),  typeof(TupleFormatter<,,,>) },
+        { typeof(Tuple<,,,,>),  typeof(TupleFormatter<,,,,>) },
+        { typeof(Tuple<,,,,,>),  typeof(TupleFormatter<,,,,,>) },
+        { typeof(Tuple<,,,,,,>),  typeof(TupleFormatter<,,,,,,>) },
+        { typeof(Tuple<,,,,,,,>),  typeof(TupleFormatter<,,,,,,,>) },
+        { typeof(ValueTuple<>),  typeof(ValueTupleFormatter<>) },
+        { typeof(ValueTuple<,>),  typeof(ValueTupleFormatter<,>) },
+        { typeof(ValueTuple<,,>),  typeof(ValueTupleFormatter<,,>) },
+        { typeof(ValueTuple<,,,>),  typeof(ValueTupleFormatter<,,,>) },
+        { typeof(ValueTuple<,,,,>),  typeof(ValueTupleFormatter<,,,,>) },
+        { typeof(ValueTuple<,,,,,>),  typeof(ValueTupleFormatter<,,,,,>) },
+        { typeof(ValueTuple<,,,,,,>),  typeof(ValueTupleFormatter<,,,,,,>) },
+        { typeof(ValueTuple<,,,,,,,>),  typeof(ValueTupleFormatter<,,,,,,,>) },
+
+#if NET9_0_OR_GREATER
+        { typeof(OrderedDictionary<,>), typeof(OrderedDictionaryFormatter<,>) },
+        { typeof(ReadOnlySet<>), typeof(ReadOnlySetFormatter<>) },
+#endif
+    };
+
     private sealed class CacheCheck<T>
     {
         public static bool Registered;
@@ -16,6 +88,37 @@ internal sealed class BuiltinFormatterResolver : ITomlValueFormatterResolver
     private sealed class DefaultFormatterCache<T>
     {
         public static ITomlValueFormatter<T>? Formatter;
+    }
+
+    private sealed class GeneratedFormatterCache<T>
+    {
+        public static ITomlValueFormatter<T>? Formatter = default!;
+
+        static GeneratedFormatterCache()
+        {
+            if (CacheCheck<T>.Registered) return;
+
+            if (typeof(T).IsEnum)
+            {
+                CacheCheck<T>.Registered = true;
+                Formatter = GetEnumFormatter<T>() as ITomlValueFormatter<T>;
+                return;
+            }
+
+            if (typeof(T).IsArray)
+            {
+                CacheCheck<T>.Registered = true;
+                Formatter = GetArrayFormatter<T>() as ITomlValueFormatter<T>;
+                return;
+            }
+
+            if (typeof(T).IsGenericType)
+            {
+                CacheCheck<T>.Registered = true;
+                Formatter = GetGenericTypeFormatter<T>() as ITomlValueFormatter<T>;
+                return;
+            }
+        }
     }
 
     static BuiltinFormatterResolver()
@@ -219,7 +322,33 @@ internal sealed class BuiltinFormatterResolver : ITomlValueFormatterResolver
         CacheCheck<IDictionary<object, object?>>.Registered = true;
     }
 
-    internal static readonly BuiltinFormatterResolver Instance = new BuiltinFormatterResolver();
+    private static object? GetEnumFormatter<T>()
+    {
+        var enumFormatterType = typeof(EnumFormatter<>).MakeGenericType(typeof(T));
+        return Activator.CreateInstance(enumFormatterType);
+    }
+
+    private static object? GetArrayFormatter<T>()
+    {
+        var arrayFormatterType = typeof(ArrayFormatter<>).MakeGenericType(typeof(T).GetElementType()!);
+        return Activator.CreateInstance(arrayFormatterType);
+    }
+
+    private static object? GetGenericTypeFormatter<T>()
+    {
+        var type = typeof(T);
+        var genericTypeDefinition = type.GetGenericTypeDefinition();
+
+        if (formatterTypeTable.TryGetValue(genericTypeDefinition, out var formatterType))
+        {
+            var genericType = formatterType.MakeGenericType(type.GetGenericArguments());
+            if (genericType != null)
+            {
+                return Activator.CreateInstance(genericType);
+            }
+        }
+        return null;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ITomlValueFormatter<T>? GetFormatter<T>()
@@ -227,6 +356,11 @@ internal sealed class BuiltinFormatterResolver : ITomlValueFormatterResolver
         var formatter = DefaultFormatterCache<T>.Formatter;
         if (formatter != null)
             return formatter;
+
+        var genericFormatter = GeneratedFormatterCache<T>.Formatter;
+        if (genericFormatter != null)
+            return genericFormatter;
+
         return null;
     }
 
