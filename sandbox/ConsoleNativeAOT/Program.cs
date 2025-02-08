@@ -4,10 +4,15 @@ using CsToml.Formatter.Resolver;
 using System.Buffers;
 using System.Text;
 using ConsoleNativeAOT;
+using System.Reflection.Metadata;
+using System.Xml.Linq;
+using System.Collections.ObjectModel;
+using CsToml.Values;
 
 Console.WriteLine("Hello, World!");
 
-GeneratedFormatterResolver.Register(new TestStruct2Formatter()); // Custom type formatter registration.
+TomlValueFormatterResolver.Register(new TestStruct2Formatter()); // Custom type formatter registration.
+TomlValueFormatterResolver.Register(new CustomFormatter()); // Custom type formatter registration.
 
 var tomlText = @"
 str = ""value""
@@ -33,6 +38,9 @@ TwoValueTuple = [ 1, 2 ]
 TestStructArr = [{Value = 999, Str = ""Test""}, {Value = 9999, Str = ""Test2""}]
 TestStruct2 = 12345
 
+dotted.keys = ""value""
+configurations = [1, {key = [ { key2 = [""VALUE""]}]}]
+
 [Table.test]
 key = ""value""
 first.second.third = ""value""
@@ -53,8 +61,11 @@ number2 = 123456
 "u8;
 
 Console.WriteLine("CsTomlSerializer.Deserialize<TomlDocument>");
-var res = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
-var rootNode = res.RootNode;
+var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
+var dottedKeys = document!.RootNode["dotted"u8]["keys"u8].GetString();
+var configurations = document!.RootNode["configurations"u8][1]["key"u8][0]["key2"u8][0].GetString();
+
+var rootNode = document.RootNode;
 Console.WriteLine(rootNode["str"u8].GetString());
 Console.WriteLine(rootNode["int"u8].GetInt64());
 Console.WriteLine(rootNode["flt"u8].GetDouble());
@@ -105,12 +116,12 @@ var testClass = new TestClass()
     },
     Pair = new KeyValuePair<int, StringBuilder>(1, new StringBuilder("value")),
     TwoValueTuple = (1, 2),
-    TestStructArr = new List<TestStruct>()
+    TestStructArr = new List<TestStruct?>()
     {
          new TestStruct() { Value = 999, Str = "Test" },
          new TestStruct() { Value = 999, Str = "Test" },
     },
-    TestStruct2 = new TestStruct2() { Value = 12345 }
+    TestStruct2 = new Custom() { Value = 12345 }
 };
 
 using var text = CsTomlSerializer.Serialize(testClass);
@@ -121,6 +132,10 @@ var deserializedTestClass = CsTomlSerializer.Deserialize<TestClass>(text.ByteSpa
 
 var testEnum = CsTomlSerializer.Deserialize<TestEnum>(@"color = ""Red"""u8);
 Console.WriteLine(testEnum.color);
+
+// 
+var sample = CsTomlSerializer.Deserialize<Sample>(@"Key = 12345"u8);
+Console.WriteLine($"Sample.Custom = {sample.Key.Value}");
 
 Console.WriteLine("END!");
 
@@ -153,10 +168,10 @@ public partial class TestClass
     public ValueTuple<int, int> TwoValueTuple { get; set; } = default!;
 
     [TomlValueOnSerialized]
-    public List<TestStruct> TestStructArr { get; set; }
+    public List<TestStruct?> TestStructArr { get; set; }
 
     [TomlValueOnSerialized]
-    public TestStruct2 TestStruct2 { get; set; }
+    public Custom TestStruct2 { get; set; }
 
 }
 
@@ -201,4 +216,32 @@ public partial class TestEnum
     public Color color { get; set; }
 }
 
+public class CustomFormatter : ITomlValueFormatter<Custom>
+{
+    public Custom Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
+    {
+        if (!rootNode.HasValue)
+        {
+            return default!;
+        }
+
+        if (rootNode.ValueType == TomlValueType.Integer)
+        {
+            return new Custom(rootNode.GetValue<uint>());
+        }
+
+        if (rootNode.ValueType == TomlValueType.String)
+        {
+            return new Custom(rootNode.GetString());
+        }
+
+        return default;
+    }
+
+    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Custom target, CsTomlSerializerOptions options)
+        where TBufferWriter : IBufferWriter<byte>
+    {
+        writer.WriteInt64(target.Value);
+    }
+}
 
