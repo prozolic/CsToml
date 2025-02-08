@@ -4,8 +4,10 @@ using System.Runtime.CompilerServices;
 
 namespace CsToml.Formatter.Resolver;
 
-public sealed class TomlSerializedObjectFormatterResolver : ITomlValueFormatterResolver
+internal sealed class TomlSerializedObjectFormatterResolver : ITomlValueFormatterResolver
 {
+    public static readonly TomlSerializedObjectFormatterResolver Instance = new TomlSerializedObjectFormatterResolver();
+
     private sealed class CacheCheck<T>
     {
         public static bool Registered;
@@ -17,6 +19,8 @@ public sealed class TomlSerializedObjectFormatterResolver : ITomlValueFormatterR
 
         static Cache()
         {
+            if (CacheCheck<T>.Registered) return;
+
             if (typeof(ITomlSerializedObjectRegister).IsAssignableFrom(typeof(T)))
             {
                 var m = typeof(T).GetMethod("CsToml.ITomlSerializedObjectRegister.Register",
@@ -30,18 +34,16 @@ public sealed class TomlSerializedObjectFormatterResolver : ITomlValueFormatterR
         }
     }
 
-    public static readonly TomlSerializedObjectFormatterResolver Instance = new TomlSerializedObjectFormatterResolver();
-
     public ITomlValueFormatter<T>? GetFormatter<T>()
     {
         return Cache<T>.Formatter;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsRegistered<T>()
+    public bool IsRegistered<T>()
         => CacheCheck<T>.Registered;
 
-    public static void Register<T>(TomlSerializedObjectFormatter<T> fomatter)
+    public void Register<T>(TomlSerializedObjectFormatter<T> fomatter)
         where T : ITomlSerializedObject<T>
     {
         if (CacheCheck<T>.Registered) return;

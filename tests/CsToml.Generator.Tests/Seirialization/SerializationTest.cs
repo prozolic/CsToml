@@ -2545,12 +2545,12 @@ public class TypeEnumTest
 }
 
 // Issue #24
-public class GeneratedFormatterResolverTest
+public class TomlValueFormatterResolverTest
 {
     [Fact]
     public void DeserializeAndSerialize()
     {
-        GeneratedFormatterResolver.Register(new SpecialHashFormatter());
+        TomlValueFormatterResolver.Register(new SpecialHashFormatter());
         var entity = CsTomlSerializer.Deserialize<Entity>("Name = 12345"u8);
         var entity2 = CsTomlSerializer.Deserialize<Entity>("Name = \"This is String\""u8);
         entity.Name.ShouldBe(new SpecialHash(12345));
