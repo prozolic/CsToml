@@ -227,7 +227,7 @@ public class CustomFormatter : ITomlValueFormatter<Custom>
 
         if (rootNode.ValueType == TomlValueType.Integer)
         {
-            return new Custom(rootNode.GetValue<uint>());
+            return new Custom(rootNode.GetInt64());
         }
 
         if (rootNode.ValueType == TomlValueType.String)
