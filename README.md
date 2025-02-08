@@ -40,9 +40,10 @@ Table of Contents
 * [Serialize and deserialize TOML sequence (Parse TOML sequence)](#serialize-and-deserialize-toml-sequence-parse-toml-sequence)
 * [Serialize and deserialize custom class/struct/record/record struct (CsToml.Generator)](#serialize-and-deserialize-custom-classstructrecordrecord-struct-cstomlgenerator)
 * [Built-in support type](#built-in-support-type)
+* [Customize Formatter](#customize-formatter)
 * [Deserialize API](#deserialize-api)
 * [Serialize API](#serialize-api)
-* [Serialize and deserialize TOML values only](#serialize-and-deserialize-toml-values-only)
+* [Other Deserialize/Serialize APIs](#other-deserializeserialize-apis)
 * [TomlDocument class](#tomldocument-class)
 * [Extensions (CsToml.Extensions)](#extensions-cstomlextensions)
 * [Microsoft.Extensions.Configuration extensions (CsToml.Extensions.Configuration)](#microsoftextensionsconfiguration-extensions-cstomlextensionsconfiguration)
@@ -184,13 +185,14 @@ partial class CsTomlClass : ITomlSerializedObject<CsTomlClass>
 
     static void ITomlSerializedObject<CsTomlClass>.Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, CsTomlClass target, CsTomlSerializerOptions options)
     {
+        writer.BeginScope();
         writer.WriteKey("Key"u8);
         writer.WriteEqual();
-        options.Resolver.GetFormatter<String>()!.Serialize(ref writer, target.Key, options);
+        options.Resolver.GetFormatter<string>()!.Serialize(ref writer, target.Key, options);
         writer.EndKeyValue();
         writer.WriteKey("alias"u8);
         writer.WriteEqual();
-        options.Resolver.GetFormatter<String>()!.Serialize(ref writer, target.Value, options);
+        options.Resolver.GetFormatter<string>()!.Serialize(ref writer, target.Value, options);
         writer.EndKeyValue();
         writer.WriteKey("Array"u8);
         writer.WriteEqual();
@@ -205,21 +207,36 @@ partial class CsTomlClass : ITomlSerializedObject<CsTomlClass>
             writer.WriteNewLine();
             writer.BeginCurrentState(TomlValueState.Table);
             writer.PushKey("Table"u8);
-            options.Resolver.GetFormatter<TableClass>()!.Serialize(ref writer, target.Table, options);
+            options.Resolver.GetFormatter<global::ConsoleApp.TableClass>()!.Serialize(ref writer, target.Table, options);
             writer.PopKey();
             writer.EndCurrentState();
         }
         else
         {
             writer.PushKey("Table"u8);
-            options.Resolver.GetFormatter<TableClass>()!.Serialize(ref writer, target.Table, options);
+            options.Resolver.GetFormatter<global::ConsoleApp.TableClass>()!.Serialize(ref writer, target.Table, options);
             writer.PopKey();
         }
+        writer.EndScope();
     }
 
     static void ITomlSerializedObjectRegister.Register()
     {
-        TomlSerializedObjectFormatterResolver.Register(new TomlSerializedObjectFormatter<CsTomlClass>());
+        if (!TomlValueFormatterResolver.IsRegistered<CsTomlClass>())
+        {
+            TomlValueFormatterResolver.Register(new TomlSerializedObjectFormatter<CsTomlClass>());
+        }
+
+        // Register Formatter in advance.
+        if (!TomlValueFormatterResolver.IsRegistered<int?>())
+        {
+            TomlValueFormatterResolver.Register(new NullableFormatter<int>());
+        }
+        if (!TomlValueFormatterResolver.IsRegistered<global::ConsoleApp.TableClass>())
+        {
+            TomlValueFormatterResolver.Register<global::ConsoleApp.TableClass>();
+        }
+
     }
 }
 ```
@@ -265,19 +282,27 @@ partial class TableClass : ITomlSerializedObject<TableClass>
 
     static void ITomlSerializedObject<TableClass>.Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TableClass target, CsTomlSerializerOptions options)
     {
+        writer.BeginScope();
         writer.WriteKey("Key"u8);
         writer.WriteEqual();
-        options.Resolver.GetFormatter<String>()!.Serialize(ref writer, target.Key, options);
+        options.Resolver.GetFormatter<string>()!.Serialize(ref writer, target.Key, options);
         writer.EndKeyValue();
         writer.WriteKey("Number"u8);
         writer.WriteEqual();
-        options.Resolver.GetFormatter<Int32>()!.Serialize(ref writer, target.Number, options);
-        writer.EndKeyValue();
+        options.Resolver.GetFormatter<int>()!.Serialize(ref writer, target.Number, options);
+        writer.EndKeyValue(true);
+        writer.EndScope();
     }
 
     static void ITomlSerializedObjectRegister.Register()
     {
-        TomlSerializedObjectFormatterResolver.Register(new TomlSerializedObjectFormatter<TableClass>());
+        if (!TomlValueFormatterResolver.IsRegistered<TableClass>())
+        {
+            TomlValueFormatterResolver.Register(new TomlSerializedObjectFormatter<TableClass>());
+        }
+
+        // Register Formatter in advance.
+
     }
 }
 ```
@@ -463,7 +488,7 @@ var serializedTomlText = Encoding.UTF8.GetString(serializedText.ByteSpan);
 Built-in support type
 ---
 
-These types can be serialized/deserialized by default as properties of custom classes.
+These types can be serialized/deserialized by default as properties of custom `class`/`struct`/`record`/`record struct`.
 
 * .NET Built-in types(`bool`, `long`, `double`, `string` etc)
 * `DateTime`, `DateTimeOffset`, `DateOnly`, `TimeOnly`, `TimeSpan`
@@ -478,6 +503,90 @@ These types can be serialized/deserialized by default as properties of custom cl
 * `KeyValuePair<>`, `Tuple<,...>`, `ValueTuple<,...>`
 * `OrderedDictionary<>`, `ReadOnlySet<>`
 * `ImmutableArray<>`, `ImmutableList<>`, `ImmutableStack<>`, `ImmutableQueue<>`, `ImmutableHashSet<>`, `ImmutableSortedSet<>`, `ImmutableDictionary<>`, `ImmutableSortedDictionary<>`
+
+Customize Formatter
+---
+
+`ITomlValueFormatter<T>` is an interface that customizes the serialization behavior of a particular type.
+If implements `ITomlValueFormatter<T>`, you can configure to use custom type to `[TomlSerializedObject]` properties.  
+
+For example, `Custom` structure can implement a custom formatter as follows.
+
+```csharp
+public struct Custom
+{
+    public long Value { get; }
+
+    public Custom(long value)
+    {
+        Value = value;
+    }
+
+    public Custom(string str)
+    {
+        if (long.TryParse(str.AsSpan(), out var value))
+        {
+            Value = value;
+        }
+        else
+        {
+            Value = 0;
+        }
+    }
+}
+```
+
+```csharp
+public class CustomFormatter : ITomlValueFormatter<Custom>
+{
+    public Custom Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
+    {
+        if (!rootNode.HasValue)
+        {
+            return default!;
+        }
+        
+        // TOML Integer
+        if (rootNode.ValueType == TomlValueType.Integer)
+        {
+            return new Custom(rootNode.GetInt64());
+        }
+
+        // TOML String
+        if (rootNode.ValueType == TomlValueType.String)
+        {
+            return new Custom(rootNode.GetString());
+        }
+
+        return default;
+    }
+
+    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Custom target, CsTomlSerializerOptions options)
+        where TBufferWriter : IBufferWriter<byte>
+    {
+        writer.WriteInt64(target.Value);
+    }
+}
+```
+
+It is possible to specify the property type of `[TomlValueOnSerialized]`.
+
+```csharp
+[TomlSerializedObject]
+public partial class Sample
+{
+    [TomlValueOnSerialized]
+    public Custom Key { get; set; }
+}
+```
+
+You need to register your custom formatter with TomlValueFormatterResolver.Register.
+
+```csharp
+TomlValueFormatterResolver.Register(new CustomFormatter()); // Custom type formatter registration.
+
+var sample = CsTomlSerializer.Deserialize<Sample>(@"Key = 12345"u8);
+```
 
 Deserialize API
 ---
@@ -573,7 +682,7 @@ await CsTomlSerializer.SerializeAsync(ms2, document);
 Console.WriteLine(Encoding.UTF8.GetString(ms2.ToArray()));
 ```
 
-Serialize and deserialize TOML values only
+Other Deserialize/Serialize APIs
 ---
 
 `CsTomlSerializer.DeserializeValueType<T>` deserialize TOML values to a specified type.
@@ -612,91 +721,476 @@ using var serializedTomlValue6 = CsTomlSerializer.SerializeValueType(tomlTupleVa
 `TomlDocument` class
 ---
 
-Use `TomlDocument` when parsing with the TOML structure preserved.
-You can get the TOML value by specifying a key from the `RootNode` property of this class (`TomlDocumentNode` struct).  
-Like `Dictionary` class, it is searched by the indexer.
-Parameters can use `ReadOnlySpan<byte>`, `ReadOnlySpan<char>` and `int`.
+Use `TomlDocument` when parsing with the TOML structure preserved.  
+It can get the TOML value by specifying the indexer in the `TomlDocumentNode.RootNode` property.
+
+### Key/Value Pair
+
+For example, in the following Key/Value Pair
+
+```TOML
+key = "value"
+```
+
+This can retrieve as follows.
+
+```csharp
+var document = CsTomlSerializer.Deserialize<TomlDocument>(toml);
+// this[ReadOnlySpan<char> key]
+TomlDocumentNode keyNode = document.RootNode["key"u8]; // this is best performance.
+var value = tableKeyNode.GetString(); // value
+
+// this[ReadOnlySpan<byte> key]
+TomlDocumentNode keyNode = document.RootNode["key"];
+var value = tableKeyNode.GetString(); // value
+```
+
 The best performance is achieved with `ReadOnlySpan<byte>`.
 `ReadOnlySpan<char>` is a little slower because the process of conversion from UTF16 to UTF8 is performed.
 
+### TOML String
+
+For example:
+
+```TOML
+key = "value"
+```
+
+This can retrieve as follows.
+
 ```csharp
-public TomlDocumentNode this[ReadOnlySpan<char> key]
-public TomlDocumentNode this[ReadOnlySpan<byte> key]
-public TomlDocumentNode this[int index]
+string str = document.RootNode["key"u8].GetString();    // "value"
 ```
 
 ```csharp
-var tomlText = @"
-key = 123
-dotted.keys = ""value""
-array = [1, ""2"", 3]
-inlineTable = { key = ""value2"", number = 123 }
-configurations = [1, {key = [ { key2 = [""VALUE""]}]}]
+if (document.RootNode["key"u8].TryGetString(out string value))
+{
+    Console.WriteLine(value);   // "value"
+}
+```
 
+### TOML Integer
+
+For example:
+
+```TOML
+key = 1234
+```
+
+This can retrieve value as follows.
+
+```csharp
+long value = document.RootNode["key"u8].GetInt64();     // 1234
+```
+
+```csharp
+if (document.RootNode["key"u8].TryGetInt64(out long value))
+{
+    Console.WriteLine(value);   // 1234
+}
+```
+
+It can also retrieve value as another primitive type (`string`, `double`, `bool`, etc...) as follows.
+
+```csharp
+string strValue = document.RootNode["key"u8].GetString();       // "1234"
+double doubleValue = document.RootNode["key"u8].GetDouble();    // 1234
+bool boolValue = document.RootNode["key"u8].GetBool();          // true
+```
+
+### TOML Float
+
+For example:
+
+```TOML
+key = 3.1415
+```
+
+This can retrieve value as follows.
+
+```csharp
+double value = document.RootNode["key"u8].GetDouble();  // 3.1415
+```
+
+```csharp
+if (document.RootNode["key"u8].TryGetDouble(out double value))
+{
+    Console.WriteLine(value);    // 3.1415
+}
+```
+
+It can also retrieve value as another primitive type (`string`,`long`, `bool`, etc...) as follows.
+
+```csharp
+string strValue = document.RootNode["key"u8].GetString();       // "3.1415"
+long longValue = document.RootNode["key"u8].GetInt64();         // 3
+bool boolValue = document.RootNode["key"u8].GetBool();          // true
+```
+
+### TOML Boolean
+
+For example:
+
+```TOML
+key = true
+```
+
+This can retrieve value as follows.
+
+```csharp
+bool value = document.RootNode["key"u8].GetBool();  // true
+```
+
+```csharp
+if (document.RootNode["key"u8].TryGetBool(out bool value))
+{
+    Console.WriteLine(value);   // true
+}
+```
+
+It can also retrieve value as another primitive type (`string`,`long`, `bool`, etc...) as follows.
+
+```csharp
+string strValue = document.RootNode["key"u8].GetString();       // "True" ( bool.TrueString )
+long longValue = document.RootNode["key"u8].GetInt64();         // 1
+double doubleValue = document.RootNode["key"u8].GetDouble();    // 1
+```
+
+### TOML Offset Date-Time
+
+For example:
+
+```TOML
+key = 1979-05-27T07:32:00Z
+```
+
+This can retrieve value as follows.
+
+```csharp
+DateTimeOffset dateTimeOffsetValue = document.RootNode["key"u8].GetDateTimeOffset();
+```
+
+```csharp
+if (document.RootNode["key"u8].TryGetDateTimeOffset(out DateTimeOffset value))
+{
+    Console.WriteLine(value);
+}
+```
+
+It can also retrieve value as another primitive type (`string`,`DateTime`, `DateOnly`,`TimeOnly`, etc...) as follows.
+
+```csharp
+string value = document.RootNode["key"u8].GetString();              // "1979-05-27T07:32:00.0000000+00:00"
+DateTime dateTimeValue = document.RootNode["key"u8].GetDateTime();
+DateOnly dateOnlyValue = document.RootNode["key"u8].GetDateOnly();
+TimeOnly timeOnlyValue = document.RootNode["key"u8].GetTimeOnly(); 
+```
+
+### TOML Local Date-Time
+
+For example:
+
+```TOML
+key = 1979-05-27T07:32:00
+```
+
+This can retrieve value as follows.
+
+```csharp
+DateTime value = document.RootNode["key"u8].GetDateTime();
+```
+
+```csharp
+if (document.RootNode["key"u8].TryGetDateTime(out DateTime value))
+{
+    Console.WriteLine(value);
+}
+```
+
+It can also retrieve value as another primitive type (`string`,`DateTimeOffset`, `DateOnly`,`TimeOnly`, etc...) as follows.
+
+```csharp
+string value = document.RootNode["key"u8].GetString();              // "1979-05-27T07:32:00.0000000"
+DateTimeOffset dateTimeOffsetValue = document.RootNode["key"u8].GetDateTimeOffset();
+DateOnly dateOnlyValue = document.RootNode["key"u8].GetDateOnly();
+TimeOnly timeOnlyValue = document.RootNode["key"u8].GetTimeOnly(); 
+```
+
+### TOML Local Date
+
+For example:
+
+```TOML
+key = 1979-05-27
+```
+
+This can retrieve value as follows.
+
+```csharp
+DateOnly value = document.RootNode["key"u8].GetDateOnly();
+```
+
+```csharp
+if (document.RootNode["key"u8].TryGetDateOnly(out DateOnly value))
+{
+    Console.WriteLine(value);
+}
+```
+
+It can also retrieve value as another primitive type (`string`,`DateTime`, `DateOnly`, etc...) as follows.
+
+```csharp
+string value = document.RootNode["key"u8].GetString();              // "1979-05-27"
+DateTimeOffset dateTimeOffsetValue = document.RootNode["key"u8].GetDateTimeOffset();
+DateTime dateTimeValue = document.RootNode["key"u8].GetDateTime();
+```
+
+### TOML Local Time
+
+For example:
+
+```TOML
+key = 07:32:00
+```
+
+This can retrieve value as follows.
+
+```csharp
+TimeOnly value = document.RootNode["key"u8].GetTimeOnly(); 
+```
+
+```csharp
+if (document.RootNode["key"u8].TryGetTimeOnly(out TimeOnly value))
+{
+    Console.WriteLine(value);
+}
+```
+
+It can also retrieve value as another primitive type (`string`, etc...) as follows.
+
+```csharp
+string value = document.RootNode["key"u8].GetString();              // "07:32:00.0000000"
+```
+
+### TOML Array
+
+For example:
+
+```TOML
+array = [ 1, 2, 3 ]
+```
+
+This can retrieve value as follows.
+`TomlValue` is the class that actually has the TOML value, and the value can retrieve value with almost the same API as the `TomlDocumentNode`.
+
+```csharp
+ReadOnlyCollection<TomlValue> array = document.RootNode["array"u8].GetArray();
+var value0 = array[0].GetInt64(); // 1
+var value1 = array[1].GetInt64(); // 2
+var value2 = array[2].GetInt64(); // 3
+
+var value00 = document.RootNode["array"u8].GetArrayValue(0).GetInt64(); // 1
+```
+
+```csharp
+if (document.RootNode["array"u8].TryGetArray(out ReadOnlyCollection<TomlValue> array))
+{
+    var value0 = array[0].GetInt64(); // 1
+    var value1 = array[1].GetInt64(); // 2
+    var value2 = array[2].GetInt64(); // 3
+}
+if (document.RootNode["array"u8].TryGetArrayValue(0, out TomlValue value11))
+{
+    Console.WriteLine(value11.GetInt64());
+}
+```
+
+### TOML Table
+
+For example:
+
+```TOML
 [table]
-key = ""value3""
-
-[[arrayOfTables]]
-key = ""value4""
-
-[[arrayOfTables]]
-number = 123
-"u8;
-
-var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
-
-var key = document!.RootNode["key"u8].GetInt64();   // 123
-var dottedKeys = document!.RootNode["dotted"u8]["keys"u8].GetString();  // "value"
-var array = document!.RootNode["array"u8].GetArray();   // [1, 2, 3]
-var item1 = array[0].GetInt64();    // 1
-var item2 = array[1].GetString();   // "2"
-var item3 = array[2].GetInt64();   // 3
-// Same as "array[0].GetInt64()"
-var item1_2 = document!.RootNode["array"u8].GetArrayValue(0).GetInt64();
-var inlineTable = document!.RootNode["inlineTable"u8]["key"u8].GetString();  // "value2"
-var configurations = document!.RootNode["configurations"u8][1]["key"u8][0]["key2"u8][0].GetString(); // "VALUE"
-
-var table = document!.RootNode["table"u8]["key"u8].GetString();  // "value3"
-var arrayOfTables = document!.RootNode["arrayOfTables"u8][0]["key"u8].GetString();  // "value4"
-var arrayOfTables2 = document!.RootNode["arrayOfTables"u8][1]["number"u8].GetString();  // 123
-
-var tuple = document!.RootNode["array"u8].GetValue<Tuple<long, string, long>>(); // Tuple<long, string, long>(1, "2", 3)
+key = "tablevalue"
 ```
 
-To retrieve primitive values from `omlDocumentNode` and `TomlValue`, call the following API.
+the key/values of that table can also be retrieved as follows.
+
+```csharp
+var value = document.RootNode["table"u8]["key"u8].GetString(); // tablevalue
+```
+
+### TOML Inline Table
+
+For example:
+
+```TOML
+key = { int = 123, type.name = ""inline table"" }
+```
+
+the key/values of that table can also be retrieved as follows.
+
+```csharp
+var intValue = document.RootNode["key"u8]["int"u8].GetInt64();              // 123
+var typeName = document.RootNode["key"u8]["type"u8]["name"u8].GetString();  // "inline table"
+```
+
+### TOML Array of Tables
+
+For example:
+
+```TOML
+[[array.of.tables]]
+
+[[array.of.tables]]
+key = "value"
+array = [ 1, 2, 3 ]
+
+[[array.of.tables]]
+key = "value2"
+array = [ 4, 5, 6 ]
+```
+
+the key/values of that table can also be retrieved as follows.
+
+```csharp
+var key1 = document.RootNode["array"u8]["of"u8]["tables"u8][1]["key"u8].GetString();               
+// "value"
+var arrayIndex1 = document.RootNode["array"u8]["of"u8]["tables"u8][1]["array"u8][0].GetInt64();    
+// 1
+
+var key2 = document.RootNode["array"u8]["of"u8]["tables"u8][2]["key"u8].GetString();               
+// "value2"
+var arrayIndex2 = document.RootNode["array"u8]["of"u8]["tables"u8][2]["array"u8][0].GetInt64();    
+// 4
+```
+
+### Complex samples.
+
+```TOML
+dotted.keys = ""value""
+configurations = [1, {key = [ { key2 = [""VALUE""]}]}]
+```
+
+```csharp
+var dottedKeys = document!.RootNode["dotted"u8]["keys"u8].GetString(); // "value"
+var configurations = document!.RootNode["configurations"u8][1]["key"u8][0]["key2"u8][0].GetString(); // "VALUE"
+```
+
+### TomlDocumentNode API
+
+To retrieve primitive values from `TomlDocumentNode` and `TomlValue`, call the following API.
 If an API with the `Get` prefix fails, an `CsTomlException` is thrown and a value is returned if it was successful.
 If an API with the `TryGet` prefix fails, false is returned and the value is set to the argument of the out parameter if it was successful.
-`CanGetValue` can be used to see which Toml value types can be converted.
-`GetValue<T>` and `TryGetValue<T>` can be used to obtain a value converted from a Toml value type to a specified type.
 
 ```csharp
-public bool CanGetValue(TomlValueFeature feature)
-public ReadOnlyCollection<TomlValue> GetArray()
-public TomlValue GetArrayValue(int index)
-public string GetString()
-public long GetInt64()
-public double GetDouble()
-public bool GetBool()
-public DateTime GetDateTime()
-public DateTimeOffset GetDateTimeOffset()
-public DateOnly GetDateOnly()
-public TimeOnly GetTimeOnly()
-public object GetObject()
-public T GetNumber<T>() where T : struct, INumberBase<T>
-public T GetValue<T>()
-public bool TryGetArray(out IReadOnlyList<TomlValue> value)
-public bool TryGetArrayValue(int index, out TomlValue value)
-public bool TryGetString(out string value)
-public bool TryGetInt64(out long value)
-public bool TryGetDouble(out double value)
-public bool TryGetBool(out bool value)
-public bool TryGetDateTime(out DateTime value)
-public bool TryGetDateTimeOffset(out DateTimeOffset value)
-public bool TryGetDateOnly(out DateOnly value)
-public bool TryGetTimeOnly(out TimeOnly value)
-public bool TryGetObject(out object value)
-public bool TryGetNumber<T>(out T value) where T : struct, INumberBase<T>
-public bool TryGetValue<T>(out T value)
+public struct TomlDocumentNode
+{
+    public bool HasValue { get; }
+    public TomlValueType ValueType { get; }
+    public readonly TomlValue GetTomlValue()
+    public bool CanGetValue(TomlValueFeature feature)
+    public ReadOnlyCollection<TomlValue> GetArray()
+    public TomlValue GetArrayValue(int index)
+    public string GetString()
+    public long GetInt64()
+    public double GetDouble()
+    public bool GetBool()
+    public DateTime GetDateTime()
+    public DateTimeOffset GetDateTimeOffset()
+    public DateOnly GetDateOnly()
+    public TimeOnly GetTimeOnly()
+    public object GetObject()
+    public T GetNumber<T>() where T : struct, INumberBase<T>
+    public T GetValue<T>()
+    public bool TryGetArray(out ReadOnlyCollection<TomlValue> value)
+    public bool TryGetArrayValue(int index, out TomlValue value)
+    public bool TryGetString(out string value)
+    public bool TryGetInt64(out long value)
+    public bool TryGetDouble(out double value)
+    public bool TryGetBool(out bool value)
+    public bool TryGetDateTime(out DateTime value)
+    public bool TryGetDateTimeOffset(out DateTimeOffset value)
+    public bool TryGetDateOnly(out DateOnly value)
+    public bool TryGetTimeOnly(out TimeOnly value)
+    public bool TryGetObject(out object value)
+    public bool TryGetNumber<T>(out T value) where T : struct, INumberBase<T>
+    public bool TryGetValue<T>(out T value)
+}
+```
+
+### Check the TOML type
+
+`TomlDocumentNode.ValueType` is possible to check the TOML type held.
+
+```csharp
+public enum TomlValueType
+{
+    Key = -1, // This is for internal use only.
+    Empty = 0, // Rarely used.
+    String = 1,
+    Integer = 2,
+    Float = 3,
+    Boolean = 4,
+    OffsetDateTime = 5,
+    LocalDateTime = 6,
+    LocalDate = 7,
+    LocalTime = 8,
+    Array = 9,
+    Table = 10, // Rarely used.
+    InlineTable = 11, // Rarely used.
+}
+```
+
+### Converted to other convertible values
+
+`TomlDocumentNode.GetValue<T>` and `TomlDocumentNode.TryGetValue<T>` can be used to obtain a value converted from a Toml value type to a specified type.
+The type that can be specified for `T` is [Built-in support type](#built-in-support-type).
+
+```TOML
+key = ""https://github.com/prozolic/CsToml""
+```
+
+```csharp
+var uri = document.RootNode["key"u8].GetValue<Uri>(); // https://github.com/prozolic/CsToml
+```
+
+### Check which values can be converted
+
+`TomlDocumentNode.CanGetValue` can be used to see which Toml value types can be converted.
+
+```csharp
+if (document.RootNode["key"u8].CanGetValue(feature: TomlValueFeature.Int64)) 
+{
+    var value = document.RootNode["key"u8].GetInt64();
+    Console.WriteLine(value);
+}
+else
+{
+    var value = document.RootNode["key"u8].GetInt64(); // Throw CsTomlException.
+    Console.WriteLine(value);
+}
+```
+
+```csharp
+[Flags]
+public enum TomlValueFeature
+{
+    None = 0,
+    String = 1,
+    Int64 = 1 << 1,
+    Double = 1 << 2,
+    Boolean = 1 << 3,
+    Number = 1 << 4,
+    DateTime = 1 << 5,
+    DateTimeOffset = 1 << 6,
+    DateOnly = 1 << 7,
+    TimeOnly = 1 << 8,
+    Object = 1 << 9,
+    Array = 1 << 10,
+    Table = 1 << 11,
+    InlineTable = 1 << 12,
+}
 ```
 
 `ToDictionary` method is available as an API to convert from `TomlDocument` to `IDictionary<TKey, TValue>`.
