@@ -5,21 +5,12 @@ using System.Globalization;
 namespace CsToml.Values;
 
 [DebuggerDisplay("{Value}")]
-internal sealed partial class TomlFloat(double value, TomlFloat.FloatKind kind = TomlFloat.FloatKind.Normal) : TomlValue
+internal sealed partial class TomlFloat(double value) : TomlValue
 {
-    public readonly static TomlFloat Inf = new(TomlCodes.Float.Inf, FloatKind.Inf);
-    public readonly static TomlFloat NInf = new (TomlCodes.Float.NInf, FloatKind.NInf);
-    public readonly static TomlFloat Nan = new (TomlCodes.Float.Nan, FloatKind.Nan);
-    public readonly static TomlFloat PNan = new(TomlCodes.Float.Nan, FloatKind.PNan);
-
-    internal enum FloatKind : byte
-    {
-        Normal,
-        Inf,
-        NInf,
-        Nan,
-        PNan
-    }
+    public readonly static TomlFloat Inf = new(TomlCodes.Float.Inf);
+    public readonly static TomlFloat NInf = new (TomlCodes.Float.NInf);
+    public readonly static TomlFloat Nan = new (TomlCodes.Float.Nan);
+    public readonly static TomlFloat PNan = new(TomlCodes.Float.Nan);
 
     public double Value { get; private set; } = value;
 
@@ -27,32 +18,9 @@ internal sealed partial class TomlFloat(double value, TomlFloat.FloatKind kind =
 
     public override TomlValueType Type => TomlValueType.Float;
 
-    internal FloatKind Kind { get; } = kind;
-
     internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
-        if (Kind == FloatKind.Normal)
-        {
-            writer.WriteDouble(Value);
-            return;
-        }
-
-        switch(Kind)
-        {
-            case FloatKind.Inf:
-                writer.WriteBytes("inf"u8);
-                break;
-            case FloatKind.NInf:
-                writer.WriteBytes("-inf"u8);
-                break;
-            case FloatKind.Nan:
-            case FloatKind.PNan:
-                writer.WriteBytes("nan"u8);
-                break;
-            default:
-                return;
-        }
-        return;
+        writer.WriteDouble(Value);
     }
 
     public override bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)

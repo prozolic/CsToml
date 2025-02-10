@@ -135,23 +135,37 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
 
     public void WriteDouble(double value)
     {
-        var length = 32;
-        int bytesWritten;
-
-        var writtenSpan = writer.GetSpan(length);
-        while (!value.TryFormat(writtenSpan, out bytesWritten, "G", CultureInfo.InvariantCulture))
+        switch(value)
         {
-            length *= 2;
-            writtenSpan = writer.GetSpan(length);
-        }
-        writer.Advance(bytesWritten);
+            case double.NegativeInfinity:
+                WriteBytes("-inf"u8);
+                return;
+            case double.PositiveInfinity:
+                WriteBytes("inf"u8);
+                return;
+            case double.NaN:
+                WriteBytes("nan"u8);
+                return;
+            default:
+                var length = 32;
+                int bytesWritten;
 
-        // integer check
-        if (!writtenSpan.Slice(0, bytesWritten).ContainsAny(".eE"u8))
-        {
-            var writtenSpanEx = writer.GetWrittenSpan(2);
-            writtenSpanEx[0] = TomlCodes.Symbol.DOT;
-            writtenSpanEx[1] = TomlCodes.Number.Zero;
+                var writtenSpan = writer.GetSpan(length);
+                while (!value.TryFormat(writtenSpan, out bytesWritten, "G", CultureInfo.InvariantCulture))
+                {
+                    length *= 2;
+                    writtenSpan = writer.GetSpan(length);
+                }
+                writer.Advance(bytesWritten);
+
+                // integer check
+                if (!writtenSpan.Slice(0, bytesWritten).ContainsAny(".eE"u8))
+                {
+                    var writtenSpanEx = writer.GetWrittenSpan(2);
+                    writtenSpanEx[0] = TomlCodes.Symbol.DOT;
+                    writtenSpanEx[1] = TomlCodes.Number.Zero;
+                }
+                return;
         }
     }
 
