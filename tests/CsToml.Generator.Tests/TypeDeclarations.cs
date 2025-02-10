@@ -148,6 +148,22 @@ internal partial class TomlPrimitive
 }
 
 [TomlSerializedObject]
+public partial class TypeTomlDouble
+{
+    [TomlValueOnSerialized]
+    public double Normal { get; set; }
+
+    [TomlValueOnSerialized]
+    public double Inf { get; set; }
+
+    [TomlValueOnSerialized]
+    public double NInf { get; set; }
+
+    [TomlValueOnSerialized]
+    public double Nan { get; set; }
+}
+
+[TomlSerializedObject]
 internal partial class NullableType
 {
     [TomlValueOnSerialized]
