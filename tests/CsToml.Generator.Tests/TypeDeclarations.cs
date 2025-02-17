@@ -666,6 +666,9 @@ internal partial class TypeImmutable
     public ImmutableList<int> ImmutableList { get; set; }
 
     [TomlValueOnSerialized]
+    public ImmutableStack<int> ImmutableStack { get; set; }
+
+    [TomlValueOnSerialized]
     public ImmutableHashSet<int> ImmutableHashSet { get; set; }
 
     [TomlValueOnSerialized] 
@@ -679,6 +682,25 @@ internal partial class TypeImmutable
 
     [TomlValueOnSerialized]
     public ImmutableSortedDictionary<string, object?> ImmutableSortedDictionary { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class TypeImmutableInterface
+{
+    [TomlValueOnSerialized]
+    public IImmutableList<int> IImmutableList { get; set; }
+
+    [TomlValueOnSerialized]
+    public IImmutableStack<int> IImmutableStack { get; set; }
+
+    [TomlValueOnSerialized]
+    public IImmutableQueue<int> IImmutableQueue { get; set; }
+
+    [TomlValueOnSerialized]
+    public IImmutableSet<int> IImmutableSet { get; set; }
+
+    [TomlValueOnSerialized]
+    public IImmutableDictionary<string, object?> IImmutableDictionary { get; set; }
 }
 
 [TomlSerializedObject]
