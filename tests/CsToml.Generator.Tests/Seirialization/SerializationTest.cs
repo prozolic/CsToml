@@ -2375,6 +2375,7 @@ public class TypeImmutableTest
         {
             ImmutableArray = ImmutableCollectionsMarshal.AsImmutableArray(array),
             ImmutableList = array.ToImmutableList(),
+            ImmutableStack = [5, 4, 3, 2, 1],
             ImmutableHashSet = set.ToImmutableHashSet(),
             ImmutableSortedSet = set.ToImmutableSortedSet(),
             ImmutableQueue = immutableQueue,
@@ -2387,6 +2388,7 @@ public class TypeImmutableTest
             using var buffer = Utf8String.CreateWriter(out var writer);
             writer.AppendLine("ImmutableArray = [ 1, 2, 3, 4, 5 ]");
             writer.AppendLine("ImmutableList = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("ImmutableStack = [ 1, 2, 3, 4, 5 ]");
             writer.AppendLine("ImmutableHashSet = [ 1, 2, 3, 4, 5 ]");
             writer.AppendLine("ImmutableSortedSet = [ 1, 2, 3, 4, 5 ]");
             writer.AppendLine("ImmutableQueue = [ 1, 2, 3, 4, 5 ]");
@@ -2403,6 +2405,7 @@ public class TypeImmutableTest
             using var buffer = Utf8String.CreateWriter(out var writer);
             writer.AppendLine("ImmutableArray = [ 1, 2, 3, 4, 5 ]");
             writer.AppendLine("ImmutableList = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("ImmutableStack = [ 1, 2, 3, 4, 5 ]");
             writer.AppendLine("ImmutableHashSet = [ 1, 2, 3, 4, 5 ]");
             writer.AppendLine("ImmutableSortedSet = [ 1, 2, 3, 4, 5 ]");
             writer.AppendLine("ImmutableQueue = [ 1, 2, 3, 4, 5 ]");
@@ -2421,6 +2424,7 @@ public class TypeImmutableTest
         using var buffer = Utf8String.CreateWriter(out var writer);
         writer.AppendLine("ImmutableArray = [ 1, 2, 3, 4, 5 ]");
         writer.AppendLine("ImmutableList = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("ImmutableStack = [ 1, 2, 3, 4, 5 ]");
         writer.AppendLine("ImmutableHashSet = [ 1, 2, 3, 4, 5 ]");
         writer.AppendLine("ImmutableSortedSet = [ 1, 2, 3, 4, 5 ]");
         writer.AppendLine("ImmutableQueue = [ 1, 2, 3, 4, 5 ]");
@@ -2430,14 +2434,11 @@ public class TypeImmutableTest
 
         var typeImmutable = CsTomlSerializer.Deserialize<TypeImmutable>(buffer.WrittenSpan);
 
-        var array = typeImmutable.ImmutableArray;
-        array.ShouldBe([1, 2, 3, 4, 5]);
-        var list = typeImmutable.ImmutableList;
-        list.ShouldBe([1, 2, 3, 4, 5]);
-        var hashset = typeImmutable.ImmutableHashSet;
-        hashset.ShouldBe([1, 2, 3, 4, 5]);
-        var queue = typeImmutable.ImmutableHashSet;
-        queue.ShouldBe([1, 2, 3, 4, 5]);
+        typeImmutable.ImmutableArray.ShouldBe([1, 2, 3, 4, 5]);
+        typeImmutable.ImmutableList.ShouldBe([1, 2, 3, 4, 5]);
+        typeImmutable.ImmutableStack.ShouldBe([5, 4, 3, 2, 1]);
+        typeImmutable.ImmutableHashSet.ShouldBe([1, 2, 3, 4, 5]);
+        typeImmutable.ImmutableSortedSet.ShouldBe([1, 2, 3, 4, 5]);
 
         {
             dynamic dict = typeImmutable.ImmutableDictionary;
@@ -2452,6 +2453,41 @@ public class TypeImmutableTest
         }
         {
             dynamic dict = typeImmutable.ImmutableSortedDictionary;
+            long value = dict["key"][0];
+            value.ShouldBe(999);
+            string value2 = dict["key"][1];
+            value2.ShouldBe("Value");
+            object[] value3 = dict["key"][2]["key"][0];
+            value3.ShouldBe(new object[] { 1, 2, 3 });
+            string value4 = dict["key"][2]["key"][1]["key"];
+            value4.ShouldBe("value");
+        }
+    }
+}
+
+public class TypeImmutableInterfaceTest
+{
+
+
+    [Fact]
+    public void Deserialize()
+    {
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("IImmutableList = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("IImmutableStack = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("IImmutableSet = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("IImmutableQueue = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("IImmutableDictionary = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
+        writer.Flush();
+
+        var typeImmutableInterface = CsTomlSerializer.Deserialize<TypeImmutableInterface>(buffer.WrittenSpan);
+        typeImmutableInterface.IImmutableList.ShouldBe([1, 2, 3, 4, 5]);
+        typeImmutableInterface.IImmutableStack.ShouldBe([5, 4, 3, 2, 1]);
+        typeImmutableInterface.IImmutableQueue.ShouldBe([1, 2, 3, 4, 5]);
+        typeImmutableInterface.IImmutableSet.ShouldBe([1, 2, 3, 4, 5]);
+
+        {
+            dynamic dict = typeImmutableInterface.IImmutableDictionary;
             long value = dict["key"][0];
             value.ShouldBe(999);
             string value2 = dict["key"][1];
