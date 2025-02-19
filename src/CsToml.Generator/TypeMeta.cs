@@ -9,7 +9,7 @@ internal sealed class TypeMeta
     private INamedTypeSymbol symbol;
     private TypeDeclarationSyntax syntax;
 
-    public IReadOnlyCollection<(IPropertySymbol, TomlSerializationKind, string?)> Members { get; }
+    public ImmutableArray<(IPropertySymbol, TomlSerializationKind, string?)> Members { get; }
     public ImmutableArray<(ITypeSymbol, TomlSerializationKind)> DefinedTypes { get; }
     public string NameSpace { get; }
     public TomlSerializedObjectType Type { get; }
@@ -26,19 +26,16 @@ internal sealed class TypeMeta
             string.Empty :
             $"{symbol.ContainingNamespace}";
 
-        var members = symbol.GetProperties().FilterMembers();
-        Array.Sort(members, static (x, y) => x.Item2 - y.Item2);
-        Members = members;
+        Members = symbol.GetPublicProperties().FilterTomlValueOnSerializedMembers().OrderBy(m => m.Item2).ToImmutableArray();
 
         var typesymbols = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
         foreach (var member in Members)
         {
             SearchTypeSymbol(typesymbols, member.Item1.Type);
         }
-        DefinedTypes = typesymbols.Select(t => (t, t.GetTomlSerializationKind())).ToImmutableArray();
-
+        DefinedTypes = typesymbols.Select(t => (t, FormatterTypeMetaData.GetTomlSerializationKind(t))).ToImmutableArray();
         TypeName = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
-        FullTypeName = symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        FullTypeName = symbol.ToFullFormatString();
 
         if (symbol.IsRecord)
             TypeKeyword = symbol.IsValueType ? "record struct" : "record";
@@ -149,7 +146,7 @@ internal sealed class TypeMeta
                     SearchTypeSymbol(typesymbols, typeParameter);
                 }
             }
-            foreach (var propetryParameter in namedSymbol.GetProperties().FilterMembers())
+            foreach (var propetryParameter in namedSymbol.GetPublicProperties().FilterTomlValueOnSerializedMembers())
             {
                 SearchTypeSymbol(typesymbols, propetryParameter.Item1.Type);
             }
@@ -161,15 +158,14 @@ internal sealed class ConstructorMeta
 {
     private INamedTypeSymbol symbol;
     private TypeDeclarationSyntax syntax;
-    private readonly List<(IMethodSymbol, ImmutableArray<IParameterSymbol>)> instanceConstructors;
 
     public bool IsImplicitlyDeclared { get; }
     public bool IncludeParameterless { get; }
     public bool IsParameterlessOnly { get; }
-    public IReadOnlyList<(IMethodSymbol ctor, ImmutableArray<IParameterSymbol> parameters)> InstanceConstructors => instanceConstructors;
-    public IReadOnlyList<IParameterSymbol> ConstructorParameters { get; }
-    public IReadOnlyList<IPropertySymbol> ConstructorParameterProperties { get; }
-    public IReadOnlyList<IPropertySymbol> MembersOfObjectInitialisers { get; }
+    public ImmutableArray<(IMethodSymbol ctor, ImmutableArray<IParameterSymbol> parameters)> InstanceConstructors { get; }
+    public ImmutableArray<IParameterSymbol> ConstructorParameters { get; }
+    public ImmutableArray<IPropertySymbol> ConstructorParameterProperties { get; }
+    public ImmutableArray<IPropertySymbol> MembersOfObjectInitialisers { get; }
 
     public ConstructorMeta(INamedTypeSymbol symbol, TypeDeclarationSyntax syntax, TypeMeta typeMeta)
     {
@@ -186,7 +182,7 @@ internal sealed class ConstructorMeta
 
             instanceConstructors.Add((constructor, constructor.Parameters));
         }
-        this.instanceConstructors = instanceConstructors;
+        InstanceConstructors = instanceConstructors.ToImmutableArray();
 
         // except the default constructor for a class or struct.
         IsImplicitlyDeclared = instanceConstructors.All(c => c.ctor.IsImplicitlyDeclared);
@@ -204,7 +200,7 @@ internal sealed class ConstructorMeta
                 }
             }
         }
-        this.ConstructorParameters = constructorParameters!;
+        this.ConstructorParameters = constructorParameters!.ToImmutableArray();
 
         var constructorParameterProperties = new List<IPropertySymbol>();
         var membersOfObjectInitialisers = new List<IPropertySymbol>();
@@ -221,8 +217,8 @@ internal sealed class ConstructorMeta
             constructorParameterProperties.Add(property.Item1);
         }
 
-        this.MembersOfObjectInitialisers = membersOfObjectInitialisers;
-        this.ConstructorParameterProperties = constructorParameterProperties;
+        this.MembersOfObjectInitialisers = membersOfObjectInitialisers.ToImmutableArray();
+        this.ConstructorParameterProperties = constructorParameterProperties.ToImmutableArray(); ;
     }
 
     public bool Validate(SourceProductionContext context)
@@ -254,7 +250,7 @@ internal sealed class ConstructorMeta
 
         }
 
-        if (ConstructorParameters.Count == 0 && !IncludeParameterless)
+        if (ConstructorParameters.Length == 0 && !IncludeParameterless)
         {
             context.ReportDiagnostic(
                 Diagnostic.Create(

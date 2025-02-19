@@ -1,4 +1,5 @@
-﻿#pragma warning disable CS8618
+﻿#pragma warning disable CS0649
+#pragma warning disable CS8618
 
 using System.Runtime.CompilerServices;
 

@@ -682,6 +682,134 @@ public class TomlPrimitiveTest
     }
 }
 
+public class TypeIntegerTest()
+{
+    [Fact]
+    public void Serialize()
+    {
+        var integer = new TypeInteger()
+        {
+            Byte = 255,
+            SByte = -128,
+            Short = -12345,
+            UShort = 12345,
+            Int = -123456,
+            Uint = 123456,
+            Long = -1234567,
+            ULong = 1234567,
+            Decimal = 999999,
+            BigInteger = 99999999,
+            Int128 = -99999999,
+            UInt128 = 99999999
+        };
+
+        using var bytes = CsTomlSerializer.Serialize(integer);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Byte = 255");
+        writer.AppendLine("SByte = -128");
+        writer.AppendLine("Short = -12345");
+        writer.AppendLine("UShort = 12345");
+        writer.AppendLine("Int = -123456");
+        writer.AppendLine("Uint = 123456");
+        writer.AppendLine("Long = -1234567");
+        writer.AppendLine("ULong = 1234567");
+        writer.AppendLine("Decimal = 999999");
+        writer.AppendLine("BigInteger = 99999999");
+        writer.AppendLine("Int128 = -99999999");
+        writer.AppendLine("UInt128 = 99999999");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void Deserialize()
+    {
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Byte = 255");
+        writer.AppendLine("SByte = -128");
+        writer.AppendLine("Short = -12345");
+        writer.AppendLine("UShort = 12345");
+        writer.AppendLine("Int = -123456");
+        writer.AppendLine("Uint = 123456");
+        writer.AppendLine("Long = -1234567");
+        writer.AppendLine("ULong = 1234567");
+        writer.AppendLine("Decimal = 999999");
+        writer.AppendLine("BigInteger = 99999999");
+        writer.AppendLine("Int128 = -99999999");
+        writer.AppendLine("UInt128 = 99999999");
+        writer.Flush();
+
+        var typeInteger = CsTomlSerializer.Deserialize<TypeInteger>(buffer.WrittenSpan);
+        typeInteger.Byte.ShouldBe((byte)255);
+        typeInteger.SByte.ShouldBe((sbyte)-128);
+        typeInteger.Short.ShouldBe((short)-12345);
+        typeInteger.UShort.ShouldBe((ushort)12345);
+        typeInteger.Int.ShouldBe(-123456);
+        typeInteger.Uint.ShouldBe((uint)123456);
+        typeInteger.Long.ShouldBe(-1234567);
+        typeInteger.ULong.ShouldBe((ulong)1234567);
+        typeInteger.Decimal.ShouldBe(999999);
+        typeInteger.BigInteger.ShouldBe(99999999);
+        typeInteger.Int128.ShouldBe(-99999999);
+        typeInteger.UInt128.ShouldBe((UInt128)99999999);
+    }
+}
+
+public class TypeBuiltinTest()
+{
+    [Fact]
+    public void Serialize()
+    {
+        var typeBuiltin = new TypeBuiltin()
+        {
+            TimeSpan = new TimeSpan(1, 2, 3, 4, 5),
+            Guid = Guid.Parse("c9da6455-213d-4a7b-8f1a-4d6d1f5c5e9f"),
+            Uri = new Uri("https://github.com/prozolic/CsToml"),
+            Version = new Version(1, 2, 3, 4),
+            BitArray = new BitArray(new[] { true, false, true, false }),
+            Type = typeof(TypeBuiltinTest),
+        };
+
+        using var bytes = CsTomlSerializer.Serialize(typeBuiltin);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("TimeSpan = 937840050000");
+        writer.AppendLine("Guid = \"c9da6455-213d-4a7b-8f1a-4d6d1f5c5e9f\"");
+        writer.AppendLine("Version = \"1.2.3.4\"");
+        writer.AppendLine("Uri = \"https://github.com/prozolic/CsToml\"");
+        writer.AppendLine("BitArray = [ true, false, true, false ]");
+        writer.AppendLine("Type = \"CsToml.Generator.Tests.Seirialization.TypeBuiltinTest, CsToml.Generator.Tests, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null\"");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void Deserialize()
+    {
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("TimeSpan = 937840050000");
+        writer.AppendLine("Guid = \"c9da6455-213d-4a7b-8f1a-4d6d1f5c5e9f\"");
+        writer.AppendLine("Version = \"1.2.3.4\"");
+        writer.AppendLine("Uri = \"https://github.com/prozolic/CsToml\"");
+        writer.AppendLine("BitArray = [ true, false, true, false ]");
+        writer.AppendLine("Type = \"CsToml.Generator.Tests.Seirialization.TypeBuiltinTest, CsToml.Generator.Tests, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null\"");
+        writer.Flush();
+
+        var typeBuiltin = CsTomlSerializer.Deserialize<TypeBuiltin>(buffer.WrittenSpan);
+        typeBuiltin.TimeSpan.ShouldBe(new TimeSpan(1, 2, 3, 4, 5));
+        typeBuiltin.Guid.ShouldBe(Guid.Parse("c9da6455-213d-4a7b-8f1a-4d6d1f5c5e9f"));
+        typeBuiltin.Uri.ShouldBe(new Uri("https://github.com/prozolic/CsToml"));
+        typeBuiltin.Version.ShouldBe(new Version(1, 2, 3, 4));
+        typeBuiltin.BitArray.ShouldBe(new BitArray(new[] { true, false, true, false }));
+        typeBuiltin.Type.ShouldBe(typeof(TypeBuiltinTest));
+    }
+}
+
 public class TypeTomlDoubleTest
 {
     [Fact]
@@ -2468,6 +2596,76 @@ public class TypeImmutableTest
 public class TypeImmutableInterfaceTest
 {
 
+    [Fact]
+    public void Serialize()
+    {
+        int[] array = [1, 2, 3, 4, 5];
+        var set = new HashSet<int>(array);
+        var queue = new Queue<int>(array);
+        var immutableQueue = ImmutableQueue<int>.Empty;
+        for (var i = queue.Count - 1; i >= 0; i--)
+        {
+            immutableQueue = immutableQueue.Enqueue(queue.Dequeue());
+        }
+
+        var dict = new Dictionary<string, object?>()
+        {
+            ["key"] = new object[]
+            {
+                999,
+                "Value",
+                new Dictionary<string, object?>()
+                {
+                    ["key"] = new object[]
+                    {
+                        new long[] {1, 2, 3},
+                        new Dictionary<string, object?>()
+                        {
+                            ["key"] = "value"
+                        }
+                    }
+                }
+            }
+        };
+
+        var type = new TypeImmutableInterface()
+        {
+            IImmutableList = array.ToImmutableList(),
+            IImmutableStack = [5, 4, 3, 2, 1],
+            IImmutableSet = set.ToImmutableHashSet(),
+            IImmutableQueue = immutableQueue,
+            IImmutableDictionary = dict.ToImmutableDictionary(),
+        };
+
+        {
+            using var bytes = CsTomlSerializer.Serialize(type);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("IImmutableList = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("IImmutableStack = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("IImmutableQueue = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("IImmutableSet = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("IImmutableDictionary = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("IImmutableList = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("IImmutableStack = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("IImmutableQueue = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("IImmutableSet = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("IImmutableDictionary = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
+        }
+    }
 
     [Fact]
     public void Deserialize()
@@ -2475,8 +2673,8 @@ public class TypeImmutableInterfaceTest
         using var buffer = Utf8String.CreateWriter(out var writer);
         writer.AppendLine("IImmutableList = [ 1, 2, 3, 4, 5 ]");
         writer.AppendLine("IImmutableStack = [ 1, 2, 3, 4, 5 ]");
-        writer.AppendLine("IImmutableSet = [ 1, 2, 3, 4, 5 ]");
         writer.AppendLine("IImmutableQueue = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("IImmutableSet = [ 1, 2, 3, 4, 5 ]");
         writer.AppendLine("IImmutableDictionary = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
         writer.Flush();
 
@@ -2497,6 +2695,78 @@ public class TypeImmutableInterfaceTest
             string value4 = dict["key"][2]["key"][1]["key"];
             value4.ShouldBe("value");
         }
+    }
+}
+
+public class TypeImmutableTest2
+{
+    [Fact]
+    public void Serialize()
+    {
+        var type = new TypeImmutable2()
+        {
+            ImmutableArray = [new TypeTable3() { Value = "[1] This is TypeTable3 in ImmutableArray" },
+                              new TypeTable3() { Value = "[2] This is TypeTable3 in ImmutableArray" },
+                              new TypeTable3() { Value = "[3] This is TypeTable3 in ImmutableArray" }],
+            ImmutableList = [new TypeTable3() { Value = "[1] This is TypeTable3 in ImmutableList" },
+                              new TypeTable3() { Value = "[2] This is TypeTable3 in ImmutableList" },
+                              new TypeTable3() { Value = "[3] This is TypeTable3 in ImmutableList" }],
+            IImmutableList = [new TypeTable3() { Value = "[1] This is TypeTable3 in IImmutableList" },
+                              new TypeTable3() { Value = "[2] This is TypeTable3 in IImmutableList" },
+                              new TypeTable3() { Value = "[3] This is TypeTable3 in IImmutableList" }],
+        };
+
+        {
+            using var bytes = CsTomlSerializer.Serialize(type);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("ImmutableArray = [ {Value = \"[1] This is TypeTable3 in ImmutableArray\"}, {Value = \"[2] This is TypeTable3 in ImmutableArray\"}, {Value = \"[3] This is TypeTable3 in ImmutableArray\"} ]");
+            writer.AppendLine("ImmutableList = [ {Value = \"[1] This is TypeTable3 in ImmutableList\"}, {Value = \"[2] This is TypeTable3 in ImmutableList\"}, {Value = \"[3] This is TypeTable3 in ImmutableList\"} ]");
+            writer.AppendLine("IImmutableList = [ {Value = \"[1] This is TypeTable3 in IImmutableList\"}, {Value = \"[2] This is TypeTable3 in IImmutableList\"}, {Value = \"[3] This is TypeTable3 in IImmutableList\"} ]");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("ImmutableArray = [ {Value = \"[1] This is TypeTable3 in ImmutableArray\"}, {Value = \"[2] This is TypeTable3 in ImmutableArray\"}, {Value = \"[3] This is TypeTable3 in ImmutableArray\"} ]");
+            writer.AppendLine("ImmutableList = [ {Value = \"[1] This is TypeTable3 in ImmutableList\"}, {Value = \"[2] This is TypeTable3 in ImmutableList\"}, {Value = \"[3] This is TypeTable3 in ImmutableList\"} ]");
+            writer.AppendLine("IImmutableList = [ {Value = \"[1] This is TypeTable3 in IImmutableList\"}, {Value = \"[2] This is TypeTable3 in IImmutableList\"}, {Value = \"[3] This is TypeTable3 in IImmutableList\"} ]");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
+        }
+    }
+
+    [Fact]
+    public void Deserialize()
+    {
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("ImmutableArray = [ {Value = \"[1] This is TypeTable3 in ImmutableArray\"}, {Value = \"[2] This is TypeTable3 in ImmutableArray\"}, {Value = \"[3] This is TypeTable3 in ImmutableArray\"} ]");
+        writer.AppendLine("ImmutableList = [ {Value = \"[1] This is TypeTable3 in ImmutableList\"}, {Value = \"[2] This is TypeTable3 in ImmutableList\"}, {Value = \"[3] This is TypeTable3 in ImmutableList\"} ]");
+        writer.AppendLine("IImmutableList = [ {Value = \"[1] This is TypeTable3 in IImmutableList\"}, {Value = \"[2] This is TypeTable3 in IImmutableList\"}, {Value = \"[3] This is TypeTable3 in IImmutableList\"} ]");
+        writer.Flush();
+
+        var typeImmutable2 = CsTomlSerializer.Deserialize<TypeImmutable2>(buffer.WrittenSpan);
+
+        typeImmutable2.IImmutableList.Count.ShouldBe(3);
+        typeImmutable2.IImmutableList[0].Value.ShouldBe("[1] This is TypeTable3 in IImmutableList");
+        typeImmutable2.IImmutableList[1].Value.ShouldBe("[2] This is TypeTable3 in IImmutableList");
+        typeImmutable2.IImmutableList[2].Value.ShouldBe("[3] This is TypeTable3 in IImmutableList");
+
+        typeImmutable2.ImmutableList.Count.ShouldBe(3);
+        typeImmutable2.ImmutableList[0].Value.ShouldBe("[1] This is TypeTable3 in ImmutableList");
+        typeImmutable2.ImmutableList[1].Value.ShouldBe("[2] This is TypeTable3 in ImmutableList");
+        typeImmutable2.ImmutableList[2].Value.ShouldBe("[3] This is TypeTable3 in ImmutableList");
+
+        typeImmutable2.ImmutableArray.Length.ShouldBe(3);
+        typeImmutable2.ImmutableArray[0].Value.ShouldBe("[1] This is TypeTable3 in ImmutableArray");
+        typeImmutable2.ImmutableArray[1].Value.ShouldBe("[2] This is TypeTable3 in ImmutableArray");
+        typeImmutable2.ImmutableArray[2].Value.ShouldBe("[3] This is TypeTable3 in ImmutableArray");
     }
 }
 

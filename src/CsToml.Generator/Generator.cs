@@ -115,12 +115,12 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
             var propertyName = property.Name;
 
             builder.AppendLine($"        var __{propertyName}__RootNode = rootNode[{$"\"{accessName}\"u8"}];");
-            builder.AppendLine($"        var __{propertyName}__ = options.Resolver.GetFormatter<{property.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>()!.Deserialize(ref __{propertyName}__RootNode, options);");
+            builder.AppendLine($"        var __{propertyName}__ = options.Resolver.GetFormatter<{property.Type.ToFullFormatString()}>()!.Deserialize(ref __{propertyName}__RootNode, options);");
         }
 
         builder.AppendLine();
 
-        if (constructorMeta.IsImplicitlyDeclared || constructorMeta.IsParameterlessOnly || (constructorMeta.ConstructorParameters.Count == 0 && constructorMeta.IncludeParameterless))
+        if (constructorMeta.IsImplicitlyDeclared || constructorMeta.IsParameterlessOnly || (constructorMeta.ConstructorParameters.Length == 0 && constructorMeta.IncludeParameterless))
         {
             builder.AppendLine($"        var target = new {typeMeta.TypeName}(){{");
             foreach (var (property, kind, aliasName) in typeMeta.Members)
@@ -136,19 +136,19 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
         {
             builder.Append($"        var target = new {typeMeta.TypeName}(");
 
-            for (var i = 0; i < constructorMeta.ConstructorParameterProperties.Count; i++)
+            for (var i = 0; i < constructorMeta.ConstructorParameterProperties.Length; i++)
             {
                 var p = constructorMeta.ConstructorParameterProperties[i];
                 var propertyName = p.Name;
                 builder.Append($"__{propertyName}__");
-                if (i < constructorMeta.ConstructorParameters.Count - 1)
+                if (i < constructorMeta.ConstructorParameters.Length - 1)
                 {
                     builder.Append(", ");
                 }
             }
             builder.Append($")");
 
-            if (constructorMeta.MembersOfObjectInitialisers.Count > 0)
+            if (constructorMeta.MembersOfObjectInitialisers.Length > 0)
             {
                 builder.AppendLine($"{{");
                 foreach (var property in constructorMeta.MembersOfObjectInitialisers)
@@ -174,7 +174,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
         var builder = new StringBuilder();
 
         var members = typeMeta.Members;
-        var onlyTomlSerializedObject = members.Count == 1 && members.First().Item2 == TomlSerializationKind.TomlSerializedObject;
+        var onlyTomlSerializedObject = members.Length == 1 && members.First().Item2 == TomlSerializationKind.TomlSerializedObject;
         if (!onlyTomlSerializedObject)
         {
             builder.AppendLine("        writer.BeginScope();");
@@ -191,8 +191,8 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
             {
                 builder.AppendLine($"        writer.WriteKey({$"\"{accessName}\"u8"});");
                 builder.AppendLine($"        writer.WriteEqual();");
-                builder.AppendLine($"        options.Resolver.GetFormatter<{property.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>()!.Serialize(ref writer, target.{propertyName}, options);");
-                if (memberCount == typeMeta.Members.Count)
+                builder.AppendLine($"        options.Resolver.GetFormatter<{property.Type.ToFullFormatString()}>()!.Serialize(ref writer, target.{propertyName}, options);");
+                if (memberCount == typeMeta.Members.Length)
                 {
                     builder.AppendLine($"        writer.EndKeyValue(true);");
                 }
@@ -208,14 +208,14 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                 builder.AppendLine($"            writer.WriteNewLine();");
                 builder.AppendLine($"            writer.BeginCurrentState(TomlValueState.Table);");
                 builder.AppendLine($"            writer.PushKey({$"\"{accessName}\"u8"});");
-                builder.AppendLine($"            options.Resolver.GetFormatter<{property.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>()!.Serialize(ref writer, target.{propertyName}, options);");
+                builder.AppendLine($"            options.Resolver.GetFormatter<{property.Type.ToFullFormatString()}>()!.Serialize(ref writer, target.{propertyName}, options);");
                 builder.AppendLine($"            writer.PopKey();");
                 builder.AppendLine($"            writer.EndCurrentState();");
                 builder.AppendLine($"        }}");
                 builder.AppendLine($"        else");
                 builder.AppendLine($"        {{");
                 builder.AppendLine($"            writer.PushKey({$"\"{accessName}\"u8"});");
-                builder.AppendLine($"            options.Resolver.GetFormatter<{property.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>()!.Serialize(ref writer, target.{propertyName}, options);");
+                builder.AppendLine($"            options.Resolver.GetFormatter<{property.Type.ToFullFormatString()}>()!.Serialize(ref writer, target.{propertyName}, options);");
                 builder.AppendLine($"            writer.PopKey();");
                 builder.AppendLine($"        }}");
             }
@@ -226,9 +226,9 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                 builder.AppendLine($"        writer.WriteKey({$"\"{accessName}\"u8"});");
                 builder.AppendLine($"        writer.WriteEqual();");
                 builder.AppendLine($"        writer.BeginCurrentState(TomlValueState.ArrayOfTable);");
-                builder.AppendLine($"        options.Resolver.GetFormatter<{property.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>()!.Serialize(ref writer, target.{propertyName}, options);");
+                builder.AppendLine($"        options.Resolver.GetFormatter<{property.Type.ToFullFormatString()}>()!.Serialize(ref writer, target.{propertyName}, options);");
                 builder.AppendLine($"        writer.EndCurrentState();");
-                if (memberCount == typeMeta.Members.Count)
+                if (memberCount == typeMeta.Members.Length)
                 {
                     builder.AppendLine($"        writer.EndKeyValue(true);");
                 }
@@ -241,8 +241,8 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
             {
                 builder.AppendLine($"        writer.WriteKey({$"\"{accessName}\"u8"});");
                 builder.AppendLine($"        writer.WriteEqual();");
-                builder.AppendLine($"        options.Resolver.GetFormatter<{property.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>()!.Serialize(ref writer, target.{propertyName}, options);");
-                if (memberCount == typeMeta.Members.Count)
+                builder.AppendLine($"        options.Resolver.GetFormatter<{property.Type.ToFullFormatString()}>()!.Serialize(ref writer, target.{propertyName}, options);");
+                if (memberCount == typeMeta.Members.Length)
                 {
                     builder.AppendLine($"        writer.EndKeyValue(true);");
                 }
@@ -271,17 +271,17 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                     continue;
                 case TomlSerializationKind.Enum:
                     builder.AppendLine($$"""
-        if (!TomlValueFormatterResolver.IsRegistered<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>())
+        if (!TomlValueFormatterResolver.IsRegistered<{{type.ToFullFormatString()}}>())
         {
-            TomlValueFormatterResolver.Register(new EnumFormatter<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>());
+            TomlValueFormatterResolver.Register(new EnumFormatter<{{type.ToFullFormatString()}}>());
         }
 """);
                     break;
                 case TomlSerializationKind.TomlSerializedObject:
                     builder.AppendLine($$"""
-        if (!TomlValueFormatterResolver.IsRegistered<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>())
+        if (!TomlValueFormatterResolver.IsRegistered<{{type.ToFullFormatString()}}>())
         {
-            TomlValueFormatterResolver.Register<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>();
+            TomlValueFormatterResolver.Register<{{type.ToFullFormatString()}}>();
         }
 """);
                     continue;
@@ -290,22 +290,21 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                     var elementType = arrayNamedType.ElementType;
 
                     builder.AppendLine($$"""
-        if (!TomlValueFormatterResolver.IsRegistered<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>())
+        if (!TomlValueFormatterResolver.IsRegistered<{{type.ToFullFormatString()}}>())
         {
-            TomlValueFormatterResolver.Register(new ArrayFormatter<{{elementType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>());
+            TomlValueFormatterResolver.Register(new ArrayFormatter<{{elementType.ToFullFormatString()}}>());
         }
 """);
                     break;
                 case TomlSerializationKind.CollectionOfITomlSerializedObject:
-                    var collectionNamedType = (INamedTypeSymbol)type;
-                    var collectionType = collectionNamedType.ConstructUnboundGenericType();
-                    if (FormatterTypeMetaData.TryGetGeneratedFormatterType(collectionType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat), out var formatter))
+                    if (FormatterTypeMetaData.TryGetFormatterType(type, out var formatter))
                     {
-                        var typeParameters = string.Join(",", collectionNamedType.TypeArguments.Select(x => x.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)));
-                        formatter = formatter.Replace("TYPEPARAMETER", typeParameters);
+                        var collectionNamedType = (INamedTypeSymbol)type;
+                        var typeParameters = string.Join(",", collectionNamedType.TypeArguments.Select(x => x.ToFullFormatString()));
+                        formatter = formatter!.Replace("TYPEPARAMETER", typeParameters);
 
                         builder.AppendLine($$"""
-        if (!TomlValueFormatterResolver.IsRegistered<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>())
+        if (!TomlValueFormatterResolver.IsRegistered<{{type.ToFullFormatString()}}>())
         {
             TomlValueFormatterResolver.Register(new {{formatter}}());
         }
@@ -313,15 +312,14 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                     }
                     break;
                 case TomlSerializationKind.Dictionary:
-                    var dictNamedType = (INamedTypeSymbol)type;
-                    var dictType = dictNamedType.ConstructUnboundGenericType();
-                    if (FormatterTypeMetaData.TryGetGeneratedFormatterType(dictType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat), out var dictFormatter))
+                    if (FormatterTypeMetaData.TryGetFormatterType(type, out var dictFormatter))
                     {
-                        var typeParameters = string.Join(",", dictNamedType.TypeArguments.Select(x => x.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)));
-                        dictFormatter = dictFormatter.Replace("TYPEPARAMETER", typeParameters);
+                        var dictNamedType = (INamedTypeSymbol)type;
+                        var typeParameters = string.Join(",", dictNamedType.TypeArguments.Select(x => x.ToFullFormatString()));
+                        dictFormatter = dictFormatter!.Replace("TYPEPARAMETER", typeParameters);
 
                         builder.AppendLine($$"""
-        if (!TomlValueFormatterResolver.IsRegistered<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>())
+        if (!TomlValueFormatterResolver.IsRegistered<{{type.ToFullFormatString()}}>())
         {
             TomlValueFormatterResolver.Register(new {{dictFormatter}}());
         }
@@ -329,29 +327,31 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                     }
                     break;
                 default:
-                    if (FormatterTypeMetaData.ContainsBuiltInFormatterType(type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)))
+                    if (FormatterTypeMetaData.ContainsBuiltInFormatterType(type))
                         break;
 
                     if (type is INamedTypeSymbol namedTypeSymbol && namedTypeSymbol.IsGenericType)
                     {
+                        // Nullable<T> is a special case.
                         var typeSymbol = namedTypeSymbol.ConstructUnboundGenericType();
                         if (typeSymbol.ToDisplayString() == "T?")
                         {
                             builder.AppendLine($$"""
-        if (!TomlValueFormatterResolver.IsRegistered<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>())
+        if (!TomlValueFormatterResolver.IsRegistered<{{type.ToFullFormatString()}}>())
         {
-            TomlValueFormatterResolver.Register(new NullableFormatter<{{namedTypeSymbol.TypeArguments[0].ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>());
+            TomlValueFormatterResolver.Register(new NullableFormatter<{{namedTypeSymbol.TypeArguments[0].ToFullFormatString()}}>());
         }
 """);
                             break;
                         }
-                        if (FormatterTypeMetaData.TryGetGeneratedFormatterType(typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat), out var typeFormatter))
+
+                        if (FormatterTypeMetaData.TryGetFormatterType(typeSymbol.ToFullFormatString(), out var typeFormatter))
                         {
-                            var typeParameters = string.Join(",", namedTypeSymbol.TypeArguments.Select(x => x.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)));
+                            var typeParameters = string.Join(",", namedTypeSymbol.TypeArguments.Select(x => x.ToFullFormatString()));
                             typeFormatter = typeFormatter.Replace("TYPEPARAMETER", typeParameters);
 
                             builder.AppendLine($$"""
-        if (!TomlValueFormatterResolver.IsRegistered<{{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}>())
+        if (!TomlValueFormatterResolver.IsRegistered<{{type.ToFullFormatString()}}>())
         {
             TomlValueFormatterResolver.Register(new {{typeFormatter}}());
         }

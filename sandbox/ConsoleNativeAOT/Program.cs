@@ -8,6 +8,7 @@ using System.Reflection.Metadata;
 using System.Xml.Linq;
 using System.Collections.ObjectModel;
 using CsToml.Values;
+using System.Collections.Immutable;
 
 Console.WriteLine("Hello, World!");
 
@@ -120,7 +121,7 @@ var testClass = new TestClass()
     {
          new TestStruct() { Value = 999, Str = "Test" },
          new TestStruct() { Value = 999, Str = "Test" },
-    },
+    }.ToImmutableHashSet(),
     TestStruct2 = new Custom() { Value = 12345 }
 };
 
@@ -133,10 +134,37 @@ var deserializedTestClass = CsTomlSerializer.Deserialize<TestClass>(text.ByteSpa
 var testEnum = CsTomlSerializer.Deserialize<TestEnum>(@"color = ""Red"""u8);
 Console.WriteLine(testEnum.color);
 
-// 
 var sample = CsTomlSerializer.Deserialize<Sample>(@"Key = 12345"u8);
 Console.WriteLine($"Sample.Custom = {sample.Key.Value}");
 
+var type = new TypeImmutable()
+{
+ImmutableArray = [new TypeTable() { Value = "[1] This is TypeTable in ImmutableArray" },
+                              new TypeTable() { Value = "[2] This is TypeTable in ImmutableArray" },
+                              new TypeTable() { Value = "[3] This is TypeTable in ImmutableArray" }],
+ImmutableList = [new TypeTable() { Value = "[1] This is TypeTable in ImmutableList" },
+                              new TypeTable() { Value = "[2] This is TypeTable in ImmutableList" },
+                              new TypeTable() { Value = "[3] This is TypeTable in ImmutableList" }],
+IImmutableList = [new TypeTable() { Value = "[1] This is TypeTable in IImmutableList" },
+                              new TypeTable() { Value = "[2] This is TypeTable in IImmutableList" },
+                              new TypeTable() { Value = "[3] This is TypeTable in IImmutableList" }],
+};
+
+Console.WriteLine($"Check TypeImmutable");
+using var bytes = CsTomlSerializer.Serialize(type);
+var typeImmutable2 = CsTomlSerializer.Deserialize<TypeImmutable>(bytes.ByteSpan);
+Console.WriteLine($"{nameof(typeImmutable2.ImmutableArray)}.Length = {typeImmutable2.ImmutableArray.Length}");
+Console.WriteLine($"{nameof(typeImmutable2.ImmutableArray)}[0] = {typeImmutable2.ImmutableArray[0].Value}");
+Console.WriteLine($"{nameof(typeImmutable2.ImmutableArray)}[1] = {typeImmutable2.ImmutableArray[1].Value}");
+Console.WriteLine($"{nameof(typeImmutable2.ImmutableArray)}[2] = {typeImmutable2.ImmutableArray[2].Value}");
+Console.WriteLine($"{nameof(typeImmutable2.ImmutableList)}.Count = {typeImmutable2.ImmutableList.Count}");
+Console.WriteLine($"{nameof(typeImmutable2.ImmutableList)}[0] = {typeImmutable2.ImmutableList[0].Value}");
+Console.WriteLine($"{nameof(typeImmutable2.ImmutableList)}[1] = {typeImmutable2.ImmutableList[1].Value}");
+Console.WriteLine($"{nameof(typeImmutable2.ImmutableList)}[2] = {typeImmutable2.ImmutableList[2].Value}");
+Console.WriteLine($"{nameof(typeImmutable2.IImmutableList)}.Count = {typeImmutable2.IImmutableList.Count}");
+Console.WriteLine($"{nameof(typeImmutable2.IImmutableList)}[0] = {typeImmutable2.IImmutableList[0].Value}");
+Console.WriteLine($"{nameof(typeImmutable2.IImmutableList)}[1] = {typeImmutable2.IImmutableList[1].Value}");
+Console.WriteLine($"{nameof(typeImmutable2.IImmutableList)}[2] = {typeImmutable2.IImmutableList[2].Value}");
 Console.WriteLine("END!");
 
 [TomlSerializedObject]
@@ -165,10 +193,10 @@ public partial class TestClass
     public KeyValuePair<int, StringBuilder> Pair { get; set; }
 
     [TomlValueOnSerialized]
-    public ValueTuple<int, int> TwoValueTuple { get; set; } = default!;
+    public ValueTuple<int, int>? TwoValueTuple { get; set; } = default!;
 
     [TomlValueOnSerialized]
-    public List<TestStruct?> TestStructArr { get; set; }
+    public IImmutableSet<TestStruct?> TestStructArr { get; set; }
 
     [TomlValueOnSerialized]
     public Custom TestStruct2 { get; set; }
@@ -244,4 +272,3 @@ public class CustomFormatter : ITomlValueFormatter<Custom>
         writer.WriteInt64(target.Value);
     }
 }
-
