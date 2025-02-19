@@ -1,4 +1,6 @@
-﻿using Microsoft.CodeAnalysis;
+﻿#pragma warning disable RS2008
+
+using Microsoft.CodeAnalysis;
 
 namespace CsToml.Generator;
 

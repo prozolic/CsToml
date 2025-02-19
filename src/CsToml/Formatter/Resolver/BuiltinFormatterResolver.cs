@@ -56,6 +56,12 @@ internal sealed class BuiltinFormatterResolver : ITomlValueFormatterResolver
         { typeof(IDictionary<,>),typeof(IDictionaryFormatter<,>) },
         { typeof(IReadOnlyDictionary<,>),typeof(IReadOnlyDictionaryFormatter<,>) },
 
+        { typeof(IImmutableList<>), typeof(IImmutableListFormatter<>) },
+        { typeof(IImmutableStack<>), typeof(IImmutableStackFormatter<>) },
+        { typeof(IImmutableQueue<>), typeof(IImmutableQueueFormatter<>) },
+        { typeof(IImmutableSet<>), typeof(IImmutableSetFormatter<>) },
+        { typeof(IImmutableDictionary<,>), typeof(IImmutableDictionaryFormatter<,>) },
+
         { typeof(KeyValuePair<,>),  typeof(KeyValuePairFormatter<,>) },
         { typeof(Tuple<>),  typeof(TupleFormatter<>) },
         { typeof(Tuple<,>),  typeof(TupleFormatter<,>) },

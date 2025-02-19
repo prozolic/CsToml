@@ -10,6 +10,7 @@ using System.Collections.ObjectModel;
 using System.Text;
 
 using CsToml.Generator.Other;
+using System.Numerics;
 
 namespace CsToml.Generator.Tests;
 
@@ -145,6 +146,69 @@ internal partial class TomlPrimitive
     [TomlValueOnSerialized]
     public TimeOnly LocalTime { get; set; }
 
+}
+
+[TomlSerializedObject]
+internal partial class TypeInteger
+{
+    [TomlValueOnSerialized]
+    public byte Byte { get; set; }
+
+    [TomlValueOnSerialized]
+    public sbyte SByte { get; set; }
+
+    [TomlValueOnSerialized]
+    public short Short { get; set; }
+
+    [TomlValueOnSerialized]
+    public ushort UShort { get; set; }
+
+    [TomlValueOnSerialized]
+    public int Int { get; set; }
+
+    [TomlValueOnSerialized]
+    public uint Uint { get; set; }
+
+    [TomlValueOnSerialized]
+    public long Long { get; set; }
+
+    [TomlValueOnSerialized]
+    public ulong ULong { get; set; }
+
+    [TomlValueOnSerialized]
+    public decimal Decimal { get; set; }
+
+    [TomlValueOnSerialized]
+    public BigInteger BigInteger { get; set; }
+
+    [TomlValueOnSerialized]
+    public Int128 Int128 { get; set; }
+
+    [TomlValueOnSerialized]
+    public UInt128 UInt128 { get; set; }
+
+}
+
+[TomlSerializedObject]
+internal partial class TypeBuiltin
+{
+    [TomlValueOnSerialized]
+    public TimeSpan TimeSpan { get; set; }
+
+    [TomlValueOnSerialized]
+    public Guid Guid { get; set; }
+
+    [TomlValueOnSerialized]
+    public Version Version { get; set; }
+
+    [TomlValueOnSerialized]
+    public Uri Uri { get; set; }
+
+    [TomlValueOnSerialized]
+    public BitArray BitArray { get; set; }
+
+    [TomlValueOnSerialized]
+    public Type Type { get; set; }
 }
 
 [TomlSerializedObject]
@@ -666,6 +730,9 @@ internal partial class TypeImmutable
     public ImmutableList<int> ImmutableList { get; set; }
 
     [TomlValueOnSerialized]
+    public ImmutableStack<int> ImmutableStack { get; set; }
+
+    [TomlValueOnSerialized]
     public ImmutableHashSet<int> ImmutableHashSet { get; set; }
 
     [TomlValueOnSerialized] 
@@ -679,6 +746,38 @@ internal partial class TypeImmutable
 
     [TomlValueOnSerialized]
     public ImmutableSortedDictionary<string, object?> ImmutableSortedDictionary { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class TypeImmutable2
+{
+    [TomlValueOnSerialized]
+    public ImmutableArray<TypeTable3> ImmutableArray { get; set; }
+
+    [TomlValueOnSerialized]
+    public ImmutableList<TypeTable3> ImmutableList { get; set; }
+
+    [TomlValueOnSerialized]
+    public IImmutableList<TypeTable3> IImmutableList { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class TypeImmutableInterface
+{
+    [TomlValueOnSerialized]
+    public IImmutableList<int> IImmutableList { get; set; }
+
+    [TomlValueOnSerialized]
+    public IImmutableStack<int> IImmutableStack { get; set; }
+
+    [TomlValueOnSerialized]
+    public IImmutableQueue<int> IImmutableQueue { get; set; }
+
+    [TomlValueOnSerialized]
+    public IImmutableSet<int> IImmutableSet { get; set; }
+
+    [TomlValueOnSerialized]
+    public IImmutableDictionary<string, object?> IImmutableDictionary { get; set; }
 }
 
 [TomlSerializedObject]
