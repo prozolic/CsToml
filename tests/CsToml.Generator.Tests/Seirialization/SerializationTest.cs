@@ -1453,7 +1453,7 @@ public class TypeDictionaryTest
             using var bytes = CsTomlSerializer.Serialize(type);
 
             using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("Value = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
+            writer.AppendLine("Value = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]}");
             writer.Flush();
 
             var expected = buffer.ToArray();
@@ -1463,32 +1463,55 @@ public class TypeDictionaryTest
             using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
 
             using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("Value = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
+            writer.AppendLine("[Value]");
+            writer.AppendLine("key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]");
             writer.Flush();
 
             var expected = buffer.ToArray();
             bytes.ByteSpan.ToArray().ShouldBe(expected);
+
         }
     }
 
     [Fact]
     public void Deserialize()
     {
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("Value = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]}");
-        writer.Flush();
+        {
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]}");
+            writer.Flush();
 
-        var type = CsTomlSerializer.Deserialize<TypeDictionary>(buffer.WrittenSpan);
-        dynamic dynamicDict = type.Value;
+            var type = CsTomlSerializer.Deserialize<TypeDictionary>(buffer.WrittenSpan);
+            dynamic dynamicDict = type.Value;
 
-        long value = dynamicDict["key"][0];
-        value.ShouldBe(999);
-        string value2 = dynamicDict["key"][1];
-        value2.ShouldBe("Value");
-        object[] value3 = dynamicDict["key"][2]["key"][0];
-        value3.ShouldBe(new object[] { 1, 2, 3 });
-        string value4 = dynamicDict["key"][2]["key"][1]["key"];
-        value4.ShouldBe("value");
+            long value = dynamicDict["key"][0];
+            value.ShouldBe(999);
+            string value2 = dynamicDict["key"][1];
+            value2.ShouldBe("Value");
+            object[] value3 = dynamicDict["key"][2]["key"][0];
+            value3.ShouldBe(new object[] { 1, 2, 3 });
+            string value4 = dynamicDict["key"][2]["key"][1]["key"];
+            value4.ShouldBe("value");
+        }
+        {
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("[Value]");
+            writer.AppendLine("key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]");
+            writer.Flush();
+
+            var type = CsTomlSerializer.Deserialize<TypeDictionary>(buffer.WrittenSpan);
+            dynamic dynamicDict = type.Value;
+
+            long value = dynamicDict["key"][0];
+            value.ShouldBe(999);
+            string value2 = dynamicDict["key"][1];
+            value2.ShouldBe("Value");
+            object[] value3 = dynamicDict["key"][2]["key"][0];
+            value3.ShouldBe(new object[] { 1, 2, 3 });
+            string value4 = dynamicDict["key"][2]["key"][1]["key"];
+            value4.ShouldBe("value");
+        }
+
     }
 }
 
@@ -1529,12 +1552,12 @@ public class TypeDictionaryTest2
             using var bytes = CsTomlSerializer.Serialize(type);
 
             using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("Value = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
-            writer.AppendLine("Value2 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
-            writer.AppendLine("Value3 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
-            writer.AppendLine("Value4 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
-            writer.AppendLine("Value5 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
-            writer.AppendLine("Value6 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
+            writer.AppendLine("Value = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]}");
+            writer.AppendLine("Value2 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]}");
+            writer.AppendLine("Value3 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]}");
+            writer.AppendLine("Value4 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]}");
+            writer.AppendLine("Value5 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]}");
+            writer.AppendLine("Value6 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]}");
             writer.Flush();
 
             var expected = buffer.ToArray();
@@ -1544,12 +1567,18 @@ public class TypeDictionaryTest2
             using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
 
             using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("Value = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
-            writer.AppendLine("Value2 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
-            writer.AppendLine("Value3 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
-            writer.AppendLine("Value4 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
-            writer.AppendLine("Value5 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
-            writer.AppendLine("Value6 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
+            writer.AppendLine("[Value]");
+            writer.AppendLine("key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]");
+            writer.AppendLine("[Value2]");
+            writer.AppendLine("key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]");
+            writer.AppendLine("[Value3]");
+            writer.AppendLine("key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]");
+            writer.AppendLine("[Value4]");
+            writer.AppendLine("key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]");
+            writer.AppendLine("[Value5]");
+            writer.AppendLine("key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]");
+            writer.AppendLine("[Value6]");
+            writer.AppendLine("key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]");
             writer.Flush();
 
             var expected = buffer.ToArray();
@@ -1560,79 +1589,54 @@ public class TypeDictionaryTest2
     [Fact]
     public void Deserialize()
     {
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("Value = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]}");
-        writer.AppendLine("Value2 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]}");
-        writer.AppendLine("Value3 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]}");
-        writer.AppendLine("Value4 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]}");
-        writer.AppendLine("Value5 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]}");
-        writer.AppendLine("Value6 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]}");
-        writer.Flush();
-
-        var type = CsTomlSerializer.Deserialize<TypeDictionary2>(buffer.WrittenSpan);
         {
-            dynamic dynamicDict = type.Value;
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]}");
+            writer.AppendLine("Value2 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]}");
+            writer.AppendLine("Value3 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]}");
+            writer.AppendLine("Value4 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]}");
+            writer.AppendLine("Value5 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]}");
+            writer.AppendLine("Value6 = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]}");
+            writer.Flush();
 
-            long value = dynamicDict["key"][0];
-            value.ShouldBe(999);
-            string value2 = dynamicDict["key"][1];
-            value2.ShouldBe("Value");
-            object[] value3 = dynamicDict["key"][2]["key"][0];
-            value3.ShouldBe(new object[] { 1, 2, 3 });
-            string value4 = dynamicDict["key"][2]["key"][1]["key"];
-            value4.ShouldBe("value");
+            var type = CsTomlSerializer.Deserialize<TypeDictionary2>(buffer.WrittenSpan);
+
+            Validate(type.Value);
+            Validate(type.Value2);
+            Validate(type.Value3);
+            Validate(type.Value4);
+            Validate(type.Value5);
+            Validate(type.Value6);
         }
-        {
-            dynamic dynamicDict = type.Value2;
 
-            long value = dynamicDict["key"][0];
-            value.ShouldBe(999);
-            string value2 = dynamicDict["key"][1];
-            value2.ShouldBe("Value");
-            object[] value3 = dynamicDict["key"][2]["key"][0];
-            value3.ShouldBe(new object[] { 1, 2, 3 });
-            string value4 = dynamicDict["key"][2]["key"][1]["key"];
-            value4.ShouldBe("value");
+        {
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("[Value]");
+            writer.AppendLine("key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]");
+            writer.AppendLine("[Value2]");
+            writer.AppendLine("key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]");
+            writer.AppendLine("[Value3]");
+            writer.AppendLine("key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]");
+            writer.AppendLine("[Value4]");
+            writer.AppendLine("key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]");
+            writer.AppendLine("[Value5]");
+            writer.AppendLine("key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]");
+            writer.AppendLine("[Value6]");
+            writer.AppendLine("key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]");
+            writer.Flush();
+
+            var type = CsTomlSerializer.Deserialize<TypeDictionary2>(buffer.WrittenSpan);
+
+            Validate(type.Value);
+            Validate(type.Value2);
+            Validate(type.Value3);
+            Validate(type.Value4);
+            Validate(type.Value5);
+            Validate(type.Value6);
         }
-        {
-            dynamic dynamicDict = type.Value3;
 
-            long value = dynamicDict["key"][0];
-            value.ShouldBe(999);
-            string value2 = dynamicDict["key"][1];
-            value2.ShouldBe("Value");
-            object[] value3 = dynamicDict["key"][2]["key"][0];
-            value3.ShouldBe(new object[] { 1, 2, 3 });
-            string value4 = dynamicDict["key"][2]["key"][1]["key"];
-            value4.ShouldBe("value");
-        }
+        static void Validate(dynamic dynamicDict)
         {
-            dynamic dynamicDict = type.Value4;
-
-            long value = dynamicDict["key"][0];
-            value.ShouldBe(999);
-            string value2 = dynamicDict["key"][1];
-            value2.ShouldBe("Value");
-            object[] value3 = dynamicDict["key"][2]["key"][0];
-            value3.ShouldBe(new object[] { 1, 2, 3 });
-            string value4 = dynamicDict["key"][2]["key"][1]["key"];
-            value4.ShouldBe("value");
-        }
-        {
-            dynamic dynamicDict = type.Value5;
-
-            long value = dynamicDict["key"][0];
-            value.ShouldBe(999);
-            string value2 = dynamicDict["key"][1];
-            value2.ShouldBe("Value");
-            object[] value3 = dynamicDict["key"][2]["key"][0];
-            value3.ShouldBe(new object[] { 1, 2, 3 });
-            string value4 = dynamicDict["key"][2]["key"][1]["key"];
-            value4.ShouldBe("value");
-        }
-        {
-            dynamic dynamicDict = type.Value6;
-
             long value = dynamicDict["key"][0];
             value.ShouldBe(999);
             string value2 = dynamicDict["key"][1];
@@ -1656,8 +1660,8 @@ public class TypeDictionaryTest3
             Value = new Dictionary<long, string>()
             {
                 [123] = "Value",
-                [-1] = "Value",
-                [123456789] = "Value",
+                [-1] = "Value2",
+                [123456789] = "Value3",
             }
         };
 
@@ -1665,7 +1669,7 @@ public class TypeDictionaryTest3
             using var bytes = CsTomlSerializer.Serialize(type);
 
             using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("Value = {123 = \"Value\", -1 = \"Value\", 123456789 = \"Value\"}");
+            writer.AppendLine("Value = {123 = \"Value\", -1 = \"Value2\", 123456789 = \"Value3\"}");
             writer.Flush();
 
             var expected = buffer.ToArray();
@@ -1675,7 +1679,10 @@ public class TypeDictionaryTest3
             using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
 
             using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("Value = {123 = \"Value\", -1 = \"Value\", 123456789 = \"Value\"}");
+            writer.AppendLine("[Value]");
+            writer.AppendLine("123 = \"Value\"");
+            writer.AppendLine("-1 = \"Value2\"");
+            writer.AppendLine("123456789 = \"Value3\"");
             writer.Flush();
 
             var expected = buffer.ToArray();
@@ -1686,19 +1693,36 @@ public class TypeDictionaryTest3
     [Fact]
     public void Deserialize()
     {
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("Value = {123 = \"Value\", -1 = \"Value2\", 123456789 = \"Value3\" }");
-        writer.Flush();
+        {
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = {123 = \"Value\", -1 = \"Value2\", 123456789 = \"Value3\" }");
+            writer.Flush();
 
-        var type = CsTomlSerializer.Deserialize<TypeDictionary3>(buffer.WrittenSpan);
-        var dynamicDict = type.Value;
+            var type = CsTomlSerializer.Deserialize<TypeDictionary3>(buffer.WrittenSpan);
+            Validate(type.Value);
+        }
 
-        string value = dynamicDict[123];
-        value.ShouldBe("Value");
-        string value2 = dynamicDict[-1];
-        value2.ShouldBe("Value2");
-        string value3 = dynamicDict[123456789];
-        value3.ShouldBe("Value3");
+        {
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("[Value]");
+            writer.AppendLine("123 = \"Value\"");
+            writer.AppendLine("-1 = \"Value2\"");
+            writer.AppendLine("123456789 = \"Value3\"");
+            writer.Flush();
+
+            var type = CsTomlSerializer.Deserialize<TypeDictionary3>(buffer.WrittenSpan);
+            Validate(type.Value);
+        }
+
+        static void Validate(dynamic dynamicDict)
+        {
+            string value = dynamicDict[123];
+            value.ShouldBe("Value");
+            string value2 = dynamicDict[-1];
+            value2.ShouldBe("Value2");
+            string value3 = dynamicDict[123456789];
+            value3.ShouldBe("Value3");
+        }
     }
 }
 
@@ -1841,7 +1865,9 @@ public class TypeTableATest
             using var bytes = CsTomlSerializer.Serialize(tableA, Option.Header);
 
             using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("Dict = {1 = \"2\", 3 = \"4\"}");
+            writer.AppendLine("[Dict]");
+            writer.AppendLine("1 = \"2\"");
+            writer.AppendLine("3 = \"4\"");
             writer.AppendLine("[TableB]");
             writer.AppendLine("Value = \"This is TypeTableB\"");
             writer.AppendLine("TableECollection = [ {TableF.Value = \"[1] This is TypeTableF\"}, {TableF.Value = \"[2] This is TypeTableF\"}, {TableF.Value = \"[3] This is TypeTableF\"} ]");
@@ -1853,6 +1879,9 @@ public class TypeTableATest
 
             var expected = buffer.ToArray();
             bytes.ByteSpan.ToArray().ShouldBe(expected);
+
+            var dict = CsTomlSerializer.Deserialize<Dictionary<object, object?>>(bytes.ByteSpan);
+            var sdict = CsTomlSerializer.Serialize(dict, Option.Header);
         }
     }
 
@@ -1861,7 +1890,7 @@ public class TypeTableATest
     {
         {
             using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("Dict = {1 = \"2\", 3 = \"4\"}");
+            writer.AppendLine("Dict = {1 = \"2\", 3 = \"4\" }");
             writer.AppendLine("TableB.Value = \"This is TypeTableB\"");
             writer.AppendLine("TableB.TableECollection = [ {TableF.Value = \"[1] This is TypeTableF\"}, {TableF.Value = \"[2] This is TypeTableF\"}, {TableF.Value = \"[3] This is TypeTableF\"} ]");
             writer.AppendLine("TableB.TableC.Value = \"This is TypeTableC\"");
@@ -1869,39 +1898,39 @@ public class TypeTableATest
             writer.Flush();
 
             var tableA = CsTomlSerializer.Deserialize<TypeTableA>(buffer.WrittenSpan);
-
-            tableA.Dict.Count.ShouldBe(2);
-            tableA.Dict[1].ShouldBe("2");
-            tableA.Dict[3].ShouldBe("4");
-            tableA.TableB.Value.ShouldBe("This is TypeTableB");
-            tableA.TableB.TableC.Value.ShouldBe("This is TypeTableC");
-            tableA.TableB.TableC.TableD.Value.ShouldBe("This is TypeTableD");
-            tableA.TableB.TableECollection.Count.ShouldBe(3);
-            tableA.TableB.TableECollection[0].TableF.Value.ShouldBe("[1] This is TypeTableF");
-            tableA.TableB.TableECollection[1].TableF.Value.ShouldBe("[2] This is TypeTableF");
-            tableA.TableB.TableECollection[2].TableF.Value.ShouldBe("[3] This is TypeTableF");
+            Validate(tableA);
         }
         {
             using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("Dict = {1 = \"2\", 3 = \"4\"}");
-            writer.AppendLine("TableB.Value = \"This is TypeTableB\"");
-            writer.AppendLine("TableB.TableECollection = [ {TableF.Value = \"[1] This is TypeTableF\"}, {TableF.Value = \"[2] This is TypeTableF\"}, {TableF.Value = \"[3] This is TypeTableF\"} ]");
-            writer.AppendLine("TableB.TableC.Value = \"This is TypeTableC\"");
-            writer.AppendLine("TableB.TableC.TableD.Value = \"This is TypeTableD\"");
+            writer.AppendLine("[Dict]");
+            writer.AppendLine("1 = \"2\"");
+            writer.AppendLine("3 = \"4\"");
+            writer.AppendLine("[TableB]");
+            writer.AppendLine("Value = \"This is TypeTableB\"");
+            writer.AppendLine("TableECollection = [ {TableF.Value = \"[1] This is TypeTableF\"}, {TableF.Value = \"[2] This is TypeTableF\"}, {TableF.Value = \"[3] This is TypeTableF\"} ]");
+            writer.AppendLine("[TableB.TableC]");
+            writer.AppendLine("Value = \"This is TypeTableC\"");
+            writer.AppendLine("[TableB.TableC.TableD]");
+            writer.AppendLine("Value = \"This is TypeTableD\"");
             writer.Flush();
 
-            var tableA = CsTomlSerializer.Deserialize<TypeTableA>(buffer.WrittenSpan);
 
-            tableA.Dict.Count.ShouldBe(2);
-            tableA.Dict[1].ShouldBe("2");
-            tableA.Dict[3].ShouldBe("4");
-            tableA.TableB.Value.ShouldBe("This is TypeTableB");
-            tableA.TableB.TableC.Value.ShouldBe("This is TypeTableC");
-            tableA.TableB.TableC.TableD.Value.ShouldBe("This is TypeTableD");
-            tableA.TableB.TableECollection.Count.ShouldBe(3);
-            tableA.TableB.TableECollection[0].TableF.Value.ShouldBe("[1] This is TypeTableF");
-            tableA.TableB.TableECollection[1].TableF.Value.ShouldBe("[2] This is TypeTableF");
-            tableA.TableB.TableECollection[2].TableF.Value.ShouldBe("[3] This is TypeTableF");
+            var tableA = CsTomlSerializer.Deserialize<TypeTableA>(buffer.WrittenSpan);
+            Validate(tableA);
+        }
+
+        static void Validate(TypeTableA typeTableA)
+        {
+            typeTableA.Dict.Count.ShouldBe(2);
+            typeTableA.Dict[1].ShouldBe("2");
+            typeTableA.Dict[3].ShouldBe("4");
+            typeTableA.TableB.Value.ShouldBe("This is TypeTableB");
+            typeTableA.TableB.TableC.Value.ShouldBe("This is TypeTableC");
+            typeTableA.TableB.TableC.TableD.Value.ShouldBe("This is TypeTableD");
+            typeTableA.TableB.TableECollection.Count.ShouldBe(3);
+            typeTableA.TableB.TableECollection[0].TableF.Value.ShouldBe("[1] This is TypeTableF");
+            typeTableA.TableB.TableECollection[1].TableF.Value.ShouldBe("[2] This is TypeTableF");
+            typeTableA.TableB.TableECollection[2].TableF.Value.ShouldBe("[3] This is TypeTableF");
         }
     }
 
@@ -1925,7 +1954,7 @@ public class TypeSortedListTest
             using var bytes = CsTomlSerializer.Serialize(type);
 
             using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("Value = [ [ \"key\", \"value\" ], [ \"key2\", \"value2\" ], [ \"key3\", \"value3\" ] ]");
+            writer.AppendLine("Value = {key = \"value\", key2 = \"value2\", key3 = \"value3\"}");
             writer.Flush();
 
             var expected = buffer.ToArray();
@@ -1935,7 +1964,10 @@ public class TypeSortedListTest
             using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
 
             using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("Value = [ [ \"key\", \"value\" ], [ \"key2\", \"value2\" ], [ \"key3\", \"value3\" ] ]");
+            writer.AppendLine("[Value]");
+            writer.AppendLine("key = \"value\"");
+            writer.AppendLine("key2 = \"value2\"");
+            writer.AppendLine("key3 = \"value3\"");
             writer.Flush();
 
             var expected = buffer.ToArray();
@@ -1946,10 +1978,6 @@ public class TypeSortedListTest
     [Fact]
     public void Deserialize()
     {
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("Value = [ [ \"key\", \"value\" ], [ \"key2\", \"value2\" ], [ \"key3\", \"value3\" ] ]");
-        writer.Flush();
-
         var expected = new SortedList<string, string>()
         {
             ["key"] = "value",
@@ -1957,8 +1985,25 @@ public class TypeSortedListTest
             ["key3"] = "value3",
         };
 
-        var type = CsTomlSerializer.Deserialize<TypeSortedList>(buffer.WrittenSpan);
-        type.Value.SequenceEqual(expected).ShouldBeTrue();
+        {
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = {key = \"value\", key2 = \"value2\", key3 = \"value3\" }");
+            writer.Flush();
+
+            var type = CsTomlSerializer.Deserialize<TypeSortedList>(buffer.WrittenSpan);
+            type.Value.SequenceEqual(expected).ShouldBeTrue();
+        }
+        {
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("[Value]");
+            writer.AppendLine("key = \"value\"");
+            writer.AppendLine("key2 = \"value2\"");
+            writer.AppendLine("key3 = \"value3\"");
+            writer.Flush();
+
+            var type = CsTomlSerializer.Deserialize<TypeSortedList>(buffer.WrittenSpan);
+            type.Value.SequenceEqual(expected).ShouldBeTrue();
+        }
     }
 }
 
@@ -2520,8 +2565,8 @@ public class TypeImmutableTest
             writer.AppendLine("ImmutableHashSet = [ 1, 2, 3, 4, 5 ]");
             writer.AppendLine("ImmutableSortedSet = [ 1, 2, 3, 4, 5 ]");
             writer.AppendLine("ImmutableQueue = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("ImmutableDictionary = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
-            writer.AppendLine("ImmutableSortedDictionary = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
+            writer.AppendLine("ImmutableDictionary = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]}");
+            writer.AppendLine("ImmutableSortedDictionary = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]}");
             writer.Flush();
 
             var expected = buffer.ToArray();
@@ -2537,8 +2582,10 @@ public class TypeImmutableTest
             writer.AppendLine("ImmutableHashSet = [ 1, 2, 3, 4, 5 ]");
             writer.AppendLine("ImmutableSortedSet = [ 1, 2, 3, 4, 5 ]");
             writer.AppendLine("ImmutableQueue = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("ImmutableDictionary = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
-            writer.AppendLine("ImmutableSortedDictionary = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
+            writer.AppendLine("[ImmutableDictionary]");
+            writer.AppendLine("key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]");
+            writer.AppendLine("[ImmutableSortedDictionary]");
+            writer.AppendLine("key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]");
             writer.Flush();
 
             var expected = buffer.ToArray();
@@ -2549,38 +2596,55 @@ public class TypeImmutableTest
     [Fact]
     public void Deserialize()
     {
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("ImmutableArray = [ 1, 2, 3, 4, 5 ]");
-        writer.AppendLine("ImmutableList = [ 1, 2, 3, 4, 5 ]");
-        writer.AppendLine("ImmutableStack = [ 1, 2, 3, 4, 5 ]");
-        writer.AppendLine("ImmutableHashSet = [ 1, 2, 3, 4, 5 ]");
-        writer.AppendLine("ImmutableSortedSet = [ 1, 2, 3, 4, 5 ]");
-        writer.AppendLine("ImmutableQueue = [ 1, 2, 3, 4, 5 ]");
-        writer.AppendLine("ImmutableDictionary = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
-        writer.AppendLine("ImmutableSortedDictionary = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
-        writer.Flush();
-
-        var typeImmutable = CsTomlSerializer.Deserialize<TypeImmutable>(buffer.WrittenSpan);
-
-        typeImmutable.ImmutableArray.ShouldBe([1, 2, 3, 4, 5]);
-        typeImmutable.ImmutableList.ShouldBe([1, 2, 3, 4, 5]);
-        typeImmutable.ImmutableStack.ShouldBe([5, 4, 3, 2, 1]);
-        typeImmutable.ImmutableHashSet.ShouldBe([1, 2, 3, 4, 5]);
-        typeImmutable.ImmutableSortedSet.ShouldBe([1, 2, 3, 4, 5]);
-
         {
-            dynamic dict = typeImmutable.ImmutableDictionary;
-            long value = dict["key"][0];
-            value.ShouldBe(999);
-            string value2 = dict["key"][1];
-            value2.ShouldBe("Value");
-            object[] value3 = dict["key"][2]["key"][0];
-            value3.ShouldBe(new object[] { 1, 2, 3 });
-            string value4 = dict["key"][2]["key"][1]["key"];
-            value4.ShouldBe("value");
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("ImmutableArray = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("ImmutableList = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("ImmutableStack = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("ImmutableHashSet = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("ImmutableSortedSet = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("ImmutableQueue = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("ImmutableDictionary = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\" }] }] }");
+            writer.AppendLine("ImmutableSortedDictionary = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\" }] }] }");
+            writer.Flush();
+
+            var typeImmutable = CsTomlSerializer.Deserialize<TypeImmutable>(buffer.WrittenSpan);
+
+            typeImmutable.ImmutableArray.ShouldBe([1, 2, 3, 4, 5]);
+            typeImmutable.ImmutableList.ShouldBe([1, 2, 3, 4, 5]);
+            typeImmutable.ImmutableStack.ShouldBe([5, 4, 3, 2, 1]);
+            typeImmutable.ImmutableHashSet.ShouldBe([1, 2, 3, 4, 5]);
+            typeImmutable.ImmutableSortedSet.ShouldBe([1, 2, 3, 4, 5]);
+            Validate(typeImmutable.ImmutableDictionary);
+            Validate(typeImmutable.ImmutableSortedDictionary);
         }
         {
-            dynamic dict = typeImmutable.ImmutableSortedDictionary;
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("ImmutableArray = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("ImmutableList = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("ImmutableStack = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("ImmutableHashSet = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("ImmutableSortedSet = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("ImmutableQueue = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("[ImmutableDictionary]");
+            writer.AppendLine("key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\" }] }] ");
+            writer.AppendLine("[ImmutableSortedDictionary]");
+            writer.AppendLine("key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\" }] }] ");
+            writer.Flush();
+
+            var typeImmutable = CsTomlSerializer.Deserialize<TypeImmutable>(buffer.WrittenSpan);
+
+            typeImmutable.ImmutableArray.ShouldBe([1, 2, 3, 4, 5]);
+            typeImmutable.ImmutableList.ShouldBe([1, 2, 3, 4, 5]);
+            typeImmutable.ImmutableStack.ShouldBe([5, 4, 3, 2, 1]);
+            typeImmutable.ImmutableHashSet.ShouldBe([1, 2, 3, 4, 5]);
+            typeImmutable.ImmutableSortedSet.ShouldBe([1, 2, 3, 4, 5]);
+            Validate(typeImmutable.ImmutableDictionary);
+            Validate(typeImmutable.ImmutableSortedDictionary);
+        }
+
+        static void Validate(dynamic dict)
+        {
             long value = dict["key"][0];
             value.ShouldBe(999);
             string value2 = dict["key"][1];
@@ -2645,7 +2709,7 @@ public class TypeImmutableInterfaceTest
             writer.AppendLine("IImmutableStack = [ 1, 2, 3, 4, 5 ]");
             writer.AppendLine("IImmutableQueue = [ 1, 2, 3, 4, 5 ]");
             writer.AppendLine("IImmutableSet = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("IImmutableDictionary = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
+            writer.AppendLine("IImmutableDictionary = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]}");
             writer.Flush();
 
             var expected = buffer.ToArray();
@@ -2659,7 +2723,8 @@ public class TypeImmutableInterfaceTest
             writer.AppendLine("IImmutableStack = [ 1, 2, 3, 4, 5 ]");
             writer.AppendLine("IImmutableQueue = [ 1, 2, 3, 4, 5 ]");
             writer.AppendLine("IImmutableSet = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("IImmutableDictionary = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
+            writer.AppendLine("[IImmutableDictionary]");
+            writer.AppendLine("key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]");
             writer.Flush();
 
             var expected = buffer.ToArray();
@@ -2670,22 +2735,43 @@ public class TypeImmutableInterfaceTest
     [Fact]
     public void Deserialize()
     {
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("IImmutableList = [ 1, 2, 3, 4, 5 ]");
-        writer.AppendLine("IImmutableStack = [ 1, 2, 3, 4, 5 ]");
-        writer.AppendLine("IImmutableQueue = [ 1, 2, 3, 4, 5 ]");
-        writer.AppendLine("IImmutableSet = [ 1, 2, 3, 4, 5 ]");
-        writer.AppendLine("IImmutableDictionary = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
-        writer.Flush();
-
-        var typeImmutableInterface = CsTomlSerializer.Deserialize<TypeImmutableInterface>(buffer.WrittenSpan);
-        typeImmutableInterface.IImmutableList.ShouldBe([1, 2, 3, 4, 5]);
-        typeImmutableInterface.IImmutableStack.ShouldBe([5, 4, 3, 2, 1]);
-        typeImmutableInterface.IImmutableQueue.ShouldBe([1, 2, 3, 4, 5]);
-        typeImmutableInterface.IImmutableSet.ShouldBe([1, 2, 3, 4, 5]);
-
         {
-            dynamic dict = typeImmutableInterface.IImmutableDictionary;
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("IImmutableList = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("IImmutableStack = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("IImmutableQueue = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("IImmutableSet = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("IImmutableDictionary = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\" }] }] }");
+            writer.Flush();
+
+            var typeImmutableInterface = CsTomlSerializer.Deserialize<TypeImmutableInterface>(buffer.WrittenSpan);
+            typeImmutableInterface.IImmutableList.ShouldBe([1, 2, 3, 4, 5]);
+            typeImmutableInterface.IImmutableStack.ShouldBe([5, 4, 3, 2, 1]);
+            typeImmutableInterface.IImmutableQueue.ShouldBe([1, 2, 3, 4, 5]);
+            typeImmutableInterface.IImmutableSet.ShouldBe([1, 2, 3, 4, 5]);
+            Validate(typeImmutableInterface.IImmutableDictionary);
+        }
+        {
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("IImmutableList = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("IImmutableStack = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("IImmutableQueue = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("IImmutableSet = [ 1, 2, 3, 4, 5 ]");
+            writer.AppendLine("[IImmutableDictionary]");
+            writer.AppendLine("key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\" }] }] ");
+            writer.Flush();
+
+            var typeImmutableInterface = CsTomlSerializer.Deserialize<TypeImmutableInterface>(buffer.WrittenSpan);
+            typeImmutableInterface.IImmutableList.ShouldBe([1, 2, 3, 4, 5]);
+            typeImmutableInterface.IImmutableStack.ShouldBe([5, 4, 3, 2, 1]);
+            typeImmutableInterface.IImmutableQueue.ShouldBe([1, 2, 3, 4, 5]);
+            typeImmutableInterface.IImmutableSet.ShouldBe([1, 2, 3, 4, 5]);
+            Validate(typeImmutableInterface.IImmutableDictionary);
+
+        }
+
+        static void Validate(dynamic dict)
+        {
             long value = dict["key"][0];
             value.ShouldBe(999);
             string value2 = dict["key"][1];
@@ -2968,7 +3054,7 @@ public class TypeOrderedDictionaryTest
             using var bytes = CsTomlSerializer.Serialize(type);
 
             using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("Value = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
+            writer.AppendLine("Value = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]}");
             writer.Flush();
 
             var expected = buffer.ToArray();
@@ -2978,7 +3064,8 @@ public class TypeOrderedDictionaryTest
             using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
 
             using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("Value = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}] }");
+            writer.AppendLine("[Value]");
+            writer.AppendLine("key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]");
             writer.Flush();
 
             var expected = buffer.ToArray();
@@ -2989,21 +3076,39 @@ public class TypeOrderedDictionaryTest
     [Fact]
     public void Deserialize()
     {
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("Value = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]}");
-        writer.Flush();
+        {
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]}");
+            writer.Flush();
 
-        var type = CsTomlSerializer.Deserialize<TypeOrderedDictionary>(buffer.WrittenSpan);
-        dynamic dynamicDict = type.Value;
+            var type = CsTomlSerializer.Deserialize<TypeOrderedDictionary>(buffer.WrittenSpan);
+            Validate(type);
+        }
+        {
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("[Value]");
+            writer.AppendLine("key = [ 999, \"Value\", {key = [ [ 1, 2, 3], {key = \"value\"}]}]");
+            writer.Flush();
 
-        long value = dynamicDict["key"][0];
-        value.ShouldBe(999);
-        string value2 = dynamicDict["key"][1];
-        value2.ShouldBe("Value");
-        object[] value3 = dynamicDict["key"][2]["key"][0];
-        value3.ShouldBe(new object[] { 1, 2, 3 });
-        string value4 = dynamicDict["key"][2]["key"][1]["key"];
-        value4.ShouldBe("value");
+            var type = CsTomlSerializer.Deserialize<TypeOrderedDictionary>(buffer.WrittenSpan);
+            Validate(type);
+        }
+
+
+        static void Validate(TypeOrderedDictionary typeOrderedDictionary)
+        {
+            dynamic dynamicDict = typeOrderedDictionary.Value;
+
+            long value = dynamicDict["key"][0];
+            value.ShouldBe(999);
+            string value2 = dynamicDict["key"][1];
+            value2.ShouldBe("Value");
+            object[] value3 = dynamicDict["key"][2]["key"][0];
+            value3.ShouldBe(new object[] { 1, 2, 3 });
+            string value4 = dynamicDict["key"][2]["key"][1]["key"];
+            value4.ShouldBe("value");
+
+        }
     }
 }
 
