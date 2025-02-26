@@ -1,6 +1,7 @@
 ﻿using CsToml.Error;
 using CsToml.Utility;
 using CsToml.Values;
+using System.Collections;
 using System.Buffers;
 
 namespace CsToml.Formatter;
@@ -65,190 +66,57 @@ public abstract class DictionaryBaseFormatter<TKey, TValue, TDicitonary, TMediat
             return;
         }
 
-        writer.BeginInlineTable();
+        var headerStyle = options.SerializeOptions.TableStyle == TomlTableStyle.Header && (writer.State == TomlValueState.Default || writer.State == TomlValueState.Table);
+        writer.BeginCurrentState(headerStyle ? TomlValueState.Table : TomlValueState.ArrayOfTable);
+        
         var enumerator = target.GetEnumerator();
         using (IEnumerator<KeyValuePair<TKey, TValue>> en = target.GetEnumerator())
         {
+            writer.BeginScope();
             if (!en.MoveNext())
             {
-                writer.EndInlineTable();
-                return;
+                goto END;
             }
 
-            var (key, value) = en.Current;
-            if (PrimitiveObjectFormatter.TryGetJumpCode(key!.GetType(), out var jumpCode))
-            {
-                var refKey = key;
-                switch (jumpCode)
-                {
-                    case 0:
-                        writer.WriteBoolean(UnsafeHelper.BitCast<TKey, bool>(refKey));
-                        break;
-                    case 1:
-                        writer.WriteInt64(UnsafeHelper.BitCast<TKey, byte>(refKey));
-                        break;
-                    case 2:
-                        writer.WriteInt64(UnsafeHelper.BitCast<TKey, sbyte>(refKey));
-                        break;
-                    case 3:
-                        writer.WriteInt64(UnsafeHelper.BitCast<TKey, char>(refKey));
-                        break;
-                    case 4:
-                        writer.WriteInt64(UnsafeHelper.BitCast<TKey, short>(refKey));
-                        break;
-                    case 5:
-                        writer.WriteInt64(UnsafeHelper.BitCast<TKey, int>(refKey));
-                        break;
-                    case 6:
-                        writer.WriteInt64(UnsafeHelper.BitCast<TKey, long>(refKey));
-                        break;
-                    case 7:
-                        writer.WriteInt64(UnsafeHelper.BitCast<TKey, ushort>(refKey));
-                        break;
-                    case 8:
-                        writer.WriteInt64(UnsafeHelper.BitCast<TKey, uint>(refKey));
-                        break;
-                    case 9:
-                        writer.WriteInt64(checked(UnsafeHelper.BitCast<TKey, long>(refKey)));
-                        break;
-                    case 10:
-                        writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                        writer.WriteDouble(UnsafeHelper.BitCast<TKey, float>(refKey));
-                        writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                        break;
-                    case 11:
-                        writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                        writer.WriteDouble(UnsafeHelper.BitCast<TKey, double>(refKey));
-                        writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                        break;
-                    case 12:
-                        var strKey = refKey as string;
-                        TomlDottedKey.ParseKey(strKey.AsSpan()).ToTomlString(ref writer);
-                        break;
-                    case 13:
-                        writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                        writer.WriteDateTime(UnsafeHelper.BitCast<TKey, DateTime>(refKey));
-                        writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                        break;
-                    case 14:
-                        writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                        writer.WriteDateTimeOffset(UnsafeHelper.BitCast<TKey, DateTimeOffset>(refKey));
-                        writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                        break;
-                    case 15:
-                        writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                        writer.WriteDateOnly(UnsafeHelper.BitCast<TKey, DateOnly>(refKey));
-
-                        break;
-                    case 16:
-                        writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                        writer.WriteTimeOnly(UnsafeHelper.BitCast<TKey, TimeOnly>(refKey));
-                        writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                        break;
-                }
-            }
-            else
-            {
-                ExceptionHelper.ThrowSerializationFailedAsKey(target.GetType());
-            }
-            writer.WriteEqual();
-            options.Resolver.GetFormatter<TValue>()!.Serialize(ref writer, value!, options);
-
+            SerializeKeyValue(ref writer, headerStyle, en.Current, options);
             if (!en.MoveNext())
             {
-                writer.WriteSpace();
-                writer.EndInlineTable();
-                return;
+                goto END;
             }
 
             do
             {
-                writer.Write(TomlCodes.Symbol.COMMA);
-                writer.WriteSpace();
-
-                (key, value) = en.Current;
-                if (PrimitiveObjectFormatter.TryGetJumpCode(key!.GetType(), out jumpCode))
-                {
-                    var refKey = key;
-                    switch (jumpCode)
-                    {
-                        case 0:
-                            writer.WriteBoolean(UnsafeHelper.BitCast<TKey, bool>(refKey));
-                            break;
-                        case 1:
-                            writer.WriteInt64(UnsafeHelper.BitCast<TKey, byte>(refKey));
-                            break;
-                        case 2:
-                            writer.WriteInt64(UnsafeHelper.BitCast<TKey, sbyte>(refKey));
-                            break;
-                        case 3:
-                            writer.WriteInt64(UnsafeHelper.BitCast<TKey, char>(refKey));
-                            break;
-                        case 4:
-                            writer.WriteInt64(UnsafeHelper.BitCast<TKey, short>(refKey));
-                            break;
-                        case 5:
-                            writer.WriteInt64(UnsafeHelper.BitCast<TKey, int>(refKey));
-                            break;
-                        case 6:
-                            writer.WriteInt64(UnsafeHelper.BitCast<TKey, long>(refKey));
-                            break;
-                        case 7:
-                            writer.WriteInt64(UnsafeHelper.BitCast<TKey, ushort>(refKey));
-                            break;
-                        case 8:
-                            writer.WriteInt64(UnsafeHelper.BitCast<TKey, uint>(refKey));
-                            break;
-                        case 9:
-                            writer.WriteInt64(checked(UnsafeHelper.BitCast<TKey, long>(refKey)));
-                            break;
-                        case 10:
-                            writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                            writer.WriteDouble(UnsafeHelper.BitCast<TKey, float>(refKey));
-                            writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                            break;
-                        case 11:
-                            writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                            writer.WriteDouble(UnsafeHelper.BitCast<TKey, double>(refKey));
-                            writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                            break;
-                        case 12:
-                            var strKey = refKey as string;
-                            TomlDottedKey.ParseKey(strKey.AsSpan()).ToTomlString(ref writer);
-                            break;
-                        case 13:
-                            writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                            writer.WriteDateTime(UnsafeHelper.BitCast<TKey, DateTime>(refKey));
-                            writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                            break;
-                        case 14:
-                            writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                            writer.WriteDateTimeOffset(UnsafeHelper.BitCast<TKey, DateTimeOffset>(refKey));
-                            writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                            break;
-                        case 15:
-                            writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                            writer.WriteDateOnly(UnsafeHelper.BitCast<TKey, DateOnly>(refKey));
-
-                            break;
-                        case 16:
-                            writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                            writer.WriteTimeOnly(UnsafeHelper.BitCast<TKey, TimeOnly>(refKey));
-                            writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                            break;
-                    }
-                }
-                else
-                {
-                    ExceptionHelper.ThrowSerializationFailedAsKey(target.GetType());
-                }
-                writer.WriteEqual();
-                options.Resolver.GetFormatter<TValue>()!.Serialize(ref writer, value!, options);
-
+                writer.EndKeyValue();
+                SerializeKeyValue(ref writer, headerStyle, en.Current, options);
             } while (en.MoveNext());
         }
+    END:
+        writer.EndKeyValue(true);
+        writer.EndScope();
+        writer.EndCurrentState();
 
-        writer.EndInlineTable();
+        static void SerializeKeyValue(ref Utf8TomlDocumentWriter<TBufferWriter> writer, bool style, KeyValuePair<TKey, TValue> pair, CsTomlSerializerOptions options)
+        {
+            var (key, value) = pair;
+
+            if (style && value is IDictionary dict && dict.Count > 0)
+            {
+                writer.WriteTableHeaderForPrimitive(key);
+                writer.WriteNewLine();
+                writer.PushKeyForPrimitive(key);
+            }
+            else
+            {
+                writer.WriteKeyForPrimitive(key);
+                writer.WriteEqual();
+            }
+            options.Resolver.GetFormatter<TValue>()!.Serialize(ref writer, value!, options);
+
+            if (style && value is IDictionary dict2 && dict2.Count > 0)
+            {
+                writer.PopKey();
+            }
+        }
     }
 
     protected abstract void AddValue(TMediator mediator, TKey key, TValue value);

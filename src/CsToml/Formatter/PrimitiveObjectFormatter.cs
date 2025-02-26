@@ -175,96 +175,12 @@ public sealed class PrimitiveObjectFormatter : ITomlValueFormatter<object>
 
         if (target is IDictionary dictionary)
         {
-            var count = 0;
-            writer.BeginInlineTable();
+            var tempDict = new Dictionary<object, object?>(dictionary.Count);
             foreach (DictionaryEntry entry in dictionary)
             {
-                var key = entry.Key;
-                var value = entry.Value;
-                if (TryGetJumpCode(key.GetType(), out var keyJumpCode))
-                {
-                    switch (keyJumpCode)
-                    {
-                        case 0:
-                            writer.WriteBoolean((bool)key);
-                            break;
-                        case 1:
-                            writer.WriteInt64((byte)key);
-                            break;
-                        case 2:
-                            writer.WriteInt64((sbyte)key);
-                            break;
-                        case 3:
-                            writer.WriteInt64((char)key);
-                            break;
-                        case 4:
-                            writer.WriteInt64((short)key);
-                            break;
-                        case 5:
-                            writer.WriteInt64((int)key);
-                            break;
-                        case 6:
-                            writer.WriteInt64((long)key);
-                            break;
-                        case 7:
-                            writer.WriteInt64((ushort)key);
-                            break;
-                        case 8:
-                            writer.WriteInt64((uint)key);
-                            break;
-                        case 9:
-                            writer.WriteInt64(checked((long)key));
-                            break;
-                        case 10:
-                            writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                            writer.WriteDouble((float)key);
-                            writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                            break;
-                        case 11:
-                            writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                            writer.WriteDouble((double)key);
-                            writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                            break;
-                        case 12:
-                            var strKey = key as string;
-                            TomlDottedKey.ParseKey(strKey.AsSpan()).ToTomlString(ref writer);
-                            break;
-                        case 13:
-                            writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                            writer.WriteDateTime((DateTime)key);
-                            writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                            break;
-                        case 14:
-                            writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                            writer.WriteDateTimeOffset((DateTimeOffset)key);
-                            writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                            break;
-                        case 15:
-                            writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                            writer.WriteDateOnly((DateOnly)key);
-
-                            break;
-                        case 16:
-                            writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                            writer.WriteTimeOnly((TimeOnly)key);
-                            writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                            break;
-                    }
-                }
-                else
-                {
-                    ExceptionHelper.ThrowSerializationFailedAsKey(target.GetType());
-                }
-                writer.WriteEqual();
-                options.Resolver.GetFormatter<object>()!.Serialize(ref writer, value!, options);
-
-                if (++count != dictionary.Count)
-                {
-                    writer.Write(TomlCodes.Symbol.COMMA);
-                    writer.WriteSpace();
-                }
+                tempDict[entry.Key] = entry.Value;
             }
-            writer.EndInlineTable();
+            options.Resolver.GetFormatter<IDictionary<object, object?>>()!.Serialize(ref writer, tempDict!, options);
             return;
         }
 

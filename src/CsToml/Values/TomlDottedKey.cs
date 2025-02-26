@@ -134,6 +134,21 @@ internal abstract partial class TomlDottedKey(ReadOnlySpan<byte> value) :
         }
     }
 
+    public static TomlDottedKey ParseKeyForPrimitive<T>(T value)
+    {
+        var bufferWriter = RecycleArrayPoolBufferWriter<byte>.Rent();
+        try
+        {
+            var documentWriter = new Utf8TomlDocumentWriter<ArrayPoolBufferWriter<byte>>(ref bufferWriter);
+            documentWriter.WriteKeyForPrimitive(value);
+            return ParseKey(bufferWriter.WrittenSpan);
+        }
+        finally
+        {
+            RecycleArrayPoolBufferWriter<byte>.Return(bufferWriter);
+        }
+    }
+
     public override bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
     {
         var status = Utf8.ToUtf16(Value, destination, out var bytesRead, out charsWritten, replaceInvalidSequences: false);

@@ -1,4 +1,6 @@
-﻿using CsToml.Utility;
+﻿using CsToml.Error;
+using CsToml.Formatter;
+using CsToml.Utility;
 using CsToml.Values;
 using System.Buffers;
 using System.Globalization;
@@ -10,6 +12,7 @@ namespace CsToml;
 public enum TomlValueState
 {
     Default,
+    Array,
     ArrayOfTable,
     Table,
 }
@@ -65,6 +68,12 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void PushKeyForPrimitive<T>(T value)
+    {
+        dottedKeys.Add(TomlDottedKey.ParseKeyForPrimitive(value));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PopKey()
     {
         dottedKeys.RemoveAt(dottedKeys.Count - 1);
@@ -104,6 +113,12 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
     public void EndCurrentState()
     {
         valueStates.RemoveAt(valueStates.Count - 1);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal bool IsArrayOrListElement()
+    {
+        return valueStates.Any(v => v.state == TomlValueState.ArrayOfTable);
     }
 
     public void WriteBoolean(bool value)
@@ -518,6 +533,85 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
         TomlDottedKey.ParseKey(key).ToTomlString(ref this);
     }
 
+    internal void WriteKeyForPrimitive<T>(T value)
+    {
+        if (PrimitiveObjectFormatter.TryGetJumpCode(value!.GetType(), out var jumpCode))
+        {
+            var refValue = value;
+            switch (jumpCode)
+            {
+                case 0:
+                    WriteBoolean(UnsafeHelper.BitCast<T, bool>(refValue));
+                    break;
+                case 1:
+                    WriteInt64(UnsafeHelper.BitCast<T, byte>(refValue));
+                    break;
+                case 2:
+                    WriteInt64(UnsafeHelper.BitCast<T, sbyte>(refValue));
+                    break;
+                case 3:
+                    WriteInt64(UnsafeHelper.BitCast<T, char>(refValue));
+                    break;
+                case 4:
+                    WriteInt64(UnsafeHelper.BitCast<T, short>(refValue));
+                    break;
+                case 5:
+                    WriteInt64(UnsafeHelper.BitCast<T, int>(refValue));
+                    break;
+                case 6:
+                    WriteInt64(UnsafeHelper.BitCast<T, long>(refValue));
+                    break;
+                case 7:
+                    WriteInt64(UnsafeHelper.BitCast<T, ushort>(refValue));
+                    break;
+                case 8:
+                    WriteInt64(UnsafeHelper.BitCast<T, uint>(refValue));
+                    break;
+                case 9:
+                    WriteInt64(checked(UnsafeHelper.BitCast<T, long>(refValue)));
+                    break;
+                case 10:
+                    Write(TomlCodes.Symbol.DOUBLEQUOTED);
+                    WriteDouble(UnsafeHelper.BitCast<T, float>(refValue));
+                    Write(TomlCodes.Symbol.DOUBLEQUOTED);
+                    break;
+                case 11:
+                    Write(TomlCodes.Symbol.DOUBLEQUOTED);
+                    WriteDouble(UnsafeHelper.BitCast<T, double>(refValue));
+                    Write(TomlCodes.Symbol.DOUBLEQUOTED);
+                    break;
+                case 12:
+                    var strKey = refValue as string;
+                    TomlDottedKey.ParseKey(strKey.AsSpan()).ToTomlString(ref this);
+                    break;
+                case 13:
+                    Write(TomlCodes.Symbol.DOUBLEQUOTED);
+                    WriteDateTime(UnsafeHelper.BitCast<T, DateTime>(refValue));
+                    Write(TomlCodes.Symbol.DOUBLEQUOTED);
+                    break;
+                case 14:
+                    Write(TomlCodes.Symbol.DOUBLEQUOTED);
+                    WriteDateTimeOffset(UnsafeHelper.BitCast<T, DateTimeOffset>(refValue));
+                    Write(TomlCodes.Symbol.DOUBLEQUOTED);
+                    break;
+                case 15:
+                    Write(TomlCodes.Symbol.DOUBLEQUOTED);
+                    WriteDateOnly(UnsafeHelper.BitCast<T, DateOnly>(refValue));
+
+                    break;
+                case 16:
+                    Write(TomlCodes.Symbol.DOUBLEQUOTED);
+                    WriteTimeOnly(UnsafeHelper.BitCast<T, TimeOnly>(refValue));
+                    Write(TomlCodes.Symbol.DOUBLEQUOTED);
+                    break;
+            }
+        }
+        else
+        {
+            ExceptionHelper.ThrowSerializationFailedAsKey(typeof(T));
+        }
+    }
+
     public void WriteTableHeader(ReadOnlySpan<byte> key)
     {
         BeginTableHeader();
@@ -528,6 +622,19 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
             writer.Write(TomlCodes.Symbol.DOT);
         }
         TomlDottedKey.ParseKey(key).ToTomlString(ref this);
+        EndTableHeader();
+    }
+
+    internal void WriteTableHeaderForPrimitive<T>(T value)
+    {
+        BeginTableHeader();
+        var keySpan = CollectionsMarshal.AsSpan(dottedKeys);
+        for (int i = 0; i < keySpan.Length; i++)
+        {
+            keySpan[i].ToTomlString(ref this);
+            writer.Write(TomlCodes.Symbol.DOT);
+        }
+        WriteKeyForPrimitive(value);
         EndTableHeader();
     }
 
@@ -558,13 +665,23 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BeginArray()
     {
+        if (this.CurrentState.state != TomlValueState.ArrayOfTable)
+        {
+            valueStates.Add((TomlValueState.Array, dottedKeys.Count));
+        }
         writer.Write(TomlCodes.Symbol.LEFTSQUAREBRACKET);
         WriteSpace();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void EndArray()
-        => writer.Write(TomlCodes.Symbol.RIGHTSQUAREBRACKET);
+    {
+        if (this.CurrentState.state == TomlValueState.Array)
+        {
+            valueStates.RemoveAt(valueStates.Count - 1);
+        }
+        writer.Write(TomlCodes.Symbol.RIGHTSQUAREBRACKET);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BeginTableHeader()
