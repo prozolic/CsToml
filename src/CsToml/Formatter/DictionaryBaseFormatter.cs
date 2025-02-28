@@ -58,7 +58,7 @@ public abstract class DictionaryBaseFormatter<TKey, TValue, TDicitonary, TMediat
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TDicitonary target, CsTomlSerializerOptions options)
-            where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IBufferWriter<byte>
     {
         if (target == null)
         {
@@ -67,12 +67,16 @@ public abstract class DictionaryBaseFormatter<TKey, TValue, TDicitonary, TMediat
         }
 
         var headerStyle = options.SerializeOptions.TableStyle == TomlTableStyle.Header && (writer.State == TomlValueState.Default || writer.State == TomlValueState.Table);
-        writer.BeginCurrentState(headerStyle ? TomlValueState.Table : TomlValueState.ArrayOfTable);
-        
-        var enumerator = target.GetEnumerator();
-        using (IEnumerator<KeyValuePair<TKey, TValue>> en = target.GetEnumerator())
+        if (!writer.IsRoot)
+            writer.BeginCurrentState(headerStyle ? TomlValueState.Table : TomlValueState.ArrayOfTable);
+
+        var enumerator = headerStyle ? target.OrderBy(x => x.Value is IDictionary).GetEnumerator() : target.GetEnumerator();
+        using (IEnumerator<KeyValuePair<TKey, TValue>> en = enumerator)
         {
-            writer.BeginScope();
+            if (!writer.IsRoot)
+            {
+                writer.BeginScope();
+            }
             if (!en.MoveNext())
             {
                 goto END;
@@ -81,7 +85,7 @@ public abstract class DictionaryBaseFormatter<TKey, TValue, TDicitonary, TMediat
             SerializeKeyValue(ref writer, headerStyle, en.Current, options);
             if (!en.MoveNext())
             {
-                goto END;
+                goto ENDKEYVALUE;
             }
 
             do
@@ -90,32 +94,48 @@ public abstract class DictionaryBaseFormatter<TKey, TValue, TDicitonary, TMediat
                 SerializeKeyValue(ref writer, headerStyle, en.Current, options);
             } while (en.MoveNext());
         }
-    END:
+    ENDKEYVALUE:
         writer.EndKeyValue(true);
+    END:
         writer.EndScope();
-        writer.EndCurrentState();
+        if (!writer.IsRoot)
+            writer.EndCurrentState();
 
         static void SerializeKeyValue(ref Utf8TomlDocumentWriter<TBufferWriter> writer, bool style, KeyValuePair<TKey, TValue> pair, CsTomlSerializerOptions options)
         {
             var (key, value) = pair;
 
-            if (style && value is IDictionary dict && dict.Count > 0)
+            if (value is IDictionary dict)
             {
-                writer.WriteTableHeaderForPrimitive(key);
-                writer.WriteNewLine();
-                writer.PushKeyForPrimitive(key);
+                if (style)
+                {
+                    writer.WriteTableHeaderForPrimitive(key);
+                    writer.WriteNewLine();
+                    if (dict.Count > 0)
+                    {
+                        writer.BeginCurrentState(TomlValueState.Table);
+                        writer.PushKeyForPrimitive(key);
+                        options.Resolver.GetFormatter<TValue>()!.Serialize(ref writer, value!, options);
+                        writer.PopKey();
+                        writer.EndCurrentState();
+                    }
+                }
+                else
+                {
+                    writer.WriteKeyForPrimitive(key);
+                    writer.WriteEqual();
+                    writer.BeginCurrentState(TomlValueState.ArrayOfTable);
+                    options.Resolver.GetFormatter<TValue>()!.Serialize(ref writer, value!, options);
+                    writer.EndCurrentState();
+                }
             }
             else
             {
                 writer.WriteKeyForPrimitive(key);
                 writer.WriteEqual();
+                options.Resolver.GetFormatter<TValue>()!.Serialize(ref writer, value!, options);
             }
-            options.Resolver.GetFormatter<TValue>()!.Serialize(ref writer, value!, options);
 
-            if (style && value is IDictionary dict2 && dict2.Count > 0)
-            {
-                writer.PopKey();
-            }
         }
     }
 

@@ -1,9 +1,7 @@
 ﻿using CsToml.Error;
-using CsToml.Formatter.Resolver;
 using CsToml.Values;
 using System.Buffers;
 using System.Collections;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 namespace CsToml.Formatter;
@@ -175,6 +173,18 @@ public sealed class PrimitiveObjectFormatter : ITomlValueFormatter<object>
 
         if (target is IDictionary dictionary)
         {
+            if (target is IDictionary<object, object?> dict)
+            {
+                options.Resolver.GetFormatter<IDictionary<object, object?>>()!.Serialize(ref writer, dict, options);
+                return;
+            }
+            else if (target is IDictionary<string, object?> dict2)
+            {
+                options.Resolver.GetFormatter<IDictionary<string, object?>>()!.Serialize(ref writer, dict2, options);
+                return;
+            }
+
+            // Convert IDictionary to IDictionary<object, object?>.
             var tempDict = new Dictionary<object, object?>(dictionary.Count);
             foreach (DictionaryEntry entry in dictionary)
             {
@@ -209,12 +219,11 @@ public sealed class PrimitiveObjectFormatter : ITomlValueFormatter<object>
                 formatter!.Serialize(ref writer, en.Current, options);
 
             } while (en.MoveNext());
+            writer.WriteSpace();
             writer.EndArray();
             return;
         }
 
         ExceptionHelper.ThrowSerializationFailedAsKey(target.GetType());
     }
-
 }
-

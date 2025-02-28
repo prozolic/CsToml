@@ -238,7 +238,7 @@ public static class CsTomlSerializer
         options ??= DefaultOptions;
         try
         {
-            var documentWriter = new Utf8TomlDocumentWriter<TBufferWriter>(ref bufferWriter);
+            var documentWriter = new Utf8TomlDocumentWriter<TBufferWriter>(ref bufferWriter, true);
             var formatter = GetFormatter<T>(null);
             using (formatter as IDisposable)
             {

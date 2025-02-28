@@ -23,6 +23,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
     private Utf8Writer<TBufferWriter> writer;
     private List<TomlDottedKey> dottedKeys;
     private List<(TomlValueState state, int dottedKeyIndex)> valueStates;
+    private readonly bool valueOnly;
 
     internal readonly int WrittenSize => writer.WrittenSize;
 
@@ -32,11 +33,14 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
 
     public readonly TomlValueState State => CurrentState.state;
 
-    public Utf8TomlDocumentWriter(ref TBufferWriter bufferWriter)
+    internal readonly bool IsRoot => valueStates.Count == 1 && !valueOnly;
+
+    public Utf8TomlDocumentWriter(ref TBufferWriter bufferWriter, bool valueOnly = false)
     {
         writer = new Utf8Writer<TBufferWriter>(ref bufferWriter);
         dottedKeys = new List<TomlDottedKey>();
         valueStates = [(TomlValueState.Default, -1)];
+        this.valueOnly = valueOnly;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -93,8 +97,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
                 default:
                     if (valueStates.Count > 1)
                     {
-                        var priviousState = CurrentPriviousState;
-                        if (priviousState.state == TomlValueState.ArrayOfTable)
+                        if (valueStates.Any(v => v.state == TomlValueState.ArrayOfTable))
                             return;
                     }
                     WriteNewLine();
@@ -535,49 +538,137 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
 
     internal void WriteKeyForPrimitive<T>(T value)
     {
-        if (PrimitiveObjectFormatter.TryGetJumpCode(value!.GetType(), out var jumpCode))
+#pragma warning disable CS8600
+#pragma warning disable CS8605
+        var valueType = value?.GetType() ?? typeof(T);
+        var isObjectType = typeof(T) == typeof(object);
+        if (PrimitiveObjectFormatter.TryGetJumpCode(valueType, out var jumpCode))
         {
             var refValue = value;
             switch (jumpCode)
             {
                 case 0:
-                    WriteBoolean(UnsafeHelper.BitCast<T, bool>(refValue));
+                    if (isObjectType)
+                    {
+                        WriteBoolean((bool)(object)refValue);
+                    }
+                    else
+                    {
+                        WriteBoolean(UnsafeHelper.BitCast<T, bool>(refValue));
+                    }
                     break;
                 case 1:
-                    WriteInt64(UnsafeHelper.BitCast<T, byte>(refValue));
+                    if (isObjectType)
+                    {
+                        WriteInt64((byte)(object)refValue);
+                    }
+                    else
+                    {
+                        WriteInt64(UnsafeHelper.BitCast<T, byte>(refValue));
+                    }
                     break;
                 case 2:
-                    WriteInt64(UnsafeHelper.BitCast<T, sbyte>(refValue));
+                    if (isObjectType)
+                    {
+                        WriteInt64((sbyte)(object)refValue);
+                    }
+                    else
+                    {
+                        WriteInt64(UnsafeHelper.BitCast<T, sbyte>(refValue));
+                    }
                     break;
                 case 3:
-                    WriteInt64(UnsafeHelper.BitCast<T, char>(refValue));
+                    if (isObjectType)
+                    {
+                        WriteInt64((char)(object)refValue);
+                    }
+                    else
+                    {
+                        WriteInt64(UnsafeHelper.BitCast<T, char>(refValue));
+                    }
                     break;
                 case 4:
-                    WriteInt64(UnsafeHelper.BitCast<T, short>(refValue));
+                    if (isObjectType)
+                    {
+                        WriteInt64((short)(object)refValue);
+                    }
+                    else
+                    {
+                        WriteInt64(UnsafeHelper.BitCast<T, short>(refValue));
+                    }
                     break;
                 case 5:
-                    WriteInt64(UnsafeHelper.BitCast<T, int>(refValue));
+                    if (isObjectType)
+                    {
+                        WriteInt64((int)(object)refValue);
+                    }
+                    else
+                    {
+                        WriteInt64(UnsafeHelper.BitCast<T, int>(refValue));
+                    }
                     break;
                 case 6:
-                    WriteInt64(UnsafeHelper.BitCast<T, long>(refValue));
+                    if (isObjectType)
+                    {
+                        WriteInt64((long)(object)refValue);
+                    }
+                    else
+                    {
+                        WriteInt64(UnsafeHelper.BitCast<T, long>(refValue));
+                    }
                     break;
                 case 7:
-                    WriteInt64(UnsafeHelper.BitCast<T, ushort>(refValue));
+                    if (isObjectType)
+                    {
+                        WriteInt64((ushort)(object)refValue);
+                    }
+                    else
+                    {
+                        WriteInt64(UnsafeHelper.BitCast<T, ushort>(refValue));
+                    }
                     break;
                 case 8:
-                    WriteInt64(UnsafeHelper.BitCast<T, uint>(refValue));
+                    if (isObjectType)
+                    {
+                        WriteInt64((uint)(object)refValue);
+                    }
+                    else
+                    {
+                        WriteInt64(UnsafeHelper.BitCast<T, uint>(refValue));
+                    }
                     break;
                 case 9:
-                    WriteInt64(checked(UnsafeHelper.BitCast<T, long>(refValue)));
+                    if (isObjectType)
+                    {
+                        WriteInt64(checked((long)(object)refValue));
+                    }
+                    else
+                    {
+                        WriteInt64(UnsafeHelper.BitCast<T, long>(refValue));
+                    }
                     break;
                 case 10:
                     Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                    WriteDouble(UnsafeHelper.BitCast<T, float>(refValue));
+                    if (isObjectType)
+                    {
+                        WriteDouble((float)(object)refValue);
+                    }
+                    else
+                    {
+                        WriteDouble(UnsafeHelper.BitCast<T, float>(refValue));
+                    }
                     Write(TomlCodes.Symbol.DOUBLEQUOTED);
                     break;
                 case 11:
                     Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                    WriteDouble(UnsafeHelper.BitCast<T, double>(refValue));
+                    if (isObjectType)
+                    {
+                        WriteDouble((double)(object)refValue);
+                    }
+                    else
+                    {
+                        WriteDouble(UnsafeHelper.BitCast<T, double>(refValue));
+                    }
                     Write(TomlCodes.Symbol.DOUBLEQUOTED);
                     break;
                 case 12:
@@ -586,30 +677,60 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
                     break;
                 case 13:
                     Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                    WriteDateTime(UnsafeHelper.BitCast<T, DateTime>(refValue));
+                    if (isObjectType)
+                    {
+                        WriteDateTime((DateTime)(object)refValue);
+                    }
+                    else
+                    {
+                        WriteDateTime(UnsafeHelper.BitCast<T, DateTime>(refValue));
+                    }
                     Write(TomlCodes.Symbol.DOUBLEQUOTED);
                     break;
                 case 14:
                     Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                    WriteDateTimeOffset(UnsafeHelper.BitCast<T, DateTimeOffset>(refValue));
+                    if (isObjectType)
+                    {
+                        WriteDateTimeOffset((DateTimeOffset)(object)refValue);
+                    }
+                    else
+                    {
+                        WriteDateTimeOffset(UnsafeHelper.BitCast<T, DateTimeOffset>(refValue));
+                    }
                     Write(TomlCodes.Symbol.DOUBLEQUOTED);
                     break;
                 case 15:
                     Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                    WriteDateOnly(UnsafeHelper.BitCast<T, DateOnly>(refValue));
-
+                    if (isObjectType)
+                    {
+                        WriteDateOnly((DateOnly)(object)refValue);
+                    }
+                    else
+                    {
+                        WriteDateOnly(UnsafeHelper.BitCast<T, DateOnly>(refValue));
+                    }
+                    Write(TomlCodes.Symbol.DOUBLEQUOTED);
                     break;
                 case 16:
                     Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                    WriteTimeOnly(UnsafeHelper.BitCast<T, TimeOnly>(refValue));
+                    if (isObjectType)
+                    {
+                        WriteTimeOnly((TimeOnly)(object)refValue);
+                    }
+                    else
+                    {
+                        WriteTimeOnly(UnsafeHelper.BitCast<T, TimeOnly>(refValue));
+                    }
                     Write(TomlCodes.Symbol.DOUBLEQUOTED);
                     break;
             }
         }
         else
         {
-            ExceptionHelper.ThrowSerializationFailedAsKey(typeof(T));
+            ExceptionHelper.ThrowSerializationFailedAsKey(valueType);
         }
+#pragma warning restore CS8600
+#pragma warning restore CS8605
     }
 
     public void WriteTableHeader(ReadOnlySpan<byte> key)
