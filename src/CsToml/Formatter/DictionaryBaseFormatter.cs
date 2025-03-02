@@ -66,11 +66,12 @@ public abstract class DictionaryBaseFormatter<TKey, TValue, TDicitonary, TMediat
             return;
         }
 
-        var headerStyle = options.SerializeOptions.TableStyle == TomlTableStyle.Header && (writer.State == TomlValueState.Default || writer.State == TomlValueState.Table);
+        var applyHeaderStyle = options.SerializeOptions.TableStyle == TomlTableStyle.Header && (writer.State == TomlValueState.Default || writer.State == TomlValueState.Table);
         if (!writer.IsRoot)
-            writer.BeginCurrentState(headerStyle ? TomlValueState.Table : TomlValueState.ArrayOfTable);
+            writer.BeginCurrentState(applyHeaderStyle ? TomlValueState.Table : TomlValueState.ArrayOfTable);
 
-        var enumerator = headerStyle ? target.OrderBy(x => x.Value is IDictionary).GetEnumerator() : target.GetEnumerator();
+        KeyValuePair<TKey, TValue> current;
+        var enumerator = applyHeaderStyle ? target.OrderBy(x => x.Value is IDictionary).GetEnumerator() : target.GetEnumerator();
         using (IEnumerator<KeyValuePair<TKey, TValue>> en = enumerator)
         {
             if (!writer.IsRoot)
@@ -82,8 +83,8 @@ public abstract class DictionaryBaseFormatter<TKey, TValue, TDicitonary, TMediat
                 goto END;
             }
 
-            var current = en.Current;
-            SerializeKeyValue(ref writer, headerStyle, current, options);
+            current = en.Current;
+            SerializeKeyValue(ref writer, applyHeaderStyle, current, options);
             if (!en.MoveNext())
             {
                 goto ENDKEYVALUE;
@@ -91,26 +92,27 @@ public abstract class DictionaryBaseFormatter<TKey, TValue, TDicitonary, TMediat
 
             do
             {
-                if (!(headerStyle && current.Value is IDictionary))
+                if (!(applyHeaderStyle && current.Value is IDictionary))
                     writer.EndKeyValue();
                 current = en.Current;
-                SerializeKeyValue(ref writer, headerStyle, en.Current, options);
+                SerializeKeyValue(ref writer, applyHeaderStyle, en.Current, options);
             } while (en.MoveNext());
         }
     ENDKEYVALUE:
-        writer.EndKeyValue(true);
+        if (!(applyHeaderStyle && current.Value is IDictionary))
+            writer.EndKeyValue(true);
     END:
         writer.EndScope();
         if (!writer.IsRoot)
             writer.EndCurrentState();
 
-        static void SerializeKeyValue(ref Utf8TomlDocumentWriter<TBufferWriter> writer, bool style, KeyValuePair<TKey, TValue> pair, CsTomlSerializerOptions options)
+        static void SerializeKeyValue(ref Utf8TomlDocumentWriter<TBufferWriter> writer, bool applyHeaderStyle, KeyValuePair<TKey, TValue> pair, CsTomlSerializerOptions options)
         {
             var (key, value) = pair;
 
             if (value is IDictionary dict)
             {
-                if (style)
+                if (applyHeaderStyle)
                 {
                     writer.WriteTableHeaderForPrimitive(key);
                     writer.WriteNewLine();

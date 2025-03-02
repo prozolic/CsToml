@@ -3094,17 +3094,12 @@ public class DictionaryTest
             writer.AppendLine("[Table]");
             writer.AppendLine("1 = \"2\"");
             writer.AppendLine("3 = \"4\"");
-            writer.AppendLine();
             writer.AppendLine("[TableParent]");
             writer.AppendLine("[TableParent.Table3]");
             writer.AppendLine("[TableParent.Table3.1]");
             writer.AppendLine("key = [ [ 1, 2, 3 ], {key = \"value\"} ]");
-            writer.AppendLine();
             writer.AppendLine("[TableParent.Table3.2]");
             writer.AppendLine("key = \"value\"");
-            writer.AppendLine();
-            writer.AppendLine();
-            writer.AppendLine();
             writer.Flush();
 
             var expected = buffer.ToArray();
@@ -3133,17 +3128,12 @@ public class DictionaryTest
             writer.AppendLine("[Table]");
             writer.AppendLine("1 = \"2\"");
             writer.AppendLine("3 = \"4\"");
-            writer.AppendLine();
             writer.AppendLine("[TableParent]");
             writer.AppendLine("[TableParent.Table3]");
             writer.AppendLine("[TableParent.Table3.1]");
             writer.AppendLine("key = [ [ 1, 2, 3 ], {key = \"value\"} ]");
-            writer.AppendLine();
             writer.AppendLine("[TableParent.Table3.2]");
             writer.AppendLine("key = \"value\"");
-            writer.AppendLine();
-            writer.AppendLine();
-            writer.AppendLine();
             writer.Flush();
 
             var dict = CsTomlSerializer.Deserialize<IDictionary<object, object?>>(buffer.WrittenSpan);
