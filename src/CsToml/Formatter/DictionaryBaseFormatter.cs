@@ -82,7 +82,8 @@ public abstract class DictionaryBaseFormatter<TKey, TValue, TDicitonary, TMediat
                 goto END;
             }
 
-            SerializeKeyValue(ref writer, headerStyle, en.Current, options);
+            var current = en.Current;
+            SerializeKeyValue(ref writer, headerStyle, current, options);
             if (!en.MoveNext())
             {
                 goto ENDKEYVALUE;
@@ -90,7 +91,9 @@ public abstract class DictionaryBaseFormatter<TKey, TValue, TDicitonary, TMediat
 
             do
             {
-                writer.EndKeyValue();
+                if (!(headerStyle && current.Value is IDictionary))
+                    writer.EndKeyValue();
+                current = en.Current;
                 SerializeKeyValue(ref writer, headerStyle, en.Current, options);
             } while (en.MoveNext());
         }
