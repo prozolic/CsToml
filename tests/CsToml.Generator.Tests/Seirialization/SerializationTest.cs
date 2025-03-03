@@ -3030,6 +3030,7 @@ public class DictionaryTest
             {
                 999,
                 "Value",
+                Color.Red,
                 new Dictionary<string, object?>()
                 {
                     ["key"] = new object[]
@@ -3076,7 +3077,7 @@ public class DictionaryTest
             using var bytes = CsTomlSerializer.Serialize(dict);
 
             using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("key = [ 999, \"Value\", {key = [ [ 1, 2, 3 ], {key = \"value\"} ]} ]");
+            writer.AppendLine("key = [ 999, \"Value\", \"Red\", {key = [ [ 1, 2, 3 ], {key = \"value\"} ]} ]");
             writer.AppendLine("Table = {1 = \"2\", 3 = \"4\"}");
             writer.AppendLine("Array = [ 123, 456.0, \"789\" ]");
             writer.AppendLine("TableParent = {Table3 = {1 = {key = [ [ 1, 2, 3 ], {key = \"value\"} ]}, 2 = {key = \"value\"}}}");
@@ -3089,7 +3090,7 @@ public class DictionaryTest
             using var bytes = CsTomlSerializer.Serialize(dict, options: Option.Header);
 
             using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("key = [ 999, \"Value\", {key = [ [ 1, 2, 3 ], {key = \"value\"} ]} ]");
+            writer.AppendLine("key = [ 999, \"Value\", \"Red\", {key = [ [ 1, 2, 3 ], {key = \"value\"} ]} ]");
             writer.AppendLine("Array = [ 123, 456.0, \"789\" ]");
             writer.AppendLine("[Table]");
             writer.AppendLine("1 = \"2\"");
@@ -3112,7 +3113,7 @@ public class DictionaryTest
     {
         {
             using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("key = [ 999, \"Value\", {key = [ [ 1, 2, 3 ], {key = \"value\"} ]} ]");
+            writer.AppendLine("key = [ 999, \"Value\", \"Red\", {key = [ [ 1, 2, 3 ], {key = \"value\"} ]} ]");
             writer.AppendLine("Table = {1 = \"2\", 3 = \"4\"}");
             writer.AppendLine("Array = [ 123, 456.0, \"789\" ]");
             writer.AppendLine("TableParent = {Table3 = {1 = {key = [ [ 1, 2, 3 ], {key = \"value\"} ]}, 2 = {key = \"value\"}}}");
@@ -3123,7 +3124,7 @@ public class DictionaryTest
         }
         {
             using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("key = [ 999, \"Value\", {key = [ [ 1, 2, 3 ], {key = \"value\"} ]} ]");
+            writer.AppendLine("key = [ 999, \"Value\", \"Red\", {key = [ [ 1, 2, 3 ], {key = \"value\"} ]} ]");
             writer.AppendLine("Array = [ 123, 456.0, \"789\" ]");
             writer.AppendLine("[Table]");
             writer.AppendLine("1 = \"2\"");
@@ -3147,26 +3148,28 @@ public class DictionaryTest
             value.ShouldBe(999);
             string value2 = dynamicDict["key"][1];
             value2.ShouldBe("Value");
-            object[] value3 = dynamicDict["key"][2]["key"][0];
-            value3.ShouldBe(new object[] { 1, 2, 3 });
-            string value4 = dynamicDict["key"][2]["key"][1]["key"];
-            value4.ShouldBe("value");
-            string value5 = dynamicDict["Table"]["1"];
-            value5.ShouldBe("2");
-            string value6 = dynamicDict["Table"]["3"];
-            value6.ShouldBe("4");
-            long value7 = dynamicDict["Array"][0];
-            value7.ShouldBe(123);
-            double value8 = dynamicDict["Array"][1];
-            value8.ShouldBe(456.0f);
-            string value9 = dynamicDict["Array"][2];
-            value9.ShouldBe("789");
-            object[] value10 = dynamicDict["TableParent"]["Table3"]["1"]["key"][0];
-            value10.ShouldBe(new object[] { 1, 2, 3 });
-            string value11 = dynamicDict["TableParent"]["Table3"]["1"]["key"][1]["key"];
-            value11.ShouldBe("value");
-            string value12 = dynamicDict["TableParent"]["Table3"]["2"]["key"];
+            string value3 = dynamicDict["key"][2];
+            value3.ShouldBe("Red");
+            object[] value4 = dynamicDict["key"][3]["key"][0];
+            value4.ShouldBe(new object[] { 1, 2, 3 });
+            string value5 = dynamicDict["key"][3]["key"][1]["key"];
+            value5.ShouldBe("value");
+            string value6 = dynamicDict["Table"]["1"];
+            value6.ShouldBe("2");
+            string value7 = dynamicDict["Table"]["3"];
+            value7.ShouldBe("4");
+            long value8 = dynamicDict["Array"][0];
+            value8.ShouldBe(123);
+            double value9 = dynamicDict["Array"][1];
+            value9.ShouldBe(456.0f);
+            string value10 = dynamicDict["Array"][2];
+            value10.ShouldBe("789");
+            object[] value11 = dynamicDict["TableParent"]["Table3"]["1"]["key"][0];
+            value11.ShouldBe(new object[] { 1, 2, 3 });
+            string value12 = dynamicDict["TableParent"]["Table3"]["1"]["key"][1]["key"];
             value12.ShouldBe("value");
+            string value13 = dynamicDict["TableParent"]["Table3"]["2"]["key"];
+            value13.ShouldBe("value");
         }
     }
 

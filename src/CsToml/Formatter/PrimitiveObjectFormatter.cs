@@ -112,7 +112,8 @@ public sealed class PrimitiveObjectFormatter : ITomlValueFormatter<object>
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, object target, CsTomlSerializerOptions options)
         where TBufferWriter : IBufferWriter<byte>
     {
-        if (TypeToJumpCode.TryGetValue(target.GetType(), out var jumpCode))
+        var type = target.GetType();
+        if (TypeToJumpCode.TryGetValue(type, out var jumpCode))
         {
             switch(jumpCode)
             {
@@ -223,6 +224,14 @@ public sealed class PrimitiveObjectFormatter : ITomlValueFormatter<object>
             writer.EndArray();
             return;
         }
+
+        if (target is Enum)
+        {
+            var enumName = Enum.GetName(type, target);
+            NullableStringFormatter.Instance.Serialize(ref writer, enumName, options);
+            return;
+        }
+
 
         ExceptionHelper.ThrowSerializationFailedAsKey(target.GetType());
     }
