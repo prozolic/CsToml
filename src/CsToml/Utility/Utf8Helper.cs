@@ -94,15 +94,6 @@ internal static class Utf8Helper
         return false;
     }
 
-    private static bool ContainInvalidSequencesVector(ReadOnlySpan<byte> bytes)
-    {
-        if (bytes.Length > 128)
-        {
-
-        }
-        return false;
-    }
-
     public static void ParseFromCodePointToUtf8(int utf32CodePoint, Span<byte> utf8Bytes, out int writtenCount)
     {
         // unicode -> utf8
