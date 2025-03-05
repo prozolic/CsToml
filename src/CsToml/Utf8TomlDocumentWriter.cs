@@ -1,4 +1,6 @@
-﻿using CsToml.Utility;
+﻿using CsToml.Error;
+using CsToml.Formatter;
+using CsToml.Utility;
 using CsToml.Values;
 using System.Buffers;
 using System.Globalization;
@@ -10,6 +12,7 @@ namespace CsToml;
 public enum TomlValueState
 {
     Default,
+    Array,
     ArrayOfTable,
     Table,
 }
@@ -20,6 +23,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
     private Utf8Writer<TBufferWriter> writer;
     private List<TomlDottedKey> dottedKeys;
     private List<(TomlValueState state, int dottedKeyIndex)> valueStates;
+    private readonly bool valueOnly;
 
     internal readonly int WrittenSize => writer.WrittenSize;
 
@@ -29,11 +33,14 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
 
     public readonly TomlValueState State => CurrentState.state;
 
-    public Utf8TomlDocumentWriter(ref TBufferWriter bufferWriter)
+    internal readonly bool IsRoot => valueStates.Count == 1 && !valueOnly;
+
+    public Utf8TomlDocumentWriter(ref TBufferWriter bufferWriter, bool valueOnly = false)
     {
         writer = new Utf8Writer<TBufferWriter>(ref bufferWriter);
         dottedKeys = new List<TomlDottedKey>();
         valueStates = [(TomlValueState.Default, -1)];
+        this.valueOnly = valueOnly;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -65,6 +72,12 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void PushKeyForPrimitive<T>(T value)
+    {
+        dottedKeys.Add(TomlDottedKey.ParseKeyForPrimitive(value));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PopKey()
     {
         dottedKeys.RemoveAt(dottedKeys.Count - 1);
@@ -84,8 +97,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
                 default:
                     if (valueStates.Count > 1)
                     {
-                        var priviousState = CurrentPriviousState;
-                        if (priviousState.state == TomlValueState.ArrayOfTable)
+                        if (valueStates.Any(v => v.state == TomlValueState.ArrayOfTable))
                             return;
                     }
                     WriteNewLine();
@@ -104,6 +116,12 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
     public void EndCurrentState()
     {
         valueStates.RemoveAt(valueStates.Count - 1);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal bool IsArrayOrListElement()
+    {
+        return valueStates.Any(v => v.state == TomlValueState.ArrayOfTable);
     }
 
     public void WriteBoolean(bool value)
@@ -518,6 +536,203 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
         TomlDottedKey.ParseKey(key).ToTomlString(ref this);
     }
 
+    internal void WriteKeyForPrimitive<T>(T value)
+    {
+#pragma warning disable CS8600
+#pragma warning disable CS8605
+        var valueType = value?.GetType() ?? typeof(T);
+        var isObjectType = typeof(T) == typeof(object);
+        if (PrimitiveObjectFormatter.TryGetJumpCode(valueType, out var jumpCode))
+        {
+            var refValue = value;
+            switch (jumpCode)
+            {
+                case 0:
+                    if (isObjectType)
+                    {
+                        WriteBoolean((bool)(object)refValue);
+                    }
+                    else
+                    {
+                        WriteBoolean(UnsafeHelper.BitCast<T, bool>(refValue));
+                    }
+                    break;
+                case 1:
+                    if (isObjectType)
+                    {
+                        WriteInt64((byte)(object)refValue);
+                    }
+                    else
+                    {
+                        WriteInt64(UnsafeHelper.BitCast<T, byte>(refValue));
+                    }
+                    break;
+                case 2:
+                    if (isObjectType)
+                    {
+                        WriteInt64((sbyte)(object)refValue);
+                    }
+                    else
+                    {
+                        WriteInt64(UnsafeHelper.BitCast<T, sbyte>(refValue));
+                    }
+                    break;
+                case 3:
+                    if (isObjectType)
+                    {
+                        WriteInt64((char)(object)refValue);
+                    }
+                    else
+                    {
+                        WriteInt64(UnsafeHelper.BitCast<T, char>(refValue));
+                    }
+                    break;
+                case 4:
+                    if (isObjectType)
+                    {
+                        WriteInt64((short)(object)refValue);
+                    }
+                    else
+                    {
+                        WriteInt64(UnsafeHelper.BitCast<T, short>(refValue));
+                    }
+                    break;
+                case 5:
+                    if (isObjectType)
+                    {
+                        WriteInt64((int)(object)refValue);
+                    }
+                    else
+                    {
+                        WriteInt64(UnsafeHelper.BitCast<T, int>(refValue));
+                    }
+                    break;
+                case 6:
+                    if (isObjectType)
+                    {
+                        WriteInt64((long)(object)refValue);
+                    }
+                    else
+                    {
+                        WriteInt64(UnsafeHelper.BitCast<T, long>(refValue));
+                    }
+                    break;
+                case 7:
+                    if (isObjectType)
+                    {
+                        WriteInt64((ushort)(object)refValue);
+                    }
+                    else
+                    {
+                        WriteInt64(UnsafeHelper.BitCast<T, ushort>(refValue));
+                    }
+                    break;
+                case 8:
+                    if (isObjectType)
+                    {
+                        WriteInt64((uint)(object)refValue);
+                    }
+                    else
+                    {
+                        WriteInt64(UnsafeHelper.BitCast<T, uint>(refValue));
+                    }
+                    break;
+                case 9:
+                    if (isObjectType)
+                    {
+                        WriteInt64(checked((long)(object)refValue));
+                    }
+                    else
+                    {
+                        WriteInt64(UnsafeHelper.BitCast<T, long>(refValue));
+                    }
+                    break;
+                case 10:
+                    Write(TomlCodes.Symbol.DOUBLEQUOTED);
+                    if (isObjectType)
+                    {
+                        WriteDouble((float)(object)refValue);
+                    }
+                    else
+                    {
+                        WriteDouble(UnsafeHelper.BitCast<T, float>(refValue));
+                    }
+                    Write(TomlCodes.Symbol.DOUBLEQUOTED);
+                    break;
+                case 11:
+                    Write(TomlCodes.Symbol.DOUBLEQUOTED);
+                    if (isObjectType)
+                    {
+                        WriteDouble((double)(object)refValue);
+                    }
+                    else
+                    {
+                        WriteDouble(UnsafeHelper.BitCast<T, double>(refValue));
+                    }
+                    Write(TomlCodes.Symbol.DOUBLEQUOTED);
+                    break;
+                case 12:
+                    var strKey = refValue as string;
+                    TomlDottedKey.ParseKey(strKey.AsSpan()).ToTomlString(ref this);
+                    break;
+                case 13:
+                    Write(TomlCodes.Symbol.DOUBLEQUOTED);
+                    if (isObjectType)
+                    {
+                        WriteDateTime((DateTime)(object)refValue);
+                    }
+                    else
+                    {
+                        WriteDateTime(UnsafeHelper.BitCast<T, DateTime>(refValue));
+                    }
+                    Write(TomlCodes.Symbol.DOUBLEQUOTED);
+                    break;
+                case 14:
+                    Write(TomlCodes.Symbol.DOUBLEQUOTED);
+                    if (isObjectType)
+                    {
+                        WriteDateTimeOffset((DateTimeOffset)(object)refValue);
+                    }
+                    else
+                    {
+                        WriteDateTimeOffset(UnsafeHelper.BitCast<T, DateTimeOffset>(refValue));
+                    }
+                    Write(TomlCodes.Symbol.DOUBLEQUOTED);
+                    break;
+                case 15:
+                    Write(TomlCodes.Symbol.DOUBLEQUOTED);
+                    if (isObjectType)
+                    {
+                        WriteDateOnly((DateOnly)(object)refValue);
+                    }
+                    else
+                    {
+                        WriteDateOnly(UnsafeHelper.BitCast<T, DateOnly>(refValue));
+                    }
+                    Write(TomlCodes.Symbol.DOUBLEQUOTED);
+                    break;
+                case 16:
+                    Write(TomlCodes.Symbol.DOUBLEQUOTED);
+                    if (isObjectType)
+                    {
+                        WriteTimeOnly((TimeOnly)(object)refValue);
+                    }
+                    else
+                    {
+                        WriteTimeOnly(UnsafeHelper.BitCast<T, TimeOnly>(refValue));
+                    }
+                    Write(TomlCodes.Symbol.DOUBLEQUOTED);
+                    break;
+            }
+        }
+        else
+        {
+            ExceptionHelper.ThrowSerializationFailedAsKey(valueType);
+        }
+#pragma warning restore CS8600
+#pragma warning restore CS8605
+    }
+
     public void WriteTableHeader(ReadOnlySpan<byte> key)
     {
         BeginTableHeader();
@@ -528,6 +743,19 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
             writer.Write(TomlCodes.Symbol.DOT);
         }
         TomlDottedKey.ParseKey(key).ToTomlString(ref this);
+        EndTableHeader();
+    }
+
+    internal void WriteTableHeaderForPrimitive<T>(T value)
+    {
+        BeginTableHeader();
+        var keySpan = CollectionsMarshal.AsSpan(dottedKeys);
+        for (int i = 0; i < keySpan.Length; i++)
+        {
+            keySpan[i].ToTomlString(ref this);
+            writer.Write(TomlCodes.Symbol.DOT);
+        }
+        WriteKeyForPrimitive(value);
         EndTableHeader();
     }
 
@@ -558,13 +786,23 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BeginArray()
     {
+        if (this.CurrentState.state != TomlValueState.ArrayOfTable)
+        {
+            valueStates.Add((TomlValueState.Array, dottedKeys.Count));
+        }
         writer.Write(TomlCodes.Symbol.LEFTSQUAREBRACKET);
         WriteSpace();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void EndArray()
-        => writer.Write(TomlCodes.Symbol.RIGHTSQUAREBRACKET);
+    {
+        if (this.CurrentState.state == TomlValueState.Array)
+        {
+            valueStates.RemoveAt(valueStates.Count - 1);
+        }
+        writer.Write(TomlCodes.Symbol.RIGHTSQUAREBRACKET);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BeginTableHeader()

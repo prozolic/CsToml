@@ -310,7 +310,7 @@ partial class TableClass : ITomlSerializedObject<TableClass>
 </details>
 
 As a result, it can be serialized and deserialized as follows.
-Custom class serialization does not preserve the layout of the original TOML text.
+Custom type serialization does not preserve the layout of the original TOML text.
 
 ```csharp
 var tomlText = @"
@@ -375,7 +375,6 @@ alias = "value"
 
 In `CsToml.Generator` v1.3.0 and later versions, read-only properties, or those that have no setter either private or public, can also be deserialized.
 
-
 ```csharp
 [TomlSerializedObject]
 internal partial class TypeTable(long intValue, string strValue)
@@ -397,7 +396,6 @@ internal partial class TypeTable(long intValue, string strValue)
 * If there is one parameterless/parameterized constructor, use it.
 * If there is more than one constructor, the parameterized constructor with the most matching parameters is automatically selected.
 * The condition for a parameterized constructor is that all parameter names must match the corresponding member names (case-insensitive).
-
 
 ```csharp
 [TomlSerializedObject]
@@ -457,10 +455,26 @@ internal partial class Constructor3
 ```
 
 
-### `CsTomlSerializerOptions.TableStyle`
+### CsTomlSerializerOptions
 
-It can also serialize to TOML table format by setting `CsTomlSerializerOptions.TableStyle` to `TomlTableStyle.Header`.
+If there is no specification, the default is `CsTomlSerializerOptions.Default`.
 You can create custom `CsTomlSerializerOptions` using `CsTomlSerializerOptions.Default` and a with expression.
+
+```csharp
+// You can create custom options by using a with expression.
+var option = CsTomlSerializerOptions.Default with
+{
+    SerializeOptions = new SerializeOptions { TableStyle = TomlTableStyle.Header }
+};
+```
+
+#### SerializeOptions.TableStyle
+
+`SerializeOptions.TableStyle` configure whether a custom type with the `[TomlSerializedObject]` attribute or Dictionary class and interface is serialized as TOML table format or TOML inline table format.
+This can be configured by passing `TomlTableStyle.Header` for TOML table format, `TomlTableStyle.Default` or `TomlTableStyle.DottedKey` for TOML inline table format.
+The default value is `TomlTableStyle.Default`.
+
+For example:
 
 ```csharp
 // You can create custom options by using a with expression.
@@ -473,16 +487,31 @@ var value = new CsTomlClass() {
     Key = "value", Number = 123, Array = [1,2,3] , Value = "alias",
     Table = new TableClass() { Key = "kEY", Number = 123 } 
 };
-using var serializedText = CsTomlSerializer.Serialize<CsTomlClass>(value, option);
 
-// Key = "value"
-// alias = "alias"
-// Array = [ 1, 2, 3 ]
-// Number = 123
-// [Table]
-// Key = "kEY"
-// Number = 123
-var serializedTomlText = Encoding.UTF8.GetString(serializedText.ByteSpan);
+using var serializedText = CsTomlSerializer.Serialize<CsTomlClass>(value, option);
+```
+
+In the case of TomlTableStyle.Default, serialize as follows.
+
+```toml
+Key = "value"
+alias = "alias"
+Array = [ 1, 2, 3 ]
+Number = 123
+Table.Key = "kEY"
+Table.Number = 123
+```
+
+In the case of TomlTableStyle.Header, serialize as follows.
+
+```toml
+Key = "value"
+alias = "alias"
+Array = [ 1, 2, 3 ]
+Number = 123
+[Table]
+Key = "kEY"
+Number = 123
 ```
 
 Built-in support type
@@ -622,7 +651,7 @@ You can also deserialize into primitive object type or collection of keys and va
 ```csharp
 // dynamic is the same as IDictionary<object, object>
 var dict = CsTomlSerializer.Deserialize<dynamic>(tomlText);
-var dict2 = CsTomlSerializer.Deserialize<Dictionary<object, object>>(tomlText);
+var dict2 = CsTomlSerializer.Deserialize<IDictionary<object, object>>(tomlText);
 ```
 
 If a syntax error is found during deserialization, an `CsTomlSerializeException` is thrown after deserialization.

@@ -224,6 +224,10 @@ internal static class FormatterTypeMetaData
             case TypeKind.Enum:
                 return TomlSerializationKind.Enum;
             case TypeKind.Class:
+                if (type.IsTomlSerializedObject())
+                {
+                    return TomlSerializationKind.TomlSerializedObject;
+                }
                 if (ContainsCollectionType(type))
                 {
                     if (IsElementType(type, TomlSerializationKind.Primitive))
@@ -236,12 +240,12 @@ internal static class FormatterTypeMetaData
                 {
                     return TomlSerializationKind.Dictionary;
                 }
-                if (type.IsTomlSerializedObject())
-                {
-                    return TomlSerializationKind.TomlSerializedObject;
-                }
                 return TomlSerializationKind.Class;
             case TypeKind.Interface:
+                if (ContainsDictionaryAny(type))
+                {
+                    return TomlSerializationKind.Dictionary;
+                }
                 if (ContainsCollectionAny(type))
                 {
                     if (IsElementType(type, TomlSerializationKind.Primitive))
@@ -250,12 +254,12 @@ internal static class FormatterTypeMetaData
                     }
                     return TomlSerializationKind.CollectionOfITomlSerializedObject;
                 }
-                if (ContainsDictionaryAny(type))
-                {
-                    return TomlSerializationKind.Dictionary;
-                }
                 return TomlSerializationKind.Interface;
             case TypeKind.Struct:
+                if (type.IsTomlSerializedObject())
+                {
+                    return TomlSerializationKind.TomlSerializedObject;
+                }
                 if (TryGetFormatterType(type, out var formatter))
                 {
                     if (IsElementType(type, TomlSerializationKind.Primitive))
@@ -263,10 +267,6 @@ internal static class FormatterTypeMetaData
                         return TomlSerializationKind.PrimitiveCollection;
                     }
                     return TomlSerializationKind.CollectionOfITomlSerializedObject;
-                }
-                if (type.IsTomlSerializedObject())
-                {
-                    return TomlSerializationKind.TomlSerializedObject;
                 }
                 return TomlSerializationKind.Struct;
         }
