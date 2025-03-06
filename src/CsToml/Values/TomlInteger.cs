@@ -10,7 +10,7 @@ namespace CsToml.Values;
 [DebuggerDisplay("{Value}")]
 internal sealed partial class TomlInteger : TomlValue
 {
-    internal static readonly TomlInteger[] cache = CreateCacheValue();
+    internal static readonly TomlInteger[] Cache = CreateCacheValue();
 
     private static TomlInteger[] CreateCacheValue()
     {
@@ -26,14 +26,14 @@ internal sealed partial class TomlInteger : TomlValue
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TomlInteger Create(long value)
     {
-        if ((ulong)(value + 1) < (ulong)cache.Length)
+        if ((ulong)(value + 1) < (ulong)Cache.Length)
         {
-            return cache[value + 1];
+            return Cache[value + 1];
         }
         return new TomlInteger(value);
     }
 
-    public static TomlInteger Zero => cache[1];
+    public static TomlInteger Zero => Cache[1];
 
     public long Value { get; init; } 
 
@@ -80,24 +80,10 @@ internal sealed partial class TomlInteger : TomlValue
 
     public override string ToString() => Value.ToString(CultureInfo.InvariantCulture);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TomlInteger Parse(ReadOnlySpan<byte> bytes)
     {
-        // hexadecimal, octal, or binary
-        if (bytes.Length > 2)
-        {
-            var prefix = Unsafe.ReadUnaligned<short>(ref MemoryMarshal.GetReference<byte>(bytes));
-            switch (prefix)
-            {
-                case 25136: //0b:binary
-                    return TomlInteger.Create(ParseBinary(bytes[2..]));
-                case 28464: //0o:octal
-                    return TomlInteger.Create(ParseOctal(bytes[2..]));
-                case 30768: //0x:hexadecimal
-                    return TomlInteger.Create(ParseHex(bytes[2..]));
-            }
-        }
-
-        if (Utf8Parser.TryParse(bytes, out long value, out int bytesConsumed2))
+        if (Utf8Parser.TryParse(bytes, out long value, out int _))
         {
             return TomlInteger.Create(value);
         }
@@ -106,7 +92,25 @@ internal sealed partial class TomlInteger : TomlValue
         return default!;
     }
 
-    private static long ParseBinary(ReadOnlySpan<byte> utf8Bytes)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TomlInteger ParseBinary(ReadOnlySpan<byte> bytes)
+    {
+        return TomlInteger.Create(ParseBinaryValue(bytes[2..]));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TomlInteger ParseOctal(ReadOnlySpan<byte> bytes)
+    {
+        return TomlInteger.Create(ParseOctalValue(bytes[2..]));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TomlInteger ParseHex(ReadOnlySpan<byte> bytes)
+    {
+        return TomlInteger.Create(ParseHexValue(bytes[2..]));
+    }
+
+    private static long ParseBinaryValue(ReadOnlySpan<byte> utf8Bytes)
     {
         var digits = utf8Bytes.Length;
         if (digits > 64) ExceptionHelper.ThrowOverflowCount();
@@ -138,7 +142,7 @@ internal sealed partial class TomlInteger : TomlValue
         }
     }
 
-    private static long ParseOctal(ReadOnlySpan<byte> utf8Bytes)
+    private static long ParseOctalValue(ReadOnlySpan<byte> utf8Bytes)
     {
         var digits = utf8Bytes.Length;
         if (digits > 21) ExceptionHelper.ThrowOverflowCount();
@@ -170,7 +174,7 @@ internal sealed partial class TomlInteger : TomlValue
         }
     }
 
-    private static long ParseHex(ReadOnlySpan<byte> utf8Bytes)
+    private static long ParseHexValue(ReadOnlySpan<byte> utf8Bytes)
     {
         var digits = utf8Bytes.Length;
         if (digits > 16) ExceptionHelper.ThrowOverflowCount();

@@ -1390,6 +1390,7 @@ internal ref struct CsTomlReader
                 }
                 else
                 {
+                    Advance(2); // +0 or -0
                     return TomlInteger.Zero;
                 }
             }
@@ -1550,7 +1551,7 @@ internal ref struct CsTomlReader
         var underscore = false;
         while (TryPeek(out var ch))
         {
-            if (TomlCodes.IsNumber(ch) || TomlCodes.IsLowerHexAlphabet(ch) || TomlCodes.IsUpperHexAlphabet(ch))
+            if (TomlCodes.IsHex(ch))
             {
                 underscore = false;
                 writer.Write(ch);
@@ -1585,7 +1586,7 @@ internal ref struct CsTomlReader
         if (underscore)
             ExceptionHelper.ThrowUnderscoreIsUsedAtTheEnd();
 
-        return TomlInteger.Parse(writer.WrittenSpan);
+        return TomlInteger.ParseHex(writer.WrittenSpan);
     }
 
     private TomlInteger ReadOctalNumeric()
@@ -1647,7 +1648,7 @@ internal ref struct CsTomlReader
         if (underscore)
             ExceptionHelper.ThrowUnderscoreIsUsedAtTheEnd();
 
-        return TomlInteger.Parse(writer.WrittenSpan);
+        return TomlInteger.ParseOctal(writer.WrittenSpan);
     }
 
     private TomlInteger ReadBinaryNumeric()
@@ -1709,7 +1710,7 @@ internal ref struct CsTomlReader
         if (underscore)
             ExceptionHelper.ThrowUnderscoreIsUsedAtTheEnd();
 
-        return TomlInteger.Parse(writer.WrittenSpan);
+        return TomlInteger.ParseBinary(writer.WrittenSpan);
     }
 
     private TomlFloat ReadDouble()
