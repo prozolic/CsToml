@@ -1075,13 +1075,12 @@ internal ref struct CsTomlReader
         Advance(1); // {
         SkipWhiteSpace();
 
-        var inlineTable = new TomlInlineTable();
         if (TryPeek(out var c)) // empty inlinetable
         {
             if (TomlCodes.IsRightBraces(c))
             {
                 Advance(1); // }
-                return inlineTable;
+                return TomlInlineTable.Empty;
             }
         }
         else
@@ -1090,6 +1089,7 @@ internal ref struct CsTomlReader
             return default;
         }
 
+        var inlineTable = new TomlInlineTable();
         TomlTableNode? currentNode = inlineTable.RootNode;
         var dotKeysForInlineTable = new ExtendableArray<TomlDottedKey>(16);
         try

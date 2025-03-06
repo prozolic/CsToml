@@ -1,7 +1,6 @@
 ﻿using CsToml.Utility;
 using System.Buffers;
 using System.Diagnostics;
-using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -10,6 +9,8 @@ namespace CsToml.Values;
 [DebuggerDisplay("Inline Table = {RootNode.NodeCount}")]
 internal sealed partial class TomlInlineTable : TomlValue
 {
+    public new static readonly TomlInlineTable Empty = new();
+
     private readonly TomlTable inlineTable = new TomlTable();
 
     public override bool HasValue => true;
@@ -18,8 +19,6 @@ internal sealed partial class TomlInlineTable : TomlValue
 
     [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
     internal TomlTableNode RootNode => inlineTable.RootNode;
-
-    public TomlInlineTable(){}
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal IDictionary<object, object> GetDictionary()
@@ -30,8 +29,11 @@ internal sealed partial class TomlInlineTable : TomlValue
         writer.BeginInlineTable();
         writer.WriteSpace();
 
-        var keys = new List<TomlDottedKey>();
-        ToTomlStringCore(ref writer, RootNode, keys);
+        if (RootNode.NodeCount > 0)
+        {
+            var keys = new List<TomlDottedKey>(RootNode.NodeCount);
+            ToTomlStringCore(ref writer, RootNode, keys);
+        }
 
         writer.WriteSpace();
         writer.EndInlineTable();
