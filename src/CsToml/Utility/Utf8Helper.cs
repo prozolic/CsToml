@@ -15,52 +15,80 @@ internal static class Utf8Helper
         for (int i = 0; i < bytes.Length; i++)
         {
             ref var b1 = ref Unsafe.Add(ref refBytes, i);
-            if ((b1 & 0x80) == 0x00) goto One;
-            else if (((b1 & 0xe0) == 0xc0)) goto Two;
-            else if (((b1 & 0xf0) == 0xe0)) goto Three;
-            else if (((b1 & 0xf8) == 0xf0)) goto Four;
-            else return true;
-
-        One:
-            if (bytes.Length - i < 4) continue;
-            var block = MemoryMarshal.Read<uint>(bytes.Slice(i, 4));
-            if ((block & 0x80808080) == 0x00) i += 3;
-            continue;
-
-        Two:
-            if (bytes.Length <= ++i) return true;
-            if ((Unsafe.Add(ref refBytes, i) & 0xc0) != 0x80) return true;
-            continue;
-
-        Three:
-            if (bytes.Length <= i + 2) return true;
-
-            if (Unsafe.Add(ref refBytes, i) == 0xe0)
+            if ((b1 & 0x80) == 0x00) // 1
             {
-                ref var b2 = ref Unsafe.Add(ref refBytes, i + 1);
-                if (0x7f < b2 && b2 < 0xa0) return true;
+                if (bytes.Length - i < 4) continue;
+                var block = Unsafe.ReadUnaligned<uint>(ref b1);
+                if ((block & 0x80808080) == 0x00) i += 3;
             }
-            else if (Unsafe.Add(ref refBytes, i) == 0xed) // surrogate pair
+            else if (((b1 & 0xe0) == 0xc0)) // 2
             {
-                if (0x9f < Unsafe.Add(ref refBytes, i + 1)) return true;
+                if (bytes.Length <= ++i) return true;
+
+                var b2 = Unsafe.Add(ref refBytes, i);
+                if ((b2 & 0xc0) != 0x80) return true;
+
+                // check codePoint
+                var codePoint = (uint)(b1 & 0x1f) << 6 | (uint)(b2 & 0x3f);
+                if ((codePoint < 0x80) || (0x7ff < codePoint))
+                {
+                    return true;
+                }
             }
-            if ((Unsafe.Add(ref refBytes, ++i) & 0xc0) != 0x80) return true;
-            if ((Unsafe.Add(ref refBytes, ++i) & 0xc0) != 0x80) return true;
-            continue;
-
-        Four:
-            if (bytes.Length <= i + 3) return true;
-
-            if (Unsafe.Add(ref refBytes, i) == 0xf0)
+            else if (((b1 & 0xf0) == 0xe0)) // 3
             {
-                ref var b2 = ref Unsafe.Add(ref refBytes, i + 1);
-                if (0x7f < b2 && b2 < 0x90) return true;
-            }
-            if ((Unsafe.Add(ref refBytes, ++i) & 0xc0) != 0x80) return true;
-            if ((Unsafe.Add(ref refBytes, ++i) & 0xc0) != 0x80) return true;
-            if ((Unsafe.Add(ref refBytes, ++i) & 0xc0) != 0x80) return true;
-            continue;
+                if (bytes.Length <= i + 2) return true;
 
+                var b2 = Unsafe.Add(ref refBytes, i + 1);
+                var b3 = Unsafe.Add(ref refBytes, i + 2);
+                // check codePoint
+                var codePoint = (uint)(b1 & 0x0f) << 12 | (uint)(b2 & 0x3f) << 6 | (uint)(b3 & 0x3f);
+                if ((codePoint < 0x800) || (0xffff < codePoint) || (0xd7ff < codePoint && codePoint < 0xe000))
+                {
+                    return true;
+                }
+
+                if (b1 == 0xe0)
+                {
+                    if (0x7f < b2 && b2 < 0xa0) return true;
+                }
+                else if (b1 == 0xed) // surrogate pair
+                {
+                    if (0x9f < b2) return true;
+                }
+                if ((b2 & 0xc0) != 0x80) return true;
+                if ((b3 & 0xc0) != 0x80) return true;
+
+                i += 2;
+            }
+            else if (((b1 & 0xf8) == 0xf0)) // 4
+            {
+                if (bytes.Length <= i + 3) return true;
+
+                var b2 = Unsafe.Add(ref refBytes, i + 1);
+                var b3 = Unsafe.Add(ref refBytes, i + 2);
+                var b4 = Unsafe.Add(ref refBytes, i + 3);
+                if (b1 == 0xf0)
+                {
+                    if (0x7f < b2 && b2 < 0x90) return true;
+                }
+                if ((b2 & 0xc0) != 0x80) return true;
+                if ((b3 & 0xc0) != 0x80) return true;
+                if ((b4 & 0xc0) != 0x80) return true;
+
+                // check codePoint
+                var codePoint = (uint)(b1 & 0x07) << 18 | (uint)(b2 & 0x3f) << 12 | (uint)(b3 & 0x3f) << 6 | (uint)(b4 & 0x3f);
+                if (codePoint <= 0xffff || 0x10ffff < codePoint)
+                {
+                    return true;
+                }
+
+                i += 3;
+            }
+            else
+            {
+                return true;
+            }
         }
 
         return false;

@@ -307,6 +307,32 @@ bin1 = 0b11010110
     {
         var document = CsTomlSerializer.Deserialize<TomlDocument>(@"int1 = +99"u8);
         (document!.RootNode["int1"].ValueType == TomlValueType.Integer).ShouldBeTrue();
+
+        var document2 = CsTomlSerializer.Deserialize<TomlDocument>(@"int1 = +0"u8);
+        (document2!.RootNode["int1"].ValueType == TomlValueType.Integer).ShouldBeTrue();
+
+        var document3 = CsTomlSerializer.Deserialize<TomlDocument>(@"int1 = -0"u8);
+        (document3!.RootNode["int1"].ValueType == TomlValueType.Integer).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Exception()
+    {
+        Should.Throw<CsTomlSerializeException>(() => {
+            var document = CsTomlSerializer.Deserialize<TomlDocument>(@"int1 = 00"u8);
+        });
+
+        Should.Throw<CsTomlSerializeException>(() => {
+            var document = CsTomlSerializer.Deserialize<TomlDocument>(@"hexError = 0o8"u8);
+        });
+
+        Should.Throw<CsTomlSerializeException>(() => {
+            var document = CsTomlSerializer.Deserialize<TomlDocument>(@"octError = 0xABCDEFG"u8);
+        });
+
+        Should.Throw<CsTomlSerializeException>(() => {
+            var document = CsTomlSerializer.Deserialize<TomlDocument>(@"binError = 0b2"u8);
+        });
     }
 }
 
