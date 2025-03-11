@@ -17,15 +17,15 @@ internal static class JsonNodeExtensions
 
     private static bool DeepEqualsCore(JsonNode? expectedNode, JsonNode? actualNode)
     {
-        if (expectedNode is JsonArray arrayNode)
+        if (expectedNode is JsonArray expectedArrayNode)
         {
-            if (!(arrayNode is JsonArray arrayNode2))
+            if (actualNode is not JsonArray actualArrayNode)
             {
                 return false;
             }
 
-            var expectedNodeList = (IList<JsonNode?>)arrayNode!;
-            var actualNodeList = (IList<JsonNode?>)arrayNode2!;
+            var expectedNodeList = (IList<JsonNode?>)expectedArrayNode!;
+            var actualNodeList = (IList<JsonNode?>)actualArrayNode!;
 
             if (expectedNodeList.Count != actualNodeList.Count)
             {

@@ -1,10 +1,7 @@
 ﻿using CsToml.Values;
 using System.Buffers;
 using System.Text;
-using System.Text.Encodings.Web;
-using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Text.Unicode;
 
 namespace CsToml.Tests;
 
@@ -20,9 +17,6 @@ internal static class TomlDocumentExtensions
             AddChildNode(jsonObj, pair.Value, pair.Key.Utf16String);
         }
 
-        var options = new JsonSerializerOptions();
-        options.Encoder = JavaScriptEncoder.Create(UnicodeRanges.All);
-        options.WriteIndented = true;
         return jsonObj;
     }
 
@@ -33,7 +27,7 @@ internal static class TomlDocumentExtensions
         {
             if (node is JsonObject jsonObj)
             {
-                jsonObj.Add(key, value);
+                jsonObj.Add(key!, value);
             }
             else if (node is JsonArray arrayJsonObj)
             {
@@ -49,18 +43,6 @@ internal static class TomlDocumentExtensions
         }
 
         var tomlValue = tomlNode.Value;
-
-        //if (tomlNode.IsGroupingProperty || tomlNode.NodeCount)
-        //{
-        //    var childJsonObj = new JsonObject();
-        //    Add(jsonObj, key!, childJsonObj);
-        //    foreach (var pair in tomlNode.KeyValuePairs)
-        //    {
-        //        AddChildNode(childJsonObj, pair.Value, pair.Key.Utf16String);
-        //    }
-        //    return;
-        //}
-
         if (tomlValue?.HasValue ?? false)
         {
             AddChildTomlValue(jsonObj, tomlValue, key);
@@ -88,7 +70,7 @@ internal static class TomlDocumentExtensions
         static void Add(JsonNode node, string? key, JsonNode value)
         {
             if (node is JsonObject jsonObj)
-                jsonObj.Add(key, value);
+                jsonObj.Add(key!, value);
             else if (node is JsonArray arrayJsonObj)
             {
                 if (key == null)
@@ -162,11 +144,6 @@ internal static class TomlDocumentExtensions
         tomlValue.ToTomlString(ref writer);
         return Encoding.UTF8.GetString(bufferWriter.WrittenSpan);
     }
-
-    private static string GetString(TomlString value)
-    {
-        return value.GetString();
-    } 
 
 }
 

@@ -130,7 +130,7 @@ number2 = 123456
     public async Task DeserializeAsyncMemoryStreamTest()
     {
         var ms = new MemoryStream(tomlText);
-        TomlDocument document = await CsTomlSerializer.DeserializeAsync<TomlDocument>(ms);
+        TomlDocument document = await CsTomlSerializer.DeserializeAsync<TomlDocument>(ms, cancellationToken: TestContext.Current.CancellationToken);
 
         document!.RootNode["str"u8].GetString().ShouldBe("value");
         document!.RootNode["int"u8].GetInt64().ShouldBe(123);
@@ -187,7 +187,7 @@ number2 = 123456
         TomlDocument document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
 
         var ms = new MemoryStream(65536);
-        await CsTomlSerializer.SerializeAsync(ms, document);
+        await CsTomlSerializer.SerializeAsync(ms, document, cancellationToken: TestContext.Current.CancellationToken);
 
         var buffer = ms.ToArray();
         buffer.ShouldBe(expectedtomlText);
