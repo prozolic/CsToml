@@ -7,10 +7,10 @@ namespace CsToml.Values;
 [DebuggerDisplay("{Value}")]
 internal sealed partial class TomlFloat(double value) : TomlValue
 {
-    public readonly static TomlFloat Inf = new(TomlCodes.Float.Inf);
-    public readonly static TomlFloat NInf = new (TomlCodes.Float.NInf);
-    public readonly static TomlFloat Nan = new (TomlCodes.Float.Nan);
-    public readonly static TomlFloat PNan = new(TomlCodes.Float.Nan);
+    public static readonly TomlFloat Inf = new(TomlCodes.Float.Inf);
+    public static readonly TomlFloat NInf = new (TomlCodes.Float.NInf);
+    public static readonly TomlFloat Nan = new (TomlCodes.Float.Nan);
+    public static readonly TomlFloat PNan = new(TomlCodes.Float.Nan);
 
     public double Value { get; private set; } = value;
 

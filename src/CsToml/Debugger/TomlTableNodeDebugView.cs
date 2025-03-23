@@ -25,7 +25,7 @@ internal sealed class TomlTableNodeDebugView(TomlTableNode csTomlTableNode)
     public TomlValue Value => node.Value!;
 
     [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
-    public TomlString[] Comments => node.Comments?.ToArray() ?? [];
+    public TomlString[] Comments => node.CommentSpan.ToArray() ?? [];
 
     public bool IsGroupingProperty => node.IsGroupingProperty;
 

@@ -45,8 +45,8 @@ internal class TomlTableNodeDictionary
         if (buckets.Length == 0)
         {
             var capacity = HashHelpers.Primes[0];
-            entries = new Entry[capacity];
-            buckets = new int[capacity];
+            entries = GC.AllocateUninitializedArray<Entry>(capacity);
+            buckets = GC.AllocateUninitializedArray<int>(capacity);
         }
 
         var hashCode = keyHashCode;
@@ -85,7 +85,7 @@ internal class TomlTableNodeDictionary
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetValueOrAdd(TomlDottedKey key, Func<TomlTableNode> valueFactory, out TomlTableNode? existingValue, out TomlTableNode? addedValue)
+    public bool TryGetValueOrAdd(TomlDottedKey key, out TomlTableNode? existingValue, out TomlTableNode? addedValue)
     {
         var hashCode = key.GetHashCodeFast();
         if (TryGetValueCore(key.Value, hashCode, out existingValue))
@@ -94,20 +94,10 @@ internal class TomlTableNodeDictionary
             return true;
         }
 
-        addedValue = valueFactory();
+        addedValue = new TomlTableNode(){ IsGroupingProperty = true, Value = TomlValue.Empty};
         TryAddCore(key, hashCode, addedValue);
         return false;
     }
-
-    [DebuggerStepThrough]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool ContainsKey(TomlDottedKey key)
-        => TryGetValue(key, out var _);
-
-    [DebuggerStepThrough]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool ContainsKey(ReadOnlySpan<byte> key)
-        => TryGetValue(key, out var _);
 
     [DebuggerStepThrough]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -166,11 +156,11 @@ internal class TomlTableNodeDictionary
     [MethodImpl(MethodImplOptions.NoInlining)]
     private void Reserve(int capacity)
     {
-        var newEntries = new Entry[capacity];
+        var newEntries = GC.AllocateUninitializedArray<Entry>(capacity);
         int count = this.count;
         Array.Copy(this.entries, newEntries, count);
 
-        this.buckets = new int[capacity];
+        this.buckets = GC.AllocateUninitializedArray<int>(capacity);
         for (int i = 0; i < count; i++)
         {
             if (newEntries[i].next >= -1)

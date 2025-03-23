@@ -1,5 +1,6 @@
 ﻿using CsToml.Error;
 using System.Buffers;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.Unicode;
@@ -12,84 +13,220 @@ internal static class Utf8Helper
     {
         ref var refBytes = ref MemoryMarshal.GetReference(bytes);
 
-        for (int i = 0; i < bytes.Length; i++)
+        if (Vector.IsHardwareAccelerated && bytes.Length >= Vector<byte>.Count)
         {
-            ref var b1 = ref Unsafe.Add(ref refBytes, i);
-            if ((b1 & 0x80) == 0x00) // 1
-            {
-                if (bytes.Length - i < 4) continue;
-                var block = Unsafe.ReadUnaligned<uint>(ref b1);
-                if ((block & 0x80808080) == 0x00) i += 3;
-            }
-            else if (((b1 & 0xe0) == 0xc0)) // 2
-            {
-                if (bytes.Length <= ++i) return true;
+            var vectorSize = Vector<byte>.Count;
+            var vector0 = Vector<byte>.Zero;
+            var vector80 = new Vector<byte>(0x80);
 
-                var b2 = Unsafe.Add(ref refBytes, i);
-                if ((b2 & 0xc0) != 0x80) return true;
+            for (int i = 0; i < bytes.Length;)
+            {
+                ref var b1 = ref Unsafe.Add(ref refBytes, i);
+                if ((b1 & 0x80) == 0x00) // 1
+                {
+                    // Only partiallys SIMD.
+                    if ((uint)(bytes.Length - i) >= (uint)vectorSize)
+                    {
+                        var vector = Vector.LoadUnsafe<byte>(ref refBytes, (uint)(i));
+                        if ((vector & vector80) == vector0)
+                        {
+                            i += vectorSize;
+                            continue;
+                        }
+                    }
 
-                // check codePoint
-                var codePoint = (uint)(b1 & 0x1f) << 6 | (uint)(b2 & 0x3f);
-                if ((codePoint < 0x80) || (0x7ff < codePoint))
+                    if (bytes.Length - i >= 8)
+                    {
+                        var block = Unsafe.ReadUnaligned<ulong>(ref b1);
+                        if ((block & 0x80808080_80808080) == 0x00)
+                        {
+                            i += 8;
+                            continue;
+                        }
+                    }
+
+                    if (bytes.Length - i >= 4)
+                    {
+                        var block = Unsafe.ReadUnaligned<uint>(ref b1);
+                        if ((block & 0x80808080) == 0x00)
+                        {
+                            i += 4;
+                            continue;
+                        }
+                    }
+                    i++;
+                }
+                else if (((b1 & 0xe0) == 0xc0)) // 2
+                {
+                    if ((uint)bytes.Length <= (uint)(i + 1)) return true;
+
+                    var b2 = Unsafe.Add(ref refBytes, i + 1);
+                    if ((b2 & 0xc0) != 0x80) return true;
+
+                    // check codePoint
+                    var codePoint = (uint)(b1 & 0x1f) << 6 | (uint)(b2 & 0x3f);
+                    if ((codePoint < 0x80) || (0x7ff < codePoint))
+                    {
+                        return true;
+                    }
+                    i += 2;
+                }
+                else if (((b1 & 0xf0) == 0xe0)) // 3
+                {
+                    if ((uint)bytes.Length <= (uint)(i + 2)) return true;
+
+                    var b2 = Unsafe.Add(ref refBytes, i + 1);
+                    var b3 = Unsafe.Add(ref refBytes, i + 2);
+                    // check codePoint
+                    var codePoint = (uint)(b1 & 0x0f) << 12 | (uint)(b2 & 0x3f) << 6 | (uint)(b3 & 0x3f);
+                    if ((codePoint < 0x800) || (0xffff < codePoint) || (0xd7ff < codePoint && codePoint < 0xe000))
+                    {
+                        return true;
+                    }
+
+                    if (b1 == 0xe0)
+                    {
+                        if (0x7f < b2 && b2 < 0xa0) return true;
+                    }
+                    else if (b1 == 0xed) // surrogate pair
+                    {
+                        if (0x9f < b2) return true;
+                    }
+                    if ((b2 & 0xc0) != 0x80) return true;
+                    if ((b3 & 0xc0) != 0x80) return true;
+
+                    i += 3;
+                }
+                else if (((b1 & 0xf8) == 0xf0)) // 4
+                {
+                    if ((uint)bytes.Length <= (uint)(i + 3)) return true;
+
+                    var b2 = Unsafe.Add(ref refBytes, i + 1);
+                    var b3 = Unsafe.Add(ref refBytes, i + 2);
+                    var b4 = Unsafe.Add(ref refBytes, i + 3);
+                    if (b1 == 0xf0)
+                    {
+                        if (0x7f < b2 && b2 < 0x90) return true;
+                    }
+                    if ((b2 & 0xc0) != 0x80) return true;
+                    if ((b3 & 0xc0) != 0x80) return true;
+                    if ((b4 & 0xc0) != 0x80) return true;
+
+                    // check codePoint
+                    var codePoint = (uint)(b1 & 0x07) << 18 | (uint)(b2 & 0x3f) << 12 | (uint)(b3 & 0x3f) << 6 | (uint)(b4 & 0x3f);
+                    if (codePoint <= 0xffff || 0x10ffff < codePoint)
+                    {
+                        return true;
+                    }
+
+                    i += 4;
+                }
+                else
                 {
                     return true;
                 }
-            }
-            else if (((b1 & 0xf0) == 0xe0)) // 3
-            {
-                if (bytes.Length <= i + 2) return true;
-
-                var b2 = Unsafe.Add(ref refBytes, i + 1);
-                var b3 = Unsafe.Add(ref refBytes, i + 2);
-                // check codePoint
-                var codePoint = (uint)(b1 & 0x0f) << 12 | (uint)(b2 & 0x3f) << 6 | (uint)(b3 & 0x3f);
-                if ((codePoint < 0x800) || (0xffff < codePoint) || (0xd7ff < codePoint && codePoint < 0xe000))
-                {
-                    return true;
-                }
-
-                if (b1 == 0xe0)
-                {
-                    if (0x7f < b2 && b2 < 0xa0) return true;
-                }
-                else if (b1 == 0xed) // surrogate pair
-                {
-                    if (0x9f < b2) return true;
-                }
-                if ((b2 & 0xc0) != 0x80) return true;
-                if ((b3 & 0xc0) != 0x80) return true;
-
-                i += 2;
-            }
-            else if (((b1 & 0xf8) == 0xf0)) // 4
-            {
-                if (bytes.Length <= i + 3) return true;
-
-                var b2 = Unsafe.Add(ref refBytes, i + 1);
-                var b3 = Unsafe.Add(ref refBytes, i + 2);
-                var b4 = Unsafe.Add(ref refBytes, i + 3);
-                if (b1 == 0xf0)
-                {
-                    if (0x7f < b2 && b2 < 0x90) return true;
-                }
-                if ((b2 & 0xc0) != 0x80) return true;
-                if ((b3 & 0xc0) != 0x80) return true;
-                if ((b4 & 0xc0) != 0x80) return true;
-
-                // check codePoint
-                var codePoint = (uint)(b1 & 0x07) << 18 | (uint)(b2 & 0x3f) << 12 | (uint)(b3 & 0x3f) << 6 | (uint)(b4 & 0x3f);
-                if (codePoint <= 0xffff || 0x10ffff < codePoint)
-                {
-                    return true;
-                }
-
-                i += 3;
-            }
-            else
-            {
-                return true;
             }
         }
+        else
+        {
+            for (int i = 0; i < bytes.Length;)
+            {
+                ref var b1 = ref Unsafe.Add(ref refBytes, i);
+                if ((b1 & 0x80) == 0x00) // 1
+                {
+                    if (bytes.Length - i >= 8)
+                    {
+                        var block = Unsafe.ReadUnaligned<ulong>(ref b1);
+                        if ((block & 0x80808080_80808080) == 0x00)
+                        {
+                            i += 8;
+                            continue;
+                        }
+                    }
+
+                    if (bytes.Length - i >= 4)
+                    {
+                        var block = Unsafe.ReadUnaligned<uint>(ref b1);
+                        if ((block & 0x80808080) == 0x00)
+                        {
+                            i += 4;
+                            continue;
+                        }
+                    }
+                    i++;
+                }
+                else if (((b1 & 0xe0) == 0xc0)) // 2
+                {
+                    if ((uint)bytes.Length <= (uint)(i + 1)) return true;
+
+                    var b2 = Unsafe.Add(ref refBytes, i + 1);
+                    if ((b2 & 0xc0) != 0x80) return true;
+
+                    // check codePoint
+                    var codePoint = (uint)(b1 & 0x1f) << 6 | (uint)(b2 & 0x3f);
+                    if ((codePoint < 0x80) || (0x7ff < codePoint))
+                    {
+                        return true;
+                    }
+                    i += 2;
+                }
+                else if (((b1 & 0xf0) == 0xe0)) // 3
+                {
+                    if ((uint)bytes.Length <= (uint)(i + 2)) return true;
+
+                    var b2 = Unsafe.Add(ref refBytes, i + 1);
+                    var b3 = Unsafe.Add(ref refBytes, i + 2);
+                    // check codePoint
+                    var codePoint = (uint)(b1 & 0x0f) << 12 | (uint)(b2 & 0x3f) << 6 | (uint)(b3 & 0x3f);
+                    if ((codePoint < 0x800) || (0xffff < codePoint) || (0xd7ff < codePoint && codePoint < 0xe000))
+                    {
+                        return true;
+                    }
+
+                    if (b1 == 0xe0)
+                    {
+                        if (0x7f < b2 && b2 < 0xa0) return true;
+                    }
+                    else if (b1 == 0xed) // surrogate pair
+                    {
+                        if (0x9f < b2) return true;
+                    }
+                    if ((b2 & 0xc0) != 0x80) return true;
+                    if ((b3 & 0xc0) != 0x80) return true;
+
+                    i += 3;
+                }
+                else if (((b1 & 0xf8) == 0xf0)) // 4
+                {
+                    if ((uint)bytes.Length <= (uint)(i + 3)) return true;
+
+                    var b2 = Unsafe.Add(ref refBytes, i + 1);
+                    var b3 = Unsafe.Add(ref refBytes, i + 2);
+                    var b4 = Unsafe.Add(ref refBytes, i + 3);
+                    if (b1 == 0xf0)
+                    {
+                        if (0x7f < b2 && b2 < 0x90) return true;
+                    }
+                    if ((b2 & 0xc0) != 0x80) return true;
+                    if ((b3 & 0xc0) != 0x80) return true;
+                    if ((b4 & 0xc0) != 0x80) return true;
+
+                    // check codePoint
+                    var codePoint = (uint)(b1 & 0x07) << 18 | (uint)(b2 & 0x3f) << 12 | (uint)(b3 & 0x3f) << 6 | (uint)(b4 & 0x3f);
+                    if (codePoint <= 0xffff || 0x10ffff < codePoint)
+                    {
+                        return true;
+                    }
+
+                    i += 4;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+        }
+
 
         return false;
     }

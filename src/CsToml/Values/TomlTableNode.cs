@@ -21,7 +21,6 @@ internal sealed class TomlTableNode
 {
     internal static readonly TomlTableNode Empty = new() { Value = TomlValue.Empty };
 
-    private static readonly Func<TomlTableNode> createGroupingPropertyNodeInvoke = CreateGroupingPropertyNode;
     private readonly TomlTableNodeDictionary? nodes;
     private List<TomlString>? comments;
     private TomlTableNodeType nodeType = TomlTableNodeType.None;
@@ -35,8 +34,6 @@ internal sealed class TomlTableNode
     }
 
     internal int NodeCount => nodes?.Count ?? 0;
-
-    internal IReadOnlyList<TomlString>? Comments => comments; // Debug
 
     internal int CommentCount => comments?.Count ?? 0;
 
@@ -126,16 +123,6 @@ internal sealed class TomlTableNode
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static TomlTableNode CreateGroupingPropertyNode()
-    {
-        return new TomlTableNode()
-        {
-            IsGroupingProperty = true,
-            Value = TomlValue.Empty
-        };
-    }
-
     internal TomlTableNode()
     {
         nodes = new();
@@ -205,7 +192,7 @@ internal sealed class TomlTableNode
             getOrAddChildNode = Empty;
             return NodeStatus.Empty;
         }
-        if (nodes.TryGetValueOrAdd(key, createGroupingPropertyNodeInvoke, out var existingNode, out var newNode))
+        if (nodes.TryGetValueOrAdd(key, out var existingNode, out var newNode))
         {
             getOrAddChildNode = existingNode!;
             return NodeStatus.Existed;
