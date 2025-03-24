@@ -45,8 +45,8 @@ internal class TomlTableNodeDictionary
         if (buckets.Length == 0)
         {
             var capacity = HashHelpers.Primes[0];
-            entries = GC.AllocateUninitializedArray<Entry>(capacity);
-            buckets = GC.AllocateUninitializedArray<int>(capacity);
+            entries = new Entry[capacity];
+            buckets = new int[capacity];
         }
 
         var hashCode = keyHashCode;
@@ -156,11 +156,11 @@ internal class TomlTableNodeDictionary
     [MethodImpl(MethodImplOptions.NoInlining)]
     private void Reserve(int capacity)
     {
-        var newEntries = GC.AllocateUninitializedArray<Entry>(capacity);
+        var newEntries = new Entry[capacity];
         int count = this.count;
         Array.Copy(this.entries, newEntries, count);
 
-        this.buckets = GC.AllocateUninitializedArray<int>(capacity);
+        this.buckets = new int[capacity];
         for (int i = 0; i < count; i++)
         {
             if (newEntries[i].next >= -1)
