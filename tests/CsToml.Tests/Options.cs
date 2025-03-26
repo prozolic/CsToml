@@ -8,7 +8,8 @@ internal sealed class Options
         Spec = new TomlSpec()
         {
             AllowNewlinesInInlineTables = true,
-            AllowTrailingCommaInInlineTables = true
+            AllowTrailingCommaInInlineTables = true,
+            SupportsEscapeSequenceE = true,
         }
     };
 }

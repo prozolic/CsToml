@@ -32,6 +32,8 @@ public record TomlSpec
 
     public bool AllowTrailingCommaInInlineTables { get; init; }
 
-#endregion
+    public bool SupportsEscapeSequenceE { get; init; }
+
+    #endregion
 }
 

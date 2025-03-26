@@ -249,7 +249,17 @@ trimmed in raw strings.
     public void ValueType()
     {
         var document = CsTomlSerializer.Deserialize<TomlDocument>(@"key = ""value"""u8);
-        (document!.RootNode["key"].ValueType == TomlValueType.String).ShouldBeTrue();
+        (document!.RootNode["key"u8].ValueType == TomlValueType.String).ShouldBeTrue();
+        document!.RootNode["key"u8].GetString().ShouldBe("value");
+    }
+
+    [Fact]
+    public void SupportsEscapeSequenceETest()
+    {
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(@"""\e-esc"" = ""\e There is no escape! \e"""u8, Options.TomlSpecVersion110);
+
+        document!.RootNode["\x1b-esc"u8].GetString().ShouldBe("\x1b There is no escape! \x1b");
+        document!.RootNode[@"\e-esc"u8].GetString().ShouldBe("\x1b There is no escape! \x1b");
     }
 }
 

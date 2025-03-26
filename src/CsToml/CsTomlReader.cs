@@ -660,7 +660,7 @@ internal ref struct CsTomlReader
     {
         Advance(1); // /
 
-        var result = TomlCodes.TryParseEscapeSequence(ref sequenceReader, bufferWriter, multiLine, true);
+        var result = TomlCodes.TryParseEscapeSequence(ref sequenceReader, bufferWriter, multiLine: multiLine, supportsEscapeSequenceE: spec.SupportsEscapeSequenceE, throwError: true);
         switch(result)
         {
             case EscapeSequenceResult.Success:
