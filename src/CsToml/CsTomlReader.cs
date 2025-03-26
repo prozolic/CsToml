@@ -2,10 +2,7 @@
 using CsToml.Extension;
 using CsToml.Utility;
 using CsToml.Values;
-using System;
-using System.Buffers;
 using System.Diagnostics;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -14,27 +11,15 @@ namespace CsToml;
 internal ref struct CsTomlReader
 {
     private Utf8SequenceReader sequenceReader;
+    private readonly TomlSpec spec;
 
     public long LineNumber { get; private set; }
 
     [DebuggerStepThrough]
-    public CsTomlReader(ref Utf8SequenceReader reader)
+    public CsTomlReader(ref Utf8SequenceReader sequenceReader, TomlSpec spec)
     {
-        sequenceReader = reader;
-        LineNumber = 1;
-    }
-
-    [DebuggerStepThrough]
-    public CsTomlReader(ReadOnlySpan<byte> tomlText)
-    {
-        sequenceReader = new Utf8SequenceReader(tomlText);
-        LineNumber = 1;
-    }
-
-    [DebuggerStepThrough]
-    public CsTomlReader(ReadOnlySequence<byte> tomlText)
-    {
-        sequenceReader = new Utf8SequenceReader(tomlText);
+        this.sequenceReader = sequenceReader;
+        this.spec = spec;
         LineNumber = 1;
     }
 
@@ -1073,7 +1058,15 @@ internal ref struct CsTomlReader
     private TomlInlineTable ReadInlineTable()
     {
         Advance(1); // {
-        SkipWhiteSpace();
+
+        if (spec.AllowNewlinesInInlineTables) // TOML v1.1.0
+        {
+            SkipWhiteSpaceAndNewLine();
+        }
+        else
+        {
+            SkipWhiteSpace();
+        }
 
         if (TryPeek(out var c)) // empty inlinetable
         {
@@ -1112,13 +1105,45 @@ internal ref struct CsTomlReader
                     if (TomlCodes.IsComma(ch))
                     {
                         Advance(1);
-                        SkipWhiteSpace();
-                        continue;
+                        if (spec.AllowTrailingCommaInInlineTables) // TOML v1.1.0
+                        {
+                            if (spec.AllowNewlinesInInlineTables) // TOML v1.1.0
+                            {
+                                SkipWhiteSpaceAndNewLine();
+                            }
+                            else
+                            {
+                                SkipWhiteSpace();
+                            }
+                            if (TryPeek(out var ch2) && TomlCodes.IsRightBraces(ch2))
+                            {
+                                Advance(1);
+                                return inlineTable;
+                            }
+                            continue;
+                        }
+                        else
+                        {
+                            SkipWhiteSpace();
+                            continue;
+                        }
                     }
-                    if (TomlCodes.IsRightBraces(ch))
+                    if (spec.AllowNewlinesInInlineTables) // TOML v1.1.0
                     {
-                        Advance(1);
-                        return inlineTable;
+                        SkipWhiteSpaceAndNewLine();
+                        if (TryPeek(out var ch2) && TomlCodes.IsRightBraces(ch2))
+                        {
+                            Advance(1);
+                            return inlineTable;
+                        }
+                    }
+                    else
+                    {
+                        if (TomlCodes.IsRightBraces(ch))
+                        {
+                            Advance(1);
+                            return inlineTable;
+                        }
                     }
                     ExceptionHelper.ThrowIncorrectTomlInlineTableFormat();
                 }

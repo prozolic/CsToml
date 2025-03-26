@@ -34,7 +34,7 @@ public partial class TomlDocument
 
     internal void Deserialize(ref Utf8SequenceReader reader, CsTomlSerializerOptions options)
     {
-        var parser = new CsTomlParser(ref reader);
+        var parser = new CsTomlParser(ref reader, options);
 
         List<TomlString>? comments = default;
         List<CsTomlParseException>? exceptions = default;
