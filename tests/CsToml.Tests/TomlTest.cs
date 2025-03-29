@@ -21,7 +21,7 @@ public class TomlTest
     private static readonly string TomlFilesVer110 = "files-toml-1.1.0";
 
     [Theory, MemberData(nameof(ValidTomlFileV100))]
-    public void ValidTest(string tomlFile, string jsonFile)
+    public void ValidTestV100(string tomlFile, string jsonFile)
     {
         Should.NotThrow(() => {
             var document = CsTomlFileSerializer.Deserialize<TomlDocument>(tomlFile);
@@ -45,10 +45,18 @@ public class TomlTest
     }
 
     [Theory, MemberData(nameof(InvalidTomlFileV100))]
-    public void InvalidTest(string tomlFile)
+    public void InvalidTestV100(string tomlFile)
     {
         Should.Throw<CsTomlSerializeException>(() => {
             var document = CsTomlFileSerializer.Deserialize<TomlDocument>(tomlFile);
+        }, $"TomlFile:{tomlFile}");
+    }
+
+    [Theory, MemberData(nameof(InvalidTomlFileV110))]
+    public void InvalidTestV110(string tomlFile)
+    {
+        Should.Throw<CsTomlSerializeException>(() => {
+            var document = CsTomlFileSerializer.Deserialize<TomlDocument>(tomlFile, Options.TomlSpecVersion110);
         }, $"TomlFile:{tomlFile}");
     }
 
@@ -127,9 +135,6 @@ public class TomlTest
 
         foreach (var file in filePathTable)
         {
-            // Validate test cases for inline table only version v1.1.0.
-            if (!file.Contains("inline-table/")) continue;
-
             yield return new object[] {
                 Path.Combine(TomlTestDirectoryPath, Path.ChangeExtension(file, "toml")),
                 Path.Combine(TomlTestDirectoryPath, Path.ChangeExtension(file, "json")),
@@ -140,6 +145,21 @@ public class TomlTest
     public static IEnumerable<object[]> InvalidTomlFileV100()
     {
         var filesToml = Path.Combine(TomlTestDirectoryPath, TomlFilesVer100);
+        var files = File.ReadAllLines(filesToml);
+        foreach (var file in files)
+        {
+            var directoryName = file.Split('/')[0];
+            var tomlFile = new FileInfo(Path.Combine(TomlTestDirectoryPath, file));
+            if (tomlFile.Exists && tomlFile.Extension == TomlExtension && directoryName == InvalidDirectory)
+            {
+                yield return new object[] { Path.Combine(TomlTestDirectoryPath, file) };
+            }
+        }
+    }
+
+    public static IEnumerable<object[]> InvalidTomlFileV110()
+    {
+        var filesToml = Path.Combine(TomlTestDirectoryPath, TomlFilesVer110);
         var files = File.ReadAllLines(filesToml);
         foreach (var file in files)
         {

@@ -10,6 +10,7 @@ internal sealed class Options
             AllowNewlinesInInlineTables = true,
             AllowTrailingCommaInInlineTables = true,
             SupportsEscapeSequenceE = true,
+            AllowSecondsOmissionInTime = true,
         }
     };
 }

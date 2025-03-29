@@ -34,6 +34,8 @@ public record TomlSpec
 
     public bool SupportsEscapeSequenceE { get; init; }
 
+    public bool AllowSecondsOmissionInTime { get; init; }
+
     #endregion
 }
 

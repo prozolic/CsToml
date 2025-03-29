@@ -57,21 +57,21 @@ internal sealed partial class TomlLocalDate(DateOnly value) : TomlValue
             ExceptionHelper.ThrowIncorrectTomlLocalDateFormat();
         }
 
-        return new TomlLocalDate(ParseUnsafe(bytes));
+        return new TomlLocalDate(ParseDateOnly(bytes));
     }
 
-    public static DateOnly ParseUnsafe(ReadOnlySpan<byte> bytes)
+    public static DateOnly ParseDateOnly(ReadOnlySpan<byte> bytes)
     {
-        var year = ParseDecimalByte(bytes[0]) * 1000;
-        year += ParseDecimalByte(bytes[1]) * 100;
-        year += ParseDecimalByte(bytes[2]) * 10;
-        year += ParseDecimalByte(bytes[3]);
+        var year = TomlCodes.Number.ParseDecimal(bytes[0]) * 1000;
+        year += TomlCodes.Number.ParseDecimal(bytes[1]) * 100;
+        year += TomlCodes.Number.ParseDecimal(bytes[2]) * 10;
+        year += TomlCodes.Number.ParseDecimal(bytes[3]);
 
-        var month = ParseDecimalByte(bytes[5]) * 10;
-        month += ParseDecimalByte(bytes[6]);
+        var month = TomlCodes.Number.ParseDecimal(bytes[5]) * 10;
+        month += TomlCodes.Number.ParseDecimal(bytes[6]);
 
-        var day = ParseDecimalByte(bytes[8]) * 10;
-        day += ParseDecimalByte(bytes[9]);
+        var day = TomlCodes.Number.ParseDecimal(bytes[8]) * 10;
+        day += TomlCodes.Number.ParseDecimal(bytes[9]);
 
         try
         {
@@ -82,15 +82,6 @@ internal sealed partial class TomlLocalDate(DateOnly value) : TomlValue
             ExceptionHelper.ThrowArgumentOutOfRangeExceptionWhenCreating<DateOnly>(e);
             return default;
         }
-    }
-
-    private static int ParseDecimalByte(byte utf8Byte)
-    {
-        if (!TomlCodes.IsNumber(utf8Byte))
-        {
-            ExceptionHelper.ThrowNumericConversionFailed(utf8Byte);
-        }
-        return TomlCodes.Number.ParseDecimal(utf8Byte);
     }
 
 }

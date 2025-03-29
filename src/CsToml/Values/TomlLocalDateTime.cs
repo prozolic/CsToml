@@ -48,26 +48,26 @@ internal sealed partial class TomlLocalDateTime(DateTime value) : TomlValue
 
     public static TomlLocalDateTime Parse(ReadOnlySpan<byte> bytes)
     {
-        if (bytes.Length < TomlCodes.DateTime.LocalDateTimeFormatLength)
-            ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
-
-        if (TomlCodes.IsHyphen(bytes[4]) && TomlCodes.IsHyphen(bytes[7]) &&
-            (TomlCodes.IsTabOrWhiteSpace(bytes[10]) || bytes[10] == TomlCodes.Alphabet.T || bytes[10] == TomlCodes.Alphabet.t))
-        {
-            return new TomlLocalDateTime(DeserializeLocalDateTime(bytes));
-        }
-
-        ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
-        return default!;
-    }
-
-    private static DateTime DeserializeLocalDateTime(ReadOnlySpan<byte> bytes)
-    {
-        DateOnly localDate = TomlLocalDate.ParseUnsafe(bytes[..10]);
-        TimeOnly localTime = TomlLocalTime.ParseUnsafe(bytes[11..]);
+        DateOnly localDate = TomlLocalDate.ParseDateOnly(bytes[..10]);
+        TimeOnly localTime = TomlLocalTime.ParseTimeOnly(bytes[11..]);
         try
         {
-            return new DateTime(localDate, localTime, DateTimeKind.Local);
+            return new TomlLocalDateTime(new DateTime(localDate, localTime, DateTimeKind.Local));
+        }
+        catch (ArgumentOutOfRangeException e)
+        {
+            ExceptionHelper.ThrowArgumentOutOfRangeExceptionWhenCreating<DateTime>(e);
+            return default!;
+        }
+    }
+
+    public static TomlLocalDateTime ParseToOmitSeconds(ReadOnlySpan<byte> bytes)
+    {
+        DateOnly localDate = TomlLocalDate.ParseDateOnly(bytes[..10]);
+        TimeOnly localTime = TomlLocalTime.ParseTimeOnlyToOmitSeconds(bytes[11..]);
+        try
+        {
+            return new TomlLocalDateTime(new DateTime(localDate, localTime, DateTimeKind.Local));
         }
         catch (ArgumentOutOfRangeException e)
         {

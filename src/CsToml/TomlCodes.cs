@@ -121,6 +121,10 @@ internal static class TomlCodes
         internal const byte LocalDateFormatLength = 10; // yyyy-MM-dd
         internal const byte LocalDateTimeFormatLength = 19; // yyyy-MM-ddTHH:mm:ss
         internal const byte OffsetDateTimeZFormatLength = 20; // yyyy-MM-ddTHH:mm:ssZ
+
+        internal const byte LocalTimeOptionFormatLength = 5; // HH:mm
+        internal const byte LocalDateTimeOptionFormatLength = 16; // yyyy-MM-ddTHH:mm
+        internal const byte OffsetDateTimeZOptionFormatLength = 17; // yyyy-MM-ddTHH:mmZ
     }
 
     internal readonly struct Symbol
