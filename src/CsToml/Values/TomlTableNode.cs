@@ -237,7 +237,13 @@ internal sealed class TomlTableNode
                 {
                     reader.Advance(1);
 
-                    if (TomlCodes.TryParseEscapeSequence(ref reader, bufferWriter, multiLine: false, supportsEscapeSequenceE: true, throwError: false) == EscapeSequenceResult.Failure)
+                    if (TomlCodes.TryParseEscapeSequence(
+                        ref reader, 
+                        bufferWriter, 
+                        multiLine: false, 
+                        supportsEscapeSequenceE: true, 
+                        supportsEscapeSequenceX: true,
+                        throwError: false) == EscapeSequenceResult.Failure)
                     {
                         childNode = default;
                         return false;

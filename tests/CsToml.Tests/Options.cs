@@ -11,6 +11,7 @@ internal sealed class Options
             AllowTrailingCommaInInlineTables = true,
             SupportsEscapeSequenceE = true,
             AllowSecondsOmissionInTime = true,
+            SupportsEscapeSequenceX = true,
         }
     };
 }

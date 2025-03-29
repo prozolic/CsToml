@@ -269,6 +269,36 @@ internal static class Utf8Helper
         ExceptionHelper.NotReturnThrow<int>(ExceptionHelper.ThrowInvalidUnicodeScalarValue);
     }
 
+    public static void ParseFrom8bitCodePointToUtf8(Span<byte> destination, ReadOnlySpan<byte> source, out int writtenCount)
+    {
+        if (destination.Length < 2)
+        {
+            writtenCount = 0;
+            ExceptionHelper.ThrowException("Number of elements in the destination Span<byte> is not 2.");
+        }
+        if (source.Length != 2)
+        {
+            writtenCount = 0;
+            ExceptionHelper.ThrowException("Number of elements in the source ReadOnlySpan<byte> is not 2.");
+        }
+
+        for (var i = 0; i < source.Length; i++)
+        {
+            if (!TomlCodes.IsHex(source[i]))
+            {
+                writtenCount = 0;
+                ExceptionHelper.ThrowIncorrectCompactEscapeCharacters(source[i]);
+            }
+        }
+
+        var codePoint = 0;
+        codePoint += (TomlCodes.Number.ParseHex(source[0]) << 4);
+        codePoint += TomlCodes.Number.ParseHex(source[1]);
+
+        Utf8Helper.ParseFromCodePointToUtf8(codePoint, destination, out writtenCount);
+    }
+
+
     public static void ParseFrom16bitCodePointToUtf8(Span<byte> destination, ReadOnlySpan<byte> source, out int writtenCount)
     {
         if (destination.Length < 4)
