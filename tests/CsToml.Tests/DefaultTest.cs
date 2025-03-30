@@ -261,6 +261,14 @@ trimmed in raw strings.
         document!.RootNode["\x1b-esc"u8].GetString().ShouldBe("\x1b There is no escape! \x1b");
         document!.RootNode[@"\e-esc"u8].GetString().ShouldBe("\x1b There is no escape! \x1b");
     }
+
+    [Fact]
+    public void SupportsEscapeSequenceXTest()
+    {
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(@"""\x43\x73\x54\x6f\x6d\x6c"" = ""this is \x43\x73\x54\x6f\x6d\x6c"""u8, Options.TomlSpecVersion110);
+        document!.RootNode["\x43\x73\x54\x6f\x6d\x6c"u8].GetString().ShouldBe("this is \x43\x73\x54\x6f\x6d\x6c");
+        document!.RootNode[@"CsToml"u8].GetString().ShouldBe("this is CsToml");
+    }
 }
 
 public class TomlIntegerTest
