@@ -72,7 +72,7 @@ public static class CsTomlSerializer
         }
         catch (CsTomlException cte)
         {
-            throw new CsTomlSerializeException("An exception was thrown during deserializing TOML. See the 'ParseExceptions' property for details about any errors.", cte);
+            throw new CsTomlSerializeException("An exception was thrown while deserializing TOML. See the 'ParseExceptions' property for details about any errors.", cte);
         }
     }
 
@@ -95,7 +95,7 @@ public static class CsTomlSerializer
         }
         catch (CsTomlException cte)
         {
-            throw new CsTomlSerializeException("An exception was thrown during deserializing TOML. See the 'ParseExceptions' property for details about any errors.", cte);
+            throw new CsTomlSerializeException("An exception was thrown while deserializing TOML. See the 'ParseExceptions' property for details about any errors.", cte);
         }
     }
 
@@ -192,7 +192,7 @@ public static class CsTomlSerializer
         }
         catch (CsTomlException cte)
         {
-            throw new CsTomlSerializeException("An exception was thrown during serializing TOML. See the 'ParseExceptions' property for details about any errors.", cte);
+            throw new CsTomlSerializeException("An exception was thrown while serializing TOML. See the 'ParseExceptions' property for details about any errors.", cte);
         }
     }
 
@@ -247,7 +247,7 @@ public static class CsTomlSerializer
         }
         catch (CsTomlException cte)
         {
-            throw new CsTomlSerializeException("An exception was thrown during serializing TOML. See the 'ParseExceptions' property for details about any errors.", cte);
+            throw new CsTomlSerializeException("An exception was thrown while serializing TOML. See the 'ParseExceptions' property for details about any errors.", cte);
         }
     }
 }

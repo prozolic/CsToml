@@ -95,7 +95,7 @@ public partial class TomlDocument
         if (exceptions?.Count > 0)
         {
             throw new CsTomlSerializeException(
-                "Exceptions were thrown during the parsing TOML. See the 'ParseExceptions' property for details about any errors.",
+                "Exceptions were thrown while parsing TOML. See the 'ParseExceptions' property for details about any errors.",
                 exceptions);
         }
     }
