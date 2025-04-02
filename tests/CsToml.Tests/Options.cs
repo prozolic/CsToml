@@ -7,6 +7,7 @@ internal sealed class Options
     {
         Spec = new TomlSpec()
         {
+            AllowUnicodeInBareKeys = true,
             AllowNewlinesInInlineTables = true,
             AllowTrailingCommaInInlineTables = true,
             SupportsEscapeSequenceE = true,

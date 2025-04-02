@@ -28,6 +28,8 @@ public record TomlSpec
 {
     #region "TOML v1.1.0 Preview Feature"
 
+    public bool AllowUnicodeInBareKeys { get; init; }
+
     public bool AllowNewlinesInInlineTables { get; init; }
 
     public bool AllowTrailingCommaInInlineTables { get; init; }

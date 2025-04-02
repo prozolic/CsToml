@@ -65,12 +65,76 @@ internal ref struct CsTomlReader
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ReadKey(ref ExtendableArray<TomlDottedKey> key)
     {
         SkipWhiteSpace();
         if (!Peek())
             ExceptionHelper.ThrowEndOfFileReached();
 
+        if (spec.AllowUnicodeInBareKeys)
+        {
+            ReadKeyToAllowUnicodeInBareKeys(ref key);
+        }
+        else
+        {
+            ReadKeyToNotAllowUnicodeInBareKeys(ref key);
+        }
+    }
+
+    private void ReadKeyToAllowUnicodeInBareKeys(ref ExtendableArray<TomlDottedKey> key)
+    {
+        var dot = true;
+        while (TryPeek(out var c))
+        {
+            switch (c)
+            {
+                case TomlCodes.Symbol.TAB:
+                case TomlCodes.Symbol.SPACE:
+                    SkipWhiteSpace();
+                    continue;
+                case TomlCodes.Symbol.EQUAL:
+                    if (key.Count == 0)
+                    {
+                        ExceptionHelper.ThrowBareKeyIsEmpty();
+                    }
+                    goto BREAK;
+                case TomlCodes.Symbol.DOT:
+                    if (dot)
+                    {
+                        if (key.Count > 0)
+                            ExceptionHelper.ThrowDotsAreUsedMoreThanOnce();
+                        else
+                            ExceptionHelper.ThrowTheDotIsDefinedFirst();
+                    }
+                    dot = true;
+                    Advance(1);
+                    SkipWhiteSpace();
+                    continue;
+                case TomlCodes.Symbol.DOUBLEQUOTED:
+                    if (!dot) ExceptionHelper.ThrowKeysAreNotJoinedByDots();
+                    dot = false;
+                    key.Add(ReadDoubleQuoteSingleLineString<TomlDottedKey>());
+                    continue;
+                case TomlCodes.Symbol.SINGLEQUOTED:
+                    if (!dot) ExceptionHelper.ThrowKeysAreNotJoinedByDots();
+                    dot = false;
+                    key.Add(ReadSingleQuoteSingleLineString<TomlDottedKey>());
+                    continue;
+                default:
+                    if (!dot) ExceptionHelper.ThrowKeysAreNotJoinedByDots();
+                    dot = false;
+                    key.Add(ReadUnquotedStringToAllowUnicode(false));
+                    continue;
+            }
+
+        BREAK:
+            break;
+        }
+    }
+
+    private void ReadKeyToNotAllowUnicodeInBareKeys(ref ExtendableArray<TomlDottedKey> key)
+    {
         var dot = true;
         while (TryPeek(out var c))
         {
@@ -125,6 +189,7 @@ internal ref struct CsTomlReader
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ReadTableHeader(ref ExtendableArray<TomlDottedKey> tableHeaderKey)
     {
         Advance(1); // [
@@ -133,6 +198,71 @@ internal ref struct CsTomlReader
         if (!Peek())
             ExceptionHelper.ThrowEndOfFileReached();
 
+        if (spec.AllowUnicodeInBareKeys)
+        {
+            ReadTableHeaderToAllowUnicodeInBareKeys(ref tableHeaderKey);
+        }
+        else
+        {
+            ReadTableHeaderToNotAllowUnicodeInBareKeys(ref tableHeaderKey);
+        }
+    }
+
+    public void ReadTableHeaderToAllowUnicodeInBareKeys(ref ExtendableArray<TomlDottedKey> tableHeaderKey)
+    {
+        var dot = true;
+        var closingRightRightSquareBracket = false;
+        while (TryPeek(out var c))
+        {
+            switch (c)
+            {
+                case TomlCodes.Symbol.TAB:
+                case TomlCodes.Symbol.SPACE:
+                    SkipWhiteSpace();
+                    continue;
+                case TomlCodes.Symbol.DOT:
+                    if (dot)
+                    {
+                        if (tableHeaderKey.Count > 0)
+                            ExceptionHelper.ThrowDotsAreUsedMoreThanOnce();
+                        else
+                            ExceptionHelper.ThrowTheDotIsDefinedFirst();
+                    }
+                    dot = true;
+                    Advance(1);
+                    SkipWhiteSpace();
+                    continue;
+                case TomlCodes.Symbol.DOUBLEQUOTED:
+                    if (!dot) ExceptionHelper.ThrowKeysAreNotJoinedByDots();
+                    dot = false;
+                    tableHeaderKey.Add(ReadDoubleQuoteSingleLineString<TomlDottedKey>());
+                    continue;
+                case TomlCodes.Symbol.SINGLEQUOTED:
+                    if (!dot) ExceptionHelper.ThrowKeysAreNotJoinedByDots();
+                    dot = false;
+                    tableHeaderKey.Add(ReadSingleQuoteSingleLineString<TomlDottedKey>());
+                    continue;
+                case TomlCodes.Symbol.RIGHTSQUAREBRACKET:
+                    closingRightRightSquareBracket = true;
+                    Advance(1);
+                    goto BREAK; // ]
+                default:
+                    if (!dot) ExceptionHelper.ThrowKeysAreNotJoinedByDots();
+                    dot = false;
+                    tableHeaderKey.Add(ReadUnquotedStringToAllowUnicode(true));
+                    continue;
+            }
+
+        BREAK:
+            break;
+        }
+
+        if (!closingRightRightSquareBracket)
+            ExceptionHelper.ThrowTableHeaderIsNotClosedWithClosingBrackets();
+    }
+
+    public void ReadTableHeaderToNotAllowUnicodeInBareKeys(ref ExtendableArray<TomlDottedKey> tableHeaderKey)
+    {
         var dot = true;
         var closingRightRightSquareBracket = false;
         while (TryPeek(out var c))
@@ -197,6 +327,80 @@ internal ref struct CsTomlReader
         if (!Peek())
             ExceptionHelper.ThrowEndOfFileReached();
 
+        if (spec.AllowUnicodeInBareKeys)
+        {
+            ReadArrayOfTablesHeaderToAllowUnicodeInBareKeys(ref arrayOfTablesHeaderKey);
+        }
+        else
+        {
+            ReadArrayOfTablesHeaderToNotAllowUnicodeInBareKeys(ref arrayOfTablesHeaderKey);
+        }
+    }
+
+    public void ReadArrayOfTablesHeaderToAllowUnicodeInBareKeys(ref ExtendableArray<TomlDottedKey> arrayOfTablesHeaderKey)
+    {
+        var dot = true;
+        var closingRightRightSquareBracket = false;
+        while (TryPeek(out var c))
+        {
+            switch (c)
+            {
+                case TomlCodes.Symbol.TAB:
+                case TomlCodes.Symbol.SPACE:
+                    SkipWhiteSpace();
+                    continue;
+                case TomlCodes.Symbol.DOT:
+                    if (dot)
+                    {
+                        if (arrayOfTablesHeaderKey.Count > 0)
+                            ExceptionHelper.ThrowDotsAreUsedMoreThanOnce();
+                        else
+                            ExceptionHelper.ThrowTheDotIsDefinedFirst();
+                    }
+                    dot = true;
+                    Advance(1);
+                    SkipWhiteSpace();
+                    continue;
+                case TomlCodes.Symbol.DOUBLEQUOTED:
+                    if (!dot) ExceptionHelper.ThrowKeysAreNotJoinedByDots();
+                    dot = false;
+                    arrayOfTablesHeaderKey.Add(ReadDoubleQuoteSingleLineString<TomlDottedKey>());
+                    continue;
+                case TomlCodes.Symbol.SINGLEQUOTED:
+                    if (!dot) ExceptionHelper.ThrowKeysAreNotJoinedByDots();
+                    dot = false;
+                    arrayOfTablesHeaderKey.Add(ReadSingleQuoteSingleLineString<TomlDottedKey>());
+                    continue;
+                case TomlCodes.Symbol.RIGHTSQUAREBRACKET:
+                    Advance(1);
+                    if (TryPeek(out var tableHeaderArrayEndCh) && TomlCodes.IsRightSquareBrackets(tableHeaderArrayEndCh))
+                    {
+                        Advance(1);
+                        closingRightRightSquareBracket = true;
+                    }
+                    else
+                    {
+                        ExceptionHelper.ThrowEndOfFileReached();
+                    }
+                    goto BREAK;
+                default:
+                    if (!dot) ExceptionHelper.ThrowKeysAreNotJoinedByDots();
+                    dot = false;
+                    arrayOfTablesHeaderKey.Add(ReadUnquotedStringToAllowUnicode(true));
+                    continue;
+            }
+
+        BREAK:
+            break;
+        }
+
+        if (!closingRightRightSquareBracket)
+            ExceptionHelper.ThrowArrayOfTablesHeaderIsNotClosedWithClosingBrackets();
+
+    }
+
+    public void ReadArrayOfTablesHeaderToNotAllowUnicodeInBareKeys(ref ExtendableArray<TomlDottedKey> arrayOfTablesHeaderKey)
+    {
         var dot = true;
         var closingRightRightSquareBracket = false;
         while (TryPeek(out var c))
@@ -992,6 +1196,79 @@ internal ref struct CsTomlReader
             RecycleArrayPoolBufferWriter<byte>.Return(bufferWriter!);
         }
     }
+
+    internal TomlDottedKey ReadUnquotedStringToAllowUnicode(bool isTableHeader = false)
+    {
+        var currentSpan = sequenceReader.UnreadSpan;
+        var fullSpan = true;
+        var totalLength = 0;
+        ArrayPoolBufferWriter<byte>? bufferWriter = default;
+
+        while (this.Peek())
+        {
+            ref var refSpan = ref MemoryMarshal.GetReference(currentSpan);
+            for (var index = 0; index < currentSpan.Length; index++)
+            {
+                ref var ch = ref Unsafe.Add(ref refSpan, index);
+                switch (ch)
+                {
+                    case TomlCodes.Symbol.TAB:
+                    case TomlCodes.Symbol.SPACE:
+                    case TomlCodes.Symbol.DOT:
+                    case TomlCodes.Symbol.EQUAL:
+                        if (!fullSpan)
+                        {
+                            bufferWriter!.Write(currentSpan.Slice(0, index));
+                        }
+                        Advance(index);
+                        goto BREAK;
+                    case TomlCodes.Symbol.RIGHTSQUAREBRACKET:
+                        if (isTableHeader)
+                        {
+                            if (!fullSpan)
+                            {
+                                bufferWriter!.Write(currentSpan.Slice(0, index));
+                            }
+                            Advance(index);
+                            goto BREAK;
+                        }
+                        ExceptionHelper.ThrowBareKeyContainsInvalid(ch);
+                        break;
+                }
+                totalLength++;
+            }
+            bufferWriter ??= RecycleArrayPoolBufferWriter<byte>.Rent();
+            bufferWriter.Write(currentSpan);
+            Advance(currentSpan.Length);
+            currentSpan = sequenceReader.CurrentSpan;
+            fullSpan = false;
+        }
+
+    BREAK:
+        if (fullSpan)
+        {
+            var keySpan = currentSpan[..totalLength];
+            if (Utf8Helper.ContainInvalidSequencesInUnquotedKey(keySpan))
+            {
+                ExceptionHelper.ThrowInvalidCodePoints();
+            }
+            return new TomlUnquotedDottedKey(keySpan);
+        }
+        try
+        {
+            var keySpan = bufferWriter!.WrittenSpan;
+            if (Utf8Helper.ContainInvalidSequencesInUnquotedKey(keySpan))
+            {
+                ExceptionHelper.ThrowInvalidCodePoints();
+            }
+            return new TomlUnquotedDottedKey(keySpan);
+        }
+        finally
+        {
+            RecycleArrayPoolBufferWriter<byte>.Return(bufferWriter!);
+        }
+    }
+
 
     internal TomlArray ReadArray()
     {

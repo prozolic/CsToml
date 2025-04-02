@@ -1601,3 +1601,54 @@ number2 = 123456
         ((IDictionary<object, object>)testArray[2])["number2"].ShouldBe(123456);
     }
 }
+
+public class KeyTest
+{
+    [Fact]
+    public void DeserializeAndSerialize()
+    {
+        var toml = @"
+€ = 'Euro'
+😂 = ""rofl""
+a‍b = ""zwj""
+ÅÅ = ""U+00C5 U+0041 U+030A""
+あイ宇絵ォ = ""Japanese""
+test.€.😂.a‍b.ÅÅ.あイ宇絵ォ = ""dotted key""
+
+[table😂]
+value = ""rofl""
+
+[[ArrayofTables😂]]
+value2 = ""rofl""
+"u8.ToArray();
+
+        var ex = Should.Throw<CsTomlSerializeException>(() =>
+        {
+            var document = CsTomlSerializer.Deserialize<TomlDocument>(toml);
+        });
+        ex.ParseExceptions!.Count.ShouldBe(8);
+
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(toml, Options.TomlSpecVersion110);
+        using var serializeText = CsTomlSerializer.Serialize(document!);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine(@"€ = 'Euro'");
+        writer.AppendLine(@"😂 = ""rofl""");
+        writer.AppendLine(@"a‍b = ""zwj""");
+        writer.AppendLine(@"ÅÅ = ""U+00C5 U+0041 U+030A""");
+        writer.AppendLine(@"あイ宇絵ォ = ""Japanese""");
+        writer.AppendLine(@"test.€.😂.a‍b.ÅÅ.あイ宇絵ォ = ""dotted key""");
+        writer.AppendLine();
+        writer.AppendLine(@"[table😂]");
+        writer.AppendLine(@"value = ""rofl""");
+        writer.AppendLine();
+        writer.AppendLine(@"[[ArrayofTables😂]]");
+        writer.AppendLine(@"value2 = ""rofl""");
+        writer.Flush();
+
+        var expected = Encoding.UTF8.GetString(buffer.ToArray()).Replace("\r\n", "\n");
+        var actual = Encoding.UTF8.GetString(serializeText.ByteSpan).Replace("\r\n", "\n");
+
+        expected.ShouldBe(actual);
+    }
+}
