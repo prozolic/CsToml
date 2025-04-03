@@ -1274,7 +1274,10 @@ internal ref struct CsTomlReader
     {
         Advance(1); // [
 
-        var array = new TomlArray();
+        var initialArray = default(InlineArray16<TomlValue>);
+        Span<TomlValue> initialArraySpan = initialArray;
+        var arrayBuilder = new InlineArrayBuilder<TomlValue>(initialArraySpan);
+
         var comma = true;
         var commaCount = 0;
         var closingBracket = false;
@@ -1284,7 +1287,7 @@ internal ref struct CsTomlReader
             {
                 case TomlCodes.Symbol.LEFTSQUAREBRACKET:
                     comma = false;
-                    array.Add(ReadArray());
+                    arrayBuilder.Add(ReadArray());
                     break;
                 case TomlCodes.Symbol.TAB:
                 case TomlCodes.Symbol.SPACE:
@@ -1325,7 +1328,7 @@ internal ref struct CsTomlReader
                 default:
                     if (!comma) ExceptionHelper.ThrowNotSeparatedByCommas();
                     comma = false;
-                    array.Add(ReadValue());
+                    arrayBuilder.Add(ReadValue());
                     break;
             }
             continue;
@@ -1335,6 +1338,13 @@ internal ref struct CsTomlReader
 
         if (!closingBracket)
             ExceptionHelper.ThrowTheArrayIsNotClosedWithClosingBrackets();
+
+        var array = new TomlArray(arrayBuilder.Count);
+        if (arrayBuilder.Count > 0)
+        {
+            var listSpan = array.GetListSpan(arrayBuilder.Count);
+            arrayBuilder.CopyToAndReturn(listSpan);
+        }
 
         return array;
     }

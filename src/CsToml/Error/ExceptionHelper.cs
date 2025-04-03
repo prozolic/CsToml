@@ -636,14 +636,25 @@ internal static class ExceptionHelper
         ThrowException($@"Cannot serialize to {type} as a key.");
     }
 
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ThrowDeserializationFailed(Type type)
     {
         ThrowException($@"Cannot deserialize to {type}.");
     }
 
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ThrowInvalidTupleCount()
     {
         ThrowException($@"Invalid Tuple count.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowOutOfMemory()
+    {
+        ThrowException($"Out of memory exception.");
     }
 }
 

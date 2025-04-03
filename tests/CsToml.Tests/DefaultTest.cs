@@ -1193,9 +1193,14 @@ colors = [ ""red"", ""yellow"", ""green""]
 nested_arrays_of_ints = [[1, 2], [3, 4, 5]]
 nested_mixed_array = [[1, 2], [""a"", ""b"", ""c""]]
 string_array = [""all"", 'strings', """"""are the same"""""", '''type''']
+
+large = [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50]
 "u8;
 
         var document = CsTomlSerializer.Deserialize<TomlDocument>(toml);
+        var arrayvalue = document.RootNode["large"u8].GetArray().Select(v => v.GetInt64()).ToArray();
+        arrayvalue.AsSpan().SequenceEqual(new long[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50 }).ShouldBeTrue();
+
         using var serializeText = CsTomlSerializer.Serialize(document!);
 
         using var buffer = Utf8String.CreateWriter(out var writer);
@@ -1205,6 +1210,7 @@ string_array = [""all"", 'strings', """"""are the same"""""", '''type''']
         writer.AppendLine("nested_arrays_of_ints = [ [ 1, 2 ], [ 3, 4, 5 ] ]");
         writer.AppendLine(@"nested_mixed_array = [ [ 1, 2 ], [ ""a"", ""b"", ""c"" ] ]");
         writer.AppendLine(@"string_array = [ ""all"", 'strings', """"""are the same"""""", '''type''' ]");
+        writer.AppendLine(@"large = [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50 ]");
         writer.Flush();
 
         buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
