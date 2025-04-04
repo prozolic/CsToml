@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 namespace CsToml.Utility;
 
 [InlineArray(16)]
-public struct InlineArray16<T>
+internal struct InlineArray16<T>
 {
     T item;
 }
@@ -18,7 +18,7 @@ public struct InlineArray16<T>
 // https://speakerdeck.com/neuecc/cedec-2023-modanhaipahuomansuc-number-2023-edition?slide=47
 // length is from 32 to 1,073,741,824
 [InlineArray(26)]
-public struct InlineArray26<T>
+internal struct InlineArray26<T>
 {
     T item;
 
@@ -30,7 +30,7 @@ public struct InlineArray26<T>
 }
 
 [StructLayout(LayoutKind.Auto)]
-public ref struct InlineArrayBuilder<T>
+internal ref struct InlineArrayBuilder<T>
 {
     private Span<T> initialArray;
     private InlineArray26<T[]> segments;
@@ -81,7 +81,7 @@ public ref struct InlineArrayBuilder<T>
             initialArray.CopyTo(destination);
             destination = destination[initialArray.Length..];
 
-            if (segmentsIndex - 1 > -1)
+            if (segmentsIndex > 0)
             {
                 foreach (var segment in ((Span<T[]>)segments)[..(segmentsIndex)])
                 {
@@ -91,10 +91,10 @@ public ref struct InlineArrayBuilder<T>
                 }
             }
 
-            var segmentArray = segments[segmentsIndex];
-            var lastSegmentSpan = segmentArray.AsSpan().Slice(0, currentIndex);
+            var lastSegment = segments[segmentsIndex];
+            var lastSegmentSpan = lastSegment.AsSpan().Slice(0, currentIndex);
             lastSegmentSpan.CopyTo(destination);
-            ArrayPool<T>.Shared.Return(segmentArray, clearArray: RuntimeHelpers.IsReferenceOrContainsReferences<T>());
+            ArrayPool<T>.Shared.Return(lastSegment, clearArray: RuntimeHelpers.IsReferenceOrContainsReferences<T>());
         }
         else
         {
