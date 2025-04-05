@@ -1,6 +1,7 @@
 ﻿
 using CsToml.Error;
 using CsToml.Values;
+using Shouldly;
 using System.Text;
 using Utf8StringInterpolation;
 
@@ -175,23 +176,17 @@ number2 = 123456
     [Fact]
     public void ThrowTest()
     {
-        Should.Throw<CsTomlSerializeException>(() =>
+        var ex =  Should.Throw<CsTomlSerializeException>(() =>
         {
             var toml = @"
 str = ""value""
 intError 
 flt = 3.1415
 "u8;
-            try
-            {
-                var document = CsTomlSerializer.Deserialize<TomlDocument>(toml);
-            }
-            catch (CsTomlSerializeException ctse)
-            {
-                ctse.ParseExceptions!.Count.ShouldBe(1);
-                throw;
-            }
+            var document = CsTomlSerializer.Deserialize<TomlDocument>(toml);
         });
+
+        ex.ParseExceptions!.Count.ShouldBe(1);
     }
 }
 
@@ -1294,7 +1289,7 @@ animal = { type.name = ""pug"" }
     }
 
     [Fact]
-    public void Version110Test()
+    public void AllowNewlinesInInlineTablesAndTrailingCommaInInlineTablesTest()
     {
         var toml = @"
 name = { 
@@ -1308,6 +1303,69 @@ animal = { type.name = ""pug"" }
 "u8;
 
        var document = CsTomlSerializer.Deserialize<TomlDocument>(toml, Options.TomlSpecVersion110);
+        using var serializeText = CsTomlSerializer.Serialize(document!);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine(@"name = { first = ""CsToml"", last = ""prozolic"" }");
+        writer.AppendLine(@"point = { x = 1, y = 2 }");
+        writer.AppendLine(@"animal = { type.name = ""pug"" }");
+        writer.Flush();
+
+        buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
+    }
+
+    [Fact]
+    public void AllowNewlinesInInlineTablesTest()
+    {
+        var toml = @"
+name = { 
+    first = ""CsToml"", 
+    last = ""prozolic"" }
+point = {
+    x = 1, 
+    y = 2
+}
+animal = { type.name = ""pug"" }
+"u8;
+
+        CsTomlSerializerOptions AllowNewlinesInInlineTables = CsTomlSerializerOptions.Default with
+        {
+            Spec = new TomlSpec()
+            {
+                AllowNewlinesInInlineTables = true
+            }
+        };
+
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(toml, AllowNewlinesInInlineTables);
+        using var serializeText = CsTomlSerializer.Serialize(document!);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine(@"name = { first = ""CsToml"", last = ""prozolic"" }");
+        writer.AppendLine(@"point = { x = 1, y = 2 }");
+        writer.AppendLine(@"animal = { type.name = ""pug"" }");
+        writer.Flush();
+
+        buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
+    }
+
+    [Fact]
+    public void AllowTrailingCommaInInlineTablesTest()
+    {
+        var toml = @"
+name = {  first = ""CsToml"",  last = ""prozolic"", }
+point = { x = 1, y = 2 ,}
+animal = { type.name = ""pug"",}
+"u8;
+
+        CsTomlSerializerOptions AllowTrailingCommaInInlineTables = CsTomlSerializerOptions.Default with
+        {
+            Spec = new TomlSpec()
+            {
+                AllowTrailingCommaInInlineTables = true
+            }
+        };
+
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(toml, AllowTrailingCommaInInlineTables);
         using var serializeText = CsTomlSerializer.Serialize(document!);
 
         using var buffer = Utf8String.CreateWriter(out var writer);

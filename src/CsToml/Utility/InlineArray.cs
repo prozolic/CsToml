@@ -66,7 +66,7 @@ internal ref struct InlineArrayBuilder<T>
             this.AddAndEnsureCapacity(value);
         }
         lastValue = value;
-        count++;
+        checked { count++; }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

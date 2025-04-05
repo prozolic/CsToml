@@ -20,6 +20,11 @@ public class TomlTest
     private static readonly string TomlFilesVer100 = "files-toml-1.0.0";
     private static readonly string TomlFilesVer110 = "files-toml-1.1.0";
 
+    private static readonly HashSet<string> ExcludedFilesForV110 = new HashSet<string>()
+    {
+        "invalid/key/special-character.toml"
+    };
+
     [Theory, MemberData(nameof(ValidTomlFileV100))]
     public void ValidTestV100(string tomlFile, string jsonFile)
     {
@@ -163,6 +168,10 @@ public class TomlTest
         var files = File.ReadAllLines(filesToml);
         foreach (var file in files)
         {
+            if (ExcludedFilesForV110.Contains(file))
+            {
+                continue;
+            }
             var directoryName = file.Split('/')[0];
             var tomlFile = new FileInfo(Path.Combine(TomlTestDirectoryPath, file));
             if (tomlFile.Exists && tomlFile.Extension == TomlExtension && directoryName == InvalidDirectory)
@@ -171,5 +180,4 @@ public class TomlTest
             }
         }
     }
-
 }

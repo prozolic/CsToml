@@ -656,5 +656,12 @@ internal static class ExceptionHelper
     {
         ThrowException($"Out of memory exception.");
     }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowTrailingCommaIsNotAllowed()
+    {
+        ThrowException($@"After the last key/value pair in an inline table, a trailing comma is not allowed.");
+    }
 }
 

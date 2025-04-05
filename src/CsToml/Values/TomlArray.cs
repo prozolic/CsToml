@@ -150,14 +150,14 @@ internal sealed partial class TomlArray(int capacity) : TomlValue, IEnumerable<T
     IEnumerator IEnumerable.GetEnumerator()
         => GetEnumerator();
 
-    private struct Enumerator(TomlArray array) : IEnumerator<TomlValue>
+    private struct Enumerator(TomlArray array) : IEnumerator<TomlValue?>
     {
         private readonly TomlArray tomlArray = array;
         private int index = 0;
 
-        public TomlValue Current { get; private set; }
+        public TomlValue? Current { get; private set; }
 
-        object IEnumerator.Current => this.Current;
+        object? IEnumerator.Current => this.Current;
 
         public readonly Enumerator GetEnumerator() => this;
 

@@ -1393,32 +1393,39 @@ internal ref struct CsTomlReader
                 node = currentNode.AddKeyValue(dotKeysForInlineTable.AsSpan(), TomlValue.Empty, []);
 
                 node.Value = ReadValue();
-                SkipWhiteSpace();
+                if (spec.AllowNewlinesInInlineTables) // TOML v1.1.0
+                {
+                    SkipWhiteSpaceAndNewLine();
+                }
+                else
+                {
+                    SkipWhiteSpace();
+                }
                 if (TryPeek(out var ch))
                 {
                     if (TomlCodes.IsComma(ch))
                     {
                         Advance(1);
-                        if (spec.AllowTrailingCommaInInlineTables) // TOML v1.1.0
+                        if (spec.AllowNewlinesInInlineTables) // TOML v1.1.0
                         {
-                            if (spec.AllowNewlinesInInlineTables) // TOML v1.1.0
-                            {
-                                SkipWhiteSpaceAndNewLine();
-                            }
-                            else
-                            {
-                                SkipWhiteSpace();
-                            }
-                            if (TryPeek(out var ch2) && TomlCodes.IsRightBraces(ch2))
-                            {
-                                Advance(1);
-                                return inlineTable;
-                            }
-                            continue;
+                            SkipWhiteSpaceAndNewLine();
                         }
                         else
                         {
                             SkipWhiteSpace();
+                        }
+
+                        if (TryPeek(out var ch2))
+                        {
+                            if (TomlCodes.IsRightBraces(ch2))
+                            {
+                                if (spec.AllowTrailingCommaInInlineTables) // TOML v1.1.0
+                                {
+                                    Advance(1);
+                                    return inlineTable;
+                                }
+                                ExceptionHelper.ThrowTrailingCommaIsNotAllowed();
+                            }
                             continue;
                         }
                     }

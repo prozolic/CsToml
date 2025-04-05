@@ -689,7 +689,7 @@ internal static class TomlCodes
                             return EscapeSequenceResult.Success;
                         }
 
-                        Span<byte> sourceSpan = stackalloc byte[4];
+                        Span<byte> sourceSpan = stackalloc byte[2];
                         if (sequenceReader.TryGetbytes(2, sourceSpan))
                         {
                             Span<byte> destination = stackalloc byte[2];
