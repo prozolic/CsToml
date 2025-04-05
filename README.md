@@ -1259,6 +1259,7 @@ var v110Options = CsTomlSerializerOptions.Default with
         SupportsEscapeSequenceX = true,
     }
 };
+var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText, v110Options);
 ```
 
 ### AllowUnicodeInBareKeys
