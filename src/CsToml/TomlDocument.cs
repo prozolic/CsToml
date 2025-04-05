@@ -34,7 +34,7 @@ public partial class TomlDocument
 
     internal void Deserialize(ref Utf8SequenceReader reader, CsTomlSerializerOptions options)
     {
-        var parser = new CsTomlParser(ref reader);
+        var parser = new CsTomlParser(ref reader, options);
 
         List<TomlString>? comments = default;
         List<CsTomlParseException>? exceptions = default;
@@ -95,7 +95,7 @@ public partial class TomlDocument
         if (exceptions?.Count > 0)
         {
             throw new CsTomlSerializeException(
-                "Exceptions were thrown during the parsing TOML. Check 'Exceptions' property about exceptions thrown.",
+                "Exceptions were thrown while parsing TOML. See the 'ParseExceptions' property for details about any errors.",
                 exceptions);
         }
     }

@@ -72,7 +72,7 @@ public static class CsTomlSerializer
         }
         catch (CsTomlException cte)
         {
-            throw new CsTomlSerializeException("An exception was thrown during the deserializing TOML. Check 'InnerException' property for exception information.", cte);
+            throw new CsTomlSerializeException("An exception was thrown while deserializing TOML. See the 'ParseExceptions' property for details about any errors.", cte);
         }
     }
 
@@ -95,7 +95,7 @@ public static class CsTomlSerializer
         }
         catch (CsTomlException cte)
         {
-            throw new CsTomlSerializeException("An exception was thrown during the deserializing TOML. Check 'InnerException' property for exception information.", cte);
+            throw new CsTomlSerializeException("An exception was thrown while deserializing TOML. See the 'ParseExceptions' property for details about any errors.", cte);
         }
     }
 
@@ -145,7 +145,7 @@ public static class CsTomlSerializer
     {
         options ??= DefaultOptions;
         var utf8SequenceReader = new Utf8SequenceReader(tomlText, true);
-        var reader = new CsTomlReader(ref utf8SequenceReader);
+        var reader = new CsTomlReader(ref utf8SequenceReader, options.Spec);
         TomlValue tomlValue = reader.ReadValue();
 
         var tomlDocumentNode = new TomlDocumentNode(tomlValue);
@@ -156,7 +156,7 @@ public static class CsTomlSerializer
     {
         options ??= DefaultOptions;
         var utf8SequenceReader = new Utf8SequenceReader(tomlSequence, true);
-        var reader = new CsTomlReader(ref utf8SequenceReader);
+        var reader = new CsTomlReader(ref utf8SequenceReader, options.Spec);
         TomlValue tomlValue = reader.ReadValue();
 
         var tomlDocumentNode = new TomlDocumentNode(tomlValue);
@@ -192,7 +192,7 @@ public static class CsTomlSerializer
         }
         catch (CsTomlException cte)
         {
-            throw new CsTomlSerializeException("An exception was thrown during the serializing TOML. Check 'InnerException' property for exception information.", cte);
+            throw new CsTomlSerializeException("An exception was thrown while serializing TOML. See the 'ParseExceptions' property for details about any errors.", cte);
         }
     }
 
@@ -247,7 +247,7 @@ public static class CsTomlSerializer
         }
         catch (CsTomlException cte)
         {
-            throw new CsTomlSerializeException("An exception was thrown during the serializing TOML. Check 'InnerException' property for exception information.", cte);
+            throw new CsTomlSerializeException("An exception was thrown while serializing TOML. See the 'ParseExceptions' property for details about any errors.", cte);
         }
     }
 }

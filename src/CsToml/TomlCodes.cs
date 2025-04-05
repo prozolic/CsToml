@@ -12,7 +12,7 @@ internal enum EscapeSequenceResult : byte
 {
     Success,
     Failure,
-    Unescaped
+    Unescaped,
 }
 
 internal static class TomlCodes
@@ -121,6 +121,10 @@ internal static class TomlCodes
         internal const byte LocalDateFormatLength = 10; // yyyy-MM-dd
         internal const byte LocalDateTimeFormatLength = 19; // yyyy-MM-ddTHH:mm:ss
         internal const byte OffsetDateTimeZFormatLength = 20; // yyyy-MM-ddTHH:mm:ssZ
+
+        internal const byte LocalTimeOptionFormatLength = 5; // HH:mm
+        internal const byte LocalDateTimeOptionFormatLength = 16; // yyyy-MM-ddTHH:mm
+        internal const byte OffsetDateTimeZOptionFormatLength = 17; // yyyy-MM-ddTHH:mmZ
     }
 
     internal readonly struct Symbol
@@ -129,6 +133,7 @@ internal static class TomlCodes
         internal const byte DASH = 0x2d;
         internal const byte BACKSPACE = 0x08;
         internal const byte TAB = 0x09;
+        internal const byte ESCAPE = 0x1b;
         internal const byte SPACE = 0x20;
         internal const byte NUMBERSIGN = 0x23;
         internal const byte CARRIAGE = 0x0d;
@@ -190,8 +195,8 @@ internal static class TomlCodes
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x30 - 0x3f
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x40 - 0x4f
             false, false, false, false, false, true, false, false, false, false, false, false, true, false, false, false,   // 0x50 - 0x5f
-            false, false, true, false, false, false, true, false, false, false, false, false, false, false, true, false,    // 0x60 - 0x6f
-            false, false, true, false, true, true, false, false, false, false, false, false, false, false, false, false,    // 0x70 - 0x7f
+            false, false, true, false, false, true, true, false, false, false, false, false, false, false, true, false,     // 0x60 - 0x6f
+            false, false, true, false, true, true, false, false, true, false, false, false, false, false, false, false,     // 0x70 - 0x7f
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x80 - 0x8f
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x90 - 0x9f
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xa0 - 0xaf
@@ -565,7 +570,7 @@ internal static class TomlCodes
     internal static bool IsComma(byte rawByte)
         => rawByte == Symbol.COMMA;
 
-    internal static EscapeSequenceResult TryParseEscapeSequence(ref Utf8SequenceReader sequenceReader, ArrayPoolBufferWriter<byte> bufferWriter, bool multiLine, bool throwError)
+    internal static EscapeSequenceResult TryParseEscapeSequence(ref Utf8SequenceReader sequenceReader, ArrayPoolBufferWriter<byte> bufferWriter, bool multiLine, bool supportsEscapeSequenceE, bool supportsEscapeSequenceX, bool throwError)
     {
         if (!sequenceReader.TryPeek(out var ch)) ExceptionHelper.ThrowEndOfFileReached();
 
@@ -589,6 +594,14 @@ internal static class TomlCodes
                     sequenceReader.Advance(1);
                     bufferWriter.Write(TomlCodes.Symbol.BACKSPACE);
                     return EscapeSequenceResult.Success;
+                case TomlCodes.Alphabet.e:
+                    if (supportsEscapeSequenceE) // TOML v1.1.0
+                    {
+                        sequenceReader.Advance(1);
+                        bufferWriter.Write(TomlCodes.Symbol.ESCAPE);
+                        return EscapeSequenceResult.Success;
+                    }
+                    return EscapeSequenceResult.Failure;
                 case TomlCodes.Alphabet.t:
                     sequenceReader.Advance(1);
                     bufferWriter.Write(TomlCodes.Symbol.TAB);
@@ -654,6 +667,37 @@ internal static class TomlCodes
                             return EscapeSequenceResult.Success;
                         }
                         ExceptionHelper.ThrowIncorrect32bitCodePoint();
+                    }
+                    catch (CsTomlException)
+                    {
+                        if (throwError) throw;
+                        return EscapeSequenceResult.Failure;
+                    }
+                    return EscapeSequenceResult.Success;
+                case TomlCodes.Alphabet.x:
+                    if (!supportsEscapeSequenceX)  // TOML v1.1.0
+                        return multiLine ? EscapeSequenceResult.Unescaped : EscapeSequenceResult.Failure;
+
+                    sequenceReader.Advance(1);
+                    try
+                    {
+                        if (sequenceReader.TryFullSpan(2, out var source))
+                        {
+                            Span<byte> destination = stackalloc byte[2];
+                            Utf8Helper.ParseFrom8bitCodePointToUtf8(destination, source, out int writtenCount);
+                            bufferWriter.Write(destination.Slice(0, writtenCount));
+                            return EscapeSequenceResult.Success;
+                        }
+
+                        Span<byte> sourceSpan = stackalloc byte[2];
+                        if (sequenceReader.TryGetbytes(2, sourceSpan))
+                        {
+                            Span<byte> destination = stackalloc byte[2];
+                            Utf8Helper.ParseFrom8bitCodePointToUtf8(destination, sourceSpan, out int writtenCount);
+                            bufferWriter.Write(destination.Slice(0, writtenCount));
+                            return EscapeSequenceResult.Success;
+                        }
+                        ExceptionHelper.ThrowIncorrect16bitCodePoint();
                     }
                     catch (CsTomlException)
                     {

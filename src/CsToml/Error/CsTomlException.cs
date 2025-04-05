@@ -38,7 +38,7 @@ public sealed class CsTomlParseException : CsTomlException
         var handler = new DefaultInterpolatedStringHandler(0, 0);
         handler.AppendLiteral("A syntax error (");
         handler.AppendLiteral(nameof(CsTomlException));
-        handler.AppendLiteral(") was thrown during the parsing line ");
+        handler.AppendLiteral(") was thrown while parsing line ");
         handler.AppendFormatted(lineNumber);
         handler.AppendLiteral($".");
         handler.AppendLiteral(Environment.NewLine);
@@ -51,7 +51,7 @@ public sealed class CsTomlParseException : CsTomlException
         var handler = new DefaultInterpolatedStringHandler(0, 0);
         handler.AppendLiteral("An unexpected exception (");
         handler.AppendLiteral(e.GetType().Name);
-        handler.AppendLiteral(") was thrown during the parsing line ");
+        handler.AppendLiteral(") was thrown while parsing line ");
         handler.AppendFormatted(lineNumber);
         handler.AppendLiteral($".");
         handler.AppendLiteral(Environment.NewLine);

@@ -65,9 +65,9 @@ internal ref struct CsTomlParser
     }
 
     [DebuggerStepThrough]
-    internal CsTomlParser(ref Utf8SequenceReader sequenceReader)
+    internal CsTomlParser(ref Utf8SequenceReader sequenceReader, CsTomlSerializerOptions options)
     {
-        reader = new CsTomlReader(ref sequenceReader);
+        reader = new CsTomlReader(ref sequenceReader, options.Spec);
         dottedKeys = new ExtendableArray<TomlDottedKey>(16);
         CurrentState = ParserState.ParseStart;
     }

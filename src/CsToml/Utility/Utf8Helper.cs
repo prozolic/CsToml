@@ -231,6 +231,116 @@ internal static class Utf8Helper
         return false;
     }
 
+    public static bool ContainInvalidSequencesInUnquotedKey(ReadOnlySpan<byte> bytes)
+    {
+        ref var refBytes = ref MemoryMarshal.GetReference(bytes);
+        for (int i = 0; i < bytes.Length;)
+        {
+            ref var b1 = ref Unsafe.Add(ref refBytes, i);
+            if ((b1 & 0x80) == 0x00) // U+0000 - U+007F 1byte
+            {
+                if (!TomlCodes.IsBareKey(b1))
+                {
+                    return true;
+                }
+                i++;
+            }
+            else if (((b1 & 0xe0) == 0xc0)) // U+0080 - U+07FF 2byte
+            {
+                if ((uint)bytes.Length <= (uint)(i + 1)) return true;
+
+                var b2 = Unsafe.Add(ref refBytes, i + 1);
+                if ((b2 & 0xc0) != 0x80) return true;
+
+                // check codePoint
+                var codePoint = (uint)(b1 & 0x1f) << 6 | (uint)(b2 & 0x3f);
+                if ((codePoint < 0x80) || (0x7ff < codePoint))
+                {
+                    return true;
+                }
+
+                if (!(codePoint == 0xb2 || codePoint == 0xb3 || codePoint == 0xb9 || (codePoint >= 0xbc && codePoint <= 0xbe) ||
+                    (codePoint >= 0xc0 && codePoint <= 0xd6) || (codePoint >= 0xd8 && codePoint <= 0xf6) ||
+                    (codePoint >= 0xf8 && codePoint <= 0x37d) || (codePoint >= 0x37f && codePoint <= 0x1fff)))
+                {
+                    return true;
+                }
+
+                i += 2;
+            }
+            else if (((b1 & 0xf0) == 0xe0)) // U+0800 - U+FFFF 3byte
+            {
+                if ((uint)bytes.Length <= (uint)(i + 2)) return true;
+
+                var b2 = Unsafe.Add(ref refBytes, i + 1);
+                var b3 = Unsafe.Add(ref refBytes, i + 2);
+                // check codePoint
+                var codePoint = (uint)(b1 & 0x0f) << 12 | (uint)(b2 & 0x3f) << 6 | (uint)(b3 & 0x3f);
+                if ((codePoint < 0x800) || (0xffff < codePoint) || (0xd7ff < codePoint && codePoint < 0xe000))
+                {
+                    return true;
+                }
+
+                if (b1 == 0xe0)
+                {
+                    if (0x7f < b2 && b2 < 0xa0) return true;
+                }
+                else if (b1 == 0xed) // surrogate pair
+                {
+                    if (0x9f < b2) return true;
+                }
+                if ((b2 & 0xc0) != 0x80) return true;
+                if ((b3 & 0xc0) != 0x80) return true;
+
+                if (!((codePoint >= 0x800 && codePoint <= 0x1fff) || (codePoint >= 0x200c && codePoint <= 0x200d) ||
+                    (codePoint >= 0x203f && codePoint <= 0x2040) || (codePoint >= 0x203f && codePoint <= 0x2040) ||
+                    (codePoint >= 0x2070 && codePoint <= 0x218f) || (codePoint >= 0x2460 && codePoint <= 0x24ff) ||
+                    (codePoint >= 0x2c00 && codePoint <= 0x2fef) || (codePoint >= 0x3001 && codePoint <= 0xd7ff) ||
+                    (codePoint >= 0xf900 && codePoint <= 0xfdcf) || (codePoint >= 0xfdf0 && codePoint <= 0xfffd)))
+                {
+                    return true;
+                }
+
+                i += 3;
+            }
+            else if (((b1 & 0xf8) == 0xf0)) // U+10000 - U+10FFFF 4byte
+            {
+                if ((uint)bytes.Length <= (uint)(i + 3)) return true;
+
+                var b2 = Unsafe.Add(ref refBytes, i + 1);
+                var b3 = Unsafe.Add(ref refBytes, i + 2);
+                var b4 = Unsafe.Add(ref refBytes, i + 3);
+                if (b1 == 0xf0)
+                {
+                    if (0x7f < b2 && b2 < 0x90) return true;
+                }
+                if ((b2 & 0xc0) != 0x80) return true;
+                if ((b3 & 0xc0) != 0x80) return true;
+                if ((b4 & 0xc0) != 0x80) return true;
+
+                // check codePoint
+                var codePoint = (uint)(b1 & 0x07) << 18 | (uint)(b2 & 0x3f) << 12 | (uint)(b3 & 0x3f) << 6 | (uint)(b4 & 0x3f);
+                if (codePoint <= 0xffff || 0x10ffff < codePoint)
+                {
+                    return true;
+                }
+
+                if (!(codePoint >= 0x10000 && codePoint <= 0xeffff))
+                {
+                    return true;
+                }
+
+                i += 4;
+            }
+            else
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public static void ParseFromCodePointToUtf8(int utf32CodePoint, Span<byte> utf8Bytes, out int writtenCount)
     {
         // unicode -> utf8
@@ -268,6 +378,36 @@ internal static class Utf8Helper
         writtenCount = 0;
         ExceptionHelper.NotReturnThrow<int>(ExceptionHelper.ThrowInvalidUnicodeScalarValue);
     }
+
+    public static void ParseFrom8bitCodePointToUtf8(Span<byte> destination, ReadOnlySpan<byte> source, out int writtenCount)
+    {
+        if (destination.Length < 2)
+        {
+            writtenCount = 0;
+            ExceptionHelper.ThrowException("Number of elements in the destination Span<byte> is not 2.");
+        }
+        if (source.Length != 2)
+        {
+            writtenCount = 0;
+            ExceptionHelper.ThrowException("Number of elements in the source ReadOnlySpan<byte> is not 2.");
+        }
+
+        for (var i = 0; i < source.Length; i++)
+        {
+            if (!TomlCodes.IsHex(source[i]))
+            {
+                writtenCount = 0;
+                ExceptionHelper.ThrowIncorrectCompactEscapeCharacters(source[i]);
+            }
+        }
+
+        var codePoint = 0;
+        codePoint += (TomlCodes.Number.ParseHex(source[0]) << 4);
+        codePoint += TomlCodes.Number.ParseHex(source[1]);
+
+        Utf8Helper.ParseFromCodePointToUtf8(codePoint, destination, out writtenCount);
+    }
+
 
     public static void ParseFrom16bitCodePointToUtf8(Span<byte> destination, ReadOnlySpan<byte> source, out int writtenCount)
     {

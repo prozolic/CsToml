@@ -28,6 +28,14 @@ internal sealed partial class TomlArray(int capacity) : TomlValue, IEnumerable<T
     public TomlArray() : this(4)
     {}
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Span<TomlValue> GetListSpan(int count)
+    {
+        CollectionsMarshal.SetCount(values, count);
+        var arraySpan = CollectionsMarshal.AsSpan(values);
+        return arraySpan;
+    }
+
     internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
         writer.BeginArray();
@@ -142,14 +150,14 @@ internal sealed partial class TomlArray(int capacity) : TomlValue, IEnumerable<T
     IEnumerator IEnumerable.GetEnumerator()
         => GetEnumerator();
 
-    private struct Enumerator(TomlArray array) : IEnumerator<TomlValue>
+    private struct Enumerator(TomlArray array) : IEnumerator<TomlValue?>
     {
         private readonly TomlArray tomlArray = array;
         private int index = 0;
 
-        public TomlValue Current { get; private set; }
+        public TomlValue? Current { get; private set; }
 
-        object IEnumerator.Current => this.Current;
+        object? IEnumerator.Current => this.Current;
 
         public readonly Enumerator GetEnumerator() => this;
 
