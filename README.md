@@ -3,10 +3,9 @@
 
 [![MIT License](https://img.shields.io/github/license/prozolic/CsToml)](LICENSE)
 [![CsToml](https://img.shields.io/nuget/v/CsToml?label=nuget%20CsToml)](https://www.nuget.org/packages/CsToml)
-[![CsToml.Extensions](https://img.shields.io/nuget/v/CsToml.Extensions?label=nuget%20CsToml.Extensions
-)](https://www.nuget.org/packages/CsToml.Extensions)
-[![CsToml.Generator](https://img.shields.io/nuget/v/CsToml.Generator?label=nuget%20CsToml.Generator
-)](https://www.nuget.org/packages/CsToml.Generator/)
+[![CsToml.Extensions](https://img.shields.io/nuget/v/CsToml.Extensions?label=nuget%20CsToml.Extensions)](https://www.nuget.org/packages/CsToml.Extensions)
+[![CsToml.Extensions.Configuration](https://img.shields.io/nuget/v/CsToml.Extensions.Configuration?label=nuget%20CsToml.Extensions.Configuration)](https://www.nuget.org/packages/CsToml.Extensions.Configuration)
+[![CsToml.Generator](https://img.shields.io/nuget/v/CsToml.Generator?label=nuget%20CsToml.Generator)](https://www.nuget.org/packages/CsToml.Generator/)
 
 CsToml is Fast and low memory allocation TOML Parser/Serializer for .NET.  
 For more information about TOML, visit the official website at [https://toml.io/en/](https://toml.io/en/)
@@ -45,6 +44,7 @@ Table of Contents
 * [Serialize API](#serialize-api)
 * [Other Deserialize/Serialize APIs](#other-deserializeserialize-apis)
 * [TomlDocument class](#tomldocument-class)
+* [Pre-release version features overview](#pre-release-version-features-overview)
 * [Extensions (CsToml.Extensions)](#extensions-cstomlextensions)
 * [Microsoft.Extensions.Configuration extensions (CsToml.Extensions.Configuration)](#microsoftextensionsconfiguration-extensions-cstomlextensionsconfiguration)
 * [UnitTest](#unittest)
@@ -513,6 +513,11 @@ Number = 123
 Key = "kEY"
 Number = 123
 ```
+
+#### Spec
+
+`Spec` can enable features in Pre-release version features.
+For more information, please click [Pre-release version features overview](#pre-release-version-features-overview).
 
 Built-in support type
 ---
@@ -1230,6 +1235,93 @@ var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
 
 // Same as document.RootNode.GetValue<Dictionary<object, object>>().
 var dict = document.ToDictionary<object, object>();
+```
+
+Pre-release version features overview
+---
+
+You can use the upcoming features planned for TOML v1.1.0, which has not been officially released yet.
+Each feature can be enabled individually from CsTomlSerializerOptions.Spec.
+
+> [!WARNING]
+> As these are features from an unreleased version, they may be subject to specification changes or deprecation in the future.
+
+```csharp
+var v110Options = CsTomlSerializerOptions.Default with
+{
+    Spec = new ()
+    {
+        AllowUnicodeInBareKeys = true,
+        AllowNewlinesInInlineTables = true,
+        AllowTrailingCommaInInlineTables = true,
+        AllowSecondsOmissionInTime = true,
+        SupportsEscapeSequenceE = true,
+        SupportsEscapeSequenceX = true,
+    }
+};
+```
+
+### AllowUnicodeInBareKeys
+
+This feature enables the use of Unicode characters (non-ASCII) in unquoted (bare) keys. This allows you to use characters from non-English scripts directly in key names without requiring quotation marks.  
+For example:
+
+```toml
+€ = 'Euro'
+😂 = ""rofl""
+a‍b = ""zwj""
+ÅÅ = ""U+00C5 U+0041 U+030A""
+あイ宇絵ォ = ""Japanese""
+```
+
+### AllowNewlinesInInlineTables
+
+This feature permits newline characters after key/value pairs within inline tables.  
+For example:
+
+```toml
+name = { 
+    first = ""CsToml"", 
+    last = ""prozolic"" }
+```
+
+### AllowTrailingCommaInInlineTables
+
+This feature supports an optional trailing comma after the last key/value pair in inline tables.  
+For example:
+
+```toml
+name = {  first = ""CsToml"",  last = ""prozolic"", }
+```
+
+### AllowSecondsOmissionInTime
+
+This feature makes the seconds component optional in both Date-Time and Time values. Previously, time specifications required hours, minutes, and seconds. With this feature enabled, you can use shortened time formats like `12:30` instead of requiring `12:30:00`.  
+For example:
+
+```toml
+without-seconds-1 = 13:37
+without-seconds-2 = 1979-05-27 07:32Z
+without-seconds-3 = 1979-05-27 07:32-07:00
+without-seconds-4 = 1979-05-27T07:32
+```
+
+### SupportsEscapeSequenceE
+
+This feature supports for the `\e` escape sequence as a shorthand for the escape character (ASCII code 27).  
+For example:
+
+```toml
+key = "\e There is no escape! \e"
+```
+
+### SupportsEscapeSequenceX
+
+This feature supports for hexadecimal escape notation (`\x00`) in basic strings.  
+For example:
+
+```toml
+name = "this is \x43\x73\x54\x6f\x6d\x6c"
 ```
 
 Extensions (`CsToml.Extensions`)
