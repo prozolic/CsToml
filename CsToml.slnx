@@ -1,0 +1,18 @@
+<Solution>
+  <Folder Name="/sandbox/">
+    <Project Path="sandbox/Benchmark/Benchmark.csproj" />
+    <Project Path="sandbox/ConsoleApp/ConsoleApp.csproj" />
+    <Project Path="sandbox/ConsoleNativeAOT/ConsoleNativeAOT.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/CsToml.Extensions.Configuration/CsToml.Extensions.Configuration.csproj" />
+    <Project Path="src/CsToml.Extensions/CsToml.Extensions.csproj" />
+    <Project Path="src/CsToml.Generator/CsToml.Generator.csproj" />
+    <Project Path="src/CsToml/CsToml.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/CsToml.Extensions.Configuration.Tests/CsToml.Extensions.Configuration.Tests.csproj" />
+    <Project Path="tests/CsToml.Generator.Tests/CsToml.Generator.Tests.csproj" />
+    <Project Path="tests/CsToml.Tests/CsToml.Tests.csproj" />
+  </Folder>
+</Solution>
