@@ -11,7 +11,7 @@ internal class BenchmarkConfig : ManualConfig
 {
     public BenchmarkConfig()
     {
-        AddExporter(MarkdownExporter.GitHub);
+        AddExporter([MarkdownExporter.GitHub, MarkdownExporter.Console, HtmlExporter.Default]);
         AddDiagnoser(MemoryDiagnoser.Default);
         AddColumn(CategoriesColumn.Default);
         AddColumn(RankColumn.Arabic);
