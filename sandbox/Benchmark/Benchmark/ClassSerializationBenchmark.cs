@@ -1,16 +1,13 @@
 ﻿using BenchmarkDotNet.Attributes;
 using Benchmark.Model;
 using CsToml;
-using System;
-using System.Collections.Generic;
-
+using System.Buffers;
 using System.Text;
 using Tomlet;
-using System.Buffers;
+using Tomlyn;
 
 namespace Benchmark;
 
-[Config(typeof(BenchmarkConfig))]
 public class ClassSerializationBenchmark
 {
 #pragma warning disable CS8618
@@ -36,12 +33,12 @@ public class ClassSerializationBenchmark
             LocalDateTime = new DateTime(2024, 8, 12, 7, 32, 0),
             Array = ["red", "yellow", "green"],
             Table = new Table() { Value = "some string" },
-            ArrayOfTable = new List<Table2>()
-            {
-                new Table2() { Value = "Hammer" },
-                new Table2() { Value = "Hammer2" },
-                new Table2() { Value = "Hammer3" }
-            }
+            ArrayOfTable =
+            [
+                new () { Value = "Hammer" },
+                new () { Value = "Hammer2" },
+                new () { Value = "Hammer3" }
+            ]
         };
         testTomlSerializedObjectInSnakeCase = new Benchmark.Model.TestTomlSerializedObjectInSnakeCase()
         {
@@ -58,23 +55,26 @@ public class ClassSerializationBenchmark
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark(Baseline = true)]
-    public void CsToml_Serialize()
+    public string CsToml()
     {
         var bufferWriter = new ArrayBufferWriter<byte>();
-        CsToml.CsTomlSerializer.Serialize(ref bufferWriter, testTomlSerializedObject, options); //CsToml
-        var test = utf8.GetString(bufferWriter.WrittenSpan);
+        CsTomlSerializer.Serialize(ref bufferWriter, testTomlSerializedObject, options); //CsToml
+        var text = utf8.GetString(bufferWriter.WrittenSpan);
+        return text;
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]
-    public void Tomlet_Serialize()
+    public string Tomlet()
     {
         var text = TomletMain.TomlStringFrom<TestTomlSerializedObject>(testTomlSerializedObject); // Tomlet
+        return text;
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]
-    public void Tomlyn_Serialize()
+    public string Tomlyn()
     {
-        var text = Tomlyn.Toml.FromModel(testTomlSerializedObjectInSnakeCase); // Tomlyn
+        var text = Toml.FromModel(testTomlSerializedObjectInSnakeCase); // Tomlyn
+        return text;
     }
 }
 

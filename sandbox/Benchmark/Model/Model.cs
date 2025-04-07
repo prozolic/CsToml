@@ -25,34 +25,34 @@ public partial class TestTomlSerializedObject
     public DateTime LocalDateTime { get; set; }
 
     [TomlValueOnSerialized]
-    public string[] Array { get; set; }
+    public string[]? Array { get; set; }
 
     [TomlValueOnSerialized]
-    public Table Table { get; set; }
+    public Table? Table { get; set; }
 
     [TomlValueOnSerialized]
-    public List<Table2> ArrayOfTable { get; set; }
+    public List<Table2>? ArrayOfTable { get; set; }
 }
 
 [TomlSerializedObject]
 public partial class Table
 {
     [TomlValueOnSerialized]
-    public string Value { get; set; }
+    public string? Value { get; set; }
 }
 
 [TomlSerializedObject]
 public partial class Table2
 {
     [TomlValueOnSerialized]
-    public string Value { get; set; }
+    public string? Value { get; set; }
 }
 
 [CsToml.TomlSerializedObject]
 public partial class TestTomlSerializedObjectInSnakeCase
 {
     [TomlValueOnSerialized("str")]
-    public string Str { get; set; }
+    public string? Str { get; set; }
 
     [TomlValueOnSerialized("long")]
     public long Long { get; set; }
@@ -70,25 +70,25 @@ public partial class TestTomlSerializedObjectInSnakeCase
     public DateTime LocalDateTime { get; set; }
 
     [TomlValueOnSerialized("array")]
-    public string[] Array { get; set; }
+    public string[]? Array { get; set; }
 
     [TomlValueOnSerialized("table")]
-    public Table Table { get; set; }
+    public Table? Table { get; set; }
 
     [TomlValueOnSerialized("array_of_table")]
-    public List<Table2> ArrayOfTable { get; set; }
+    public List<Table2>? ArrayOfTable { get; set; }
 }
 
 [TomlSerializedObject]
 public partial class TableInSnakeCase
 {
     [TomlValueOnSerialized("value")]
-    public string Value { get; set; }
+    public string? Value { get; set; }
 }
 
 [TomlSerializedObject]
 public partial class Table2InSnakeCase
 {
     [TomlValueOnSerialized("value")]
-    public string Value { get; set; }
+    public string? Value { get; set; }
 }
