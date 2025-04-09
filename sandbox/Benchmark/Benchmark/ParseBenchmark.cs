@@ -21,7 +21,7 @@ public class DefaultParseBenchmark
         tomlUtf16Text = File.ReadAllText(Constants.TomlFilePath);
     }
 
-    [BenchmarkCategory("Benchmark"), Benchmark(Baseline = true)]
+    [BenchmarkCategory("Benchmark"), Benchmark()]
     public CsToml.TomlDocument CsToml()
     {
         var document = CsTomlSerializer.Deserialize<TomlDocument>(Encoding.UTF8.GetBytes(tomlUtf16Text));
@@ -37,7 +37,7 @@ public class DefaultParseBenchmark
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]
-    public Tomlet.Models.TomlDocument Tomlet_Parse()
+    public Tomlet.Models.TomlDocument Tomlet()
     {
         var parser = new Tomlet.TomlParser();
         var document = parser.Parse(tomlUtf16Text);
@@ -45,9 +45,9 @@ public class DefaultParseBenchmark
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]
-    public Tomlyn.Model.TomlTable Tomlyn_Parse()
+    public Tomlyn.Model.TomlTable Tomlyn()
     {
-        var table = Tomlyn.Toml.ToModel(tomlUtf16Text);
+        var table = Toml.ToModel(tomlUtf16Text);
         return table;
     }
 }

@@ -2,30 +2,51 @@
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Diagnosers;
 using BenchmarkDotNet.Exporters;
+using BenchmarkDotNet.Engines;
 using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Loggers;
+using BenchmarkDotNet.Reports;
+using BenchmarkDotNet.Toolchains.CsProj;
 
 namespace Benchmark;
+
 
 internal class BenchmarkConfig : ManualConfig
 {
     public BenchmarkConfig()
     {
+        WithSummaryStyle(SummaryStyle.Default.WithMaxParameterColumnWidth(20));
+
+        // Apply both global settings and local setting (Attribute)
+        WithUnionRule(DefaultConfig.Instance.UnionRule);
+        WithArtifactsPath(DefaultConfig.Instance.ArtifactsPath);
+
         AddExporter([MarkdownExporter.GitHub, MarkdownExporter.Console, HtmlExporter.Default]);
         AddDiagnoser(MemoryDiagnoser.Default);
-        AddColumn(CategoriesColumn.Default);
-        AddColumn(RankColumn.Arabic);
-        AddColumn(StatisticColumn.Min);
-        AddColumn(StatisticColumn.Max);
 
         AddColumnProvider(DefaultColumnProviders.Instance);
         AddAnalyser(DefaultConfig.Instance.GetAnalysers().ToArray());
         AddValidator(DefaultConfig.Instance.GetValidators().ToArray());
         AddLogger(ConsoleLogger.Default);
 
-        //AddJob(Job.ShortRun);
-        AddJob(Job.ShortRun.DontEnforcePowerPlan());
+        // .NET 9.0 as default.
+        AddJob(Job.ShortRun
+            .WithStrategy(RunStrategy.Throughput)
+            .DontEnforcePowerPlan()
+            .WithToolchain(CsProjCoreToolchain.NetCoreApp90)
+            .WithId($"Benchmark{CsProjCoreToolchain.NetCoreApp90.Name}"));
+    }
+
+    public BenchmarkConfig AddTargetFramework()
+    {
+        // Add .NET 8.0
+        AddJob(Job.ShortRun
+            .WithStrategy(RunStrategy.Throughput)
+            .DontEnforcePowerPlan()
+            .WithToolchain(CsProjCoreToolchain.NetCoreApp80)
+            .WithId($"Benchmark{CsProjCoreToolchain.NetCoreApp80.Name}"));
+
+        return this;
     }
 
 }
-
