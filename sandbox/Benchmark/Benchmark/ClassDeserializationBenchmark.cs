@@ -3,10 +3,10 @@ using Benchmark.Model;
 using CsToml;
 using System.Text;
 using Tomlet;
+using Tomlyn;
 
 namespace Benchmark;
 
-[Config(typeof(BenchmarkConfig))]
 public class ClassDeserializationBenchmark
 {
 #pragma warning disable CS8618
@@ -72,22 +72,25 @@ value =  ""Hammer3""
 ";
     }
 
-    [BenchmarkCategory("Benchmark"), Benchmark(Baseline = true)]
-    public void CsToml_Deserialize()
+    [BenchmarkCategory("Benchmark"), Benchmark]
+    public TestTomlSerializedObject CsToml_Deserialize()
     {
         var obj = CsTomlSerializer.Deserialize<TestTomlSerializedObject>(Encoding.UTF8.GetBytes(tomlUtf16Text)); //CsToml
+        return obj;
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]
-    public void Tomlet_Deserialize()
+    public TestTomlSerializedObject Tomlet_Deserialize()
     {
         var obj = TomletMain.To<TestTomlSerializedObject>(tomlUtf16Text); // Tomlet
+        return obj;
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]
-    public void Tomlyn_Deserialize()
+    public TestTomlSerializedObjectInSnakeCase Tomlyn_Deserialize()
     {
-        var obj = Tomlyn.Toml.ToModel<TestTomlSerializedObjectInSnakeCase>(tomlUtf16TextInSnakeCase); // Tomlyn
+        var obj = Toml.ToModel<TestTomlSerializedObjectInSnakeCase>(tomlUtf16TextInSnakeCase); // Tomlyn
+        return obj;
     }
 }
 
