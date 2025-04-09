@@ -72,22 +72,22 @@ value =  ""Hammer3""
 ";
     }
 
-    [BenchmarkCategory("Benchmark"), Benchmark(Baseline = true)]
-    public TestTomlSerializedObject CsToml()
+    [BenchmarkCategory("Benchmark"), Benchmark]
+    public TestTomlSerializedObject CsToml_Deserialize()
     {
         var obj = CsTomlSerializer.Deserialize<TestTomlSerializedObject>(Encoding.UTF8.GetBytes(tomlUtf16Text)); //CsToml
         return obj;
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]
-    public TestTomlSerializedObject Tomlet()
+    public TestTomlSerializedObject Tomlet_Deserialize()
     {
         var obj = TomletMain.To<TestTomlSerializedObject>(tomlUtf16Text); // Tomlet
         return obj;
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]
-    public TestTomlSerializedObjectInSnakeCase Tomlyn()
+    public TestTomlSerializedObjectInSnakeCase Tomlyn_Deserialize()
     {
         var obj = Toml.ToModel<TestTomlSerializedObjectInSnakeCase>(tomlUtf16TextInSnakeCase); // Tomlyn
         return obj;

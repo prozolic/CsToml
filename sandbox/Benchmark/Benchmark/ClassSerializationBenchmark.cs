@@ -54,8 +54,8 @@ public class ClassSerializationBenchmark
         };
     }
 
-    [BenchmarkCategory("Benchmark"), Benchmark(Baseline = true)]
-    public string CsToml()
+    [BenchmarkCategory("Benchmark"), Benchmark]
+    public string CsToml_Serialize()
     {
         var bufferWriter = new ArrayBufferWriter<byte>();
         CsTomlSerializer.Serialize(ref bufferWriter, testTomlSerializedObject, options); //CsToml
@@ -64,14 +64,14 @@ public class ClassSerializationBenchmark
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]
-    public string Tomlet()
+    public string Tomlet_Serialize()
     {
         var text = TomletMain.TomlStringFrom<TestTomlSerializedObject>(testTomlSerializedObject); // Tomlet
         return text;
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]
-    public string Tomlyn()
+    public string Tomlyn_Serialize()
     {
         var text = Toml.FromModel(testTomlSerializedObjectInSnakeCase); // Tomlyn
         return text;

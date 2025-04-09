@@ -10,17 +10,14 @@
 CsToml is Fast and low memory allocation TOML Parser/Serializer for .NET.  
 For more information about TOML, visit the official website at [https://toml.io/en/](https://toml.io/en/)
 
-> [!NOTE]
-> The official release version is v1.1.0 or higher. Less than v1.1.0 is deprecated due to incompatible APIs.
+![Parse Toml text](./img/benchmark_parse.png)
 
-![80 values with table and array of tables](https://github.com/user-attachments/assets/2f38c653-28ce-43e5-a615-9fa61637525d)
+> This benchmark parses a string (string) into a TOML object. I used [Tommy](https://github.com/dezhidki/Tommy), [Tomlet](https://github.com/SamboyCoding/Tomlet) and [Tomlyn](https://github.com/xoofx/Tomlyn) for comparison. `CsToml(v1.6.0)` includes additional `UTF8.GetBytes` calls. This benchmark code is [sandbox/Benchmark](https://github.com/prozolic/CsToml/blob/main/sandbox/Benchmark/Benchmark/ParseBenchmark.cs).
 
-> This benchmark parses a string (string) into a TOML object. I used [Tommy](https://github.com/dezhidki/Tommy), [Tomlet](https://github.com/SamboyCoding/Tomlet) and [Tomlyn](https://github.com/xoofx/Tomlyn) for comparison. `CsToml` includes additional `UTF8.GetBytes` calls. This benchmark code is [sandbox/Benchmark](https://github.com/prozolic/CsToml/blob/main/sandbox/Benchmark/ParseBenchmark.cs).
+![Deserialize TestTomlSerializedObject (9 values with table and array of tables)](./img/benchmark_serialization.png)
+![Serialize TestTomlSerializedObject (9 values with table and array of tables)](./img/benchmark_deserialization.png)
 
-![Deserialize TestTomlSerializedObject (9 values with table and array of tables)](https://github.com/user-attachments/assets/10ff18d6-3209-43c9-87e2-37c91e987733)
-![Serialize TestTomlSerializedObject (9 values with table and array of tables)](https://github.com/user-attachments/assets/374780e9-ec12-4f53-a390-cabe1085aa65)
-
-> This benchmark convert custom class to string and string to custom class. I used [Tomlet](https://github.com/SamboyCoding/Tomlet) and [Tomlyn](https://github.com/xoofx/Tomlyn) for comparison. `CsToml` includes additional `UTF8.GetBytes` calls. This benchmark code is [sandbox/Benchmark Deserialization](https://github.com/prozolic/CsToml/blob/main/sandbox/Benchmark/ClassDeserializationBenchmark.cs), [sandbox/Benchmark Serialization](https://github.com/prozolic/CsToml/blob/main/sandbox/Benchmark/ClassSerializationBenchmark.cs).
+> This benchmark convert custom class to string and string to custom class. I used [Tomlet](https://github.com/SamboyCoding/Tomlet) and [Tomlyn](https://github.com/xoofx/Tomlyn) for comparison. `CsToml(v1.6.0)` includes additional `UTF8.GetBytes` calls. This benchmark code is [sandbox/Benchmark Deserialization](https://github.com/prozolic/CsToml/blob/main/sandbox/Benchmark/Benchmark/ClassDeserializationBenchmark.cs), [sandbox/Benchmark Serialization](https://github.com/prozolic/CsToml/blob/main/sandbox/Benchmark/Benchmark/ClassSerializationBenchmark.cs).
 
 CsToml has the following features.
 
@@ -29,6 +26,7 @@ CsToml has the following features.
 - Parsing is performed using byte sequence instead of `string`.
 - It is processed byte sequence directly by the API defined in `System.Buffers`(`IBufferWriter<byte>`,`ReadOnlySequence<byte>`), memory allocation is small and fast.
 - Buffers are rented from the pool(`ArrayPool<T>`), reducing the allocation.
+- Core APIs compatible with Native AOT.
 - CsToml deserializer has been tested using [the standard TOML v1.0.0 test cases](https://github.com/toml-lang/toml-test/tree/master/tests) and all have passed.
 - The serialization interface and implementation is influenced by [MemoryPack](https://github.com/Cysharp/MemoryPack) and [VYaml](https://github.com/hadashiA/VYaml).
 
@@ -52,6 +50,9 @@ Table of Contents
 
 Installation
 ---
+
+> [!NOTE]
+> The official release version is v1.1.0 or higher. Less than v1.1.0 is deprecated.
 
 This library is distributed via NuGet. We target .NET 8 and .NET 9.  
 

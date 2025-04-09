@@ -22,14 +22,14 @@ public class DefaultParseBenchmark
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark()]
-    public CsToml.TomlDocument CsToml()
+    public CsToml.TomlDocument CsToml_Parse()
     {
         var document = CsTomlSerializer.Deserialize<TomlDocument>(Encoding.UTF8.GetBytes(tomlUtf16Text));
         return document;
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]
-    public Tommy.TomlTable Tommy()
+    public Tommy.TomlTable Tommy_Parse()
     {
         using var reader = new StringReader(tomlUtf16Text);
         var table = TOML.Parse(reader);
@@ -37,7 +37,7 @@ public class DefaultParseBenchmark
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]
-    public Tomlet.Models.TomlDocument Tomlet()
+    public Tomlet.Models.TomlDocument Tomlet_Parse()
     {
         var parser = new Tomlet.TomlParser();
         var document = parser.Parse(tomlUtf16Text);
@@ -45,7 +45,7 @@ public class DefaultParseBenchmark
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]
-    public Tomlyn.Model.TomlTable Tomlyn()
+    public Tomlyn.Model.TomlTable Tomlyn_Parse()
     {
         var table = Toml.ToModel(tomlUtf16Text);
         return table;
