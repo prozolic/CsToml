@@ -5,7 +5,7 @@ using BenchmarkDotNet.Running;
 
 var defaultBenchmark = new DefaultParseBenchmark();
 defaultBenchmark.GlobalSetup();
-defaultBenchmark.CsToml();
+defaultBenchmark.CsToml_Parse();
 
 return;
 #else
