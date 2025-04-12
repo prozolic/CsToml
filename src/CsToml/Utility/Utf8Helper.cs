@@ -24,7 +24,7 @@ internal static class Utf8Helper
                 ref var b1 = ref Unsafe.Add(ref refBytes, i);
                 if ((b1 & 0x80) == 0x00) // 1
                 {
-                    // Only partiallys SIMD.
+                    // Only partially SIMD.
                     if ((uint)(bytes.Length - i) >= (uint)vectorSize)
                     {
                         var vector = Vector.LoadUnsafe<byte>(ref refBytes, (uint)(i));

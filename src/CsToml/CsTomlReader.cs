@@ -478,7 +478,7 @@ internal ref struct CsTomlReader
                 return ReadSingleQuoteString();
             case TomlCodes.Symbol.PLUS:
             case TomlCodes.Symbol.MINUS:
-                return ReadNumbericValueIfLeadingSign();
+                return ReadNumericValueIfLeadingSign();
             case TomlCodes.Number.Zero:
                 return ReadNumericValueOrDateIfLeadingZero();
             case TomlCodes.Number.One:
@@ -1693,7 +1693,7 @@ internal ref struct CsTomlReader
         return false;
     }
 
-    internal TomlValue ReadNumbericValueIfLeadingSign()
+    internal TomlValue ReadNumericValueIfLeadingSign()
     {
         if (TryPeek(1, out var ch))
         {
@@ -2133,7 +2133,7 @@ internal ref struct CsTomlReader
                     continue;
                 case TomlCodes.Symbol.PLUS:
                 case TomlCodes.Symbol.MINUS:
-                    if (!exp || sign) ExceptionHelper.ThrowIncorrectPositivAndNegativeSigns();
+                    if (!exp || sign) ExceptionHelper.ThrowIncorrectPositiveAndNegativeSigns();
                     number = false;
                     sign = true;
                     writer.Write(ch);
@@ -2175,7 +2175,7 @@ internal ref struct CsTomlReader
                 break;
             case TomlCodes.Symbol.PLUS:
             case TomlCodes.Symbol.MINUS:
-                ExceptionHelper.ThrowIncorrectPositivAndNegativeSigns();
+                ExceptionHelper.ThrowIncorrectPositiveAndNegativeSigns();
                 break;
         }
 

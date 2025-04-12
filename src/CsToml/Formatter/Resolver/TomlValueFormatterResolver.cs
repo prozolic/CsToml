@@ -86,18 +86,18 @@ public sealed class TomlValueFormatterResolver : ITomlValueFormatterResolver
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void Register<T>(ITomlValueFormatter<T> fomatter)
+    public static void Register<T>(ITomlValueFormatter<T> formatter)
     {
         if (IsRegistered<T>()) return;
 
         CacheCheck<T>.Registered = true;
-        Cache<T>.Formatter = fomatter;
+        Cache<T>.Formatter = formatter;
     }
 
-    public static void Register<T>(TomlSerializedObjectFormatter<T> fomatter)
+    public static void Register<T>(TomlSerializedObjectFormatter<T> formatter)
         where T : ITomlSerializedObject<T>
     {
-        TomlSerializedObjectFormatterResolver.Instance.Register(fomatter);
+        TomlSerializedObjectFormatterResolver.Instance.Register(formatter);
     }
 
     public static void Register<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>()

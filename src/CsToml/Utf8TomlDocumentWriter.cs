@@ -27,7 +27,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
 
     internal readonly int WrittenSize => writer.WrittenSize;
 
-    internal readonly (TomlValueState state, int dottedKeyIndex) CurrentPriviousState => valueStates[^2];
+    internal readonly (TomlValueState state, int dottedKeyIndex) CurrentPreviousState => valueStates[^2];
 
     internal readonly (TomlValueState state, int dottedKeyIndex) CurrentState => valueStates[^1];
 
@@ -200,7 +200,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
     public void WriteDateTimeOffset(DateTimeOffset value)
     {
         var totalMicrosecond = value.Millisecond * 1000 + value.Microsecond;
-        var offsetTotalMinutes = value.Offset.TotalMinutes; // check timezone
+        var offsetTotalMinutes = value.Offset.TotalMinutes; // check TimeZone
 
         if (offsetTotalMinutes == 0)
         {

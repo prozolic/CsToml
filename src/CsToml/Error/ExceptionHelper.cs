@@ -237,7 +237,7 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void ThrowIncorrectPositivAndNegativeSigns()
+    internal static void ThrowIncorrectPositiveAndNegativeSigns()
     {
         ThrowException($@" '+' or '-' are included in incorrect positions.");
     }

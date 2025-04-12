@@ -1,5 +1,6 @@
 ﻿barekey
 Builtin
+comsumed
 CsToml
 dd
 f
@@ -15,6 +16,9 @@ ffffzzz
 fffffzzz
 ffffffzzz
 formatter
+Getbytes
+Hashtable
+Hashtables
 HH
 linebreak
 localdatetime
