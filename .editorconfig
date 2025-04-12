@@ -1,0 +1,32 @@
+﻿root = true
+
+# All files
+[*]
+charset = utf-8-bom
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = true
+
+# Visual Studio Spell checker configs (https://learn.microsoft.com/en-us/visualstudio/ide/text-spell-checker?view=vs-2022#how-to-customize-the-spell-checker)
+spelling_exclusion_path  = ./exclusion.dic
+
+# Solution files and MSBuild project files
+[*.{sln,slnx,csproj,props,targets}]
+indent_size = 2
+
+# TOML files
+[*.toml]
+indent_size = 2
+
+# JSON files
+[*.json]
+indent_size = 2
+
+# YAML files
+[*.yml]
+indent_size = 2
+
+[*.cs]
+dotnet_diagnostic.IDE0044.severity = none # Add readonly modifier
+dotnet_diagnostic.IDE0051.severity = none # Remove unused private member
+
