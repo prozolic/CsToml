@@ -1883,8 +1883,6 @@ internal ref struct CsTomlReader
         }
 
         var writer = new SpanWriter(stackalloc byte[32]);
-        writer.Write(TomlCodes.Number.Zero);
-        writer.Write(TomlCodes.Alphabet.x);
 
         var underscore = false;
         while (TryPeek(out var ch))
@@ -1945,8 +1943,6 @@ internal ref struct CsTomlReader
         }
 
         var writer = new SpanWriter(stackalloc byte[32]);
-        writer.Write(TomlCodes.Number.Zero);
-        writer.Write(TomlCodes.Alphabet.o);
 
         var underscore = false;
         while (TryPeek(out var ch))
@@ -2007,8 +2003,6 @@ internal ref struct CsTomlReader
         }
 
         var writer = new SpanWriter(stackalloc byte[64]);
-        writer.Write(TomlCodes.Number.Zero);
-        writer.Write(TomlCodes.Alphabet.b);
 
         var underscore = false;
         while (TryPeek(out var ch))
