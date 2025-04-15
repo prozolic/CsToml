@@ -96,7 +96,7 @@ internal abstract partial class TomlInteger : TomlValue
 
         public static TomlDefaultInteger Create(long value)
         {
-            if ((ulong)(value + 1) < (ulong)Cache<TomlDefaultInteger>.Values.Length)
+            if ((ulong)(value + 1) < (ulong)CacheHelper.Length)
             {
                 return Cache<TomlDefaultInteger>.Values[value + 1];
             }
@@ -119,7 +119,7 @@ internal abstract partial class TomlInteger : TomlValue
         public static TomlBinaryInteger Create(ReadOnlySpan<byte> bytes)
         {
             var value = ParseBinaryValue(bytes);
-            if ((ulong)(value + 1) < (ulong)Cache<TomlBinaryInteger>.Values.Length)
+            if ((ulong)(value + 1) < (ulong)CacheHelper.Length)
             {
                 return Cache<TomlBinaryInteger>.Values[value + 1];
             }
@@ -184,7 +184,7 @@ internal abstract partial class TomlInteger : TomlValue
         public static TomlOctalInteger Create(ReadOnlySpan<byte> bytes)
         {
             var value = ParseOctalValue(bytes);
-            if ((ulong)(value + 1) < (ulong)Cache<TomlOctalInteger>.Values.Length)
+            if ((ulong)(value + 1) < (ulong)CacheHelper.Length)
             {
                 return Cache<TomlOctalInteger>.Values[value + 1];
             }
@@ -249,7 +249,7 @@ internal abstract partial class TomlInteger : TomlValue
         public static TomlHexInteger Create(ReadOnlySpan<byte> bytes)
         {
             var value = ParseHexValue(bytes);
-            if ((ulong)(value + 1) < (ulong)Cache<TomlHexInteger>.Values.Length)
+            if ((ulong)(value + 1) < (ulong)CacheHelper.Length)
             {
                 return Cache<TomlHexInteger>.Values[value + 1];
             }
@@ -318,13 +318,22 @@ internal abstract partial class TomlInteger : TomlValue
 
         static Cache()
         {
-            var values = new T[10];
-            for (int i = 0; i < values.Length; i++)
-            {
-                values[i] = T.Create(i - 1);
-            }
+            Values = CacheHelper.Create<T>();
+        }
+    }
 
-            Values = values;
+    private static class CacheHelper
+    {
+        public static readonly int Length = 10;
+
+        internal static T[] Create<T>() where T : TomlInteger, ITomlIntegerCreator<T>
+        {
+            var array = new T[Length];
+            for (int i = 0; i < array.Length; i++)
+            {
+                array[i] = T.Create(i - 1);
+            }
+            return array;
         }
     }
 }
