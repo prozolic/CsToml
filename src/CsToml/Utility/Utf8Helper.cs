@@ -529,7 +529,19 @@ internal static class Utf8Helper
                 ExceptionHelper.ThrowBufferTooSmallFailed();
             }
 
-            return new string(bufferBytesSpan[..charsWritten]);
+            ref char bufferReference = ref MemoryMarshal.GetReference(bufferBytesSpan);
+            unsafe
+            {
+                fixed (char* ptr = &bufferReference)
+                {
+                    var str = string.Create(charsWritten, ((IntPtr)ptr, charsWritten), static (destination, state) =>
+                    {
+                        var source = MemoryMarshal.CreateSpan(ref Unsafe.AsRef<char>((char*)state.Item1), state.charsWritten);
+                        source.CopyTo(destination);
+                    });
+                    return str;
+                }
+            }
         }
         else
         {
@@ -546,7 +558,19 @@ internal static class Utf8Helper
                 }
 
                 bufferWriter.Advance(charsWritten);
-                return new string(bufferWriter.WrittenSpan);
+                ref char bufferReference = ref MemoryMarshal.GetReference(bufferBytesSpan);
+                unsafe
+                {
+                    fixed (char* ptr = &bufferReference)
+                    {
+                        var str = string.Create(charsWritten, ((IntPtr)ptr, charsWritten), static (destination, state) =>
+                        {
+                            var source = MemoryMarshal.CreateSpan(ref Unsafe.AsRef<char>((char*)state.Item1), state.charsWritten);
+                            source.CopyTo(destination);
+                        });
+                        return str;
+                    }
+                }
             }
             finally
             {
