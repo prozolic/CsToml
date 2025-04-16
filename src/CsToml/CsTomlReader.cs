@@ -1390,7 +1390,7 @@ internal ref struct CsTomlReader
                 ReadEqual();
                 SkipWhiteSpace();
                 // Register only the key, then set the value.
-                node = currentNode.AddKeyValue(dotKeysForInlineTable.AsSpan(), TomlValue.Empty, []);
+                node = currentNode.AddKeyValue(dotKeysForInlineTable.AsSpan(), TomlValue.Empty);
 
                 node.Value = ReadValue();
                 if (spec.AllowNewlinesInInlineTables) // TOML v1.1.0

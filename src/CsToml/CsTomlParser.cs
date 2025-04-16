@@ -84,8 +84,8 @@ internal ref struct CsTomlParser
 
     [DebuggerStepThrough]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly TomlValue? GetComment()
-        => comment;
+    public readonly TomlString GetComment()
+        => Unsafe.As<TomlString>(comment!);
 
     [DebuggerStepThrough]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
