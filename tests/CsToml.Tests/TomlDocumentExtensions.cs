@@ -141,7 +141,17 @@ internal static class TomlDocumentExtensions
     {
         var bufferWriter = new ArrayBufferWriter<byte>();
         var writer = new Utf8TomlDocumentWriter<ArrayBufferWriter<byte>>(ref bufferWriter);
-        tomlValue.ToTomlString(ref writer);
+
+        if (tomlValue.Type == TomlValueType.Integer)
+        {
+            // Not in literal format.
+            var integerValue = tomlValue.GetInt64();
+            writer.WriteInt64(integerValue);
+        }
+        else
+        {
+            tomlValue.ToTomlString(ref writer);
+        }
         return Encoding.UTF8.GetString(bufferWriter.WrittenSpan);
     }
 

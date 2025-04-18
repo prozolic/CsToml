@@ -34,11 +34,15 @@ public partial class TomlDocument
 
     internal void Deserialize(ref Utf8SequenceReader reader, CsTomlSerializerOptions options)
     {
-        var parser = new CsTomlParser(ref reader, options);
+        var initialComments = default(InlineArray16<TomlString>);
+        Span<TomlString> initialCommentsSpan = initialComments;
+        var commentsBuilder = new InlineArrayBuilder<TomlString>(initialCommentsSpan);
 
-        List<TomlString>? comments = default;
         List<CsTomlParseException>? exceptions = default;
-        TomlTableNode? currentNode = table.RootNode;
+        TomlTableNode currentNode = table.RootNode;
+        TomlTableNode commentNode = table.RootNode;
+
+        var parser = new CsTomlParser(ref reader, options);
 
         try
         {
@@ -49,33 +53,36 @@ public partial class TomlDocument
                     switch (parser.CurrentState)
                     {
                         case ParserState.Comment:
-                            comments ??= new List<TomlString>();
-                            comments?.Add((TomlString)parser.GetComment()!);
-                            break;
+                            commentsBuilder.Add(parser.GetComment());
+                            continue;
 
                         case ParserState.KeyValue:
-                            currentNode!.AddKeyValue(parser.GetDottedKeySpan(), parser.GetValue()!, comments);
-                            comments?.Clear();
+                            var node = currentNode!.AddKeyValue(parser.GetDottedKeySpan(), parser.GetValue()!);
+                            commentNode = node;
                             break;
 
                         case ParserState.TableHeader:
-                            table.AddTableHeader(parser.GetDottedKeySpan(), comments, out currentNode);
-                            comments?.Clear();
+                            currentNode = table.AddTableHeader(parser.GetDottedKeySpan());
+                            commentNode = currentNode;
                             break;
 
                         case ParserState.ArrayOfTablesHeader:
-                            table.AddArrayOfTablesHeader(parser.GetDottedKeySpan(), comments, out currentNode);
-                            comments?.Clear();
+                            currentNode = table.AddArrayOfTablesHeader(parser.GetDottedKeySpan(), out commentNode);
                             break;
 
                         case ParserState.ThrowException:
                             exceptions ??= new List<CsTomlParseException>();
                             exceptions?.Add(parser.GetException()!);
-                            comments?.Clear();
                             break;
 
                         default:
                             break;
+                    }
+
+                    if (commentsBuilder.Count > 0)
+                    {
+                        var commentsSpan = commentNode.SetCommentCount(commentsBuilder.Count);
+                        commentsBuilder.CopyToAndReturn(commentsSpan);   
                     }
                 }
                 catch (CsTomlException cte)

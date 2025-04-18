@@ -15,7 +15,7 @@ internal sealed partial class TomlInlineTable : TomlValue
 
     public override bool HasValue => true;
 
-    public override TomlValueType Type => TomlValueType.Integer;
+    public override TomlValueType Type => TomlValueType.InlineTable;
 
     [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
     internal TomlTableNode RootNode => inlineTable.RootNode;

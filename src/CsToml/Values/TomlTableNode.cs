@@ -134,13 +134,24 @@ internal sealed class TomlTableNode
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void AddComment(IReadOnlyCollection<TomlString> comments)
+    internal Span<TomlString> SetCommentCount(int commentCount)
     {
-        this.comments ??= new List<TomlString>(comments.Count);
-        this.comments.AddRange(comments);
+        if (this.comments == null)
+        {
+            this.comments = new List<TomlString>(commentCount);
+            CollectionsMarshal.SetCount(this.comments, commentCount);
+            return CollectionsMarshal.AsSpan(this.comments).Slice(0, commentCount);
+        }
+        else
+        {
+            var currentCount = this.comments.Count;
+            CollectionsMarshal.SetCount(this.comments, this.comments.Count + commentCount);
+            return CollectionsMarshal.AsSpan(this.comments).Slice(currentCount, commentCount);
+        }
     }
 
-    internal TomlTableNode AddKeyValue(ReadOnlySpan<TomlDottedKey> dotKeys, TomlValue value, IReadOnlyCollection<TomlString>? comments)
+
+    internal TomlTableNode AddKeyValue(ReadOnlySpan<TomlDottedKey> dotKeys, TomlValue value)
     {
         var currentNode = this;
         var lastKey = dotKeys[^1];
@@ -171,11 +182,6 @@ internal sealed class TomlTableNode
         }
 
         var newNode = new TomlTableNode(value);
-        if (comments?.Count > 0)
-        {
-            newNode.AddComment(comments);
-        }
-
         if (!currentNode.IsGroupingProperty || !(currentNode.nodes?.TryAdd(lastKey, newNode) ?? false))
         {
             ExceptionHelper.ThrowKeyIsDefined(lastKey);

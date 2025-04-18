@@ -3,37 +3,19 @@ using System.Buffers.Text;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace CsToml.Values;
 
-[DebuggerDisplay("{Value}")]
-internal sealed partial class TomlInteger : TomlValue
+internal interface ITomlIntegerCreator<T>
+    where T : TomlInteger
 {
-    internal static readonly TomlInteger[] Cache = CreateCacheValue();
+    static abstract T Create(long value);
+}
 
-    private static TomlInteger[] CreateCacheValue()
-    {
-        var intCacheValues = new TomlInteger[10];
-        for (int i = 0; i < intCacheValues.Length; i++)
-        {
-            intCacheValues[i] = new TomlInteger(i - 1);
-        }
-
-        return intCacheValues;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TomlInteger Create(long value)
-    {
-        if ((ulong)(value + 1) < (ulong)Cache.Length)
-        {
-            return Cache[value + 1];
-        }
-        return new TomlInteger(value);
-    }
-
-    public static TomlInteger Zero => Cache[1];
+[DebuggerDisplay("{Value}")]
+internal abstract partial class TomlInteger : TomlValue
+{
+    public static TomlInteger Zero => Cache<TomlDefaultInteger>.Values[1];
 
     public long Value { get; init; } 
 
@@ -44,11 +26,6 @@ internal sealed partial class TomlInteger : TomlValue
     private TomlInteger(long value)
     {
         this.Value = value;
-    }
-
-    internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
-    {
-        writer.WriteInt64(Value);
     }
 
     public override bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
@@ -85,7 +62,7 @@ internal sealed partial class TomlInteger : TomlValue
     {
         if (Utf8Parser.TryParse(bytes, out long value, out int _))
         {
-            return TomlInteger.Create(value);
+            return TomlDefaultInteger.Create(value);
         }
 
         ExceptionHelper.ThrowFailedToParseToNumeric();
@@ -95,150 +72,268 @@ internal sealed partial class TomlInteger : TomlValue
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TomlInteger ParseBinary(ReadOnlySpan<byte> bytes)
     {
-        return TomlInteger.Create(ParseBinaryValue(bytes[2..]));
+        return TomlBinaryInteger.Create(bytes);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TomlInteger ParseOctal(ReadOnlySpan<byte> bytes)
     {
-        return TomlInteger.Create(ParseOctalValue(bytes[2..]));
+        return TomlOctalInteger.Create(bytes);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TomlInteger ParseHex(ReadOnlySpan<byte> bytes)
     {
-        return TomlInteger.Create(ParseHexValue(bytes[2..]));
+        return TomlHexInteger.Create(bytes);
     }
 
-    private static long ParseBinaryValue(ReadOnlySpan<byte> utf8Bytes)
+    private sealed class TomlDefaultInteger(long value) : TomlInteger(value), ITomlIntegerCreator<TomlDefaultInteger>
     {
-        var digits = utf8Bytes.Length;
-        if (digits > 64) ExceptionHelper.ThrowOverflowCount();
-
-        long value = 0;
-        int digitsCount = 1;
-        long baseValue = 1;
-        while (true)
+        static TomlDefaultInteger ITomlIntegerCreator<TomlDefaultInteger>.Create(long value)
         {
-            value += ParseBinaryByte(utf8Bytes[utf8Bytes.Length - digitsCount]) * baseValue;
-            if (value < 0) ExceptionHelper.ThrowOverflowCount();
-            if (digits == digitsCount++) return value;
-            baseValue *= 2;
+            return new TomlDefaultInteger(value);
+        }
 
-            value += ParseBinaryByte(utf8Bytes[utf8Bytes.Length - digitsCount]) * baseValue;
-            if (value < 0) ExceptionHelper.ThrowOverflowCount();
-            if (digits == digitsCount++) return value;
-            baseValue *= 2;
+        public static TomlDefaultInteger Create(long value)
+        {
+            if ((ulong)(value + 1) < (ulong)CacheHelper.Length)
+            {
+                return Cache<TomlDefaultInteger>.Values[value + 1];
+            }
+            return new TomlDefaultInteger(value);
+        }
 
-            value += ParseBinaryByte(utf8Bytes[utf8Bytes.Length - digitsCount]) * baseValue;
-            if (value < 0) ExceptionHelper.ThrowOverflowCount();
-            if (digits == digitsCount++) return value;
-            baseValue *= 2;
-
-            value += ParseBinaryByte(utf8Bytes[utf8Bytes.Length - digitsCount]) * baseValue;
-            if (value < 0) ExceptionHelper.ThrowOverflowCount();
-            if (digits == digitsCount++) return value;
-            baseValue *= 2;
+        internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+        {
+            writer.WriteInt64(Value);
         }
     }
 
-    private static long ParseOctalValue(ReadOnlySpan<byte> utf8Bytes)
+    private sealed class TomlBinaryInteger(long value) : TomlInteger(value), ITomlIntegerCreator<TomlBinaryInteger>
     {
-        var digits = utf8Bytes.Length;
-        if (digits > 21) ExceptionHelper.ThrowOverflowCount();
-
-        long value = 0;
-        int digitsCount = 1;
-        long baseValue = 1;
-        while (true)
+        static TomlBinaryInteger ITomlIntegerCreator<TomlBinaryInteger>.Create(long value)
         {
-            value += ParseOctalByte(utf8Bytes[utf8Bytes.Length - digitsCount]) * baseValue;
-            if (value < 0) ExceptionHelper.ThrowOverflowCount();
-            if (digits == digitsCount++) return value;
-            baseValue *= 8;
+            return new TomlBinaryInteger(value);
+        }
 
-            value += ParseOctalByte(utf8Bytes[utf8Bytes.Length - digitsCount]) * baseValue;
-            if (value < 0) ExceptionHelper.ThrowOverflowCount();
-            if (digits == digitsCount++) return value;
-            baseValue *= 8;
+        public static TomlBinaryInteger Create(ReadOnlySpan<byte> bytes)
+        {
+            var value = ParseBinaryValue(bytes);
+            if ((ulong)(value + 1) < (ulong)CacheHelper.Length)
+            {
+                return Cache<TomlBinaryInteger>.Values[value + 1];
+            }
+            return new TomlBinaryInteger(value);
+        }
 
-            value += ParseOctalByte(utf8Bytes[utf8Bytes.Length - digitsCount]) * baseValue;
-            if (value < 0) ExceptionHelper.ThrowOverflowCount();
-            if (digits == digitsCount++) return value;
-            baseValue *= 8;
+        private static long ParseBinaryValue(ReadOnlySpan<byte> bytes)
+        {
+            var digits = bytes.Length;
+            if (digits > 64) ExceptionHelper.ThrowOverflowCount();
 
-            value += ParseOctalByte(utf8Bytes[utf8Bytes.Length - digitsCount]) * baseValue;
-            if (value < 0) ExceptionHelper.ThrowOverflowCount();
-            if (digits == digitsCount++) return value;
-            baseValue *= 8;
+            long value = 0;
+            int digitsCount = 1;
+            long baseValue = 1;
+            while (true)
+            {
+                value += ParseBinaryByte(bytes[bytes.Length - digitsCount]) * baseValue;
+                if (value < 0) ExceptionHelper.ThrowOverflowCount();
+                if (digits == digitsCount++) return value;
+                baseValue *= 2;
+
+                value += ParseBinaryByte(bytes[bytes.Length - digitsCount]) * baseValue;
+                if (value < 0) ExceptionHelper.ThrowOverflowCount();
+                if (digits == digitsCount++) return value;
+                baseValue *= 2;
+
+                value += ParseBinaryByte(bytes[bytes.Length - digitsCount]) * baseValue;
+                if (value < 0) ExceptionHelper.ThrowOverflowCount();
+                if (digits == digitsCount++) return value;
+                baseValue *= 2;
+
+                value += ParseBinaryByte(bytes[bytes.Length - digitsCount]) * baseValue;
+                if (value < 0) ExceptionHelper.ThrowOverflowCount();
+                if (digits == digitsCount++) return value;
+                baseValue *= 2;
+            }
+
+            static long ParseBinaryByte(byte utf8Byte)
+            {
+                if (!TomlCodes.IsBinary(utf8Byte))
+                {
+                    ExceptionHelper.ThrowNumericConversionFailed(utf8Byte);
+                }
+                return TomlCodes.Number.ParseDecimal(utf8Byte);
+            }
+
+        }
+
+        internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+        {
+            writer.WriteInt64InBinaryFormat(Value);
         }
     }
 
-    private static long ParseHexValue(ReadOnlySpan<byte> utf8Bytes)
+    private sealed class TomlOctalInteger(long value) : TomlInteger(value), ITomlIntegerCreator<TomlOctalInteger>
     {
-        var digits = utf8Bytes.Length;
-        if (digits > 16) ExceptionHelper.ThrowOverflowCount();
-
-        long value = 0;
-        int digitsCount = 1;
-        long baseValue = 1;
-        while (true)
+        static TomlOctalInteger ITomlIntegerCreator<TomlOctalInteger>.Create(long value)
         {
-            value += ParseHexByte(utf8Bytes[utf8Bytes.Length - digitsCount]) * baseValue;
-            if (value < 0) ExceptionHelper.ThrowOverflowCount();
-            if (digits == digitsCount++) return value;
-            baseValue *= 16;
+            return new TomlOctalInteger(value);
+        }
 
-            value += ParseHexByte(utf8Bytes[utf8Bytes.Length - digitsCount]) * baseValue;
-            if (value < 0) ExceptionHelper.ThrowOverflowCount();
-            if (digits == digitsCount++) return value;
-            baseValue *= 16;
+        public static TomlOctalInteger Create(ReadOnlySpan<byte> bytes)
+        {
+            var value = ParseOctalValue(bytes);
+            if ((ulong)(value + 1) < (ulong)CacheHelper.Length)
+            {
+                return Cache<TomlOctalInteger>.Values[value + 1];
+            }
+            return new TomlOctalInteger(value);
+        }
 
-            value += ParseHexByte(utf8Bytes[utf8Bytes.Length - digitsCount]) * baseValue;
-            if (value < 0) ExceptionHelper.ThrowOverflowCount();
-            if (digits == digitsCount++) return value;
-            baseValue *= 16;
+        private static long ParseOctalValue(ReadOnlySpan<byte> bytes)
+        {
+            var digits = bytes.Length;
+            if (digits > 21) ExceptionHelper.ThrowOverflowCount();
 
-            value += ParseHexByte(utf8Bytes[utf8Bytes.Length - digitsCount]) * baseValue;
-            if (value < 0) ExceptionHelper.ThrowOverflowCount();
-            if (digits == digitsCount++) return value;
-            baseValue *= 16;
+            long value = 0;
+            int digitsCount = 1;
+            long baseValue = 1;
+            while (true)
+            {
+                value += ParseOctalByte(bytes[bytes.Length - digitsCount]) * baseValue;
+                if (value < 0) ExceptionHelper.ThrowOverflowCount();
+                if (digits == digitsCount++) return value;
+                baseValue *= 8;
+
+                value += ParseOctalByte(bytes[bytes.Length - digitsCount]) * baseValue;
+                if (value < 0) ExceptionHelper.ThrowOverflowCount();
+                if (digits == digitsCount++) return value;
+                baseValue *= 8;
+
+                value += ParseOctalByte(bytes[bytes.Length - digitsCount]) * baseValue;
+                if (value < 0) ExceptionHelper.ThrowOverflowCount();
+                if (digits == digitsCount++) return value;
+                baseValue *= 8;
+
+                value += ParseOctalByte(bytes[bytes.Length - digitsCount]) * baseValue;
+                if (value < 0) ExceptionHelper.ThrowOverflowCount();
+                if (digits == digitsCount++) return value;
+                baseValue *= 8;
+            }
+
+            static long ParseOctalByte(byte utf8Byte)
+            {
+                if (!TomlCodes.IsOctal(utf8Byte))
+                {
+                    ExceptionHelper.ThrowNumericConversionFailed(utf8Byte);
+                }
+                return TomlCodes.Number.ParseDecimal(utf8Byte);
+            }
+
+        }
+
+        internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+        {
+            writer.WriteInt64InOctalFormat(Value);
         }
     }
 
-    private static long ParseBinaryByte(byte utf8Byte)
+    private sealed class TomlHexInteger(long value) : TomlInteger(value), ITomlIntegerCreator<TomlHexInteger>
     {
-        if (!TomlCodes.IsBinary(utf8Byte))
+        static TomlHexInteger ITomlIntegerCreator<TomlHexInteger>.Create(long value)
         {
-            ExceptionHelper.ThrowNumericConversionFailed(utf8Byte);
+            return new TomlHexInteger(value);
         }
-        return TomlCodes.Number.ParseDecimal(utf8Byte);
+
+        public static TomlHexInteger Create(ReadOnlySpan<byte> bytes)
+        {
+            var value = ParseHexValue(bytes);
+            if ((ulong)(value + 1) < (ulong)CacheHelper.Length)
+            {
+                return Cache<TomlHexInteger>.Values[value + 1];
+            }
+            return new TomlHexInteger(value);
+        }
+
+        private static long ParseHexValue(ReadOnlySpan<byte> bytes)
+        {
+            var digits = bytes.Length;
+            if (digits > 16) ExceptionHelper.ThrowOverflowCount();
+
+            long value = 0;
+            int digitsCount = 1;
+            long baseValue = 1;
+            while (true)
+            {
+                value += ParseHexByte(bytes[bytes.Length - digitsCount]) * baseValue;
+                if (value < 0) ExceptionHelper.ThrowOverflowCount();
+                if (digits == digitsCount++) return value;
+                baseValue *= 16;
+
+                value += ParseHexByte(bytes[bytes.Length - digitsCount]) * baseValue;
+                if (value < 0) ExceptionHelper.ThrowOverflowCount();
+                if (digits == digitsCount++) return value;
+                baseValue *= 16;
+
+                value += ParseHexByte(bytes[bytes.Length - digitsCount]) * baseValue;
+                if (value < 0) ExceptionHelper.ThrowOverflowCount();
+                if (digits == digitsCount++) return value;
+                baseValue *= 16;
+
+                value += ParseHexByte(bytes[bytes.Length - digitsCount]) * baseValue;
+                if (value < 0) ExceptionHelper.ThrowOverflowCount();
+                if (digits == digitsCount++) return value;
+                baseValue *= 16;
+            }
+
+            static long ParseHexByte(byte utf8Byte)
+            {
+                if (TomlCodes.IsUpperHexAlphabet(utf8Byte))
+                {
+                    return utf8Byte - 0x37;
+                }
+                if (TomlCodes.IsLowerHexAlphabet(utf8Byte))
+                {
+                    return utf8Byte - 0x57;
+                }
+                if (!TomlCodes.IsNumber(utf8Byte))
+                {
+                    ExceptionHelper.ThrowNumericConversionFailed(utf8Byte);
+                }
+                return TomlCodes.Number.ParseDecimal(utf8Byte);
+            }
+
+        }
+
+        internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+        {
+            writer.WriteInt64InHexFormat(Value);
+        }
     }
 
-    private static long ParseOctalByte(byte utf8Byte)
+    private readonly struct Cache<T> where T : TomlInteger, ITomlIntegerCreator<T>
     {
-        if (!TomlCodes.IsOctal(utf8Byte))
+        internal static readonly T[] Values;
+
+        static Cache()
         {
-            ExceptionHelper.ThrowNumericConversionFailed(utf8Byte);
+            Values = CacheHelper.Create<T>();
         }
-        return TomlCodes.Number.ParseDecimal(utf8Byte);
     }
 
-    private static long ParseHexByte(byte utf8Byte)
+    private static class CacheHelper
     {
-        if (TomlCodes.IsUpperHexAlphabet(utf8Byte))
+        public static readonly int Length = 10;
+
+        internal static T[] Create<T>() where T : TomlInteger, ITomlIntegerCreator<T>
         {
-            return utf8Byte - 0x37;
+            var array = new T[Length];
+            for (int i = 0; i < array.Length; i++)
+            {
+                array[i] = T.Create(i - 1);
+            }
+            return array;
         }
-        if (TomlCodes.IsLowerHexAlphabet(utf8Byte))
-        {
-            return utf8Byte - 0x57;
-        }
-        if (!TomlCodes.IsNumber(utf8Byte))
-        {
-            ExceptionHelper.ThrowNumericConversionFailed(utf8Byte);
-        }
-        return TomlCodes.Number.ParseDecimal(utf8Byte);
     }
 }
-

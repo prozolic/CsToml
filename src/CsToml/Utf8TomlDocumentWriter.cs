@@ -4,6 +4,7 @@ using CsToml.Utility;
 using CsToml.Values;
 using System.Buffers;
 using System.Globalization;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -149,6 +150,96 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
         if (value < 0) length++;
 
         value.TryFormat(writer.GetWrittenSpan(length), out int bytesWritten, null, CultureInfo.InvariantCulture);
+    }
+
+    internal void WriteInt64InBinaryFormat(long value)
+    {
+        if (value == 0)
+        {
+            WriteBytes("0b0"u8);
+            return;
+        }
+
+        WriteBytes("0b"u8);
+
+        int digits = 64 - BitOperations.LeadingZeroCount((ulong)value);
+        var writtenSpan = writer.GetWrittenSpan(digits);
+        var index = digits - 1;
+
+        while (value > 0)
+        {
+            var v = value & 1;
+            writtenSpan[index--] = (byte)(TomlCodes.Number.Zero + (byte)v);
+            value >>= 1;
+        }
+    }
+
+    internal void WriteInt64InOctalFormat(long value)
+    {
+        if (value == 0)
+        {
+            WriteBytes("0o0"u8);
+            return;
+        }
+
+        WriteBytes("0o"u8);
+
+        int bitLength = 64 - BitOperations.LeadingZeroCount((ulong)value);
+        var digits = (bitLength + 2) / 3;
+        var writtenSpan = writer.GetWrittenSpan(digits);
+        var index = digits - 1;
+
+        while (value > 0) 
+        {
+            var v = value & 7;
+            writtenSpan[index--] = (byte)(TomlCodes.Number.Zero + (byte)v);
+            value >>= 3;
+        }
+    }
+
+    internal void WriteInt64InHexFormat(long value)
+    {
+        if (value == 0)
+        {
+            WriteBytes("0x0"u8);
+            return;
+        }
+
+        WriteBytes("0x"u8);
+
+        int bitLength = 64 - BitOperations.LeadingZeroCount((ulong)value);
+        var digits = (bitLength + 3) / 4;
+        var writtenSpan = writer.GetWrittenSpan(digits);
+        var index = digits - 1;
+
+        while (value > 0)
+        {
+            var v = value & 15;
+            switch (v)
+            {
+                case 0:
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                case 5:
+                case 6:
+                case 7:
+                case 8:
+                case 9:
+                    writtenSpan[index--] = (byte)(TomlCodes.Number.Zero + (byte)v);
+                    break;
+                case 10: // A
+                case 11: // B
+                case 12: // C
+                case 13: // D
+                case 14: // E
+                case 15: // F
+                    writtenSpan[index--] = (byte)(TomlCodes.Alphabet.A + (byte)v - 10);
+                    break;
+            }
+            value >>= 4;
+        }
     }
 
     public void WriteDouble(double value)

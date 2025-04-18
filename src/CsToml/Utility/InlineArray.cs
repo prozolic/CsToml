@@ -101,6 +101,11 @@ internal ref struct InlineArrayBuilder<T>
             var initialArray = this.initialArray.Slice(0, currentIndex);
             initialArray.CopyTo(destination);
         }
+
+        current = initialArray;
+        count = 0;
+        currentIndex = 0;
+        segmentsIndex = -1;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

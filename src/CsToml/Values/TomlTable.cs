@@ -22,10 +22,11 @@ internal sealed partial class TomlTable : TomlValue
 
     internal TomlTable() { }
 
-    internal void AddTableHeader(ReadOnlySpan<TomlDottedKey> dotKeys, IReadOnlyCollection<TomlString>? comments, out TomlTableNode? newNode)
+    internal TomlTableNode AddTableHeader(ReadOnlySpan<TomlDottedKey> dotKeys)
     {
         var node = RootNode;
         var addedNewNode = false;
+        TomlTableNode? newNode;
 
         for (var i = 0; i < dotKeys.Length; i++)
         {
@@ -72,15 +73,13 @@ internal sealed partial class TomlTable : TomlValue
             }
         }
 
-        if (comments?.Count > 0)
-        {
-            node!.AddComment(comments);
-        }
         node!.IsTableHeaderDefinitionPosition = true;
         newNode = node;
+
+        return newNode;
     }
 
-    internal void AddArrayOfTablesHeader(ReadOnlySpan<TomlDottedKey> dotKeys, IReadOnlyCollection<TomlString>? comments, out TomlTableNode? newNode)
+    internal TomlTableNode AddArrayOfTablesHeader(ReadOnlySpan<TomlDottedKey> dotKeys, out TomlTableNode commentNode)
     {
         var currentNode = RootNode;
         var addedNewNode = false;
@@ -117,7 +116,7 @@ internal sealed partial class TomlTable : TomlValue
                 continue;
             }
 
-            newNode = null;
+            Unsafe.SkipInit(out commentNode);
             ExceptionHelper.ThrowIncorrectTomlFormat();
         }
 
@@ -141,11 +140,8 @@ internal sealed partial class TomlTable : TomlValue
         }
         var table = new TomlTable();
         (currentNode.Value as TomlArray)?.Add(table);
-        if (comments?.Count > 0)
-        {
-            currentNode.AddComment(comments);
-        }
-        newNode = table.RootNode;
+        commentNode = currentNode;
+        return table.RootNode;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

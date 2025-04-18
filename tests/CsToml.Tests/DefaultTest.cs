@@ -304,12 +304,12 @@ bin1 = 0b11010110
         writer.AppendLine("int8 = 12345");
         writer.AppendLine("int9 = 9223372036854775807");
         writer.AppendLine("int10 = -9223372036854775808");
-        writer.AppendLine("hex1 = 3735928559");
-        writer.AppendLine("hex2 = 3735928559");
-        writer.AppendLine("hex3 = 3735928559");
-        writer.AppendLine("oct1 = 342391");
-        writer.AppendLine("oct2 = 493");
-        writer.AppendLine("bin1 = 214");
+        writer.AppendLine("hex1 = 0xDEADBEEF");
+        writer.AppendLine("hex2 = 0xDEADBEEF");
+        writer.AppendLine("hex3 = 0xDEADBEEF");
+        writer.AppendLine("oct1 = 0o1234567");
+        writer.AppendLine("oct2 = 0o755");
+        writer.AppendLine("bin1 = 0b11010110");
         writer.Flush();
 
         buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
