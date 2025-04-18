@@ -2,21 +2,22 @@
 
 namespace CsToml.Formatter;
 
-public class ConcurrentDictionaryFormatter<TKey, TValue> : DictionaryBaseFormatter<TKey, TValue, ConcurrentDictionary<TKey, TValue>, Dictionary<TKey, TValue>>
+public class ConcurrentDictionaryFormatter<TKey, TValue> : DictionaryBaseFormatter<TKey, TValue, ConcurrentDictionary<TKey, TValue>, ConcurrentDictionary<TKey, TValue>>
     where TKey : notnull
 {
-    protected override void AddValue(Dictionary<TKey, TValue> mediator, TKey key, TValue value)
+    protected override void AddValue(ConcurrentDictionary<TKey, TValue> mediator, TKey key, TValue value)
     {
-        mediator.Add(key, value);
+        mediator.TryAdd(key, value);
     }
 
-    protected override ConcurrentDictionary<TKey, TValue> Complete(Dictionary<TKey, TValue> dictionary)
+    protected override ConcurrentDictionary<TKey, TValue> Complete(ConcurrentDictionary<TKey, TValue> dictionary)
     {
-        return new ConcurrentDictionary<TKey, TValue>(dictionary);;
+        return dictionary;
     }
 
-    protected override Dictionary<TKey, TValue> CreateMediator(int capacity)
+    protected override ConcurrentDictionary<TKey, TValue> CreateMediator(int capacity)
     {
-        return new Dictionary<TKey, TValue>(capacity);
+        // Set the number of processors to concurrencyLevel.
+        return new ConcurrentDictionary<TKey, TValue>(Environment.ProcessorCount, capacity);
     }
 }

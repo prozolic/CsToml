@@ -21,6 +21,6 @@ public sealed class ConcurrentBagFormatter<T> : CollectionBaseFormatter<Concurre
 
     protected override List<T> CreateCollection(int capacity)
     {
-        return new List<T>();
+        return new List<T>(capacity);
     }
 }
