@@ -1,4 +1,5 @@
 ﻿using CsToml.Error;
+using CsToml.Formatter;
 using CsToml.Utility;
 using CsToml.Values;
 using System.Buffers;
@@ -7,7 +8,7 @@ using System.Diagnostics;
 namespace CsToml;
 
 [DebuggerDisplay("Toml Document = {table.RootNode.NodeCount}")]
-public partial class TomlDocument
+public partial class TomlDocument : ITomlValueFormatter<TomlDocument>
 {
     private readonly TomlTable table;
 
@@ -22,6 +23,16 @@ public partial class TomlDocument
         LineNumber = 0;
     }
 
+    TomlDocument ITomlValueFormatter<TomlDocument>.Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
+    {
+        return this;
+    }
+
+    void ITomlValueFormatter<TomlDocument>.Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlDocument target, CsTomlSerializerOptions options)
+    {
+        target!.ToTomlString(ref writer);
+    }
+
     public IDictionary<TKey, TValue> ToDictionary<TKey, TValue>() where TKey : notnull
         => RootNode.GetValue<IDictionary<TKey, TValue>>();
 
@@ -32,7 +43,7 @@ public partial class TomlDocument
         return true;
     }
 
-    internal void Deserialize(ref Utf8SequenceReader reader, CsTomlSerializerOptions options)
+    internal void Parse(ref Utf8SequenceReader reader, CsTomlSerializerOptions options)
     {
         var initialComments = default(InlineArray16<TomlString>);
         Span<TomlString> initialCommentsSpan = initialComments;
@@ -105,5 +116,20 @@ public partial class TomlDocument
                 "Exceptions were thrown while parsing TOML. See the 'ParseExceptions' property for details about any errors.",
                 exceptions);
         }
+    }
+}
+
+internal sealed class TempTomlDocumentFormatter : ITomlValueFormatter<TomlDocument>
+{
+    public static readonly TempTomlDocumentFormatter Instance = new();
+
+    TomlDocument ITomlValueFormatter<TomlDocument>.Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
+    {
+        throw new NotSupportedException();
+    }
+
+    void ITomlValueFormatter<TomlDocument>.Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlDocument target, CsTomlSerializerOptions options)
+    {
+        target!.ToTomlString(ref writer);
     }
 }

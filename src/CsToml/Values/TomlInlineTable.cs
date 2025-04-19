@@ -11,18 +11,19 @@ internal sealed partial class TomlInlineTable : TomlValue
 {
     public new static readonly TomlInlineTable Empty = new();
 
-    private readonly TomlTable inlineTable = new TomlTable();
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private readonly TomlTableNode node = new() { IsGroupingProperty = true, Value = TomlValue.Empty };
 
     public override bool HasValue => true;
 
     public override TomlValueType Type => TomlValueType.InlineTable;
 
     [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-    internal TomlTableNode RootNode => inlineTable.RootNode;
+    internal TomlTableNode RootNode => node;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal IDictionary<object, object> GetDictionary()
-        => inlineTable.GetDictionary();
+        => node.GetDictionary();
 
     internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
@@ -88,7 +89,7 @@ internal sealed partial class TomlInlineTable : TomlValue
 
     public override bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
     {
-        var tableFormat = $"TOML Inline Table[{inlineTable.RootNode.NodeCount}]";
+        var tableFormat = $"TOML Inline Table[{RootNode.NodeCount}]";
         if (tableFormat.TryCopyTo(destination))
         {
             charsWritten = tableFormat.Length;
@@ -133,7 +134,7 @@ internal sealed partial class TomlInlineTable : TomlValue
         }
         var written = 18;
 
-        if (!inlineTable.RootNode.NodeCount.TryFormat(utf8Destination.Slice(written), out var byteWritten2, format, provider))
+        if (!RootNode.NodeCount.TryFormat(utf8Destination.Slice(written), out var byteWritten2, format, provider))
         {
             bytesWritten = 0;
             return false;
