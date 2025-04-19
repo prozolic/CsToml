@@ -344,6 +344,28 @@ internal partial class TypeCollection
 }
 
 [TomlSerializedObject]
+internal partial class TypeCollectionInterface
+{
+    [TomlValueOnSerialized]
+    public ICollection<int> Value { get; set; }
+
+    [TomlValueOnSerialized]
+    public IList<int> Value2 { get; set; }
+
+    [TomlValueOnSerialized]
+    public ISet<int> Value3 { get; set; }
+
+    [TomlValueOnSerialized]
+    public IReadOnlyCollection<int> Value4 { get; set; }
+
+    [TomlValueOnSerialized]
+    public IReadOnlyList<int> Value5 { get; set; }
+
+    [TomlValueOnSerialized]
+    public IReadOnlySet<int> Value6 { get; set; }
+}
+
+[TomlSerializedObject]
 internal partial class TypeDictionary
 {
     [TomlValueOnSerialized()]

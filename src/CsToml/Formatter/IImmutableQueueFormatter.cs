@@ -23,4 +23,50 @@ public sealed class IImmutableQueueFormatter<T> : CollectionBaseFormatter<IImmut
     {
         return new Queue<T>(capacity);
     }
+
+    protected override void SerializeCollection<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, IImmutableQueue<T> target, CsTomlSerializerOptions options)
+    {
+        if (target is ImmutableQueue<T> immQueueTarget)
+        {
+            if (immQueueTarget.IsEmpty)
+            {
+                writer.BeginArray();
+                writer.EndArray();
+                return;
+            }
+
+            var formatter = options.Resolver.GetFormatter<T>()!;
+
+            writer.BeginArray();
+
+            // Use ImmutableQueue<T>.GetEnumerator directly instead of IEnumerable<T>.GetEnumerator.
+            var en = immQueueTarget.GetEnumerator();
+            if (!en.MoveNext())
+            {
+                writer.EndArray();
+                return;
+            }
+
+            formatter.Serialize(ref writer, en.Current!, options);
+            if (!en.MoveNext())
+            {
+                writer.WriteSpace();
+                writer.EndArray();
+                return;
+            }
+
+            do
+            {
+                writer.Write(TomlCodes.Symbol.COMMA);
+                writer.WriteSpace();
+                formatter.Serialize(ref writer, en.Current!, options);
+
+            } while (en.MoveNext());
+            writer.WriteSpace();
+            writer.EndArray();
+            return;
+        }
+
+        base.SerializeCollection(ref writer, target, options);
+    }
 }
