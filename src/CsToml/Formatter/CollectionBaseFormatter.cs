@@ -1,8 +1,11 @@
 ﻿using CsToml.Error;
+using CsToml.Extension;
 using System.Buffers;
+using System.ComponentModel;
 
 namespace CsToml.Formatter;
 
+[EditorBrowsable(EditorBrowsableState.Never)]
 public abstract class CollectionBaseFormatter<TCollection, TElement, TMediator> : ITomlValueFormatter<TCollection?>
     where TCollection : IEnumerable<TElement>
 {
@@ -38,22 +41,26 @@ public abstract class CollectionBaseFormatter<TCollection, TElement, TMediator> 
             ExceptionHelper.ThrowSerializationFailed(typeof(TCollection));
             return;
         }
-        var count = GetCount(target);
-        if (!count.HasValue)
-        {
-            var collection = CreateCollection(0);
-            foreach (var i in target)
-            {
-                AddValue(collection, i);
-            }
 
-            options.Resolver.GetFormatter<TMediator>()!.Serialize(ref writer, collection, options);
-            return;
+        SerializeCollection(ref writer, target, options);
+    }
+
+    protected virtual void SerializeCollection<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TCollection target, CsTomlSerializerOptions options)
+        where TBufferWriter : IBufferWriter<byte>
+    {
+        if (target.TryGetNonEnumeratedCount2(out var count))
+        {
+            if (count == 0)
+            {
+                writer.BeginArray();
+                writer.EndArray();
+                return;
+            }
         }
 
         var formatter = options.Resolver.GetFormatter<TElement>()!;
         writer.BeginArray();
-        using (IEnumerator<TElement?> en = target.GetEnumerator())
+        using (var en = target.GetEnumerator())
         {
             if (!en.MoveNext())
             {
@@ -81,15 +88,6 @@ public abstract class CollectionBaseFormatter<TCollection, TElement, TMediator> 
         writer.EndArray();
     }
 
-    private int? GetCount(TCollection collection)
-    {
-        if (Enumerable.TryGetNonEnumeratedCount(collection, out var count))
-        {
-            return count;
-        }
-
-        return null;
-    }
 
     protected abstract TMediator CreateCollection(int capacity);
     protected abstract void AddValue(TMediator mediator, TElement element);

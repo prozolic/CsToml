@@ -5,7 +5,6 @@ using CsToml.Utility;
 using CsToml.Values;
 using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 
 namespace CsToml;
 
@@ -13,42 +12,11 @@ public static class CsTomlSerializer
 {
     private static readonly CsTomlSerializerOptions DefaultOptions = CsTomlSerializerOptions.Default with { SerializeOptions = new() };
 
-    [ThreadStatic]
-    private static TomlDocumentFormatter? DocumentFormatter;
-
-    private sealed class TomlDocumentFormatter : ITomlValueFormatter<TomlDocument>, IDisposable
-    {
-        private TomlDocument? tomlDocument;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetTomlDocument(TomlDocument? tomlDocument)
-        {
-            this.tomlDocument = tomlDocument;
-        }
-
-        public TomlDocument Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
-        {
-            return this.tomlDocument!;
-        }
-
-        public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlDocument target, CsTomlSerializerOptions options) where TBufferWriter : IBufferWriter<byte>
-        {
-            target!.ToTomlString(ref writer);
-        }
-
-        public void Dispose()
-        {
-            tomlDocument = null;
-        }
-    }
-
     private static ITomlValueFormatter<T> GetFormatter<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(TomlDocument? tomlDocument)
     {
         if (typeof(T) == typeof(TomlDocument))
         {
-            var formatter = DocumentFormatter ??= new TomlDocumentFormatter();
-            formatter.SetTomlDocument(tomlDocument);
-            return (formatter as ITomlValueFormatter<T>)!;
+            return (tomlDocument as ITomlValueFormatter<T>) ?? (TempTomlDocumentFormatter.Instance as ITomlValueFormatter<T>)!;
         }
         return TomlValueFormatterResolver.Instance.GetFormatter<T>()!;
     }
@@ -59,7 +27,7 @@ public static class CsTomlSerializer
 
         var document = new TomlDocument();
         var reader = new Utf8SequenceReader(tomlText, true);
-        document.Deserialize(ref reader, options);
+        document.Parse(ref reader, options);
 
         try
         {
@@ -82,7 +50,7 @@ public static class CsTomlSerializer
 
         var document = new TomlDocument();
         var reader = new Utf8SequenceReader(tomlSequence, true);
-        document.Deserialize(ref reader, options);
+        document.Parse(ref reader, options);
 
         try
         {
