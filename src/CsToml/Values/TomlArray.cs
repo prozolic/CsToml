@@ -143,14 +143,34 @@ internal sealed partial class TomlArray(int capacity) : TomlValue, IEnumerable<T
         => values.Add(tomlValue);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public IEnumerator<TomlValue> GetEnumerator()
+    public Enumerator GetEnumerator()
         => new Enumerator(this);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    IEnumerator IEnumerable.GetEnumerator()
-        => GetEnumerator();
+    IEnumerator<TomlValue> IEnumerable<TomlValue>.GetEnumerator()
+        => new IEnumerableEnumerator(this);
 
-    private struct Enumerator(TomlArray array) : IEnumerator<TomlValue?>
+    IEnumerator IEnumerable.GetEnumerator()
+        => ((IEnumerable<TomlValue>)this)!.GetEnumerator();
+
+    public ref struct Enumerator(TomlArray array)
+    {
+        private readonly Span<TomlValue> tomlArraySpan = CollectionsMarshal.AsSpan(array.values);
+        private int index = 0;
+
+        public TomlValue? Current { get; private set; }
+
+        public bool MoveNext()
+        {
+            var array = tomlArraySpan;
+            if (array.Length <= index) return false;
+
+            this.Current = array[index];
+            index++;
+            return true;
+        }
+    }
+
+    private struct IEnumerableEnumerator(TomlArray array) : IEnumerator<TomlValue?>
     {
         private readonly TomlArray tomlArray = array;
         private int index = 0;
@@ -159,7 +179,7 @@ internal sealed partial class TomlArray(int capacity) : TomlValue, IEnumerable<T
 
         object? IEnumerator.Current => this.Current;
 
-        public readonly Enumerator GetEnumerator() => this;
+        public readonly IEnumerableEnumerator GetEnumerator() => this;
 
         public void Dispose()
             => Reset();

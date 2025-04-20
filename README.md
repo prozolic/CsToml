@@ -539,6 +539,7 @@ These types can be serialized/deserialized by default as properties of custom `c
 * `OrderedDictionary<>`, `ReadOnlySet<>`
 * `ImmutableArray<>`, `ImmutableList<>`, `ImmutableStack<>`, `ImmutableQueue<>`, `ImmutableHashSet<>`, `ImmutableSortedSet<>`, `ImmutableDictionary<>`, `ImmutableSortedDictionary<>`
 * `IImmutableList<>`, `IImmutableStack<>`, `IImmutableQueue<>`, `IImmutableSet<>`, `IImmutableDictionary<>`
+* `FrozenSet<>`, `FrozenDictionary<>`
 
 Customize Formatter
 ---

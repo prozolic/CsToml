@@ -37,6 +37,8 @@ internal static class FormatterTypeMetaData
         { "global::System.Collections.Immutable.IImmutableStack<>", "IImmutableStackFormatter<TYPEPARAMETER>" },
         { "global::System.Collections.Immutable.IImmutableQueue<>", "IImmutableQueueFormatter<TYPEPARAMETER>" },
         { "global::System.Collections.Immutable.IImmutableSet<>", "IImmutableSetFormatter<TYPEPARAMETER>" },
+
+        { "global::System.Collections.Frozen.FrozenSet<>", "FrozenSetFormatter<TYPEPARAMETER>" },
     };
 
     private static readonly Dictionary<string, string> builtInDictionaryFormatterTypes = new()
@@ -54,6 +56,8 @@ internal static class FormatterTypeMetaData
         { "global::System.Collections.Generic.IDictionary<,>", "IDictionaryFormatter<TYPEPARAMETER>" },
         { "global::System.Collections.Generic.IReadOnlyDictionary<,>", "IReadOnlyDictionaryFormatter<TYPEPARAMETER>" },
         { "global::System.Collections.Immutable.IImmutableDictionary<,>", "IImmutableDictionaryFormatter<TYPEPARAMETER>" },
+
+        { "global::System.Collections.Frozen.FrozenDictionary<,>", "FrozenDictionaryFormatter<TYPEPARAMETER>" },
     };
 
     private static readonly Dictionary<string, string> builtInGenericFormatterTypes = new()

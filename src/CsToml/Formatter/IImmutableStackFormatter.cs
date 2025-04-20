@@ -23,4 +23,43 @@ public sealed class IImmutableStackFormatter<T> : CollectionBaseFormatter<IImmut
     {
         return new List<T>(capacity);
     }
+
+    protected override void SerializeCollection<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, IImmutableStack<T> target, CsTomlSerializerOptions options)
+    {
+        if (target is ImmutableStack<T> immStackTarget)
+        {
+            writer.BeginArray();
+            if (immStackTarget.IsEmpty)
+            {
+                writer.EndArray();
+                return;
+            }
+
+            // Use ImmutableStack<T>.GetEnumerator directly instead of IEnumerable<T>.GetEnumerator.
+            var en = immStackTarget.GetEnumerator();
+            en.MoveNext();
+
+            var formatter = options.Resolver.GetFormatter<T>()!;
+            formatter.Serialize(ref writer, en.Current!, options);
+            if (!en.MoveNext())
+            {
+                writer.WriteSpace();
+                writer.EndArray();
+                return;
+            }
+
+            do
+            {
+                writer.Write(TomlCodes.Symbol.COMMA);
+                writer.WriteSpace();
+                formatter.Serialize(ref writer, en.Current!, options);
+
+            } while (en.MoveNext());
+            writer.WriteSpace();
+            writer.EndArray();
+            return;
+        }
+
+        base.SerializeCollection(ref writer, target, options);
+    }
 }
