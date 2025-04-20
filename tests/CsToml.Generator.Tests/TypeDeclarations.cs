@@ -11,6 +11,7 @@ using System.Text;
 
 using CsToml.Generator.Other;
 using System.Numerics;
+using System.Collections.Frozen;
 
 namespace CsToml.Generator.Tests;
 
@@ -347,22 +348,25 @@ internal partial class TypeCollection
 internal partial class TypeCollectionInterface
 {
     [TomlValueOnSerialized]
-    public ICollection<int> Value { get; set; }
+    public IEnumerable<int> Value { get; set; }
 
     [TomlValueOnSerialized]
-    public IList<int> Value2 { get; set; }
+    public ICollection<int> Value2 { get; set; }
 
     [TomlValueOnSerialized]
-    public ISet<int> Value3 { get; set; }
+    public IList<int> Value3 { get; set; }
 
     [TomlValueOnSerialized]
-    public IReadOnlyCollection<int> Value4 { get; set; }
+    public ISet<int> Value4 { get; set; }
 
     [TomlValueOnSerialized]
-    public IReadOnlyList<int> Value5 { get; set; }
+    public IReadOnlyCollection<int> Value5 { get; set; }
 
     [TomlValueOnSerialized]
-    public IReadOnlySet<int> Value6 { get; set; }
+    public IReadOnlyList<int> Value6 { get; set; }
+
+    [TomlValueOnSerialized]
+    public IReadOnlySet<int> Value7 { get; set; }
 }
 
 [TomlSerializedObject]
@@ -399,6 +403,16 @@ internal partial class TypeDictionary3
 {
     [TomlValueOnSerialized()]
     public Dictionary<long, string> Value { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class TypeFrozen
+{
+    [TomlValueOnSerialized()]
+    public FrozenSet<long> Value { get; set; }
+
+    [TomlValueOnSerialized()]
+    public FrozenDictionary<long, string> Value2 { get; set; }
 }
 
 [TomlSerializedObject]

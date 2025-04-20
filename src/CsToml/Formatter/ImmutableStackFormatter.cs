@@ -26,24 +26,18 @@ public sealed class ImmutableStackFormatter<T> : CollectionBaseFormatter<Immutab
 
     protected override void SerializeCollection<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ImmutableStack<T> target, CsTomlSerializerOptions options)
     {
+        writer.BeginArray();
         if (target.IsEmpty)
         {
-            writer.BeginArray();
             writer.EndArray();
             return;
         }
-
-        var formatter = options.Resolver.GetFormatter<T>()!;
-        writer.BeginArray();
 
         // Use ImmutableStack<T>.GetEnumerator directly instead of IEnumerable<T>.GetEnumerator.
         var en = target.GetEnumerator();
-        if (!en.MoveNext())
-        {
-            writer.EndArray();
-            return;
-        }
+        en.MoveNext();
 
+        var formatter = options.Resolver.GetFormatter<T>()!;
         formatter.Serialize(ref writer, en.Current!, options);
         if (!en.MoveNext())
         {

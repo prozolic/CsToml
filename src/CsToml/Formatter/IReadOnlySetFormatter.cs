@@ -22,25 +22,18 @@ public sealed class IReadOnlySetFormatter<T> : CollectionBaseFormatter<IReadOnly
     {
         if (target is HashSet<T> hashsetTarget)
         {
+            writer.BeginArray();
             if (hashsetTarget.Count == 0)
             {
-                writer.BeginArray();
                 writer.EndArray();
                 return;
             }
-
-            var formatter = options.Resolver.GetFormatter<T>()!;
-
-            writer.BeginArray();
 
             // Use HashSet<T>.GetEnumerator directly instead of IEnumerable<T>.GetEnumerator.
             var en = hashsetTarget.GetEnumerator();
-            if (!en.MoveNext())
-            {
-                writer.EndArray();
-                return;
-            }
+            en.MoveNext();
 
+            var formatter = options.Resolver.GetFormatter<T>()!;
             formatter.Serialize(ref writer, en.Current!, options);
             if (!en.MoveNext())
             {

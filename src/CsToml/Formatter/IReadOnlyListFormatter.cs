@@ -22,6 +22,35 @@ public sealed class IReadOnlyListFormatter<T> : CollectionBaseFormatter<IReadOnl
 
     protected override void SerializeCollection<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, IReadOnlyList<T> target, CsTomlSerializerOptions options)
     {
+        if (target is T[] arrayTarget)
+        {
+            writer.BeginArray();
+            if (arrayTarget.Length == 0)
+            {
+                writer.EndArray();
+                return;
+            }
+
+            var targetSpan = arrayTarget.AsSpan();
+            var formatter = options.Resolver.GetFormatter<T>()!;
+            formatter.Serialize(ref writer, targetSpan[0], options);
+            if (targetSpan.Length == 1)
+            {
+                writer.WriteSpace();
+                writer.EndArray();
+                return;
+            }
+
+            for (int i = 1; i < targetSpan.Length; i++)
+            {
+                writer.Write(TomlCodes.Symbol.COMMA);
+                writer.WriteSpace();
+                formatter.Serialize(ref writer, targetSpan[i], options);
+            }
+            writer.WriteSpace();
+            writer.EndArray();
+            return;
+        }
         if (target is List<T> listTarget)
         {
             writer.BeginArray();

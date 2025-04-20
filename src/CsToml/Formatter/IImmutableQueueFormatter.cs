@@ -28,25 +28,18 @@ public sealed class IImmutableQueueFormatter<T> : CollectionBaseFormatter<IImmut
     {
         if (target is ImmutableQueue<T> immQueueTarget)
         {
+            writer.BeginArray();
             if (immQueueTarget.IsEmpty)
             {
-                writer.BeginArray();
                 writer.EndArray();
                 return;
             }
+
+            // Use ImmutableHashSet<T>.GetEnumerator directly instead of IEnumerable<T>.GetEnumerator.
+            var en = immQueueTarget.GetEnumerator();
+            en.MoveNext();
 
             var formatter = options.Resolver.GetFormatter<T>()!;
-
-            writer.BeginArray();
-
-            // Use ImmutableQueue<T>.GetEnumerator directly instead of IEnumerable<T>.GetEnumerator.
-            var en = immQueueTarget.GetEnumerator();
-            if (!en.MoveNext())
-            {
-                writer.EndArray();
-                return;
-            }
-
             formatter.Serialize(ref writer, en.Current!, options);
             if (!en.MoveNext())
             {

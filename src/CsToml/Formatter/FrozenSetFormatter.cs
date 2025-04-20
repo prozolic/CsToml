@@ -1,16 +1,17 @@
-﻿
+﻿using System.Collections.Frozen;
+
 namespace CsToml.Formatter;
 
-public sealed class HashSetFormatter<T> : CollectionBaseFormatter<HashSet<T>, T, HashSet<T>>
+public sealed class FrozenSetFormatter<T> : CollectionBaseFormatter<FrozenSet<T>, T, HashSet<T>>
 {
     protected override void AddValue(HashSet<T> mediator, T element)
     {
         mediator.Add(element);
     }
 
-    protected override HashSet<T> Complete(HashSet<T> collection)
+    protected override FrozenSet<T> Complete(HashSet<T> collection)
     {
-        return collection;
+        return collection.ToFrozenSet();
     }
 
     protected override HashSet<T> CreateCollection(int capacity)
@@ -18,7 +19,7 @@ public sealed class HashSetFormatter<T> : CollectionBaseFormatter<HashSet<T>, T,
         return new HashSet<T>(capacity);
     }
 
-    protected override void SerializeCollection<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, HashSet<T> target, CsTomlSerializerOptions options)
+    protected override void SerializeCollection<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, FrozenSet<T> target, CsTomlSerializerOptions options)
     {
         writer.BeginArray();
         if (target.Count == 0)
@@ -27,7 +28,7 @@ public sealed class HashSetFormatter<T> : CollectionBaseFormatter<HashSet<T>, T,
             return;
         }
 
-        // Use HashSet<T>.GetEnumerator directly instead of IEnumerable<T>.GetEnumerator.
+        // Use FrozenSet<T>.GetEnumerator directly instead of IEnumerable<T>.GetEnumerator.
         var en = target.GetEnumerator();
         en.MoveNext();
 

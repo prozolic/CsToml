@@ -22,6 +22,35 @@ public sealed class ICollectionFormatter<T> : CollectionBaseFormatter<ICollectio
 
     protected override void SerializeCollection<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ICollection<T> target, CsTomlSerializerOptions options)
     {
+        if (target is T[] arrayTarget)
+        {
+            writer.BeginArray();
+            if (arrayTarget.Length == 0)
+            {
+                writer.EndArray();
+                return;
+            }
+
+            var targetSpan = arrayTarget.AsSpan();
+            var formatter = options.Resolver.GetFormatter<T>()!;
+            formatter.Serialize(ref writer, targetSpan[0], options);
+            if (targetSpan.Length == 1)
+            {
+                writer.WriteSpace();
+                writer.EndArray();
+                return;
+            }
+
+            for (int i = 1; i < targetSpan.Length; i++)
+            {
+                writer.Write(TomlCodes.Symbol.COMMA);
+                writer.WriteSpace();
+                formatter.Serialize(ref writer, targetSpan[i], options);
+            }
+            writer.WriteSpace();
+            writer.EndArray();
+            return;
+        }
         if (target is List<T> listTarget)
         {
             writer.BeginArray();
@@ -46,6 +75,62 @@ public sealed class ICollectionFormatter<T> : CollectionBaseFormatter<ICollectio
                 writer.Write(TomlCodes.Symbol.COMMA);
                 writer.WriteSpace();
                 formatter.Serialize(ref writer, targetSpan[i], options);
+            }
+            writer.WriteSpace();
+            writer.EndArray();
+            return;
+        }
+        if (target is IList<T> iListTarget)
+        {
+            writer.BeginArray();
+            if (iListTarget.Count == 0)
+            {
+                writer.EndArray();
+                return;
+            }
+
+            var formatter = options.Resolver.GetFormatter<T>()!;
+            formatter.Serialize(ref writer, iListTarget[0], options);
+            if (iListTarget.Count == 1)
+            {
+                writer.WriteSpace();
+                writer.EndArray();
+                return;
+            }
+
+            for (int i = 1; i < iListTarget.Count; i++)
+            {
+                writer.Write(TomlCodes.Symbol.COMMA);
+                writer.WriteSpace();
+                formatter.Serialize(ref writer, iListTarget[i], options);
+            }
+            writer.WriteSpace();
+            writer.EndArray();
+            return;
+        }
+        if (target is IReadOnlyList<T> iReadOnlyListTarget)
+        {
+            writer.BeginArray();
+            if (iReadOnlyListTarget.Count == 0)
+            {
+                writer.EndArray();
+                return;
+            }
+
+            var formatter = options.Resolver.GetFormatter<T>()!;
+            formatter.Serialize(ref writer, iReadOnlyListTarget[0], options);
+            if (iReadOnlyListTarget.Count == 1)
+            {
+                writer.WriteSpace();
+                writer.EndArray();
+                return;
+            }
+
+            for (int i = 1; i < iReadOnlyListTarget.Count; i++)
+            {
+                writer.Write(TomlCodes.Symbol.COMMA);
+                writer.WriteSpace();
+                formatter.Serialize(ref writer, iReadOnlyListTarget[i], options);
             }
             writer.WriteSpace();
             writer.EndArray();

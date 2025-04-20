@@ -19,27 +19,20 @@ public sealed class IImmutableSetFormatter<T> : CollectionBaseFormatter<IImmutab
 
     protected override void SerializeCollection<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, IImmutableSet<T> target, CsTomlSerializerOptions options)
     {
-        if (target is ImmutableHashSet<T> immQueueTarget)
+        if (target is ImmutableHashSet<T> immHashSetTarget)
         {
-            if (immQueueTarget.IsEmpty)
+            writer.BeginArray();
+            if (immHashSetTarget.IsEmpty)
             {
-                writer.BeginArray();
                 writer.EndArray();
                 return;
             }
-
-            var formatter = options.Resolver.GetFormatter<T>()!;
-
-            writer.BeginArray();
 
             // Use ImmutableHashSet<T>.GetEnumerator directly instead of IEnumerable<T>.GetEnumerator.
-            var en = immQueueTarget.GetEnumerator();
-            if (!en.MoveNext())
-            {
-                writer.EndArray();
-                return;
-            }
+            var en = immHashSetTarget.GetEnumerator();
+            en.MoveNext();
 
+            var formatter = options.Resolver.GetFormatter<T>()!;
             formatter.Serialize(ref writer, en.Current!, options);
             if (!en.MoveNext())
             {
