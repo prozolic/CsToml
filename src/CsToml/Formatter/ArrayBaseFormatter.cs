@@ -1,8 +1,10 @@
 ﻿using CsToml.Error;
 using System.Buffers;
+using System.ComponentModel;
 
 namespace CsToml.Formatter;
 
+[EditorBrowsable(EditorBrowsableState.Never)]
 public abstract class ArrayBaseFormatter<TArray, TElement> : ITomlValueFormatter<TArray?>
 {
     public TArray? Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
