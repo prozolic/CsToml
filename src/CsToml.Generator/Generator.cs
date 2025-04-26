@@ -323,7 +323,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
 """);
                     break;
                 case TomlSerializationKind.CollectionOfITomlSerializedObject:
-                    if (FormatterTypeMetaData.TryGetFormatterType(type, out var formatter))
+                    if (FormatterTypeMetaData.TryGetGenericFormatterType(type, out var formatter) != GenericFormatterType.None)
                     {
                         var collectionNamedType = (INamedTypeSymbol)type;
                         var typeParameters = string.Join(",", collectionNamedType.TypeArguments.Select(x => x.ToFullFormatString()));
@@ -338,7 +338,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                     }
                     break;
                 case TomlSerializationKind.Dictionary:
-                    if (FormatterTypeMetaData.TryGetFormatterType(type, out var dictFormatter))
+                    if (FormatterTypeMetaData.TryGetGenericFormatterType(type, out var dictFormatter) != GenericFormatterType.None)
                     {
                         var dictNamedType = (INamedTypeSymbol)type;
                         var typeParameters = string.Join(",", dictNamedType.TypeArguments.Select(x => x.ToFullFormatString()));
@@ -371,7 +371,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                             break;
                         }
 
-                        if (FormatterTypeMetaData.TryGetFormatterType(typeSymbol.ToFullFormatString(), out var typeFormatter))
+                        if (FormatterTypeMetaData.TryGetGenericFormatterType(typeSymbol.ToFullFormatString(), out var typeFormatter) != GenericFormatterType.None)
                         {
                             var typeParameters = string.Join(",", namedTypeSymbol.TypeArguments.Select(x => x.ToFullFormatString()));
                             typeFormatter = typeFormatter.Replace("TYPEPARAMETER", typeParameters);
