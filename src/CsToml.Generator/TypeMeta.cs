@@ -22,6 +22,16 @@ internal sealed class TypeMeta
         this.symbol = symbol;
         this.syntax = syntax;
 
+        TypeName = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+        FullTypeName = symbol.ToFullFormatString();
+
+        Console.WriteLine(FullTypeName);
+
+        if (symbol.IsRecord)
+            TypeKeyword = symbol.IsValueType ? "record struct" : "record";
+        else
+            TypeKeyword = symbol.IsValueType ? "struct" : "class";
+
         NameSpace = symbol!.ContainingNamespace.IsGlobalNamespace ?
             string.Empty :
             $"{symbol.ContainingNamespace}";
@@ -34,13 +44,6 @@ internal sealed class TypeMeta
             SearchTypeSymbol(typesymbols, member.Item1.Type);
         }
         DefinedTypes = typesymbols.Select(t => (t, FormatterTypeMetaData.GetTomlSerializationKind(t))).ToImmutableArray();
-        TypeName = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
-        FullTypeName = symbol.ToFullFormatString();
-
-        if (symbol.IsRecord)
-            TypeKeyword = symbol.IsValueType ? "record struct" : "record";
-        else
-            TypeKeyword = symbol.IsValueType ? "struct" : "class";
     }
 
     public bool Validate(SourceProductionContext context)

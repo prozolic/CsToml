@@ -429,6 +429,17 @@ internal partial class TypeArrayOfTable
     public TypeTomlSerializedObjectList Header { get; set; }
 }
 
+
+[TomlSerializedObject]
+internal partial class TypeArrayOfTable2
+{
+    [TomlValueOnSerialized]
+    public ImmutableArray<TestStruct?> TestStructArray { get; set; }
+
+    [TomlValueOnSerialized]
+    public Dictionary<long, string> Dict { get; set; }
+}
+
 [TomlSerializedObject]
 internal partial class TypeAlias
 {

@@ -3,6 +3,14 @@ using Microsoft.CodeAnalysis;
 
 namespace CsToml.Generator;
 
+internal enum GenericFormatterType
+{
+    None,
+    Array,
+    Collection,
+    Dictionary
+}
+
 internal static class FormatterTypeMetaData
 {
     private static readonly Dictionary<string, string> builtInCollectionFormatterTypes = new()
@@ -63,6 +71,7 @@ internal static class FormatterTypeMetaData
     private static readonly Dictionary<string, string> builtInGenericFormatterTypes = new()
     {
         { "global::System.Collections.Generic.KeyValuePair<,>", "KeyValuePairFormatter<TYPEPARAMETER>" },
+        { "global::System.Tuple<>", "TupleFormatter<TYPEPARAMETER>" },
         { "global::System.Tuple<,>", "TupleFormatter<TYPEPARAMETER>" },
         { "global::System.Tuple<,,>", "TupleFormatter<TYPEPARAMETER>" },
         { "global::System.Tuple<,,,>", "TupleFormatter<TYPEPARAMETER>" },
@@ -70,6 +79,7 @@ internal static class FormatterTypeMetaData
         { "global::System.Tuple<,,,,,>", "TupleFormatter<TYPEPARAMETER>" },
         { "global::System.Tuple<,,,,,,>", "TupleFormatter<TYPEPARAMETER>" },
         { "global::System.Tuple<,,,,,,,>", "TupleFormatter<TYPEPARAMETER>" },
+        { "global::System.ValueTuple<>", "ValueTupleFormatter<TYPEPARAMETER>" },
         { "global::System.ValueTuple<,>", "ValueTupleFormatter<TYPEPARAMETER>" },
         { "global::System.ValueTuple<,,>", "ValueTupleFormatter<TYPEPARAMETER>" },
         { "global::System.ValueTuple<,,,>", "ValueTupleFormatter<TYPEPARAMETER>" },
@@ -168,38 +178,43 @@ internal static class FormatterTypeMetaData
         return type.AllInterfaces.OfType<INamedTypeSymbol>().Any(t => ContainsDictionary(t));
     }
 
-    public static bool TryGetFormatterType(ITypeSymbol formatterTypeSymbol, out string? formatter)
+    public static GenericFormatterType TryGetGenericFormatterType(ITypeSymbol formatterTypeSymbol, out string? formatter)
     {
         if (formatterTypeSymbol is not INamedTypeSymbol nameformatterTypeSymbol)
         {
             formatter = null;
-            return false;
+            return GenericFormatterType.None;
         }
         if (!nameformatterTypeSymbol.IsGenericType)
         {
             formatter = null;
-            return false;
+            return GenericFormatterType.None;
         }
 
         var formatterType = nameformatterTypeSymbol.ConstructUnboundGenericType();
         var formatterTypeString = formatterType.ToFullFormatString();
 
-        return TryGetFormatterType(formatterTypeString, out formatter);
+        return TryGetGenericFormatterType(formatterTypeString, out formatter);
     }
 
-    public static bool TryGetFormatterType(string formatterType, out string formatter)
+    public static GenericFormatterType TryGetGenericFormatterType(string formatterType, out string formatter)
     {
         if (builtInCollectionFormatterTypes.TryGetValue(formatterType, out formatter))
         {
-            return true;
+            return GenericFormatterType.Collection;
         }
 
         if (builtInDictionaryFormatterTypes.TryGetValue(formatterType, out formatter))
         {
-            return true;
+            return GenericFormatterType.Dictionary;
         }
 
-        return builtInGenericFormatterTypes.TryGetValue(formatterType, out formatter);
+        if( builtInGenericFormatterTypes.TryGetValue(formatterType, out formatter))
+        {
+            return GenericFormatterType.Collection;
+        }
+
+        return GenericFormatterType.None;
     }
 
     public static bool ContainsBuiltInFormatterType(ITypeSymbol typeSymbol)
@@ -220,7 +235,7 @@ internal static class FormatterTypeMetaData
         switch (type.TypeKind)
         {
             case TypeKind.Array:
-                if (IsElementType(type, TomlSerializationKind.Primitive))
+                if (IsElementPrimitiveType(type, GenericFormatterType.Array, TomlSerializationKind.Primitive))
                 {
                     return TomlSerializationKind.PrimitiveArray;
                 }
@@ -234,7 +249,7 @@ internal static class FormatterTypeMetaData
                 }
                 if (ContainsCollectionType(type))
                 {
-                    if (IsElementType(type, TomlSerializationKind.Primitive))
+                    if (IsElementPrimitiveType(type, GenericFormatterType.Collection, TomlSerializationKind.Primitive))
                     {
                         return TomlSerializationKind.PrimitiveCollection;
                     }
@@ -252,7 +267,7 @@ internal static class FormatterTypeMetaData
                 }
                 if (ContainsCollectionAny(type))
                 {
-                    if (IsElementType(type, TomlSerializationKind.Primitive))
+                    if (IsElementPrimitiveType(type, GenericFormatterType.Collection, TomlSerializationKind.Primitive))
                     {
                         return TomlSerializationKind.PrimitiveCollection;
                     }
@@ -264,9 +279,11 @@ internal static class FormatterTypeMetaData
                 {
                     return TomlSerializationKind.TomlSerializedObject;
                 }
-                if (TryGetFormatterType(type, out var formatter))
+
+                var genericFormatterType = TryGetGenericFormatterType(type, out var _);
+                if (genericFormatterType != GenericFormatterType.None)
                 {
-                    if (IsElementType(type, TomlSerializationKind.Primitive))
+                    if (IsElementPrimitiveType(type, genericFormatterType, TomlSerializationKind.Primitive))
                     {
                         return TomlSerializationKind.PrimitiveCollection;
                     }
@@ -278,8 +295,11 @@ internal static class FormatterTypeMetaData
         return TomlSerializationKind.Error;
     }
 
-    public static bool IsElementType(ITypeSymbol typeSymbol, TomlSerializationKind kind)
+    public static bool IsElementPrimitiveType(ITypeSymbol typeSymbol, GenericFormatterType genericFormatterType, TomlSerializationKind kind)
     {
+        if (genericFormatterType == GenericFormatterType.None)
+            return false;
+
         if (typeSymbol is IArrayTypeSymbol arrayTypeSymbol)
         {
             var symbolKind = GetTomlSerializationKind(arrayTypeSymbol.ElementType);
@@ -293,6 +313,12 @@ internal static class FormatterTypeMetaData
             {
                 var symbolKind = GetTomlSerializationKind(typeArguments[0]);
                 return symbolKind == kind;
+            }
+
+            // KeyValuePair, ValueTuple are applicable.
+            if (typeArguments.Length >= 2 && genericFormatterType == GenericFormatterType.Collection)
+            {
+                return typeArguments.All(t => GetTomlSerializationKind(t) == kind);
             }
             return false;
         }

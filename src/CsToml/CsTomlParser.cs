@@ -19,32 +19,6 @@ internal enum ParserState : byte
     EndComment = 7
 }
 
-internal ref struct DottedKeyEnumerator
-{
-    private ReadOnlySpan<TomlDottedKey> keys;
-    private int index;
-
-    internal DottedKeyEnumerator(ReadOnlySpan<TomlDottedKey> keys)
-    {
-        this.keys = keys;
-        index = 0;
-    }
-
-    public string Current { get; private set; } = string.Empty;
-
-    public readonly DottedKeyEnumerator GetEnumerator() => this;
-
-    public bool MoveNext()
-    {
-        var target = keys;
-        if (target.Length == 0 || target.Length == index) return false;
-
-        Current = target[index++].Utf16String;
-        return true;
-    }
-
-}
-
 internal ref struct CsTomlParser
 {
     private CsTomlReader reader;
