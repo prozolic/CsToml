@@ -12,7 +12,7 @@ public interface ITomlValueFormatterResolver
 
 public sealed class TomlValueFormatterResolver : ITomlValueFormatterResolver
 {
-    public static readonly TomlValueFormatterResolver Instance = new TomlValueFormatterResolver();
+    public static readonly TomlValueFormatterResolver Instance = new ();
 
     private sealed class CacheCheck<T>
     {

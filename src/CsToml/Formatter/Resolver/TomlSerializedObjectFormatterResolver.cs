@@ -6,7 +6,7 @@ namespace CsToml.Formatter.Resolver;
 
 internal sealed class TomlSerializedObjectFormatterResolver : ITomlValueFormatterResolver
 {
-    public static readonly TomlSerializedObjectFormatterResolver Instance = new TomlSerializedObjectFormatterResolver();
+    public static readonly TomlSerializedObjectFormatterResolver Instance = new ();
 
     private sealed class CacheCheck<T>
     {
