@@ -11,6 +11,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text.Unicode;
 
 namespace CsToml;
@@ -257,55 +258,32 @@ public struct TomlDocumentNode
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal IDictionary<object, object> GetDictionary()
+    public NodeEnumerator GetEnumerator() // GetEnumeratorメソッドは必須
+        => new (this.Node, HasValue);
+
+    [StructLayout(LayoutKind.Auto)]
+    public ref struct NodeEnumerator
     {
-        var dict = node?.GetDictionary();
-        if (dict == null)
-        {
-            return new Dictionary<object, object>();
-        }
-        return dict;
-    }
-
-    internal bool TryGetDictionary(out IDictionary<object, object> value)
-    {
-        try
-        {
-            value = GetDictionary();
-            return true;
-        }
-        catch(CsTomlException)
-        {
-            value = default!;
-            return false;
-        }
-    }
-
-
-    public NodeEnumerator GetNodeEnumerator()
-        => new NodeEnumerator(this);
-
-    public struct NodeEnumerator : IEnumerator<KeyValuePair<TomlValue, TomlDocumentNode>>
-    {
-        private TomlDocumentNode documentNode;
         private TomlTableNodeDictionary.KeyValuePairEnumerator enumerator;
+        private bool hasValue;
         private KeyValuePair<TomlValue, TomlDocumentNode> current;
 
-        public NodeEnumerator(TomlDocumentNode documentNode)
+        public readonly KeyValuePair<TomlValue, TomlDocumentNode> Current
         {
-            this.documentNode = documentNode;
-            this.enumerator = documentNode.Node.KeyValuePairs;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => current;
         }
 
-        public KeyValuePair<TomlValue, TomlDocumentNode> Current => current;
+        internal NodeEnumerator(TomlTableNode tomlTableNode, bool hasValue)
+        {
+            enumerator = tomlTableNode.KeyValuePairs;
+            this.hasValue = hasValue;
+        }
 
-        object IEnumerator.Current => current;
-
-        public readonly NodeEnumerator GetEnumerator() => this;
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext()
         {
-            if (!documentNode.HasValue) return false;
+            if (!hasValue) return false;
 
             if (!enumerator.MoveNext())
             {
@@ -323,14 +301,5 @@ public struct TomlDocumentNode
             }
             return true;
         }
-
-        public void Reset()
-        {
-            enumerator = documentNode.Node.KeyValuePairs;
-            current = default;
-        }
-
-        public void Dispose()
-        { }
     }
 }

@@ -19,7 +19,7 @@ internal sealed class TomlStreamConfigurationParser
     private void VisitObjectElement(TomlDocumentNode node)
     {
         isEmpty = true;
-        foreach (var element in node.GetNodeEnumerator())
+        foreach (var element in node)
         {
             isEmpty = false;
             EnterContext(element.Key.GetString()!);
