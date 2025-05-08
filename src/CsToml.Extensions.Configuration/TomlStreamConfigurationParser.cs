@@ -5,7 +5,7 @@ namespace CsToml.Extensions.Configuration;
 
 internal sealed class TomlStreamConfigurationParser
 {
-    private IDictionary<string, string?> data = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, string?> data = new(StringComparer.OrdinalIgnoreCase);
     private readonly Stack<string> paths = new();
     private bool isEmpty;
 
@@ -22,9 +22,9 @@ internal sealed class TomlStreamConfigurationParser
         foreach (var element in node)
         {
             isEmpty = false;
-            EnterContext(element.Key.GetString()!);
+            paths.Push(paths.Count > 0 ? $"{paths.Peek()}{ConfigurationPath.KeyDelimiter}{element.Key.GetString()}" : element.Key.GetString());
             VisitElement(element.Value);
-            ExitContext();
+            paths.Pop();
         }
 
         if (paths.Count > 0 && isEmpty)
@@ -67,9 +67,9 @@ internal sealed class TomlStreamConfigurationParser
 
         foreach (var arrayElement in node.GetArray())
         {
-            EnterContext(index.ToString());
+            paths.Push(paths.Count > 0 ? $"{paths.Peek()}{ConfigurationPath.KeyDelimiter}{index}" : $"{index}");
             VisitElement(new TomlDocumentNode(arrayElement));
-            ExitContext();
+            paths.Pop();
             index++;
         }
 
@@ -79,11 +79,7 @@ internal sealed class TomlStreamConfigurationParser
         }
     }
 
-    private void EnterContext(string context)
-        => paths.Push(paths.Count > 0 ? paths.Peek() + ConfigurationPath.KeyDelimiter + context : context);
 
-    private void ExitContext()
-        => paths.Pop();
 }
 
 
