@@ -280,12 +280,12 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
 
     public void WriteString(string? value)
     {
-        TomlString.Parse(value).ToTomlString(ref this);
+        TomlStringHelper.Parse(value).ToTomlString(ref this);
     }
 
     public void WriteString(scoped ReadOnlySpan<byte> value)
     {
-        TomlString.Parse(value).ToTomlString(ref this);
+        TomlStringHelper.Parse(value).ToTomlString(ref this);
     }
 
     public void WriteDateTimeOffset(DateTimeOffset value)

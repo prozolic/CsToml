@@ -1,10 +1,18 @@
 ﻿using CsToml.Error;
 using CsToml.Utility;
+using System.Runtime.CompilerServices;
 
 namespace CsToml.Values;
 
-internal partial class TomlString
+internal static class TomlStringHelper
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T Parse<T>(ReadOnlySpan<byte> value)
+        where T : TomlValue, ITomlStringParser<T>
+    {
+        return T.Parse(value);
+    }
+
     public static TomlString Parse(ReadOnlySpan<byte> utf16String)
     {
         if (Utf8Helper.ContainInvalidSequences(utf16String))
@@ -15,38 +23,39 @@ internal partial class TomlString
         {
             if (Utf8Helper.ContainsEscapeChar(utf16String, true))
             {
-                return TomlString.Parse(utf16String, CsTomlStringType.MultiLineLiteral);
+                return TomlStringHelper.Parse<TomlMultiLineLiteralString>(utf16String);
             }
-            return TomlString.Parse(utf16String, CsTomlStringType.MultiLineBasic);
+
+            return TomlStringHelper.Parse<TomlMultiLineBasicString>(utf16String);
         }
 
         // check escape
         if (Utf8Helper.ContainsEscapeChar(utf16String, true))
         {
-            return TomlString.Parse(utf16String, CsTomlStringType.Literal);
+            return TomlStringHelper.Parse<TomlLiteralString>(utf16String);
         }
 
         if (utf16String.Contains(TomlCodes.Symbol.BACKSLASH) && !utf16String.Contains(TomlCodes.Symbol.SINGLEQUOTED))
         {
-            return TomlString.Parse(utf16String, CsTomlStringType.Basic);
+            return TomlStringHelper.Parse<TomlBasicString>(utf16String);
         }
 
         if (utf16String.Contains(TomlCodes.Symbol.DOUBLEQUOTED))
         {
             if (!utf16String.Contains(TomlCodes.Symbol.SINGLEQUOTED))
             {
-                return TomlString.Parse(utf16String, CsTomlStringType.Literal);
+                return TomlStringHelper.Parse<TomlLiteralString>(utf16String);
             }
-            return TomlString.Parse(utf16String, CsTomlStringType.MultiLineLiteral);
+            return TomlStringHelper.Parse<TomlMultiLineLiteralString>(utf16String);
         }
 
-        return TomlString.Parse(utf16String, CsTomlStringType.Basic);
+        return TomlStringHelper.Parse<TomlBasicString>(utf16String);
     }
 
     public static TomlString Parse(ReadOnlySpan<char> utf16String)
     {
         if (utf16String.Length == 0)
-            return TomlBasicString.Empty;
+            return TomlBasicString.EmptyString;
 
         var writer = RecycleArrayPoolBufferWriter<byte>.Rent();
         try
@@ -59,40 +68,4 @@ internal partial class TomlString
             RecycleArrayPoolBufferWriter<byte>.Return(writer);
         }
     }
-
-    public static TomlString Parse(ReadOnlySpan<byte> bytes, CsTomlStringType type)
-    {
-        if (bytes.Length == 0)
-        {
-            switch(type)
-            {
-                case CsTomlStringType.Basic:
-                    return TomlBasicString.Empty;
-                case CsTomlStringType.MultiLineBasic:
-                    return TomlMultiLineBasicString.Empty;
-                case CsTomlStringType.Literal:
-                    return TomlLiteralString.Empty;
-                case CsTomlStringType.MultiLineLiteral:
-                    return TomlMultiLineLiteralString.Empty;
-                case CsTomlStringType.Unquoted:
-                    return TomlUnquotedString.Empty;
-            }
-        }
-        switch (type)
-        {
-            case CsTomlStringType.Basic:
-                return new TomlBasicString(Utf8Helper.ToUtf16(bytes));
-            case CsTomlStringType.MultiLineBasic:
-                return new TomlMultiLineBasicString(Utf8Helper.ToUtf16(bytes));
-            case CsTomlStringType.Literal:
-                return new TomlLiteralString(Utf8Helper.ToUtf16(bytes));
-            case CsTomlStringType.MultiLineLiteral:
-                return new TomlMultiLineLiteralString(Utf8Helper.ToUtf16(bytes));
-            case CsTomlStringType.Unquoted:
-                return new TomlUnquotedString(Utf8Helper.ToUtf16(bytes));
-        }
-        ExceptionHelper.ThrowIncorrectTomlStringFormat();
-        return default;
-    }
 }
-

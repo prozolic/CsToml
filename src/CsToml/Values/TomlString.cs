@@ -6,10 +6,26 @@ using System.Text.Unicode;
 
 namespace CsToml.Values;
 
-[DebuggerDisplay("{Utf16String}")]
-internal sealed class TomlUnquotedString(string value) : TomlString(value)
+internal interface ITomlStringParser<T>
+    where T : TomlValue
 {
-    public new static readonly TomlUnquotedString Empty = new TomlUnquotedString(string.Empty);
+    static abstract T Parse(ReadOnlySpan<byte> value);
+}
+
+
+[DebuggerDisplay("{Utf16String}")]
+internal sealed class TomlUnquotedString(string value) : TomlString(value), ITomlStringParser<TomlUnquotedString>
+{
+    public static readonly TomlUnquotedString EmptyString = new (string.Empty);
+
+    static TomlUnquotedString ITomlStringParser<TomlUnquotedString>.Parse(ReadOnlySpan<byte> value)
+    {
+        if (value.Length == 0)
+        {
+            return EmptyString;
+        }
+        return new TomlUnquotedString(Utf8Helper.ToUtf16(value));
+    }
 
     internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
@@ -30,9 +46,18 @@ internal sealed class TomlUnquotedString(string value) : TomlString(value)
 }
 
 [DebuggerDisplay("{Utf16String}")]
-internal sealed class TomlBasicString(string value) : TomlString(value)
+internal sealed class TomlBasicString(string value) : TomlString(value), ITomlStringParser<TomlBasicString>
 {
-    public new static readonly TomlBasicString Empty = new TomlBasicString(string.Empty);
+    public static readonly TomlBasicString EmptyString = new(string.Empty);
+
+    static TomlBasicString ITomlStringParser<TomlBasicString>.Parse(ReadOnlySpan<byte> value)
+    {
+        if (value.Length == 0)
+        {
+            return EmptyString;
+        }
+        return new TomlBasicString(Utf8Helper.ToUtf16(value));
+    }
 
     internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
@@ -99,9 +124,18 @@ internal sealed class TomlBasicString(string value) : TomlString(value)
 }
 
 [DebuggerDisplay("{Utf16String}")]
-internal sealed class TomlMultiLineBasicString(string value) : TomlString(value)
+internal sealed class TomlMultiLineBasicString(string value) : TomlString(value), ITomlStringParser<TomlMultiLineBasicString>
 {
-    public new static readonly TomlMultiLineBasicString Empty = new TomlMultiLineBasicString(string.Empty);
+    public static readonly TomlMultiLineBasicString EmptyString = new(string.Empty);
+
+    static TomlMultiLineBasicString ITomlStringParser<TomlMultiLineBasicString>.Parse(ReadOnlySpan<byte> value)
+    {
+        if (value.Length == 0)
+        {
+            return EmptyString;
+        }
+        return new TomlMultiLineBasicString(Utf8Helper.ToUtf16(value));
+    }
 
     internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
@@ -167,9 +201,19 @@ internal sealed class TomlMultiLineBasicString(string value) : TomlString(value)
 }
 
 [DebuggerDisplay("{Utf16String}")]
-internal sealed class TomlLiteralString(string value) : TomlString(value)
+internal sealed class TomlLiteralString(string value) : TomlString(value), ITomlStringParser<TomlLiteralString>
 {
-    public new static readonly TomlLiteralString Empty = new TomlLiteralString(string.Empty);
+    public static readonly TomlLiteralString EmptyString = new (string.Empty);
+
+    static TomlLiteralString ITomlStringParser<TomlLiteralString>.Parse(ReadOnlySpan<byte> value)
+    {
+        if (value.Length == 0)
+        {
+            return EmptyString;
+        }
+        return new TomlLiteralString(Utf8Helper.ToUtf16(value));
+    }
+
 
     internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
@@ -196,9 +240,18 @@ internal sealed class TomlLiteralString(string value) : TomlString(value)
 }
 
 [DebuggerDisplay("{Utf16String}")]
-internal sealed class TomlMultiLineLiteralString(string value) : TomlString(value)
+internal sealed class TomlMultiLineLiteralString(string value) : TomlString(value), ITomlStringParser<TomlMultiLineLiteralString>
 {
-    public new static readonly TomlMultiLineLiteralString Empty = new TomlMultiLineLiteralString(string.Empty);
+    public static readonly TomlMultiLineLiteralString EmptyString = new(string.Empty);
+
+    static TomlMultiLineLiteralString ITomlStringParser<TomlMultiLineLiteralString>.Parse(ReadOnlySpan<byte> value)
+    {
+        if (value.Length == 0)
+        {
+            return EmptyString;
+        }
+        return new TomlMultiLineLiteralString(Utf8Helper.ToUtf16(value));
+    }
 
     internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
@@ -218,11 +271,8 @@ internal sealed class TomlMultiLineLiteralString(string value) : TomlString(valu
 }
 
 [DebuggerDisplay("{Utf16String}")]
-internal abstract partial class TomlString(string value) : TomlValue, ITomlStringParser<TomlString>
+internal abstract partial class TomlString(string value) : TomlValue
 {
-    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-    private readonly string value = value;
-
     public override bool HasValue => true;
 
     public override TomlValueType Type => TomlValueType.String;

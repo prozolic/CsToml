@@ -57,7 +57,7 @@ internal ref struct CsTomlReader
             if (Utf8Helper.ContainInvalidSequences(bufferWriter.WrittenSpan))
                 ExceptionHelper.ThrowInvalidCodePoints();
 
-            return TomlString.Parse(bufferWriter.WrittenSpan, CsTomlStringType.Unquoted);
+            return TomlStringHelper.Parse<TomlUnquotedString>(bufferWriter.WrittenSpan);
         }
         finally
         {
@@ -114,12 +114,12 @@ internal ref struct CsTomlReader
                 case TomlCodes.Symbol.DOUBLEQUOTED:
                     if (!dot) ExceptionHelper.ThrowKeysAreNotJoinedByDots();
                     dot = false;
-                    key.Add(ReadDoubleQuoteSingleLineString<TomlDottedKey>());
+                    key.Add(ReadDoubleQuoteSingleLineString<TomlBasicDottedKey>());
                     continue;
                 case TomlCodes.Symbol.SINGLEQUOTED:
                     if (!dot) ExceptionHelper.ThrowKeysAreNotJoinedByDots();
                     dot = false;
-                    key.Add(ReadSingleQuoteSingleLineString<TomlDottedKey>());
+                    key.Add(ReadSingleQuoteSingleLineString<TomlLiteralDottedKey>());
                     continue;
                 default:
                     if (!dot) ExceptionHelper.ThrowKeysAreNotJoinedByDots();
@@ -172,12 +172,12 @@ internal ref struct CsTomlReader
                 case TomlCodes.Symbol.DOUBLEQUOTED:
                     if (!dot) ExceptionHelper.ThrowKeysAreNotJoinedByDots();
                     dot = false;
-                    key.Add(ReadDoubleQuoteSingleLineString<TomlDottedKey>());
+                    key.Add(ReadDoubleQuoteSingleLineString<TomlBasicDottedKey>());
                     continue;
                 case TomlCodes.Symbol.SINGLEQUOTED:
                     if (!dot) ExceptionHelper.ThrowKeysAreNotJoinedByDots();
                     dot = false;
-                    key.Add(ReadSingleQuoteSingleLineString<TomlDottedKey>());
+                    key.Add(ReadSingleQuoteSingleLineString<TomlLiteralDottedKey>());
                     continue;
                 default:
                     ExceptionHelper.ThrowKeyContainsInvalid(c);
@@ -235,12 +235,12 @@ internal ref struct CsTomlReader
                 case TomlCodes.Symbol.DOUBLEQUOTED:
                     if (!dot) ExceptionHelper.ThrowKeysAreNotJoinedByDots();
                     dot = false;
-                    tableHeaderKey.Add(ReadDoubleQuoteSingleLineString<TomlDottedKey>());
+                    tableHeaderKey.Add(ReadDoubleQuoteSingleLineString<TomlBasicDottedKey>());
                     continue;
                 case TomlCodes.Symbol.SINGLEQUOTED:
                     if (!dot) ExceptionHelper.ThrowKeysAreNotJoinedByDots();
                     dot = false;
-                    tableHeaderKey.Add(ReadSingleQuoteSingleLineString<TomlDottedKey>());
+                    tableHeaderKey.Add(ReadSingleQuoteSingleLineString<TomlLiteralDottedKey>());
                     continue;
                 case TomlCodes.Symbol.RIGHTSQUAREBRACKET:
                     closingRightRightSquareBracket = true;
@@ -295,12 +295,12 @@ internal ref struct CsTomlReader
                 case TomlCodes.Symbol.DOUBLEQUOTED:
                     if (!dot) ExceptionHelper.ThrowKeysAreNotJoinedByDots();
                     dot = false;
-                    tableHeaderKey.Add(ReadDoubleQuoteSingleLineString<TomlDottedKey>());
+                    tableHeaderKey.Add(ReadDoubleQuoteSingleLineString<TomlBasicDottedKey>());
                     continue;
                 case TomlCodes.Symbol.SINGLEQUOTED:
                     if (!dot) ExceptionHelper.ThrowKeysAreNotJoinedByDots();
                     dot = false;
-                    tableHeaderKey.Add(ReadSingleQuoteSingleLineString<TomlDottedKey>());
+                    tableHeaderKey.Add(ReadSingleQuoteSingleLineString<TomlLiteralDottedKey>());
                     continue;
                 case TomlCodes.Symbol.RIGHTSQUAREBRACKET:
                     closingRightRightSquareBracket = true;
@@ -364,12 +364,12 @@ internal ref struct CsTomlReader
                 case TomlCodes.Symbol.DOUBLEQUOTED:
                     if (!dot) ExceptionHelper.ThrowKeysAreNotJoinedByDots();
                     dot = false;
-                    arrayOfTablesHeaderKey.Add(ReadDoubleQuoteSingleLineString<TomlDottedKey>());
+                    arrayOfTablesHeaderKey.Add(ReadDoubleQuoteSingleLineString<TomlBasicDottedKey>());
                     continue;
                 case TomlCodes.Symbol.SINGLEQUOTED:
                     if (!dot) ExceptionHelper.ThrowKeysAreNotJoinedByDots();
                     dot = false;
-                    arrayOfTablesHeaderKey.Add(ReadSingleQuoteSingleLineString<TomlDottedKey>());
+                    arrayOfTablesHeaderKey.Add(ReadSingleQuoteSingleLineString<TomlLiteralDottedKey>());
                     continue;
                 case TomlCodes.Symbol.RIGHTSQUAREBRACKET:
                     Advance(1);
@@ -433,12 +433,12 @@ internal ref struct CsTomlReader
                 case TomlCodes.Symbol.DOUBLEQUOTED:
                     if (!dot) ExceptionHelper.ThrowKeysAreNotJoinedByDots();
                     dot = false;
-                    arrayOfTablesHeaderKey.Add(ReadDoubleQuoteSingleLineString<TomlDottedKey>());
+                    arrayOfTablesHeaderKey.Add(ReadDoubleQuoteSingleLineString<TomlBasicDottedKey>());
                     continue;
                 case TomlCodes.Symbol.SINGLEQUOTED:
                     if (!dot) ExceptionHelper.ThrowKeysAreNotJoinedByDots();
                     dot = false;
-                    arrayOfTablesHeaderKey.Add(ReadSingleQuoteSingleLineString<TomlDottedKey>());
+                    arrayOfTablesHeaderKey.Add(ReadSingleQuoteSingleLineString<TomlLiteralDottedKey>());
                     continue;
                 case TomlCodes.Symbol.RIGHTSQUAREBRACKET:
                     Advance(1);
@@ -673,14 +673,14 @@ internal ref struct CsTomlReader
         {
             case 1:
             case 2:
-                return ReadDoubleQuoteSingleLineString<TomlString>();
+                return ReadDoubleQuoteSingleLineString<TomlBasicString>();
             case 3:
             case 4:
             case 5:
                 return ReadDoubleQuoteMultiLineString();
             case 6: // first(3) + end(3) = 6 
                 Advance(6);
-                return TomlMultiLineBasicString.Empty;
+                return TomlMultiLineBasicString.EmptyString;
             case 7: // first(3) + one adjacent mark(1) + end(3) = 7
                 Advance(7);
                 return new TomlMultiLineBasicString("\"");
@@ -743,7 +743,7 @@ internal ref struct CsTomlReader
             if (Utf8Helper.ContainInvalidSequences(bufferWriter.WrittenSpan))
                 ExceptionHelper.ThrowInvalidCodePoints();
 
-            return T.Parse(bufferWriter.WrittenSpan, CsTomlStringType.Basic);
+            return T.Parse(bufferWriter.WrittenSpan);
         }
         finally
         {
@@ -852,7 +852,7 @@ internal ref struct CsTomlReader
             if (Utf8Helper.ContainInvalidSequences(bufferWriter.WrittenSpan))
                 ExceptionHelper.ThrowInvalidCodePoints();
 
-            return TomlString.Parse(bufferWriter.WrittenSpan, CsTomlStringType.MultiLineBasic);
+            return TomlStringHelper.Parse<TomlMultiLineBasicString>(bufferWriter.WrittenSpan);
         }
         finally
         {
@@ -914,14 +914,14 @@ internal ref struct CsTomlReader
         {
             case 1:
             case 2:
-                return ReadSingleQuoteSingleLineString<TomlString>();
+                return ReadSingleQuoteSingleLineString<TomlLiteralString>();
             case 3:
             case 4:
             case 5:
                 return ReadSingleQuoteMultiLineString();
             case 6: // first(3) + end(3) = 6 
                 Advance(6);
-                return TomlMultiLineLiteralString.Empty;
+                return TomlMultiLineLiteralString.EmptyString;
             case 7: // first(3) + one adjacent mark(1) + end(3) = 7
                 Advance(7);
                 return new TomlMultiLineLiteralString("'");
@@ -979,14 +979,14 @@ internal ref struct CsTomlReader
 
         if (fullSpan)
         {
-            return T.Parse(currentSpan[..totalLength], CsTomlStringType.Literal);
+            return T.Parse(currentSpan[..totalLength]);
         }
 
         try
         {
             if (Utf8Helper.ContainInvalidSequences(bufferWriter!.WrittenSpan))
                 ExceptionHelper.ThrowInvalidCodePoints();
-            return T.Parse(bufferWriter!.WrittenSpan, CsTomlStringType.Literal);
+            return T.Parse(bufferWriter!.WrittenSpan);
         }
         finally
         {
@@ -1113,7 +1113,7 @@ internal ref struct CsTomlReader
 
         if (fullSpan)
         {
-            return TomlString.Parse(currentSpan.Slice(0, totalLength + singleQuotedContinuousCountAtTheEnd - 2), CsTomlStringType.MultiLineLiteral);
+            return TomlStringHelper.Parse<TomlMultiLineLiteralString>(currentSpan.Slice(0, totalLength + singleQuotedContinuousCountAtTheEnd - 2));
         }
 
         try
@@ -1123,7 +1123,7 @@ internal ref struct CsTomlReader
             if (Utf8Helper.ContainInvalidSequences(written2))
                 ExceptionHelper.ThrowInvalidCodePoints();
 
-            return TomlString.Parse(written2, CsTomlStringType.MultiLineLiteral);
+            return TomlStringHelper.Parse<TomlMultiLineLiteralString>(written2);
         }
         finally
         {
@@ -2047,7 +2047,7 @@ internal ref struct CsTomlReader
 
     private TomlFloat ReadDouble()
     {
-        var writer = new SpanWriter(stackalloc byte[512]);
+        var writer = new SpanWriter(stackalloc byte[64]);
         if (TryPeek(out var plusOrMinusCh) && TomlCodes.IsPlusOrMinusSign(plusOrMinusCh))
         {
             writer.Write(plusOrMinusCh);

@@ -8,8 +8,19 @@ using System.Text.Unicode;
 namespace CsToml.Values;
 
 [DebuggerDisplay("{Utf16String}")]
-internal sealed class TomlUnquotedDottedKey(ReadOnlySpan<byte> value) : TomlDottedKey(value)
+internal sealed class TomlUnquotedDottedKey(ReadOnlySpan<byte> value) : TomlDottedKey(value), ITomlStringParser<TomlUnquotedDottedKey>
 {
+    public static readonly TomlUnquotedDottedKey EmptyString = new([]);
+
+    static TomlUnquotedDottedKey ITomlStringParser<TomlUnquotedDottedKey>.Parse(ReadOnlySpan<byte> value)
+    {
+        if (value.Length == 0)
+        {
+            return EmptyString;
+        }
+        return new TomlUnquotedDottedKey(value);
+    }
+
     internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
         if (Value.Length > 0)
@@ -20,8 +31,19 @@ internal sealed class TomlUnquotedDottedKey(ReadOnlySpan<byte> value) : TomlDott
 }
 
 [DebuggerDisplay("{Utf16String}")]
-internal sealed class TomlBasicDottedKey(ReadOnlySpan<byte> value) : TomlDottedKey(value)
+internal sealed class TomlBasicDottedKey(ReadOnlySpan<byte> value) : TomlDottedKey(value), ITomlStringParser<TomlBasicDottedKey>
 {
+    public static readonly TomlBasicDottedKey EmptyString = new([]);
+
+    static TomlBasicDottedKey ITomlStringParser<TomlBasicDottedKey>.Parse(ReadOnlySpan<byte> value)
+    {
+        if (value.Length == 0)
+        {
+            return EmptyString;
+        }
+        return new TomlBasicDottedKey(value);
+    }
+
     internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
         TomlBasicString.ToTomlBasicString(ref writer, Value);
@@ -29,8 +51,19 @@ internal sealed class TomlBasicDottedKey(ReadOnlySpan<byte> value) : TomlDottedK
 }
 
 [DebuggerDisplay("{Utf16String}")]
-internal sealed class TomlLiteralDottedKey(ReadOnlySpan<byte> value) : TomlDottedKey(value)
+internal sealed class TomlLiteralDottedKey(ReadOnlySpan<byte> value) : TomlDottedKey(value), ITomlStringParser<TomlLiteralDottedKey>
 {
+    public static readonly TomlLiteralDottedKey EmptyString = new([]);
+
+    static TomlLiteralDottedKey ITomlStringParser<TomlLiteralDottedKey>.Parse(ReadOnlySpan<byte> value)
+    {
+        if (value.Length == 0)
+        {
+            return EmptyString;
+        }
+        return new TomlLiteralDottedKey(value);
+    }
+
     internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
         TomlLiteralString.ToTomlLiteralString(ref writer, Value);
@@ -38,10 +71,7 @@ internal sealed class TomlLiteralDottedKey(ReadOnlySpan<byte> value) : TomlDotte
 }
 
 [DebuggerDisplay("{Utf16String}")]
-internal abstract partial class TomlDottedKey(ReadOnlySpan<byte> value) :
-    TomlValue(),
-    ITomlStringParser<TomlDottedKey>,
-    IEquatable<TomlDottedKey?>
+internal abstract partial class TomlDottedKey(ReadOnlySpan<byte> value) : TomlValue(), IEquatable<TomlDottedKey?>
 {
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private byte[] bytes = value.ToArray();
@@ -55,21 +85,6 @@ internal abstract partial class TomlDottedKey(ReadOnlySpan<byte> value) :
 
     [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
     public string Utf16String => Utf8Helper.ToUtf16(Value);
-
-    public static TomlDottedKey Parse(ReadOnlySpan<byte> value, CsTomlStringType type)
-    {
-        switch(type)
-        {
-            case CsTomlStringType.Unquoted:
-                return new TomlUnquotedDottedKey(value);
-            case CsTomlStringType.Basic:
-                return new TomlBasicDottedKey(value);
-            case CsTomlStringType.Literal:
-                return new TomlLiteralDottedKey(value);
-        }
-        ExceptionHelper.ThrowIncorrectTomlStringFormat();
-        return default;
-    }
 
     public static TomlDottedKey ParseKey(ReadOnlySpan<byte> utf16String)
     {
