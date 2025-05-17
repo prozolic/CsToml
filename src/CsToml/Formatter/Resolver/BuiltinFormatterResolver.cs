@@ -187,6 +187,8 @@ internal sealed class BuiltinFormatterResolver : ITomlValueFormatterResolver
         DefaultFormatterCache<StringBuilder?>.Formatter = StringBuilderFormatter.Instance;
         DefaultFormatterCache<BitArray?>.Formatter = BitArrayFormatter.Instance;
         DefaultFormatterCache<Type?>.Formatter = TypeFormatter.Instance;
+        DefaultFormatterCache<Complex>.Formatter = ComplexFormatter.Instance;
+        DefaultFormatterCache<Complex?>.Formatter = NullableComplexFormatter.Instance;
 
         DefaultFormatterCache<bool[]?>.Formatter = new ArrayFormatter<bool>();
         DefaultFormatterCache<byte[]?>.Formatter = new ArrayFormatter<byte>();

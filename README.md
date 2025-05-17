@@ -528,7 +528,7 @@ These types can be serialized/deserialized by default as properties of custom `c
 * .NET Built-in types(`bool`, `long`, `double`, `string` etc)
 * `DateTime`, `DateTimeOffset`, `DateOnly`, `TimeOnly`, `TimeSpan`
 * `Enum`, `Half`, `Int128`, `UInt128`, `BigInteger`, `BitArray`
-* `Uri`, `Version`, `Guid`, `Type`, `Nullable`, `StringBuilder`
+* `Uri`, `Version`, `Guid`, `Type`, `Nullable`, `StringBuilder`, `Complex`
 * `T[]`, `Memory<>`, `ReadOnlyMemory<>`
 * `List<>`, `Stack<>`, `HashSet<>`, `SortedSet<>`, `Queue<>`, `PriorityQueue<,>`, `LinkedList<>`, `ReadOnlyCollection<>`, `BlockingCollection<>`, `SortedList<>`
 * `ConcurrentQueue<>`, `ConcurrentStack<>`, `ConcurrentBag<>`, `ConcurrentDictionary<>`

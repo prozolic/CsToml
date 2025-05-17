@@ -138,6 +138,7 @@ internal static class FormatterTypeMetaData
         "global::System.Text.StringBuilder",
         "global::System.Collections.BitArray",
         "global::System.Type",
+        "global::System.Numerics.Complex"
     };
 
     public static bool ContainsCollectionType(ITypeSymbol type)
