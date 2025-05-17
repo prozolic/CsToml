@@ -1,5 +1,6 @@
 ﻿using CsToml.Error;
 using CsToml.Extension;
+using CsToml.Values;
 using System.Buffers;
 using System.ComponentModel;
 
@@ -16,12 +17,12 @@ public abstract class CollectionBaseFormatter<TCollection, TElement, TMediator> 
             return default;
         }
 
-        if (rootNode.TryGetArray(out var value))
+        if (rootNode.CanGetValue(TomlValueFeature.Array) && rootNode.Value is TomlArray tomlArray)
         {
             var formatter = options.Resolver.GetFormatter<TElement>()!;
 
-            var collection = CreateCollection(value.Count);
-            for (int i = 0; i < value.Count; i++)
+            var collection = CreateCollection(tomlArray.Count);
+            for (int i = 0; i < tomlArray.Count; i++)
             {
                 var arrayValueNode = rootNode[i];
                 AddValue(collection, formatter.Deserialize(ref arrayValueNode, options));

@@ -1,4 +1,5 @@
 ﻿using CsToml.Error;
+using CsToml.Values;
 using System.Buffers;
 using System.ComponentModel;
 
@@ -14,10 +15,10 @@ public abstract class ArrayBaseFormatter<TArray, TElement> : ITomlValueFormatter
             return default;
         }
 
-        if (rootNode.TryGetArray(out var value))
+        if (rootNode.CanGetValue(TomlValueFeature.Array) && rootNode.Value is TomlArray tomlArray)
         {
             var formatter = options.Resolver.GetFormatter<TElement>()!;
-            var array = new TElement[value.Count];
+            var array = new TElement[tomlArray.Count];
             var arraySpan = array.AsSpan();
             for (int i = 0; i < arraySpan.Length; i++)
             {

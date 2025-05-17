@@ -1,4 +1,5 @@
 ﻿using CsToml.Error;
+using CsToml.Values;
 using System.Buffers;
 
 namespace CsToml.Formatter;
@@ -46,9 +47,9 @@ public sealed class TupleFormatter<T1, T2> : ITomlValueFormatter<Tuple<T1, T2>?>
             return default!;
         }
 
-        if (rootNode.TryGetArray(out var value))
+        if (rootNode.CanGetValue(TomlValueFeature.Array) && rootNode.Value is TomlArray tomlArray)
         {
-            if (value.Count != 2)
+            if (tomlArray.Count != 2)
             {
                 ExceptionHelper.ThrowInvalidTupleCount();
                 return default!;
@@ -94,9 +95,9 @@ public sealed class TupleFormatter<T1, T2, T3> : ITomlValueFormatter<Tuple<T1, T
             return default!;
         }
 
-        if (rootNode.TryGetArray(out var value))
+        if (rootNode.CanGetValue(TomlValueFeature.Array) && rootNode.Value is TomlArray tomlArray)
         {
-            if (value.Count != 3)
+            if (tomlArray.Count != 3)
             {
                 ExceptionHelper.ThrowInvalidTupleCount();
                 return default!;
@@ -148,9 +149,9 @@ public sealed class TupleFormatter<T1, T2, T3, T4> : ITomlValueFormatter<Tuple<T
             return default!;
         }
 
-        if (rootNode.TryGetArray(out var value))
+        if (rootNode.CanGetValue(TomlValueFeature.Array) && rootNode.Value is TomlArray tomlArray)
         {
-            if (value.Count != 4)
+            if (tomlArray.Count != 4)
             {
                 ExceptionHelper.ThrowInvalidTupleCount();
                 return default!;
@@ -207,9 +208,9 @@ public sealed class TupleFormatter<T1, T2, T3, T4, T5> : ITomlValueFormatter<Tup
             return default!;
         }
 
-        if (rootNode.TryGetArray(out var value))
+        if (rootNode.CanGetValue(TomlValueFeature.Array) && rootNode.Value is TomlArray tomlArray)
         {
-            if (value.Count != 5)
+            if (tomlArray.Count != 5)
             {
                 ExceptionHelper.ThrowInvalidTupleCount();
                 return default!;
@@ -270,9 +271,9 @@ public sealed class TupleFormatter<T1, T2, T3, T4, T5, T6> : ITomlValueFormatter
             return default!;
         }
 
-        if (rootNode.TryGetArray(out var value))
+        if (rootNode.CanGetValue(TomlValueFeature.Array) && rootNode.Value is TomlArray tomlArray)
         {
-            if (value.Count != 6)
+            if (tomlArray.Count != 6)
             {
                 ExceptionHelper.ThrowInvalidTupleCount();
                 return default!;
@@ -338,9 +339,9 @@ public sealed class TupleFormatter<T1, T2, T3, T4, T5, T6, T7> : ITomlValueForma
             return default!;
         }
 
-        if (rootNode.TryGetArray(out var value))
+        if (rootNode.CanGetValue(TomlValueFeature.Array) && rootNode.Value is TomlArray tomlArray)
         {
-            if (value.Count != 7)
+            if (tomlArray.Count != 7)
             {
                 ExceptionHelper.ThrowInvalidTupleCount();
                 return default!;
@@ -412,9 +413,9 @@ public sealed class TupleFormatter<T1, T2, T3, T4, T5, T6, T7, TRest> : ITomlVal
             return default!;
         }
 
-        if (rootNode.TryGetArray(out var value))
+        if (rootNode.CanGetValue(TomlValueFeature.Array) && rootNode.Value is TomlArray tomlArray)
         {
-            if (value.Count != 8)
+            if (tomlArray.Count != 8)
             {
                 ExceptionHelper.ThrowInvalidTupleCount();
                 return default!;

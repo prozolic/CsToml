@@ -1,4 +1,5 @@
 ﻿using CsToml.Error;
+using CsToml.Values;
 using System.Buffers;
 using System.Collections;
 
@@ -16,14 +17,13 @@ internal sealed class BitArrayFormatter : ITomlValueFormatter<BitArray?>
             return default;
         }
 
-        if (rootNode.TryGetArray(out var value))
+        if (rootNode.CanGetValue(TomlValueFeature.Array) && rootNode.Value is TomlArray array)
         {
-            var bitArray = new BitArray(value.Count);
-            var formatter = options.Resolver.GetFormatter<bool>()!;
-            for (int i = 0; i < bitArray.Length; i++)
+            var bitArray = new BitArray(array.Count);
+            var i = 0;
+            foreach(var e in array)
             {
-                var arrayValueNode = rootNode[i];
-                bitArray[i] = formatter.Deserialize(ref arrayValueNode, options);
+                bitArray[i++] = e!.GetBool();
             }
             return bitArray;
         }

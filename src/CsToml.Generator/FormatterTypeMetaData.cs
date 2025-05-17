@@ -1,5 +1,6 @@
 ﻿
 using Microsoft.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 namespace CsToml.Generator;
 
@@ -219,7 +220,14 @@ internal static class FormatterTypeMetaData
     }
 
     public static bool ContainsBuiltInFormatterType(ITypeSymbol typeSymbol)
-        => builtInFormatterTypeMap.Contains(typeSymbol.ToFullFormatString());
+    {
+        if (TryGetNullableParameterType(typeSymbol, out var nullableTypeSymbol))
+        {
+            return builtInFormatterTypeMap.Contains(nullableTypeSymbol!.ToFullFormatString());
+        }
+
+        return builtInFormatterTypeMap.Contains(typeSymbol.ToFullFormatString());
+    }
 
     public static TomlSerializationKind GetTomlSerializationKind(ITypeSymbol type)
     {
@@ -327,13 +335,19 @@ internal static class FormatterTypeMetaData
         return false;
     }
 
-    public static bool IsNullableType(ITypeSymbol typeSymbol)
+    public static bool TryGetNullableParameterType(ITypeSymbol typeSymbol, out ITypeSymbol? nullableType)
     {
         if (typeSymbol is INamedTypeSymbol namedTypeSymbol && namedTypeSymbol.IsGenericType)
         {
             // Nullable<T> is a special case.
-            return namedTypeSymbol.ConstructUnboundGenericType().ToDisplayString() == "T?";
+            if (namedTypeSymbol.ConstructedFrom.SpecialType == SpecialType.System_Nullable_T)
+            {
+                nullableType = namedTypeSymbol.TypeArguments[0];
+                return true;
+            }
         }
+
+        nullableType = null;
         return false;
     }
 }
