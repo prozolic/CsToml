@@ -210,6 +210,22 @@ internal partial class TypeBuiltin
 
     [TomlValueOnSerialized]
     public Type Type { get; set; }
+
+    [TomlValueOnSerialized]
+    public Complex Complex { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class NullableTypeBuiltin
+{
+    [TomlValueOnSerialized]
+    public TimeSpan? TimeSpan { get; set; }
+
+    [TomlValueOnSerialized]
+    public Guid? Guid { get; set; }
+
+    [TomlValueOnSerialized]
+    public Complex? Complex { get; set; }
 }
 
 [TomlSerializedObject]
