@@ -59,6 +59,8 @@ internal sealed class BuiltinFormatterResolver : ITomlValueFormatterResolver
         { typeof(IReadOnlySet<>),  typeof(IReadOnlySetFormatter<>) },
         { typeof(IDictionary<,>),typeof(IDictionaryFormatter<,>) },
         { typeof(IReadOnlyDictionary<,>),typeof(IReadOnlyDictionaryFormatter<,>) },
+        { typeof(ILookup<,>), typeof(ILookupFormatter<,>) },
+        { typeof(IGrouping<,>), typeof(IGroupingFormatter<,>) },
 
         { typeof(IImmutableList<>), typeof(IImmutableListFormatter<>) },
         { typeof(IImmutableStack<>), typeof(IImmutableStackFormatter<>) },
@@ -83,6 +85,7 @@ internal sealed class BuiltinFormatterResolver : ITomlValueFormatterResolver
         { typeof(ValueTuple<,,,,,>),  typeof(ValueTupleFormatter<,,,,,>) },
         { typeof(ValueTuple<,,,,,,>),  typeof(ValueTupleFormatter<,,,,,,>) },
         { typeof(ValueTuple<,,,,,,,>),  typeof(ValueTupleFormatter<,,,,,,,>) },
+        { typeof(Lazy<>), typeof(LazyFormatter<>) },
 
 #if NET9_0_OR_GREATER
         { typeof(OrderedDictionary<,>), typeof(OrderedDictionaryFormatter<,>) },

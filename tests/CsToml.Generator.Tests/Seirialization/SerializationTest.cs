@@ -1510,6 +1510,76 @@ public class TypeCollectionInterfaceTest
     }
 }
 
+public class TypeLinqInterfaceTest
+{
+
+    [Fact]
+    public void Serialize()
+    {
+        var dict = new Dictionary<int, string>()
+        {
+            [1] = "1",
+            [2] = "1",
+            [3] = "3",
+        };
+        var dict2 = new Dictionary<int, TestStruct>()
+        {
+            [1] = new() { Value = 123, Str = "123" },
+            [2] = new() { Value = 123, Str = "123" },
+            [3] = new() { Value = 789, Str = "789" },
+        };
+        var typeLinqInterface = new TypeLinqInterface()
+        {
+            Lookup = dict.ToLookup(p => p.Value),
+            Lookup2 = dict2.ToLookup(p => p.Value.Str),
+            Grouping = dict.GroupBy(p => p.Value).First(),
+            Grouping2 = dict2.ToLookup(p => p.Value.Str).First(),
+        };
+
+        using var bytes = CsTomlSerializer.Serialize(typeLinqInterface);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Lookup = [ {\"1\" = [ [ 1, \"1\" ], [ 2, \"1\" ] ]}, {\"3\" = [ [ 3, \"3\" ] ]} ]");
+        writer.AppendLine("Lookup2 = [ {\"123\" = [ [ 1, {Value = 123, Str = \"123\"} ], [ 2, {Value = 123, Str = \"123\"} ] ]}, {\"789\" = [ [ 3, {Value = 789, Str = \"789\"} ] ]} ]");
+        writer.AppendLine("Grouping = {\"1\" = [ [ 1, \"1\" ], [ 2, \"1\" ] ]}");
+        writer.AppendLine("Grouping2 = {\"123\" = [ [ 1, {Value = 123, Str = \"123\"} ], [ 2, {Value = 123, Str = \"123\"} ] ]}");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void Deserialize()
+    {
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Lookup = [ {\"1\" = [ [ 1, \"1\" ], [ 2, \"1\" ] ]}, {\"3\" = [ [ 3, \"3\" ] ]} ]");
+        writer.AppendLine("Lookup2 = [ {\"123\" = [ [ 1, {Value = 123, Str = \"123\"} ], [ 2, {Value = 123, Str = \"123\"} ] ]}, {\"789\" = [ [ 3, {Value = 789, Str = \"789\"} ] ]} ]");
+        writer.AppendLine("Grouping = {\"1\" = [ [ 1, \"1\" ], [ 2, \"1\" ] ]}");
+        writer.AppendLine("Grouping2 = {\"123\" = [ [ 1, {Value = 123, Str = \"123\"} ], [ 2, {Value = 123, Str = \"123\"} ] ]}");
+        writer.Flush();
+
+        var dict = new Dictionary<int, string>()
+        {
+            [1] = "1",
+            [2] = "1",
+            [3] = "3",
+        };
+        var dict2 = new Dictionary<int, TestStruct>()
+        {
+            [1] = new() { Value = 123, Str = "123" },
+            [2] = new() { Value = 123, Str = "123" },
+            [3] = new() { Value = 789, Str = "789" },
+        };
+
+        var type = CsTomlSerializer.Deserialize<TypeLinqInterface>(buffer.WrittenSpan);
+        type.Lookup.ShouldBe(dict.ToLookup(p => p.Value));
+        type.Lookup2.ShouldBe(dict2.ToLookup(p => p.Value.Str));
+        type.Grouping.ShouldBe(dict.GroupBy(p => p.Value).First());
+        type.Grouping2.ShouldBe(dict2.ToLookup(p => p.Value.Str).First());
+    }
+}
+
 public class TypeArrayOfTablesTest
 {
     [Fact]
@@ -3609,6 +3679,47 @@ public class DictionaryTest
         }
     }
 
+}
+
+public class WithLazyTest
+{
+    [Fact]
+    public void Deserialize()
+    {
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Int = 123");
+        writer.AppendLine("NullableInt = 123");
+        writer.AppendLine("Str = \"Lazy<string>\"");
+        writer.AppendLine("IntList = [ 1, 2, 3 ]");
+        writer.Flush();
+
+        var withLazy = CsTomlSerializer.Deserialize<WithLazy>(buffer.WrittenSpan);
+        withLazy.Int.Value.ShouldBe(123);
+        withLazy.NullableInt.Value.ShouldBe(123);
+        withLazy.Str.Value.ShouldBe("Lazy<string>");
+        withLazy.IntList.Value.ShouldBe([1, 2, 3]);
+    }
+
+    [Fact]
+    public void Serialize()
+    {
+        var type = new WithLazy()
+        {
+            Int = new Lazy<int>(() => 123),
+            NullableInt = new Lazy<int?>(() => 123),
+            Str = new Lazy<string>(() => "Lazy<string>"),
+            IntList = new Lazy<List<int>>(() => [1, 2, 3]),
+        };
+        using var bytes = CsTomlSerializer.Serialize(type);
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Int = 123");
+        writer.AppendLine("NullableInt = 123");
+        writer.AppendLine("Str = \"Lazy<string>\"");
+        writer.AppendLine("IntList = [ 1, 2, 3 ]");
+        writer.Flush();
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
 }
 
 #if NET9_0_OR_GREATER

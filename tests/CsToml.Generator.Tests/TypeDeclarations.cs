@@ -386,6 +386,22 @@ internal partial class TypeCollectionInterface
 }
 
 [TomlSerializedObject]
+internal partial class TypeLinqInterface
+{
+    [TomlValueOnSerialized]
+    public ILookup<string, KeyValuePair<int, string>> Lookup { get; set; }
+
+    [TomlValueOnSerialized]
+    public ILookup<string, KeyValuePair<int, TestStruct>> Lookup2 { get; set; }
+
+    [TomlValueOnSerialized]
+    public IGrouping<string, KeyValuePair<int, string>> Grouping { get; set; }
+
+    [TomlValueOnSerialized]
+    public IGrouping<string, KeyValuePair<int, TestStruct>> Grouping2 { get; set; }
+}
+
+[TomlSerializedObject]
 internal partial class TypeDictionary
 {
     [TomlValueOnSerialized()]
@@ -932,6 +948,22 @@ public class SpecialHashFormatter : ITomlValueFormatter<SpecialHash>
     {
         writer.WriteInt64(target.Hash);
     }
+}
+
+[TomlSerializedObject]
+public partial class WithLazy
+{
+    [TomlValueOnSerialized]
+    public Lazy<int> Int { get; set; }
+
+    [TomlValueOnSerialized]
+    public Lazy<int?> NullableInt { get; set; }
+
+    [TomlValueOnSerialized]
+    public Lazy<string> Str { get; set; }
+
+    [TomlValueOnSerialized]
+    public Lazy<List<int>> IntList { get; set; }
 }
 
 #if NET9_0_OR_GREATER

@@ -1,6 +1,5 @@
 ﻿
 using Microsoft.CodeAnalysis;
-using System.Runtime.CompilerServices;
 
 namespace CsToml.Generator;
 
@@ -9,7 +8,8 @@ internal enum GenericFormatterType
     None,
     Array,
     Collection,
-    Dictionary
+    Dictionary,
+    Other,
 }
 
 internal static class FormatterTypeMetaData
@@ -42,6 +42,9 @@ internal static class FormatterTypeMetaData
         { "global::System.Collections.Generic.IReadOnlyList<>", "IReadOnlyListFormatter<TYPEPARAMETER>" },
         { "global::System.Collections.Generic.ISet<>", "ISetFormatter<TYPEPARAMETER>" },
         { "global::System.Collections.Generic.IReadOnlySet<>", "IReadOnlySetFormatter<TYPEPARAMETER>" },
+        { "global::System.Linq.ILookup<,>", "ILookupFormatter<TYPEPARAMETER>" },
+        { "global::System.Linq.IGrouping<,>", "IGroupingFormatter<TYPEPARAMETER>" },
+
         { "global::System.Collections.Immutable.IImmutableList<>", "IImmutableListFormatter<TYPEPARAMETER>" },
         { "global::System.Collections.Immutable.IImmutableStack<>", "IImmutableStackFormatter<TYPEPARAMETER>" },
         { "global::System.Collections.Immutable.IImmutableQueue<>", "IImmutableQueueFormatter<TYPEPARAMETER>" },
@@ -92,6 +95,11 @@ internal static class FormatterTypeMetaData
         { "global::System.Nullable<,>", "NullableFormatter<TYPEPARAMETER>" },
         { "global::System.Memory<>", "MemoryFormatter<TYPEPARAMETER>" },
         { "global::System.ReadOnlyMemory<>", "ReadOnlyMemoryFormatter<TYPEPARAMETER>" },
+    };
+
+    private static readonly Dictionary<string, string> otherGenericFormatterTypes = new()
+    {
+        { "global::System.Lazy<>", "LazyFormatter<TYPEPARAMETER>" },
     };
 
     private static readonly HashSet<string> builtInFormatterTypeMap = new()
@@ -211,9 +219,14 @@ internal static class FormatterTypeMetaData
             return GenericFormatterType.Dictionary;
         }
 
-        if( builtInGenericFormatterTypes.TryGetValue(formatterType, out formatter))
+        if(builtInGenericFormatterTypes.TryGetValue(formatterType, out formatter))
         {
             return GenericFormatterType.Collection;
+        }
+
+        if (otherGenericFormatterTypes.TryGetValue(formatterType, out formatter))
+        {
+            return GenericFormatterType.Other;
         }
 
         return GenericFormatterType.None;
