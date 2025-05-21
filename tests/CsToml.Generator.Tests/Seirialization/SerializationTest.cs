@@ -773,6 +773,7 @@ public class TypeBuiltinTest()
             Version = new Version(1, 2, 3, 4),
             BitArray = new BitArray(new[] { true, false, true, false }),
             Type = typeof(TypeBuiltinTest),
+            Complex = new System.Numerics.Complex(12, 6)
         };
 
         using var bytes = CsTomlSerializer.Serialize(typeBuiltin);
@@ -784,6 +785,7 @@ public class TypeBuiltinTest()
         writer.AppendLine("Uri = \"https://github.com/prozolic/CsToml\"");
         writer.AppendLine("BitArray = [ true, false, true, false ]");
         writer.AppendLine("Type = \"CsToml.Generator.Tests.Seirialization.TypeBuiltinTest, CsToml.Generator.Tests, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null\"");
+        writer.AppendLine("Complex = [ 12.0, 6.0 ]");
         writer.Flush();
 
         var expected = buffer.ToArray();
@@ -800,6 +802,7 @@ public class TypeBuiltinTest()
         writer.AppendLine("Uri = \"https://github.com/prozolic/CsToml\"");
         writer.AppendLine("BitArray = [ true, false, true, false ]");
         writer.AppendLine("Type = \"CsToml.Generator.Tests.Seirialization.TypeBuiltinTest, CsToml.Generator.Tests, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null\"");
+        writer.AppendLine("Complex = [ 12.0, 6.0 ]");
         writer.Flush();
 
         var typeBuiltin = CsTomlSerializer.Deserialize<TypeBuiltin>(buffer.WrittenSpan);
@@ -809,9 +812,49 @@ public class TypeBuiltinTest()
         typeBuiltin.Version.ShouldBe(new Version(1, 2, 3, 4));
         typeBuiltin.BitArray.ShouldBe(new BitArray(new[] { true, false, true, false }));
         typeBuiltin.Type.ShouldBe(typeof(TypeBuiltinTest));
+        typeBuiltin.Complex.ShouldBe(new System.Numerics.Complex(12, 6));
     }
 }
 
+public class NullableTypeBuiltinTest()
+{
+    [Fact]
+    public void Serialize()
+    {
+        var typeBuiltin = new NullableTypeBuiltin()
+        {
+            TimeSpan = new TimeSpan(1, 2, 3, 4, 5),
+            Guid = Guid.Parse("c9da6455-213d-4a7b-8f1a-4d6d1f5c5e9f"),
+            Complex = new System.Numerics.Complex(12, 6)
+        };
+
+        using var bytes = CsTomlSerializer.Serialize(typeBuiltin);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("TimeSpan = 937840050000");
+        writer.AppendLine("Guid = \"c9da6455-213d-4a7b-8f1a-4d6d1f5c5e9f\"");
+        writer.AppendLine("Complex = [ 12.0, 6.0 ]");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void Deserialize()
+    {
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("TimeSpan = 937840050000");
+        writer.AppendLine("Guid = \"c9da6455-213d-4a7b-8f1a-4d6d1f5c5e9f\"");
+        writer.AppendLine("Complex = [ 12.0, 6.0 ]");
+        writer.Flush();
+
+        var typeBuiltin = CsTomlSerializer.Deserialize<NullableTypeBuiltin>(buffer.WrittenSpan);
+        typeBuiltin.TimeSpan.ShouldBe(new TimeSpan(1, 2, 3, 4, 5));
+        typeBuiltin.Guid.ShouldBe(Guid.Parse("c9da6455-213d-4a7b-8f1a-4d6d1f5c5e9f"));
+        typeBuiltin.Complex.ShouldBe(new System.Numerics.Complex(12, 6));
+    }
+}
 public class TypeTomlDoubleTest
 {
     [Fact]
@@ -1464,6 +1507,76 @@ public class TypeCollectionInterfaceTest
         type.Value5.ShouldBe(expected);
         type.Value6.ShouldBe(expected);
         type.Value7.ShouldBe(expected);
+    }
+}
+
+public class TypeLinqInterfaceTest
+{
+
+    [Fact]
+    public void Serialize()
+    {
+        var dict = new Dictionary<int, string>()
+        {
+            [1] = "1",
+            [2] = "1",
+            [3] = "3",
+        };
+        var dict2 = new Dictionary<int, TestStruct>()
+        {
+            [1] = new() { Value = 123, Str = "123" },
+            [2] = new() { Value = 123, Str = "123" },
+            [3] = new() { Value = 789, Str = "789" },
+        };
+        var typeLinqInterface = new TypeLinqInterface()
+        {
+            Lookup = dict.ToLookup(p => p.Value),
+            Lookup2 = dict2.ToLookup(p => p.Value.Str),
+            Grouping = dict.GroupBy(p => p.Value).First(),
+            Grouping2 = dict2.ToLookup(p => p.Value.Str).First(),
+        };
+
+        using var bytes = CsTomlSerializer.Serialize(typeLinqInterface);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Lookup = [ {\"1\" = [ [ 1, \"1\" ], [ 2, \"1\" ] ]}, {\"3\" = [ [ 3, \"3\" ] ]} ]");
+        writer.AppendLine("Lookup2 = [ {\"123\" = [ [ 1, {Value = 123, Str = \"123\"} ], [ 2, {Value = 123, Str = \"123\"} ] ]}, {\"789\" = [ [ 3, {Value = 789, Str = \"789\"} ] ]} ]");
+        writer.AppendLine("Grouping = {\"1\" = [ [ 1, \"1\" ], [ 2, \"1\" ] ]}");
+        writer.AppendLine("Grouping2 = {\"123\" = [ [ 1, {Value = 123, Str = \"123\"} ], [ 2, {Value = 123, Str = \"123\"} ] ]}");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void Deserialize()
+    {
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Lookup = [ {\"1\" = [ [ 1, \"1\" ], [ 2, \"1\" ] ]}, {\"3\" = [ [ 3, \"3\" ] ]} ]");
+        writer.AppendLine("Lookup2 = [ {\"123\" = [ [ 1, {Value = 123, Str = \"123\"} ], [ 2, {Value = 123, Str = \"123\"} ] ]}, {\"789\" = [ [ 3, {Value = 789, Str = \"789\"} ] ]} ]");
+        writer.AppendLine("Grouping = {\"1\" = [ [ 1, \"1\" ], [ 2, \"1\" ] ]}");
+        writer.AppendLine("Grouping2 = {\"123\" = [ [ 1, {Value = 123, Str = \"123\"} ], [ 2, {Value = 123, Str = \"123\"} ] ]}");
+        writer.Flush();
+
+        var dict = new Dictionary<int, string>()
+        {
+            [1] = "1",
+            [2] = "1",
+            [3] = "3",
+        };
+        var dict2 = new Dictionary<int, TestStruct>()
+        {
+            [1] = new() { Value = 123, Str = "123" },
+            [2] = new() { Value = 123, Str = "123" },
+            [3] = new() { Value = 789, Str = "789" },
+        };
+
+        var type = CsTomlSerializer.Deserialize<TypeLinqInterface>(buffer.WrittenSpan);
+        type.Lookup.ShouldBe(dict.ToLookup(p => p.Value));
+        type.Lookup2.ShouldBe(dict2.ToLookup(p => p.Value.Str));
+        type.Grouping.ShouldBe(dict.GroupBy(p => p.Value).First());
+        type.Grouping2.ShouldBe(dict2.ToLookup(p => p.Value.Str).First());
     }
 }
 
@@ -3566,6 +3679,47 @@ public class DictionaryTest
         }
     }
 
+}
+
+public class WithLazyTest
+{
+    [Fact]
+    public void Deserialize()
+    {
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Int = 123");
+        writer.AppendLine("NullableInt = 123");
+        writer.AppendLine("Str = \"Lazy<string>\"");
+        writer.AppendLine("IntList = [ 1, 2, 3 ]");
+        writer.Flush();
+
+        var withLazy = CsTomlSerializer.Deserialize<WithLazy>(buffer.WrittenSpan);
+        withLazy.Int.Value.ShouldBe(123);
+        withLazy.NullableInt.Value.ShouldBe(123);
+        withLazy.Str.Value.ShouldBe("Lazy<string>");
+        withLazy.IntList.Value.ShouldBe([1, 2, 3]);
+    }
+
+    [Fact]
+    public void Serialize()
+    {
+        var type = new WithLazy()
+        {
+            Int = new Lazy<int>(() => 123),
+            NullableInt = new Lazy<int?>(() => 123),
+            Str = new Lazy<string>(() => "Lazy<string>"),
+            IntList = new Lazy<List<int>>(() => [1, 2, 3]),
+        };
+        using var bytes = CsTomlSerializer.Serialize(type);
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Int = 123");
+        writer.AppendLine("NullableInt = 123");
+        writer.AppendLine("Str = \"Lazy<string>\"");
+        writer.AppendLine("IntList = [ 1, 2, 3 ]");
+        writer.Flush();
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
 }
 
 #if NET9_0_OR_GREATER

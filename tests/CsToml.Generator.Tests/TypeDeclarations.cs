@@ -210,6 +210,22 @@ internal partial class TypeBuiltin
 
     [TomlValueOnSerialized]
     public Type Type { get; set; }
+
+    [TomlValueOnSerialized]
+    public Complex Complex { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class NullableTypeBuiltin
+{
+    [TomlValueOnSerialized]
+    public TimeSpan? TimeSpan { get; set; }
+
+    [TomlValueOnSerialized]
+    public Guid? Guid { get; set; }
+
+    [TomlValueOnSerialized]
+    public Complex? Complex { get; set; }
 }
 
 [TomlSerializedObject]
@@ -367,6 +383,22 @@ internal partial class TypeCollectionInterface
 
     [TomlValueOnSerialized]
     public IReadOnlySet<int> Value7 { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class TypeLinqInterface
+{
+    [TomlValueOnSerialized]
+    public ILookup<string, KeyValuePair<int, string>> Lookup { get; set; }
+
+    [TomlValueOnSerialized]
+    public ILookup<string, KeyValuePair<int, TestStruct>> Lookup2 { get; set; }
+
+    [TomlValueOnSerialized]
+    public IGrouping<string, KeyValuePair<int, string>> Grouping { get; set; }
+
+    [TomlValueOnSerialized]
+    public IGrouping<string, KeyValuePair<int, TestStruct>> Grouping2 { get; set; }
 }
 
 [TomlSerializedObject]
@@ -916,6 +948,22 @@ public class SpecialHashFormatter : ITomlValueFormatter<SpecialHash>
     {
         writer.WriteInt64(target.Hash);
     }
+}
+
+[TomlSerializedObject]
+public partial class WithLazy
+{
+    [TomlValueOnSerialized]
+    public Lazy<int> Int { get; set; }
+
+    [TomlValueOnSerialized]
+    public Lazy<int?> NullableInt { get; set; }
+
+    [TomlValueOnSerialized]
+    public Lazy<string> Str { get; set; }
+
+    [TomlValueOnSerialized]
+    public Lazy<List<int>> IntList { get; set; }
 }
 
 #if NET9_0_OR_GREATER

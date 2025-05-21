@@ -8,7 +8,8 @@ internal enum GenericFormatterType
     None,
     Array,
     Collection,
-    Dictionary
+    Dictionary,
+    Other,
 }
 
 internal static class FormatterTypeMetaData
@@ -41,6 +42,9 @@ internal static class FormatterTypeMetaData
         { "global::System.Collections.Generic.IReadOnlyList<>", "IReadOnlyListFormatter<TYPEPARAMETER>" },
         { "global::System.Collections.Generic.ISet<>", "ISetFormatter<TYPEPARAMETER>" },
         { "global::System.Collections.Generic.IReadOnlySet<>", "IReadOnlySetFormatter<TYPEPARAMETER>" },
+        { "global::System.Linq.ILookup<,>", "ILookupFormatter<TYPEPARAMETER>" },
+        { "global::System.Linq.IGrouping<,>", "IGroupingFormatter<TYPEPARAMETER>" },
+
         { "global::System.Collections.Immutable.IImmutableList<>", "IImmutableListFormatter<TYPEPARAMETER>" },
         { "global::System.Collections.Immutable.IImmutableStack<>", "IImmutableStackFormatter<TYPEPARAMETER>" },
         { "global::System.Collections.Immutable.IImmutableQueue<>", "IImmutableQueueFormatter<TYPEPARAMETER>" },
@@ -93,6 +97,11 @@ internal static class FormatterTypeMetaData
         { "global::System.ReadOnlyMemory<>", "ReadOnlyMemoryFormatter<TYPEPARAMETER>" },
     };
 
+    private static readonly Dictionary<string, string> otherGenericFormatterTypes = new()
+    {
+        { "global::System.Lazy<>", "LazyFormatter<TYPEPARAMETER>" },
+    };
+
     private static readonly HashSet<string> builtInFormatterTypeMap = new()
     {
         "bool",
@@ -138,6 +147,7 @@ internal static class FormatterTypeMetaData
         "global::System.Text.StringBuilder",
         "global::System.Collections.BitArray",
         "global::System.Type",
+        "global::System.Numerics.Complex"
     };
 
     public static bool ContainsCollectionType(ITypeSymbol type)
@@ -209,16 +219,28 @@ internal static class FormatterTypeMetaData
             return GenericFormatterType.Dictionary;
         }
 
-        if( builtInGenericFormatterTypes.TryGetValue(formatterType, out formatter))
+        if(builtInGenericFormatterTypes.TryGetValue(formatterType, out formatter))
         {
             return GenericFormatterType.Collection;
+        }
+
+        if (otherGenericFormatterTypes.TryGetValue(formatterType, out formatter))
+        {
+            return GenericFormatterType.Other;
         }
 
         return GenericFormatterType.None;
     }
 
     public static bool ContainsBuiltInFormatterType(ITypeSymbol typeSymbol)
-        => builtInFormatterTypeMap.Contains(typeSymbol.ToFullFormatString());
+    {
+        if (TryGetNullableParameterType(typeSymbol, out var nullableTypeSymbol))
+        {
+            return builtInFormatterTypeMap.Contains(nullableTypeSymbol!.ToFullFormatString());
+        }
+
+        return builtInFormatterTypeMap.Contains(typeSymbol.ToFullFormatString());
+    }
 
     public static TomlSerializationKind GetTomlSerializationKind(ITypeSymbol type)
     {
@@ -326,13 +348,19 @@ internal static class FormatterTypeMetaData
         return false;
     }
 
-    public static bool IsNullableType(ITypeSymbol typeSymbol)
+    public static bool TryGetNullableParameterType(ITypeSymbol typeSymbol, out ITypeSymbol? nullableType)
     {
         if (typeSymbol is INamedTypeSymbol namedTypeSymbol && namedTypeSymbol.IsGenericType)
         {
             // Nullable<T> is a special case.
-            return namedTypeSymbol.ConstructUnboundGenericType().ToDisplayString() == "T?";
+            if (namedTypeSymbol.ConstructedFrom.SpecialType == SpecialType.System_Nullable_T)
+            {
+                nullableType = namedTypeSymbol.TypeArguments[0];
+                return true;
+            }
         }
+
+        nullableType = null;
         return false;
     }
 }

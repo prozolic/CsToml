@@ -1,4 +1,5 @@
 ﻿using CsToml.Error;
+using CsToml.Values;
 using System.Buffers;
 
 namespace CsToml.Formatter;
@@ -12,11 +13,11 @@ public sealed class PriorityQueueFormatter<TElement, TPriority> : ITomlValueForm
             return default!;
         }
 
-        if (rootNode.TryGetArray(out var value))
+        if (rootNode.CanGetValue(TomlValueFeature.Array) && rootNode.Value is TomlArray tomlArray)
         {
             var formatter = options.Resolver.GetFormatter<ValueTuple<TElement, TPriority>>()!;
             var priorityQueue = new PriorityQueue<TElement, TPriority>();
-            for (int i = 0; i < value.Count; i++)
+            for (int i = 0; i < tomlArray.Count; i++)
             {
                 var arrayValueNode = rootNode[i];
                 var item = formatter.Deserialize(ref arrayValueNode, options);

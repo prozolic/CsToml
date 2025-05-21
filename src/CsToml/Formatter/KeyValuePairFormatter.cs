@@ -1,4 +1,5 @@
 ﻿using CsToml.Error;
+using CsToml.Values;
 using System.Buffers;
 
 namespace CsToml.Formatter;
@@ -12,9 +13,9 @@ public sealed class KeyValuePairFormatter<TKey, TValue> : ITomlValueFormatter<Ke
             return default!;
         }
 
-        if (rootNode.TryGetArray(out var array))
+        if (rootNode.CanGetValue(TomlValueFeature.Array) && rootNode.Value is TomlArray tomlArray)
         {
-            if (array.Count != 2)
+            if (tomlArray.Count != 2)
             {
                 ExceptionHelper.ThrowInvalidTupleCount();
                 return default!;

@@ -1,4 +1,5 @@
 ﻿using CsToml.Error;
+using CsToml.Values;
 using System;
 using System.Buffers;
 using System.Collections;
@@ -16,11 +17,11 @@ public sealed class ArrayListFormatter : ITomlValueFormatter<ArrayList?>
             return default;
         }
 
-        if (rootNode.TryGetArray(out var value))
+        if (rootNode.CanGetValue(TomlValueFeature.Array) && rootNode.Value is TomlArray tomlArray)
         {
             var formatter = options.Resolver.GetFormatter<object>()!;
-            var arrayList = new ArrayList(value.Count);
-            for (int i = 0; i < value.Count; i++)
+            var arrayList = new ArrayList(tomlArray.Count);
+            for (int i = 0; i < tomlArray.Count; i++)
             {
                 var arrayValueNode = rootNode[i];
                 arrayList.Add(formatter.Deserialize(ref arrayValueNode, options));
