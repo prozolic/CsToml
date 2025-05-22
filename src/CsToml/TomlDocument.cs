@@ -4,6 +4,7 @@ using CsToml.Utility;
 using CsToml.Values;
 using System.Buffers;
 using System.Diagnostics;
+using System.Runtime.CompilerServices; // InlineArray16<T>
 
 namespace CsToml;
 
