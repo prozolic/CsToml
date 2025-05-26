@@ -17,6 +17,7 @@ using System.Text.Unicode;
 namespace CsToml;
 
 [DebuggerDisplay("DocumentNode = {NodeCount}")]
+[StructLayout(LayoutKind.Auto)]
 public struct TomlDocumentNode
 {
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
