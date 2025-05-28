@@ -1,9 +1,11 @@
 ﻿
 using System.Buffers;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace CsToml.Utility;
 
+[StructLayout(LayoutKind.Auto)]
 internal struct ExtendableArray<T>
 {
     private T[] array;

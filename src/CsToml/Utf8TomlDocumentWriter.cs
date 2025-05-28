@@ -18,6 +18,7 @@ public enum TomlValueState
     Table,
 }
 
+[StructLayout(LayoutKind.Auto)]
 public ref struct Utf8TomlDocumentWriter<TBufferWriter>
     where TBufferWriter : IBufferWriter<byte>
 {

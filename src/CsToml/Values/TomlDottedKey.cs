@@ -213,7 +213,7 @@ internal abstract partial class TomlDottedKey(ReadOnlySpan<byte> value) : TomlVa
         => GetHashCodeFast();
 }
 
-internal static class CsTomlDotKeyExtensions
+internal static class TomlDottedKeyExtensions
 {
     public static string GetJoinName(this ReadOnlySpan<TomlDottedKey> key)
     {

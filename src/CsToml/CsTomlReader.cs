@@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
 
 namespace CsToml;
 
+[StructLayout(LayoutKind.Auto)]
 internal ref struct CsTomlReader
 {
     private Utf8SequenceReader sequenceReader;

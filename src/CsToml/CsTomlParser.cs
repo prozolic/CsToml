@@ -4,6 +4,7 @@ using CsToml.Values;
 using System.Buffers;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace CsToml;
 
@@ -19,6 +20,7 @@ internal enum ParserState : byte
     EndComment = 7
 }
 
+[StructLayout(LayoutKind.Auto)]
 internal ref struct CsTomlParser
 {
     private CsTomlReader reader;

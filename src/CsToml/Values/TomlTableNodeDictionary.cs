@@ -19,7 +19,7 @@ using System.Runtime.CompilerServices;
 namespace CsToml.Values.Internal;
 
 [DebuggerDisplay("Count = {Count}")]
-internal class TomlTableNodeDictionary
+internal sealed class TomlTableNodeDictionary
 {
     private int[] buckets;
     private Entry[] entries;
