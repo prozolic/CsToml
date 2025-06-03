@@ -5,9 +5,10 @@ using System.Runtime.CompilerServices;
 // -----------------------------------------------------------------------------------------------------------------------------
 // The original code for CsTomlTableNodeDictionary is from dotnet/runtime(MIT license), Please check the original license.
 //
-// [dotnet/runtime]
-// https://github.com/dotnet/runtime
-// https://github.com/dotnet/runtime/blob/main/LICENSE.TXT
+// Original source: https://github.com/dotnet/runtime
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See LICENSE.TXT: https://github.com/dotnet/runtime/blob/main/LICENSE.TXT
 //
 // [System.Collections.Generic.Dictionary]
 // https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/System/Collections/Generic/Dictionary.cs
