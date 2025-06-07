@@ -277,6 +277,7 @@ internal static class Utf8Helper
         return false;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void FromUtf16(IBufferWriter<byte> writer, ReadOnlySpan<char> value)
     {
         // buffer size to 3 times worst-case (UTF16 -> UTF8)
@@ -292,6 +293,19 @@ internal static class Utf8Helper
             ExceptionHelper.ThrowBufferTooSmallFailed();
         }
         writer.Advance(bytesWritten);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void FromUtf16(ReadOnlySpan<char> source, Span<byte> destination, out int charsRead, out int bytesWritten)
+    {
+        var status = Utf8.FromUtf16(source, destination, out charsRead, out bytesWritten, replaceInvalidSequences: false);
+
+        if (status != OperationStatus.Done)
+        {
+            if (status == OperationStatus.InvalidData)
+                ExceptionHelper.ThrowInvalidByteIncluded();
+            ExceptionHelper.ThrowBufferTooSmallFailed();
+        }
     }
 
     public static string ToUtf16(ReadOnlySpan<byte> utf8Bytes)
