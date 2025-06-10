@@ -398,9 +398,7 @@ internal sealed class TomlMultiLineLiteralString(string value) : TomlString(valu
                     fixed (byte* ptr = &destReference)
                     {
                         var writtenSpan = MemoryMarshal.CreateSpan(ref Unsafe.AsRef<byte>(ptr), bytesWritten);
-                        writer.WriteBytes("'''"u8);
-                        writer.WriteBytes(writtenSpan);
-                        writer.WriteBytes("'''"u8);
+                        ToTomlMultiLineLiteralString(ref writer, writtenSpan);
                     }
                 }
             }
@@ -412,15 +410,21 @@ internal sealed class TomlMultiLineLiteralString(string value) : TomlString(valu
             try
             {
                 Utf8Helper.FromUtf16(bufferWriter, Utf16String.AsSpan());
-                writer.WriteBytes("'''"u8);
-                writer.WriteBytes(bufferWriter.WrittenSpan);
-                writer.WriteBytes("'''"u8);
+                ToTomlMultiLineLiteralString(ref writer, bufferWriter.WrittenSpan);
             }
             finally
             {
                 RecycleArrayPoolBufferWriter<byte>.Return(bufferWriter);
             }
         }
+    }
+
+    internal static void ToTomlMultiLineLiteralString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> byteSpan)
+        where TBufferWriter : IBufferWriter<byte>
+    {
+        writer.WriteBytes("'''"u8);
+        writer.WriteBytes(byteSpan);
+        writer.WriteBytes("'''"u8);
     }
 }
 
@@ -459,7 +463,7 @@ internal abstract partial class TomlString(string value) : TomlValue()
     public override string ToString() => Utf16String;
 }
 
-internal enum CsTomlStringType : byte
+internal enum TomlStringType : byte
 {
     Unquoted,
     Basic,

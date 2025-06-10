@@ -281,12 +281,66 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
 
     public void WriteString(string? value)
     {
-        TomlStringHelper.Parse(value).ToTomlString(ref this);
+        if (string.IsNullOrEmpty(value))
+        {
+            WriteBytes("\"\""u8);
+            return;
+        }
+
+        var valueSpan = value.AsSpan();
+
+        // buffer size to 3 times worst-case (UTF16 -> UTF8)
+        var maxBufferSize = (valueSpan.Length + 1) * 3;
+        if (maxBufferSize <= 1024)
+        {
+            Span<byte> dest = stackalloc byte[maxBufferSize];
+            Utf8Helper.FromUtf16(valueSpan, dest, out var _, out var bytesWritten);
+
+            if (bytesWritten > 0)
+            {
+                ref byte destReference = ref MemoryMarshal.GetReference(dest);
+                unsafe
+                {
+                    fixed (byte* ptr = &destReference)
+                    {
+                        var writtenSpan = MemoryMarshal.CreateSpan(ref Unsafe.AsRef<byte>(ptr), bytesWritten);
+                        WriteStringInternal(writtenSpan, TomlStringHelper.GetTomlStringType(writtenSpan));
+                    }
+                }
+            }
+        }
+        else
+        {
+            var bufferWriter = RecycleArrayPoolBufferWriter<byte>.Rent();
+            try
+            {
+                Utf8Helper.FromUtf16(bufferWriter, value.AsSpan());
+                WriteStringInternal(bufferWriter.WrittenSpan, TomlStringHelper.GetTomlStringType(bufferWriter.WrittenSpan));
+            }
+            finally
+            {
+                RecycleArrayPoolBufferWriter<byte>.Return(bufferWriter);
+            }
+        }
     }
 
-    public void WriteString(scoped ReadOnlySpan<byte> value)
+    private void WriteStringInternal(ReadOnlySpan<byte> value, TomlStringType tomlStringType)
     {
-        TomlStringHelper.Parse(value).ToTomlString(ref this);
+        switch (tomlStringType)
+        {
+            case TomlStringType.Basic:
+                TomlBasicString.ToTomlBasicString(ref this, value);
+                break;
+            case TomlStringType.Literal:
+                TomlLiteralString.ToTomlLiteralString(ref this, value);
+                break;
+            case TomlStringType.MultiLineBasic:
+                TomlMultiLineBasicString.ToTomlMultiLineBasicString(ref this, value);
+                break;
+            case TomlStringType.MultiLineLiteral:
+                TomlMultiLineLiteralString.ToTomlMultiLineLiteralString(ref this, value);
+                break;
+        }
     }
 
     public void WriteDateTimeOffset(DateTimeOffset value)

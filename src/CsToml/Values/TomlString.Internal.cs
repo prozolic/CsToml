@@ -13,59 +13,40 @@ internal static class TomlStringHelper
         return T.Parse(value);
     }
 
-    public static TomlString Parse(ReadOnlySpan<byte> utf16String)
+    public static TomlStringType GetTomlStringType(ReadOnlySpan<byte> utf8String)
     {
-        if (Utf8Helper.ContainInvalidSequences(utf16String))
+        if (Utf8Helper.ContainInvalidSequences(utf8String))
             ExceptionHelper.ThrowInvalidCodePoints();
 
         // check newline
-        if (utf16String.Contains(TomlCodes.Symbol.LINEFEED))
+        if (utf8String.Contains(TomlCodes.Symbol.LINEFEED))
         {
-            if (Utf8Helper.ContainsEscapeChar(utf16String, true))
+            if (Utf8Helper.ContainsEscapeChar(utf8String, true))
             {
-                return TomlStringHelper.Parse<TomlMultiLineLiteralString>(utf16String);
+                return TomlStringType.MultiLineLiteral;
             }
-
-            return TomlStringHelper.Parse<TomlMultiLineBasicString>(utf16String);
+            return TomlStringType.MultiLineBasic;
         }
 
         // check escape
-        if (Utf8Helper.ContainsEscapeChar(utf16String, true))
+        if (Utf8Helper.ContainsEscapeChar(utf8String, true))
         {
-            return TomlStringHelper.Parse<TomlLiteralString>(utf16String);
+            return TomlStringType.Literal;
         }
 
-        if (utf16String.Contains(TomlCodes.Symbol.BACKSLASH) && !utf16String.Contains(TomlCodes.Symbol.SINGLEQUOTED))
+        if (utf8String.Contains(TomlCodes.Symbol.BACKSLASH) && !utf8String.Contains(TomlCodes.Symbol.SINGLEQUOTED))
         {
-            return TomlStringHelper.Parse<TomlBasicString>(utf16String);
+            return TomlStringType.Basic;
         }
 
-        if (utf16String.Contains(TomlCodes.Symbol.DOUBLEQUOTED))
+        if (utf8String.Contains(TomlCodes.Symbol.DOUBLEQUOTED))
         {
-            if (!utf16String.Contains(TomlCodes.Symbol.SINGLEQUOTED))
+            if (!utf8String.Contains(TomlCodes.Symbol.SINGLEQUOTED))
             {
-                return TomlStringHelper.Parse<TomlLiteralString>(utf16String);
+                return TomlStringType.Literal;
             }
-            return TomlStringHelper.Parse<TomlMultiLineLiteralString>(utf16String);
+            return TomlStringType.MultiLineLiteral;
         }
-
-        return TomlStringHelper.Parse<TomlBasicString>(utf16String);
-    }
-
-    public static TomlString Parse(ReadOnlySpan<char> utf16String)
-    {
-        if (utf16String.Length == 0)
-            return TomlBasicString.EmptyString;
-
-        var writer = RecycleArrayPoolBufferWriter<byte>.Rent();
-        try
-        {
-            Utf8Helper.FromUtf16(writer, utf16String);
-            return Parse(writer.WrittenSpan);
-        }
-        finally
-        {
-            RecycleArrayPoolBufferWriter<byte>.Return(writer);
-        }
+        return TomlStringType.Basic;
     }
 }
