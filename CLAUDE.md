@@ -125,6 +125,8 @@ Official TOML test cases are located at `tests/CsToml.Tests/toml-test/` with bot
 
 - `src/CsToml/CsTomlSerializer.cs` - Main public API
 - `src/CsToml/CsTomlParser.cs` - Core parsing logic
+- `src/CsToml/CsTomlReader.cs` - Core TOML reader
 - `src/CsToml/TomlDocument.cs` - Document model for preserving TOML structure
+- `src/CsToml/Formatter/*Formatter.cs` - Built-in support type serialization behavior
 - `src/CsToml.Generator/Generator.cs` - Source generator implementation
 - `tests/CsToml.Tests/TomlTest.cs` - TOML compliance test runner

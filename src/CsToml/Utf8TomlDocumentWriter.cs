@@ -120,28 +120,15 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
         valueStates.RemoveAt(valueStates.Count - 1);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal bool IsArrayOrListElement()
-    {
-        return valueStates.Any(v => v.state == TomlValueState.ArrayOfTable);
-    }
-
     public void WriteBoolean(bool value)
     {
         if (value)
         {
-            writer.Write(TomlCodes.Alphabet.t);
-            writer.Write(TomlCodes.Alphabet.r);
-            writer.Write(TomlCodes.Alphabet.u);
-            writer.Write(TomlCodes.Alphabet.e);
+            writer.Write("true"u8);
         }
         else
         {
-            writer.Write(TomlCodes.Alphabet.f);
-            writer.Write(TomlCodes.Alphabet.a);
-            writer.Write(TomlCodes.Alphabet.l);
-            writer.Write(TomlCodes.Alphabet.s);
-            writer.Write(TomlCodes.Alphabet.e);
+            writer.Write("false"u8);
         }
     }
 
