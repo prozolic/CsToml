@@ -1,4 +1,4 @@
-[CsToml - TOML Parser/Serializer  for .NET](https://prozolic.github.io/CsToml)
+﻿[CsToml - TOML Parser/Serializer  for .NET](https://prozolic.github.io/CsToml)
 ===
 
 [![MIT License](https://img.shields.io/github/license/prozolic/CsToml)](LICENSE)
@@ -7,22 +7,22 @@
 [![CsToml.Extensions.Configuration](https://img.shields.io/nuget/v/CsToml.Extensions.Configuration?label=nuget%20CsToml.Extensions.Configuration)](https://www.nuget.org/packages/CsToml.Extensions.Configuration)
 [![CsToml.Generator](https://img.shields.io/nuget/v/CsToml.Generator?label=nuget%20CsToml.Generator)](https://www.nuget.org/packages/CsToml.Generator/)
 
-CsToml is Fast and low memory allocation TOML Parser/Serializer for .NET.  
+CsToml is a fast, low memory allocation TOML Parser/Serializer for .NET.  
 For more information about TOML, visit the official website at [https://toml.io/en/](https://toml.io/en/)
 
 ![Parse Toml text](./img/benchmark_parse.png)
 
 > This benchmark parses a string (string) into a TOML object. I used [Tommy](https://github.com/dezhidki/Tommy), [Tomlet](https://github.com/SamboyCoding/Tomlet) and [Tomlyn](https://github.com/xoofx/Tomlyn) for comparison. `CsToml(v1.6.0)` includes additional `UTF8.GetBytes` calls. This benchmark code is [sandbox/Benchmark](https://github.com/prozolic/CsToml/blob/main/sandbox/Benchmark/Benchmark/ParseBenchmark.cs).
 
-![Deserialize TestTomlSerializedObject (9 values with table and array of tables)](./img/benchmark_serialization.png)
-![Serialize TestTomlSerializedObject (9 values with table and array of tables)](./img/benchmark_deserialization.png)
+![Serialize TestTomlSerializedObject (9 values with table and array of tables)](./img/benchmark_serialization.png)
+![Deserialize TestTomlSerializedObject (9 values with table and array of tables)](./img/benchmark_deserialization.png)
 
-> This benchmark convert custom class to string and string to custom class. I used [Tomlet](https://github.com/SamboyCoding/Tomlet) and [Tomlyn](https://github.com/xoofx/Tomlyn) for comparison. `CsToml(v1.6.0)` includes additional `UTF8.GetBytes` calls. This benchmark code is [sandbox/Benchmark Deserialization](https://github.com/prozolic/CsToml/blob/main/sandbox/Benchmark/Benchmark/ClassDeserializationBenchmark.cs), [sandbox/Benchmark Serialization](https://github.com/prozolic/CsToml/blob/main/sandbox/Benchmark/Benchmark/ClassSerializationBenchmark.cs).
+> This benchmark converts custom class to string and string to custom class. I used [Tomlet](https://github.com/SamboyCoding/Tomlet) and [Tomlyn](https://github.com/xoofx/Tomlyn) for comparison. `CsToml(v1.6.0)` includes additional `UTF8.GetBytes` calls. This benchmark code is [sandbox/Benchmark Deserialization](https://github.com/prozolic/CsToml/blob/main/sandbox/Benchmark/Benchmark/ClassDeserializationBenchmark.cs), [sandbox/Benchmark Serialization](https://github.com/prozolic/CsToml/blob/main/sandbox/Benchmark/Benchmark/ClassSerializationBenchmark.cs).
 
 CsToml has the following features.
 
 - It complies with [TOML v1.0.0](https://toml.io/en/v1.0.0).
-- .NET 8 or later supported.
+- .NET 8 or later is supported.
 - Parsing is performed using byte sequence instead of `string`.
 - It is processed byte sequence directly by the API defined in `System.Buffers`(`IBufferWriter<byte>`,`ReadOnlySequence<byte>`), memory allocation is small and fast.
 - Buffers are rented from the pool(`ArrayPool<T>`), reducing the allocation.
@@ -54,20 +54,20 @@ Installation
 > [!NOTE]
 > The official release version is v1.1.0 or higher. Less than v1.1.0 is deprecated.
 
-This library is distributed via NuGet. We target .NET 8 and .NET 9.  
+This library is distributed via NuGet. We target .NET 8, .NET 9.  
 
 > PM> Install-Package [CsToml](https://www.nuget.org/packages/CsToml/)
 
-When you install `CsToml.Generator`, it automatically creates code to make your custom classes serializable. learn more in our [Serialize and deserialize custom class/struct/record/record struct (CsToml.Generator)](#serialize-and-deserialize-custom-classstructrecordrecord-struct-cstomlgenerator). It is basically recommended to install it together with CsToml.  
+When you install `CsToml.Generator`, it automatically creates code to make your custom classes serializable. Learn more in our [Serialize and deserialize custom class/struct/record/record struct (CsToml.Generator)](#serialize-and-deserialize-custom-classstructrecordrecord-struct-cstomlgenerator). It is basically recommended to install it together with CsToml.  
 However, this requires Roslyn 4.3.1 (Visual Studio 2022 version 17.3) or higher.
 
 > PM> Install-Package [CsToml.Generator](https://www.nuget.org/packages/CsToml.Generator/)  
 
-If `CsToml.Extensions` is installed, you can serialize/deserialize from the TOML file path. learn more in our [Extensions (CsToml.Extensions)](#extensions-cstomlextensions)
+If `CsToml.Extensions` is installed, you can serialize/deserialize from the TOML file path. Learn more in our [Extensions (CsToml.Extensions)](#extensions-cstomlextensions)
 
 > PM> Install-Package [CsToml.Extensions](https://www.nuget.org/packages/CsToml.Extensions/)  
 
-If `CsToml.Extensions.Configuration` is installed, the TOML configuration provider is available. learn more in our [Microsoft.Extensions.Configuration extensions (CsToml.Extensions.Configuration)](#microsoftextensionsconfiguration-extensions-cstomlextensionsconfiguration)
+If `CsToml.Extensions.Configuration` is installed, the TOML configuration provider is available. Learn more in our [Microsoft.Extensions.Configuration extensions (CsToml.Extensions.Configuration)](#microsoftextensionsconfiguration-extensions-cstomlextensionsconfiguration)
 
 > PM> Install-Package [CsToml.Extensions.Configuration](https://www.nuget.org/packages/CsToml.Extensions.Configuration/)  
 
@@ -135,7 +135,7 @@ public partial class TableClass
 }
 ```
 
-Adding the above attributes will generate code for serialization/deserialization by [Source Generators](https://learn.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/source-generators-overview).  
+Adding the above attributes will generate code for serialization/deserialization using [Source Generators](https://learn.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/source-generators-overview).  
 See [Built-in support type](#built-in-support-type) for more information on available property types.
 
 <details><summary>Generated Code(CsTomlClass_generated.g.cs)</summary>
@@ -339,7 +339,7 @@ var serializedTomlText = Encoding.UTF8.GetString(serializedText.ByteSpan);
 
 ### Properties
 
-`[TomlValueOnSerialized]`serializes public instance properties.
+`[TomlValueOnSerialized]` serializes public instance properties.
 Property names with `[TomlValueOnSerialized]` are used as keys in the TOML document.
 
 ```csharp
@@ -374,7 +374,7 @@ This is serialized as follows:
 alias = "value"
 ```
 
-In `CsToml.Generator` v1.3.0 and later versions, read-only properties, or those that have no setter either private or public, can also be deserialized.
+In `CsToml.Generator` v1.3.0 and later versions, read-only properties (those without setters or with private setters) can also be deserialized.
 
 ```csharp
 [TomlSerializedObject]
@@ -629,7 +629,7 @@ Deserialize API
 ---
 
 Deserialize has `ReadOnlySpan<byte>`, `ReadOnlySequence<byte>` and `Stream`.
-The second argument is `CsTomlSerializerOptions`, which need not be specified explicitly in `CsTomlSerializer.Deserialize`.
+The second argument is `CsTomlSerializerOptions`, which is optional in `CsTomlSerializer.Deserialize`.
 It may be used to add optional features in the future.  
 
 ```csharp
@@ -775,11 +775,11 @@ This can retrieve as follows.
 var document = CsTomlSerializer.Deserialize<TomlDocument>(toml);
 // this[ReadOnlySpan<char> key]
 TomlDocumentNode keyNode = document.RootNode["key"u8]; // this is best performance.
-var value = tableKeyNode.GetString(); // value
+var value = keyNode.GetString(); // value
 
 // this[ReadOnlySpan<byte> key]
 TomlDocumentNode keyNode = document.RootNode["key"];
-var value = tableKeyNode.GetString(); // value
+var value = keyNode.GetString(); // value
 ```
 
 The best performance is achieved with `ReadOnlySpan<byte>`.
