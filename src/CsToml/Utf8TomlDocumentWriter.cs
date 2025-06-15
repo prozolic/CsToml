@@ -120,28 +120,15 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
         valueStates.RemoveAt(valueStates.Count - 1);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal bool IsArrayOrListElement()
-    {
-        return valueStates.Any(v => v.state == TomlValueState.ArrayOfTable);
-    }
-
     public void WriteBoolean(bool value)
     {
         if (value)
         {
-            writer.Write(TomlCodes.Alphabet.t);
-            writer.Write(TomlCodes.Alphabet.r);
-            writer.Write(TomlCodes.Alphabet.u);
-            writer.Write(TomlCodes.Alphabet.e);
+            writer.Write("true"u8);
         }
         else
         {
-            writer.Write(TomlCodes.Alphabet.f);
-            writer.Write(TomlCodes.Alphabet.a);
-            writer.Write(TomlCodes.Alphabet.l);
-            writer.Write(TomlCodes.Alphabet.s);
-            writer.Write(TomlCodes.Alphabet.e);
+            writer.Write("false"u8);
         }
     }
 
@@ -281,12 +268,66 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
 
     public void WriteString(string? value)
     {
-        TomlStringHelper.Parse(value).ToTomlString(ref this);
+        if (string.IsNullOrEmpty(value))
+        {
+            WriteBytes("\"\""u8);
+            return;
+        }
+
+        var valueSpan = value.AsSpan();
+
+        // buffer size to 3 times worst-case (UTF16 -> UTF8)
+        var maxBufferSize = (valueSpan.Length + 1) * 3;
+        if (maxBufferSize <= 1024)
+        {
+            Span<byte> dest = stackalloc byte[maxBufferSize];
+            Utf8Helper.FromUtf16(valueSpan, dest, out var _, out var bytesWritten);
+
+            if (bytesWritten > 0)
+            {
+                ref byte destReference = ref MemoryMarshal.GetReference(dest);
+                unsafe
+                {
+                    fixed (byte* ptr = &destReference)
+                    {
+                        var writtenSpan = MemoryMarshal.CreateSpan(ref Unsafe.AsRef<byte>(ptr), bytesWritten);
+                        WriteStringInternal(writtenSpan, TomlStringHelper.GetTomlStringType(writtenSpan));
+                    }
+                }
+            }
+        }
+        else
+        {
+            var bufferWriter = RecycleArrayPoolBufferWriter<byte>.Rent();
+            try
+            {
+                Utf8Helper.FromUtf16(bufferWriter, value.AsSpan());
+                WriteStringInternal(bufferWriter.WrittenSpan, TomlStringHelper.GetTomlStringType(bufferWriter.WrittenSpan));
+            }
+            finally
+            {
+                RecycleArrayPoolBufferWriter<byte>.Return(bufferWriter);
+            }
+        }
     }
 
-    public void WriteString(scoped ReadOnlySpan<byte> value)
+    private void WriteStringInternal(ReadOnlySpan<byte> value, TomlStringType tomlStringType)
     {
-        TomlStringHelper.Parse(value).ToTomlString(ref this);
+        switch (tomlStringType)
+        {
+            case TomlStringType.Basic:
+                TomlBasicString.ToTomlBasicString(ref this, value);
+                break;
+            case TomlStringType.Literal:
+                TomlLiteralString.ToTomlLiteralString(ref this, value);
+                break;
+            case TomlStringType.MultiLineBasic:
+                TomlMultiLineBasicString.ToTomlMultiLineBasicString(ref this, value);
+                break;
+            case TomlStringType.MultiLineLiteral:
+                TomlMultiLineLiteralString.ToTomlMultiLineLiteralString(ref this, value);
+                break;
+        }
     }
 
     public void WriteDateTimeOffset(DateTimeOffset value)

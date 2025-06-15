@@ -196,6 +196,10 @@ public class TomlStringTest
     public void DeserializeAndSerialize()
     {
         var toml = @"
+empty = """"
+empty2 = ''
+empty3 = """"""""""""
+empty4 = ''''''
 key = ""value""
 1234 = ""value""
 ""127.0.0.1"" = ""value""
@@ -217,6 +221,10 @@ trimmed in raw strings.
         using var serializeText = CsTomlSerializer.Serialize(document!);
 
         using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine(@"empty = """"");
+        writer.AppendLine(@"empty2 = ''");
+        writer.AppendLine(@"empty3 = """"""""""""");
+        writer.AppendLine(@"empty4 = ''''''");
         writer.AppendLine(@"key = ""value""");
         writer.AppendLine(@"1234 = ""value""");
         writer.AppendLine(@"""127.0.0.1"" = ""value""");
@@ -237,7 +245,6 @@ trimmed in raw strings.
 
         expected.ShouldBe(actual);
 
-        //buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
 
     [Fact]
@@ -1708,6 +1715,41 @@ value2 = ""rofl""
         writer.AppendLine();
         writer.AppendLine(@"[[ArrayofTables😂]]");
         writer.AppendLine(@"value2 = ""rofl""");
+        writer.Flush();
+
+        var expected = Encoding.UTF8.GetString(buffer.ToArray()).Replace("\r\n", "\n");
+        var actual = Encoding.UTF8.GetString(serializeText.ByteSpan).Replace("\r\n", "\n");
+
+        expected.ShouldBe(actual);
+    }
+}
+
+public class CommentTest
+{
+    [Fact]
+    public void Execute()
+    {
+    var tomlText = @"
+# This is a comment
+str = ""value""
+
+# This is a comment
+# This is a comment2
+# This is a comment3
+int = 123
+"u8;
+
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
+
+        using var serializeText = CsTomlSerializer.Serialize(document!);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine(@"# This is a comment");
+        writer.AppendLine(@"str = ""value""");
+        writer.AppendLine(@"# This is a comment");
+        writer.AppendLine(@"# This is a comment2");
+        writer.AppendLine(@"# This is a comment3");
+        writer.AppendLine(@"int = 123");
         writer.Flush();
 
         var expected = Encoding.UTF8.GetString(buffer.ToArray()).Replace("\r\n", "\n");

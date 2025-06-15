@@ -174,7 +174,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
         var builder = new StringBuilder();
 
         var members = typeMeta.Members;
-        var onlyTomlSerializedObject = members.Length == 1 && members.First().Item2 == TomlSerializationKind.TomlSerializedObject;
+        var onlyTomlSerializedObject = members.Length == 1 && members[0].Item2 == TomlSerializationKind.TomlSerializedObject;
         if (!onlyTomlSerializedObject)
         {
             builder.AppendLine("        writer.BeginScope();");
