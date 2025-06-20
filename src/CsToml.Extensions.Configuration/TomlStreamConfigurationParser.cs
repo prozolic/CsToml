@@ -3,15 +3,17 @@ using Microsoft.Extensions.Configuration;
 
 namespace CsToml.Extensions.Configuration;
 
-internal sealed class TomlStreamConfigurationParser
+internal struct TomlStreamConfigurationParser
 {
     private readonly Dictionary<string, string?> data = new(StringComparer.OrdinalIgnoreCase);
     private readonly Stack<string> paths = new();
     private bool isEmpty;
 
-    public IDictionary<string, string?> Parse(Stream stream)
+    public TomlStreamConfigurationParser() { }
+
+    public IDictionary<string, string?> Parse(Stream stream, CsTomlSerializerOptions? serializerOptions)
     {
-        var document = CsTomlSerializer.Deserialize<TomlDocument>(stream);
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(stream, serializerOptions);
         VisitObjectElement(document.RootNode);
         return data;
     }
