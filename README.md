@@ -1365,6 +1365,16 @@ var app = builder.Build();
 
 using var fs = new FileStream("test.toml", FileMode.Open);
 builder.Configuration.AddTomlStream(fs);
+
+// Blazor WebAssembly
+var httpClient = new HttpClient
+{
+    BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
+};
+
+var toml = await httpClient.GetByteArrayAsync("test.toml");
+var ms = new MemoryStream(toml);
+builder.Configuration.AddTomlStream(ms);
 ```
 
 ```csharp
