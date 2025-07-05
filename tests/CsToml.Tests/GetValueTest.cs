@@ -1,4 +1,6 @@
 ﻿using CsToml.Error;
+using CsToml.Values;
+using System.Collections.Immutable;
 
 namespace CsToml.Tests;
 
@@ -545,6 +547,12 @@ value3 = 3
         arrayValue[1].GetInt64().ShouldBe(2);
         arrayValue[2].GetInt64().ShouldBe(3);
 
+        var immutableArrayValue = value!.GetImmutableArray();
+        immutableArrayValue.Length.ShouldBe(3);
+        immutableArrayValue[0].GetInt64().ShouldBe(1);
+        immutableArrayValue[1].GetInt64().ShouldBe(2);
+        immutableArrayValue[2].GetInt64().ShouldBe(3);
+
         var arrayIndexValue = value!.GetArrayValue(0);
         arrayIndexValue.GetInt64().ShouldBe(1);
         value!.GetString().ShouldBe("[1, 2, 3]");
@@ -574,6 +582,14 @@ value3 = 3
         {
             value!.TryGetArrayValue(0, out var arrayIndexValue).ShouldBeTrue();
             arrayIndexValue.GetInt64().ShouldBe(1);
+        }
+        {
+            value!.TryGetImmutableArray(out var immutableArrayValue).ShouldBeTrue();
+            immutableArrayValue.Select(i => i.GetInt64()).ShouldBe([1, 2, 3]);
+            immutableArrayValue.Length.ShouldBe(3);
+            immutableArrayValue[0].GetInt64().ShouldBe(1);
+            immutableArrayValue[1].GetInt64().ShouldBe(2);
+            immutableArrayValue[2].GetInt64().ShouldBe(3);
         }
         {
             value!.TryGetString(out var v).ShouldBeTrue();
