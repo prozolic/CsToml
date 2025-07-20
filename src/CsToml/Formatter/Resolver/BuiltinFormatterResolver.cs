@@ -234,6 +234,8 @@ internal sealed class BuiltinFormatterResolver : ITomlValueFormatterResolver
         DefaultFormatterCache<Hashtable>.Formatter = HashtableFormatter.Instance;
         DefaultFormatterCache<ArrayList?>.Formatter = ArrayListFormatter.Instance;
 
+        DefaultFormatterCache<Dictionary<string, object?>>.Formatter = new DictionaryFormatter<string, object?>();
+        DefaultFormatterCache<Dictionary<object, object?>>.Formatter = new DictionaryFormatter<object, object?>();
         DefaultFormatterCache<IDictionary<string, object?>>.Formatter = new IDictionaryFormatter<string, object?>();
         DefaultFormatterCache<IDictionary<object, object?>>.Formatter = new IDictionaryFormatter<object, object?>();
 
@@ -333,6 +335,8 @@ internal sealed class BuiltinFormatterResolver : ITomlValueFormatterResolver
         CacheCheck<Hashtable>.Registered = true;
         CacheCheck<ArrayList?>.Registered = true;
 
+        CacheCheck<Dictionary<string, object?>>.Registered = true;
+        CacheCheck<Dictionary<object, object?>>.Registered = true;
         CacheCheck<IDictionary<string, object?>>.Registered = true;
         CacheCheck<IDictionary<object, object?>>.Registered = true;
     }
