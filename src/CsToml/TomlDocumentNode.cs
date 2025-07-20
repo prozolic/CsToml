@@ -211,7 +211,7 @@ public struct TomlDocumentNode
         => Value.TryGetArrayValue(index, out value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetImmutableArray(out ImmutableArray<TomlValue> value)
+    public readonly bool TryGetImmutableArray(out ImmutableArray<TomlValue> value)
         => Value.TryGetImmutableArray(out value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
