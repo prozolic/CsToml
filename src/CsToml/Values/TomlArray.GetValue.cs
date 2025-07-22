@@ -1,5 +1,6 @@
 ﻿
 using CsToml.Error;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 
 namespace CsToml.Values;
@@ -20,6 +21,9 @@ internal partial class TomlArray
         }
         return this[index];
     }
+
+    public override ImmutableArray<TomlValue> GetImmutableArray()
+        => values.ToImmutableArray();
 
     public override string GetString()
         => ToString();

@@ -4,8 +4,10 @@ using CsToml.Formatter.Resolver;
 using CsToml.Utility;
 using CsToml.Values;
 using CsToml.Values.Internal;
+using System;
 using System.Buffers;
 using System.Collections;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -150,6 +152,10 @@ public struct TomlDocumentNode
         => Value.GetArrayValue(index);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly ImmutableArray<TomlValue> GetImmutableArray()
+        => Value.GetImmutableArray();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly string GetString()
         => Value.GetString();
 
@@ -205,6 +211,10 @@ public struct TomlDocumentNode
         => Value.TryGetArrayValue(index, out value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly bool TryGetImmutableArray(out ImmutableArray<TomlValue> value)
+        => Value.TryGetImmutableArray(out value);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool TryGetString(out string value)
         => Value.TryGetString(out value);
 
@@ -237,7 +247,7 @@ public struct TomlDocumentNode
         => Value.TryGetTimeOnly(out value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetObject(out object value)
+    public readonly bool TryGetObject(out object value)
         => Value.TryGetObject(out value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

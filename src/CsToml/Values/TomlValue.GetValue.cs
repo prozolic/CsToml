@@ -1,4 +1,5 @@
 ﻿using CsToml.Error;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Numerics;
 
@@ -14,6 +15,9 @@ public partial class TomlValue
 
     public virtual TomlValue GetArrayValue(int index)
         => ExceptionHelper.NotReturnThrow<TomlValue>(ExceptionHelper.ThrowInvalidCasting);
+
+    public virtual ImmutableArray<TomlValue> GetImmutableArray()
+        => ExceptionHelper.NotReturnThrow<ImmutableArray<TomlValue>>(ExceptionHelper.ThrowInvalidCasting);
 
     public virtual string GetString()
         => ExceptionHelper.NotReturnThrow<string>(ExceptionHelper.ThrowInvalidCasting);
@@ -87,6 +91,17 @@ public partial class TomlValue
             value = default!;
             return false;
         }
+    }
+
+    public bool TryGetImmutableArray(out ImmutableArray<TomlValue> value)
+    {
+        if (CanGetValue(TomlValueFeature.Array))
+        {
+            value = GetImmutableArray();
+            return true;
+        }
+        value = default!;
+        return false;
     }
 
     public bool TryGetString(out string value)
