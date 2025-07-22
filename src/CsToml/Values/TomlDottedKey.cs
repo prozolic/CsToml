@@ -164,6 +164,63 @@ internal abstract partial class TomlDottedKey(ReadOnlySpan<byte> value) : TomlVa
         }
     }
 
+    public static void WriteTomlKey<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> utf8String)
+        where TBufferWriter : IBufferWriter<byte>
+    {
+        if (Utf8Helper.ContainInvalidSequences(utf8String))
+            ExceptionHelper.ThrowInvalidCodePoints();
+
+        var barekey = false;
+        var backslash = false;
+        var singleQuoted = false;
+        var doubleQuoted = false;
+        for (int i = 0; i < utf8String.Length; i++)
+        {
+            switch (utf8String[i])
+            {
+                case TomlCodes.Symbol.BACKSLASH:
+                    backslash = true;
+                    break;
+                case TomlCodes.Symbol.SINGLEQUOTED:
+                    singleQuoted = true;
+                    break;
+                case TomlCodes.Symbol.DOUBLEQUOTED:
+                    doubleQuoted = true;
+                    break;
+                default:
+                    barekey = TomlCodes.IsBareKey(utf8String[i]);
+                    break;
+            }
+        }
+        if (barekey)
+        {
+            if (utf8String.Length > 0)
+            {
+                writer.WriteBytes(utf8String);
+            }
+            return;
+        }
+
+        if (backslash && !singleQuoted)
+        {
+            TomlBasicString.ToTomlBasicString(ref writer, utf8String);
+            return;
+        }
+
+        if (doubleQuoted && !singleQuoted)
+        {
+            TomlLiteralString.ToTomlLiteralString(ref writer, utf8String);
+            return;
+        }
+
+        if (Utf8Helper.ContainsEscapeChar(utf8String, true))
+        {
+            TomlLiteralString.ToTomlLiteralString(ref writer, utf8String);
+            return;
+        }
+        TomlBasicString.ToTomlBasicString(ref writer, utf8String);
+    }
+
     public override bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
     {
         var status = Utf8.ToUtf16(Value, destination, out var bytesRead, out charsWritten, replaceInvalidSequences: false);

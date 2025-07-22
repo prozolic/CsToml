@@ -68,19 +68,19 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void PushKey(ReadOnlySpan<byte> key)
+    public readonly void PushKey(ReadOnlySpan<byte> key)
     {
         dottedKeys.Add(TomlDottedKey.ParseKey(key));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void PushKeyForPrimitive<T>(T value)
+    internal readonly void PushKeyForPrimitive<T>(T value)
     {
         dottedKeys.Add(TomlDottedKey.ParseKeyForPrimitive(value));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void PopKey()
+    public readonly void PopKey()
     {
         dottedKeys.RemoveAt(dottedKeys.Count - 1);
     }
@@ -109,13 +109,13 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BeginCurrentState(TomlValueState state)
+    public readonly void BeginCurrentState(TomlValueState state)
     {
         valueStates.Add((state, dottedKeys.Count));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void EndCurrentState()
+    public readonly void EndCurrentState()
     {
         valueStates.RemoveAt(valueStates.Count - 1);
     }
@@ -666,7 +666,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
             }
         }
 
-        TomlDottedKey.ParseKey(key).ToTomlString(ref this);
+        TomlDottedKey.WriteTomlKey(ref this, key);
     }
 
     internal void WriteKeyForPrimitive<T>(T value)
