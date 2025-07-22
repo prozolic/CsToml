@@ -247,7 +247,7 @@ public struct TomlDocumentNode
         => Value.TryGetTimeOnly(out value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetObject(out object value)
+    public readonly bool TryGetObject(out object value)
         => Value.TryGetObject(out value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

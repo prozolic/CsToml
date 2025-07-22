@@ -1126,32 +1126,34 @@ public struct TomlDocumentNode
     public bool HasValue { get; }
     public TomlValueType ValueType { get; }
     public readonly TomlValue GetTomlValue()
-    public bool CanGetValue(TomlValueFeature feature)
-    public ReadOnlyCollection<TomlValue> GetArray()
-    public TomlValue GetArrayValue(int index)
-    public string GetString()
-    public long GetInt64()
-    public double GetDouble()
-    public bool GetBool()
-    public DateTime GetDateTime()
-    public DateTimeOffset GetDateTimeOffset()
-    public DateOnly GetDateOnly()
-    public TimeOnly GetTimeOnly()
-    public object GetObject()
-    public T GetNumber<T>() where T : struct, INumberBase<T>
+    public readonly bool CanGetValue(TomlValueFeature feature)
+    public readonly ReadOnlyCollection<TomlValue> GetArray()
+    public readonly TomlValue GetArrayValue(int index)
+    public readonly ImmutableArray<TomlValue> GetImmutableArray()
+    public readonly string GetString()
+    public readonly long GetInt64()
+    public readonly double GetDouble()
+    public readonly bool GetBool()
+    public readonly DateTime GetDateTime()
+    public readonly DateTimeOffset GetDateTimeOffset()
+    public readonly DateOnly GetDateOnly()
+    public readonly TimeOnly GetTimeOnly()
+    public readonly object GetObject()
+    public readonly T GetNumber<T>() where T : struct, INumberBase<T>
     public T GetValue<T>()
-    public bool TryGetArray(out ReadOnlyCollection<TomlValue> value)
-    public bool TryGetArrayValue(int index, out TomlValue value)
-    public bool TryGetString(out string value)
-    public bool TryGetInt64(out long value)
-    public bool TryGetDouble(out double value)
-    public bool TryGetBool(out bool value)
-    public bool TryGetDateTime(out DateTime value)
-    public bool TryGetDateTimeOffset(out DateTimeOffset value)
-    public bool TryGetDateOnly(out DateOnly value)
-    public bool TryGetTimeOnly(out TimeOnly value)
-    public bool TryGetObject(out object value)
-    public bool TryGetNumber<T>(out T value) where T : struct, INumberBase<T>
+    public readonly bool TryGetArray(out ReadOnlyCollection<TomlValue> value)
+    public readonly bool TryGetArrayValue(int index, out TomlValue value)
+    public readonly bool TryGetImmutableArray(out ImmutableArray<TomlValue> value)
+    public readonly bool TryGetString(out string value)
+    public readonly bool TryGetInt64(out long value)
+    public readonly bool TryGetDouble(out double value)
+    public readonly bool TryGetBool(out bool value)
+    public readonly bool TryGetDateTime(out DateTime value)
+    public readonly bool TryGetDateTimeOffset(out DateTimeOffset value)
+    public readonly bool TryGetDateOnly(out DateOnly value)
+    public readonly bool TryGetTimeOnly(out TimeOnly value)
+    public readonly bool TryGetObject(out object value)
+    public readonly bool TryGetNumber<T>(out T value) where T : struct, INumberBase<T>
     public bool TryGetValue<T>(out T value)
 }
 ```
@@ -1367,10 +1369,7 @@ using var fs = new FileStream("test.toml", FileMode.Open);
 builder.Configuration.AddTomlStream(fs);
 
 // Blazor WebAssembly
-var httpClient = new HttpClient
-{
-    BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
-};
+var httpClient = new HttpClient{ BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) };
 
 var toml = await httpClient.GetByteArrayAsync("test.toml");
 var ms = new MemoryStream(toml);
