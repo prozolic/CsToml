@@ -26,6 +26,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
     private List<TomlDottedKey> dottedKeys;
     private List<(TomlValueState state, int dottedKeyIndex)> valueStates;
     private readonly bool valueOnly;
+    private readonly CsTomlSerializerOptions options;
 
     internal readonly int WrittenSize => writer.WrittenSize;
 
@@ -37,12 +38,16 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
 
     internal readonly bool IsRoot => valueStates.Count == 1 && !valueOnly;
 
-    public Utf8TomlDocumentWriter(ref TBufferWriter bufferWriter, bool valueOnly = false)
+    public Utf8TomlDocumentWriter(ref TBufferWriter bufferWriter, bool valueOnly = false) : this(ref bufferWriter, valueOnly, null)
+    {}
+
+    internal Utf8TomlDocumentWriter(ref TBufferWriter bufferWriter, bool valueOnly, CsTomlSerializerOptions? options)
     {
         writer = new Utf8Writer<TBufferWriter>(ref bufferWriter);
         dottedKeys = new List<TomlDottedKey>();
         valueStates = [(TomlValueState.Default, -1)];
         this.valueOnly = valueOnly;
+        this.options = options ?? CsTomlSerializerOptions.Default;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -70,13 +75,13 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly void PushKey(ReadOnlySpan<byte> key)
     {
-        dottedKeys.Add(TomlDottedKey.ParseKey(key));
+        dottedKeys.Add(TomlDottedKeyHelper.ParseKey(key, options.Spec.SupportsEscapeSequenceE, options.Spec.SupportsEscapeSequenceX));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal readonly void PushKeyForPrimitive<T>(T value)
     {
-        dottedKeys.Add(TomlDottedKey.ParseKeyForPrimitive(value));
+        dottedKeys.Add(TomlDottedKeyHelper.ParseKeyForPrimitive(value));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -291,7 +296,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
                     fixed (byte* ptr = &destReference)
                     {
                         var writtenSpan = MemoryMarshal.CreateSpan(ref Unsafe.AsRef<byte>(ptr), bytesWritten);
-                        WriteStringInternal(writtenSpan, TomlStringHelper.GetTomlStringType(writtenSpan));
+                        WriteStringInternal(writtenSpan, TomlStringHelper.GetTomlStringType(writtenSpan, options.Spec.SupportsEscapeSequenceE, options.Spec.SupportsEscapeSequenceX));
                     }
                 }
             }
@@ -302,7 +307,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
             try
             {
                 Utf8Helper.FromUtf16(bufferWriter, value.AsSpan());
-                WriteStringInternal(bufferWriter.WrittenSpan, TomlStringHelper.GetTomlStringType(bufferWriter.WrittenSpan));
+                WriteStringInternal(bufferWriter.WrittenSpan, TomlStringHelper.GetTomlStringType(bufferWriter.WrittenSpan, options.Spec.SupportsEscapeSequenceE, options.Spec.SupportsEscapeSequenceX));
             }
             finally
             {
@@ -315,6 +320,9 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
     {
         switch (tomlStringType)
         {
+            case TomlStringType.Unquoted:
+                WriteBytes(value);
+                break;
             case TomlStringType.Basic:
                 TomlBasicString.ToTomlBasicString(ref this, value);
                 break;
@@ -666,7 +674,51 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
             }
         }
 
-        TomlDottedKey.WriteTomlKey(ref this, key);
+        WriteKeyInternal(key, TomlDottedKeyHelper.GetTomlKeyType(key, options.Spec.SupportsEscapeSequenceE, options.Spec.SupportsEscapeSequenceX));
+    }
+
+    internal void WriteKeyInternal(string key)
+    {
+        var keySpan = key.AsSpan();
+
+        // buffer size to 3 times worst-case (UTF16 -> UTF8)
+        var maxBufferSize = (keySpan.Length + 1) * 3;
+        if (maxBufferSize <= 1024)
+        {
+            Span<byte> dest = stackalloc byte[maxBufferSize];
+            Utf8Helper.FromUtf16(keySpan, dest, out var _, out var bytesWritten);
+
+            if (bytesWritten > 0)
+            {
+                ref byte destReference = ref MemoryMarshal.GetReference(dest);
+                unsafe
+                {
+                    fixed (byte* ptr = &destReference)
+                    {
+                        var writtenSpan = MemoryMarshal.CreateSpan(ref Unsafe.AsRef<byte>(ptr), bytesWritten);
+                        WriteKeyInternal(writtenSpan, TomlDottedKeyHelper.GetTomlKeyType( writtenSpan, options.Spec.SupportsEscapeSequenceE, options.Spec.SupportsEscapeSequenceX));
+                    }
+                }
+            }
+        }
+        else
+        {
+            var bufferWriter = RecycleArrayPoolBufferWriter<byte>.Rent();
+            try
+            {
+                Utf8Helper.FromUtf16(bufferWriter, keySpan);
+                WriteKeyInternal(bufferWriter.WrittenSpan, TomlDottedKeyHelper.GetTomlKeyType(bufferWriter.WrittenSpan, options.Spec.SupportsEscapeSequenceE, options.Spec.SupportsEscapeSequenceX));
+            }
+            finally
+            {
+                RecycleArrayPoolBufferWriter<byte>.Return(bufferWriter);
+            }
+        }
+    }
+
+    internal void WriteKeyInternal(ReadOnlySpan<byte> key, TomlStringType tomlStringType)
+    {
+        WriteStringInternal(key, tomlStringType);
     }
 
     internal void WriteKeyForPrimitive<T>(T value)
@@ -806,7 +858,11 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
                     break;
                 case 12:
                     var strKey = refValue as string;
-                    TomlDottedKey.ParseKey(strKey.AsSpan()).ToTomlString(ref this);
+                    TomlDottedKeyHelper.ParseKey(
+                        strKey.AsSpan(),
+                        options.Spec.SupportsEscapeSequenceE,
+                        options.Spec.SupportsEscapeSequenceX)
+                        .ToTomlString(ref this);
                     break;
                 case 13:
                     Write(TomlCodes.Symbol.DOUBLEQUOTED);
@@ -875,7 +931,11 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
             keySpan[i].ToTomlString(ref this);
             writer.Write(TomlCodes.Symbol.DOT);
         }
-        TomlDottedKey.ParseKey(key).ToTomlString(ref this);
+        TomlDottedKeyHelper.ParseKey(
+            key,
+            options.Spec.SupportsEscapeSequenceE,
+            options.Spec.SupportsEscapeSequenceX)
+            .ToTomlString(ref this);
         EndTableHeader();
     }
 

@@ -122,7 +122,7 @@ internal sealed class HashtableFormatter : ITomlValueFormatter<Hashtable>
                         writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
                         break;
                     case 12:
-                        TomlDottedKey.ParseKey(((string)key).AsSpan()).ToTomlString(ref writer);
+                        writer.WriteKeyInternal((string)key);
                         break;
                     case 13:
                         writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
@@ -212,7 +212,7 @@ internal sealed class HashtableFormatter : ITomlValueFormatter<Hashtable>
                             writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
                             break;
                         case 12:
-                            TomlDottedKey.ParseKey(((string)key).AsSpan()).ToTomlString(ref writer);
+                            writer.WriteKeyInternal((string)key);
                             break;
                         case 13:
                             writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
