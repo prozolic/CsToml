@@ -11,7 +11,7 @@ internal static class SymbolUtility
     public static bool IsTomlSerializedObject(this ISymbol typeSymbol)
         => typeSymbol.GetAttributeData("CsToml", "TomlSerializedObjectAttribute").Any();
 
-    public static IEnumerable<(IPropertySymbol, TomlSerializationKind, string?)> FilterTomlValueOnSerializedMembers(
+    public static IEnumerable<TomlValueOnSerializedData> FilterTomlValueOnSerializedMembers(
         this IEnumerable<IPropertySymbol> symbols)
     {
         foreach (var symbol in symbols)
@@ -20,13 +20,29 @@ internal static class SymbolUtility
             if (attr == null) continue;
 
             var serializationKind = FormatterTypeMetaData.GetTomlSerializationKind(symbol.Type);
-            if (attr.ConstructorArguments.Length > 0)
+            if (attr.ConstructorArguments.Length > 0 && (attr.ConstructorArguments[0].Value as string) != null)
             {
-                yield return (symbol, serializationKind, attr.ConstructorArguments[0].Value! as string); ;
+                yield return new TomlValueOnSerializedData()
+                {
+                    Symbol = symbol,
+                    SerializationKind = serializationKind,
+                    DefinedName = symbol.Name,
+                    TomlValueOnSerializedAttributeData = attr,
+                    AliasName = (string)attr.ConstructorArguments[0].Value!,
+                    CanAliasName = true
+                };
             }
             else
             {
-                yield return (symbol, serializationKind, string.Empty);
+                yield return new TomlValueOnSerializedData()
+                {
+                    Symbol = symbol,
+                    SerializationKind = serializationKind,
+                    DefinedName = symbol.Name,
+                    TomlValueOnSerializedAttributeData = attr,
+                    AliasName = null,
+                    CanAliasName = false
+                };
             }
         }
     }

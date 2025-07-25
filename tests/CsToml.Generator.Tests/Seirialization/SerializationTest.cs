@@ -3729,7 +3729,7 @@ public class AliasNameTest
     {
         using var buffer = Utf8String.CreateWriter(out var writer);
         writer.AppendLine("ba-re_Key = \"this is ba-re_Key\"");
-        writer.AppendLine("Empty = 'this is \"\"'");
+        writer.AppendLine("\"\" = 'this is \"\"'");
         writer.AppendLine("\"あいうえお\" = \"this is あいうえお\"");
         writer.AppendLine("\"127.0.0.1\" = \"this is 127.0.0.1\"");
         writer.AppendLine("\"https://github.com/prozolic/CsToml\" = \"this is https://github.com/prozolic/CsToml\"");
@@ -3763,7 +3763,7 @@ public class AliasNameTest
 
         using var buffer = Utf8String.CreateWriter(out var writer);
         writer.AppendLine("ba-re_Key = \"this is ba-re_Key\"");
-        writer.AppendLine("Empty = 'this is \"\"'");
+        writer.AppendLine("\"\" = 'this is \"\"'");
         writer.AppendLine("\"あいうえお\" = \"this is あいうえお\"");
         writer.AppendLine("\"127.0.0.1\" = \"this is 127.0.0.1\"");
         writer.AppendLine("\"https://github.com/prozolic/CsToml\" = \"this is https://github.com/prozolic/CsToml\"");

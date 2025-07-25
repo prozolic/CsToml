@@ -109,13 +109,13 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
     {
         var builder = new StringBuilder();
 
-        foreach (var (property, kind, aliasName) in typeMeta.Members)
+        foreach (var member in typeMeta.Members)
         {
-            var accessName = string.IsNullOrWhiteSpace(aliasName) ? property.Name : aliasName;
-            var propertyName = property.Name;
+            var propertyName = member.DefinedName;
+            var accessName = member.CanAliasName ? member.AliasName : propertyName;
 
             builder.AppendLine($"        var __{propertyName}__RootNode = rootNode[{$"@\"{accessName}\"u8"}];");
-            builder.AppendLine($"        var __{propertyName}__ = options.Resolver.GetFormatter<{property.Type.ToFullFormatString()}>()!.Deserialize(ref __{propertyName}__RootNode, options);");
+            builder.AppendLine($"        var __{propertyName}__ = options.Resolver.GetFormatter<{member.Symbol.Type.ToFullFormatString()}>()!.Deserialize(ref __{propertyName}__RootNode, options);");
         }
 
         builder.AppendLine();
@@ -123,9 +123,9 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
         if (constructorMeta.IsImplicitlyDeclared || constructorMeta.IsParameterlessOnly || (constructorMeta.ConstructorParameters.Length == 0 && constructorMeta.IncludeParameterless))
         {
             builder.AppendLine($"        var target = new {typeMeta.TypeName}(){{");
-            foreach (var (property, kind, aliasName) in typeMeta.Members)
+            foreach (var member in typeMeta.Members)
             {
-                var propertyName = property.Name;
+                var propertyName = member.DefinedName;
                 builder.AppendLine($"            {propertyName} = __{propertyName}__,");
             }
             builder.AppendLine($"        }};");
@@ -174,25 +174,28 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
         var builder = new StringBuilder();
 
         var members = typeMeta.Members;
-        var onlyTomlSerializedObject = members.Length == 1 && members[0].Item2 == TomlSerializationKind.TomlSerializedObject;
+        var onlyTomlSerializedObject = members.Length == 1 && members[0].SerializationKind == TomlSerializationKind.TomlSerializedObject;
         if (!onlyTomlSerializedObject)
         {
             builder.AppendLine("        writer.BeginScope();");
         }
 
         var memberCount = 0;
-        foreach (var (property, kind, aliasName) in typeMeta.Members)
+        foreach (var member in members)
         {
+            var propertyName = member.DefinedName;
+            var accessName = member.CanAliasName ? member.AliasName : propertyName;
+            var kind = member.SerializationKind;
+            var symbol = member.Symbol;
+
             memberCount++;
-            var accessName = string.IsNullOrWhiteSpace(aliasName) ? property.Name : aliasName;
-            var propertyName = property.Name;
 
             if (kind == TomlSerializationKind.Primitive || kind == TomlSerializationKind.Object)
             {
                 builder.AppendLine($"        writer.WriteKey({$"@\"{accessName}\"u8"});");
                 builder.AppendLine($"        writer.WriteEqual();");
-                builder.AppendLine($"        options.Resolver.GetFormatter<{property.Type.ToFullFormatString()}>()!.Serialize(ref writer, target.{propertyName}, options);");
-                if (memberCount == typeMeta.Members.Length)
+                builder.AppendLine($"        options.Resolver.GetFormatter<{symbol.Type.ToFullFormatString()}>()!.Serialize(ref writer, target.{propertyName}, options);");
+                if (memberCount == members.Length)
                 {
                     builder.AppendLine($"        writer.EndKeyValue(true);");
                 }
@@ -208,14 +211,14 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                 builder.AppendLine($"            writer.WriteNewLine();");
                 builder.AppendLine($"            writer.BeginCurrentState(TomlValueState.Table);");
                 builder.AppendLine($"            writer.PushKey({$"@\"{accessName}\"u8"});");
-                builder.AppendLine($"            options.Resolver.GetFormatter<{property.Type.ToFullFormatString()}>()!.Serialize(ref writer, target.{propertyName}, options);");
+                builder.AppendLine($"            options.Resolver.GetFormatter<{symbol.Type.ToFullFormatString()}>()!.Serialize(ref writer, target.{propertyName}, options);");
                 builder.AppendLine($"            writer.PopKey();");
                 builder.AppendLine($"            writer.EndCurrentState();");
                 builder.AppendLine($"        }}");
                 builder.AppendLine($"        else");
                 builder.AppendLine($"        {{");
                 builder.AppendLine($"            writer.PushKey({$"@\"{accessName}\"u8"});");
-                builder.AppendLine($"            options.Resolver.GetFormatter<{property.Type.ToFullFormatString()}>()!.Serialize(ref writer, target.{propertyName}, options);");
+                builder.AppendLine($"            options.Resolver.GetFormatter<{symbol.Type.ToFullFormatString()}>()!.Serialize(ref writer, target.{propertyName}, options);");
                 builder.AppendLine($"            writer.PopKey();");
                 builder.AppendLine($"        }}");
             }
@@ -226,7 +229,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                 builder.AppendLine($"            writer.WriteNewLine();");
                 builder.AppendLine($"            writer.BeginCurrentState(TomlValueState.Table);");
                 builder.AppendLine($"            writer.PushKey({$"@\"{accessName}\"u8"});");
-                builder.AppendLine($"            options.Resolver.GetFormatter<{property.Type.ToFullFormatString()}>()!.Serialize(ref writer, target.{propertyName}, options);");
+                builder.AppendLine($"            options.Resolver.GetFormatter<{symbol.Type.ToFullFormatString()}>()!.Serialize(ref writer, target.{propertyName}, options);");
                 builder.AppendLine($"            writer.PopKey();");
                 builder.AppendLine($"            writer.EndCurrentState();");
                 builder.AppendLine($"        }}");
@@ -235,9 +238,9 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                 builder.AppendLine($"            writer.WriteKey({$"@\"{accessName}\"u8"});");
                 builder.AppendLine($"            writer.WriteEqual();");
                 builder.AppendLine($"            writer.BeginCurrentState(TomlValueState.ArrayOfTable);");
-                builder.AppendLine($"            options.Resolver.GetFormatter<{property.Type.ToFullFormatString()}>()!.Serialize(ref writer, target.{propertyName}, options);");
+                builder.AppendLine($"            options.Resolver.GetFormatter<{symbol.Type.ToFullFormatString()}>()!.Serialize(ref writer, target.{propertyName}, options);");
                 builder.AppendLine($"            writer.EndCurrentState();");
-                if (memberCount == typeMeta.Members.Length)
+                if (memberCount == members.Length)
                 {
                     builder.AppendLine($"            writer.EndKeyValue(true);");
                 }
@@ -252,9 +255,9 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                 builder.AppendLine($"        writer.WriteKey({$"@\"{accessName}\"u8"});");
                 builder.AppendLine($"        writer.WriteEqual();");
                 builder.AppendLine($"        writer.BeginCurrentState(TomlValueState.ArrayOfTable);");
-                builder.AppendLine($"        options.Resolver.GetFormatter<{property.Type.ToFullFormatString()}>()!.Serialize(ref writer, target.{propertyName}, options);");
+                builder.AppendLine($"        options.Resolver.GetFormatter<{symbol.Type.ToFullFormatString()}>()!.Serialize(ref writer, target.{propertyName}, options);");
                 builder.AppendLine($"        writer.EndCurrentState();");
-                if (memberCount == typeMeta.Members.Length)
+                if (memberCount == members.Length)
                 {
                     builder.AppendLine($"        writer.EndKeyValue(true);");
                 }
@@ -267,7 +270,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
             {
                 builder.AppendLine($"        writer.WriteKey({$"@\"{accessName}\"u8"});");
                 builder.AppendLine($"        writer.WriteEqual();");
-                builder.AppendLine($"        options.Resolver.GetFormatter<{property.Type.ToFullFormatString()}>()!.Serialize(ref writer, target.{propertyName}, options);");
+                builder.AppendLine($"        options.Resolver.GetFormatter<{symbol.Type.ToFullFormatString()}>()!.Serialize(ref writer, target.{propertyName}, options);");
                 if (memberCount == typeMeta.Members.Length)
                 {
                     builder.AppendLine($"        writer.EndKeyValue(true);");
