@@ -100,12 +100,15 @@ internal static class TomlStringHelper
                     break;
                 case TomlCodes.Symbol.SINGLEQUOTED:
                     singleQuoted = true;
+                    sequenceReader.Advance(1);
                     break;
                 case TomlCodes.Symbol.DOUBLEQUOTED:
                     doubleQuoted = true;
+                    sequenceReader.Advance(1);
                     break;
                 case TomlCodes.Symbol.LINEFEED:
                     newline = true;
+                    sequenceReader.Advance(1);
                     break;
                 case TomlCodes.Symbol.CARRIAGE:
                     sequenceReader.Advance(1);
@@ -119,10 +122,9 @@ internal static class TomlStringHelper
                     {
                         escapeChar = TomlCodes.IsEscape(ch);
                     }
+                    sequenceReader.Advance(1);
                     break;
             }
-
-            sequenceReader.Advance(1);
         }
 
         // check newline

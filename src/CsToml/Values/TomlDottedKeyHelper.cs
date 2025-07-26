@@ -36,21 +36,20 @@ internal static class TomlDottedKeyHelper
         }
     }
 
-    public static TomlDottedKey ParseKeyForPrimitive<T>(T value)
+    public static TomlDottedKey ParseKeyForPrimitive<T>(T value, bool supportsEscapeSequenceE, bool supportsEscapeSequenceX)
     {
         var bufferWriter = RecycleArrayPoolBufferWriter<byte>.Rent();
         try
         {
             var documentWriter = new Utf8TomlDocumentWriter<ArrayPoolBufferWriter<byte>>(ref bufferWriter);
             documentWriter.WriteKeyForPrimitive(value);
-            return ParseKey(bufferWriter.WrittenSpan, false, false);
+            return ParseKey(bufferWriter.WrittenSpan, supportsEscapeSequenceE, supportsEscapeSequenceX);
         }
         finally
         {
             RecycleArrayPoolBufferWriter<byte>.Return(bufferWriter);
         }
     }
-
     public static TomlStringType GetTomlKeyType(ReadOnlySpan<byte> utf8String, bool supportsEscapeSequenceE, bool supportsEscapeSequenceX)
     {
         if (Utf8Helper.ContainInvalidSequences(utf8String))
@@ -137,19 +136,20 @@ internal static class TomlDottedKeyHelper
                     break;
                 case TomlCodes.Symbol.SINGLEQUOTED:
                     singleQuoted = true;
+                    sequenceReader.Advance(1);
                     break;
                 case TomlCodes.Symbol.DOUBLEQUOTED:
                     doubleQuoted = true;
+                    sequenceReader.Advance(1);
                     break;
                 default:
                     if (barekey)
                     {
                         barekey = TomlCodes.IsBareKey(ch);
                     }
+                    sequenceReader.Advance(1);
                     break;
             }
-
-            sequenceReader.Advance(1);
         }
 
         if (barekey)
