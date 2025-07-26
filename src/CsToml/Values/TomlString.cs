@@ -305,7 +305,6 @@ internal sealed class TomlLiteralString(string value) : TomlString(value), IToml
         return new TomlLiteralString(Utf8Helper.ToUtf16(value));
     }
 
-
     internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
         var valueSpan = value.AsSpan();

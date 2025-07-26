@@ -1,6 +1,8 @@
-﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Immutable;
+using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace CsToml.Generator;
 
@@ -9,7 +11,7 @@ internal sealed class TypeMeta
     private INamedTypeSymbol symbol;
     private TypeDeclarationSyntax syntax;
 
-    public ImmutableArray<(IPropertySymbol, TomlSerializationKind, string?)> Members { get; }
+    public ImmutableArray<TomlValueOnSerializedData> Members { get; }
     public ImmutableArray<(ITypeSymbol, TomlSerializationKind)> DefinedTypes { get; }
     public string NameSpace { get; }
     public TomlSerializedObjectType Type { get; }
@@ -36,12 +38,12 @@ internal sealed class TypeMeta
             string.Empty :
             $"{symbol.ContainingNamespace}";
 
-        Members = symbol.GetPublicProperties().FilterTomlValueOnSerializedMembers().OrderBy(m => m.Item2).ToImmutableArray();
+        Members = symbol.GetPublicProperties().FilterTomlValueOnSerializedMembers().OrderBy(m => m.SerializationKind).ToImmutableArray();
 
         var typesymbols = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
         foreach (var member in Members)
         {
-            SearchTypeSymbol(typesymbols, member.Item1.Type);
+            SearchTypeSymbol(typesymbols, member.Symbol.Type);
         }
         DefinedTypes = typesymbols.Select(t => (t, FormatterTypeMetaData.GetTomlSerializationKind(t))).ToImmutableArray();
     }
@@ -52,7 +54,7 @@ internal sealed class TypeMeta
         {
             context.ReportDiagnostic(
                 Diagnostic.Create(
-                    DiagnosticDescriptors.MustBePartial,
+                    DiagnosticDescriptors.TypeMustBePartial,
                     syntax.Identifier.GetLocation(),
                     symbol!.Name));
             return false;
@@ -61,7 +63,7 @@ internal sealed class TypeMeta
         {
             context.ReportDiagnostic(
                 Diagnostic.Create(
-                    DiagnosticDescriptors.MustNotBeNestedType,
+                    DiagnosticDescriptors.TypeCannotBeNested,
                     syntax.Identifier.GetLocation(),
                     symbol!.Name));
             return false;
@@ -70,7 +72,7 @@ internal sealed class TypeMeta
         {
             context.ReportDiagnostic(
                 Diagnostic.Create(
-                    DiagnosticDescriptors.MustNotBeAbstract,
+                    DiagnosticDescriptors.TypeCannotBeAbstract,
                     syntax.Identifier.GetLocation(),
                     symbol!.Name));
             return false;
@@ -78,37 +80,57 @@ internal sealed class TypeMeta
 
         var error = false;
         var keyTable = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var (property, kind, aliasName) in Members)
+        foreach (var member in Members)
         {
-            if (string.IsNullOrEmpty(aliasName))
+            var property = member.Symbol;
+            var kind = member.SerializationKind;
+
+            if (member.CanAliasName)
             {
-                if (!keyTable.Contains(property.Name))
-                {
-                    keyTable.Add(property.Name);
-                }
-                else
-                {
-                    context.ReportDiagnostic(
-                        Diagnostic.Create(
-                            DiagnosticDescriptors.DefiningKeyMultipleTimesForProperty,
-                            GetPropertyLocation(property, syntax),
-                            property.Name));
-                    error = true;
-                }
-            }
-            else
-            {
-                if (!keyTable.Contains(aliasName!))
+                var aliasName = member.AliasName!;
+                if (!keyTable.Contains(aliasName))
                 {
                     keyTable.Add(aliasName!);
                 }
                 else
                 {
+                    var arguments = member.Arguments;
+
                     context.ReportDiagnostic(
                         Diagnostic.Create(
-                            DiagnosticDescriptors.DefiningKeyMultipleTimesForAliasName,
-                            GetPropertyLocation(property, syntax),
+                            DiagnosticDescriptors.DuplicateAliasKey,
+                            arguments[0].GetLocation(),
                             aliasName));
+                    error = true;
+                }
+
+                // if the alias name contains a newline or carriage return, it is invalid.
+                if (aliasName.Contains("\n") || aliasName.Contains("\r"))
+                {
+                    var arguments = member.Arguments;
+
+                    context.ReportDiagnostic(
+                        Diagnostic.Create(
+                            DiagnosticDescriptors.AliasNameCannotContainNewlines,
+                            arguments[0].GetLocation(),
+                            aliasName));
+                    error = true;
+                }
+            }
+            else
+            {
+                var name = member.DefinedName!;
+                if (!keyTable.Contains(name))
+                {
+                    keyTable.Add(name);
+                }
+                else
+                {
+                    context.ReportDiagnostic(
+                        Diagnostic.Create(
+                            DiagnosticDescriptors.DuplicatePropertyKey,
+                            GetPropertyLocation(property, syntax),
+                            name));
                     error = true;
                 }
             }
@@ -117,7 +139,7 @@ internal sealed class TypeMeta
             {
                 context.ReportDiagnostic(
                     Diagnostic.Create(
-                        DiagnosticDescriptors.ErrorType,
+                        DiagnosticDescriptors.InvalidSerializationType,
                         GetPropertyLocation(property, syntax),
                         symbol!.Name));
                 error = true;
@@ -151,7 +173,7 @@ internal sealed class TypeMeta
             }
             foreach (var propetryParameter in namedSymbol.GetPublicProperties().FilterTomlValueOnSerializedMembers())
             {
-                SearchTypeSymbol(typesymbols, propetryParameter.Item1.Type);
+                SearchTypeSymbol(typesymbols, propetryParameter.Symbol.Type);
             }
         }
     }
@@ -195,7 +217,7 @@ internal sealed class ConstructorMeta
         IParameterSymbol[] constructorParameters = [];
         foreach (var constructor in this.InstanceConstructors)
         {
-            if (constructor.parameters.All(p => typeMeta.Members.Any(m => m.Item1.Type.Equals(p.Type, SymbolEqualityComparer.Default) && m.Item1.Name.Equals(p.Name, StringComparison.OrdinalIgnoreCase))))
+            if (constructor.parameters.All(p => typeMeta.Members.Any(m => m.Symbol.Type.Equals(p.Type, SymbolEqualityComparer.Default) && m.Symbol.Name.Equals(p.Name, StringComparison.OrdinalIgnoreCase))))
             {
                 if ((constructorParameters?.Length ?? 0) <= constructor.parameters.Length)
                 {
@@ -209,15 +231,15 @@ internal sealed class ConstructorMeta
         var membersOfObjectInitialisers = new List<IPropertySymbol>();
         foreach (var member in typeMeta.Members)
         {
-            if (!ConstructorParameters.Any(c => c.Type.Equals(member.Item1.Type, SymbolEqualityComparer.Default) && c.Name.Equals(member.Item1.Name, StringComparison.OrdinalIgnoreCase)))
+            if (!ConstructorParameters.Any(c => c.Type.Equals(member.Symbol.Type, SymbolEqualityComparer.Default) && c.Name.Equals(member.Symbol.Name, StringComparison.OrdinalIgnoreCase)))
             {
-                membersOfObjectInitialisers.Add(member.Item1);
+                membersOfObjectInitialisers.Add(member.Symbol);
             }
         }
         foreach (var member in constructorParameters!)
         {
-            var property = typeMeta.Members.FirstOrDefault(m => m.Item1.Type.Equals(member.Type, SymbolEqualityComparer.Default) && m.Item1.Name.Equals(member.Name, StringComparison.OrdinalIgnoreCase));
-            constructorParameterProperties.Add(property.Item1);
+            var property = typeMeta.Members.FirstOrDefault(m => m.Symbol.Type.Equals(member.Type, SymbolEqualityComparer.Default) && m.Symbol.Name.Equals(member.Name, StringComparison.OrdinalIgnoreCase));
+            constructorParameterProperties.Add(property.Symbol);
         }
 
         this.MembersOfObjectInitialisers = membersOfObjectInitialisers.ToImmutableArray();
@@ -234,7 +256,7 @@ internal sealed class ConstructorMeta
             {
                 context.ReportDiagnostic(
                     Diagnostic.Create(
-                        DiagnosticDescriptors.MustBeSetter,
+                        DiagnosticDescriptors.PropertyMustHaveSetter,
                         GetPropertyLocation(property, syntax),
                         symbol!.Name));
                 error = true;
@@ -245,7 +267,7 @@ internal sealed class ConstructorMeta
             {
                 context.ReportDiagnostic(
                 Diagnostic.Create(
-                    DiagnosticDescriptors.MustBePublicOrInit,
+                    DiagnosticDescriptors.SetterMustBePublicOrInit,
                     GetPropertyLocation(property, syntax),
                     symbol!.Name));
                 error = true;
@@ -257,7 +279,7 @@ internal sealed class ConstructorMeta
         {
             context.ReportDiagnostic(
                 Diagnostic.Create(
-                    DiagnosticDescriptors.NoConstructor,
+                    DiagnosticDescriptors.NoBindableConstructor,
                     syntax.Identifier.GetLocation(),
                     symbol!.Name));
             error = true;
@@ -277,4 +299,25 @@ internal enum TomlSerializedObjectType
     Class,
     Struct,
     Record,
+}
+
+[StructLayout(LayoutKind.Auto)]
+internal struct TomlValueOnSerializedData
+{
+    public IPropertySymbol Symbol { get; init; }
+
+    public TomlSerializationKind SerializationKind { get; init; }
+
+    public string? DefinedName { get; init; }
+
+    public AttributeData? TomlValueOnSerializedAttributeData { get; init; }
+
+    public readonly SeparatedSyntaxList<AttributeArgumentSyntax> Arguments =>
+        TomlValueOnSerializedAttributeData?.ApplicationSyntaxReference?.GetSyntax() is AttributeSyntax attributeSyntax
+            ? attributeSyntax.ArgumentList?.Arguments ?? default
+            : default;
+
+    public string? AliasName { get; init; }
+
+    public bool CanAliasName { get; init; }
 }

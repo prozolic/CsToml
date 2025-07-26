@@ -966,6 +966,28 @@ public partial class WithLazy
     public Lazy<List<int>> IntList { get; set; }
 }
 
+[TomlSerializedObject]
+internal partial record AliasName
+{
+    [TomlValueOnSerialized("ba-re_Key")]
+    public string? BareKey { get; set; }
+
+    [TomlValueOnSerialized("")]
+    public string? Empty { get; set; }
+
+    [TomlValueOnSerialized("あいうえお")]
+    public string? Hiragana { get; set; }
+
+    [TomlValueOnSerialized("127.0.0.1")]
+    public string? IpAddress { get; set; }
+
+    [TomlValueOnSerialized("https://github.com/prozolic/CsToml")]
+    public string? Url { get; set; }
+
+    [TomlValueOnSerialized("<\\i\\c*\\s*\\\\>")]
+    public string? Literal { get; set; }
+}
+
 #if NET9_0_OR_GREATER
 
 [TomlSerializedObject]
