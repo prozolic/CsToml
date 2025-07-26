@@ -64,6 +64,13 @@ public class ClassSerializationBenchmark
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]
+    public string CsToml_Serialize2()
+    {
+        using var text = CsTomlSerializer.Serialize(testTomlSerializedObject, options); //CsToml
+        return text.ToString();
+    }
+
+    [BenchmarkCategory("Benchmark"), Benchmark]
     public string Tomlet_Serialize()
     {
         var text = TomletMain.TomlStringFrom<TestTomlSerializedObject>(testTomlSerializedObject); // Tomlet
