@@ -12,21 +12,22 @@ For more information about TOML, visit the official website at [https://toml.io/
 
 ![Parse Toml text](./img/benchmark_parse.png)
 
-> This benchmark parses a string (string) into a TOML object. I used [Tommy](https://github.com/dezhidki/Tommy), [Tomlet](https://github.com/SamboyCoding/Tomlet) and [Tomlyn](https://github.com/xoofx/Tomlyn) for comparison. `CsToml(v1.6.0)` includes additional `UTF8.GetBytes` calls. This benchmark code is [sandbox/Benchmark](https://github.com/prozolic/CsToml/blob/main/sandbox/Benchmark/Benchmark/ParseBenchmark.cs).
+> This benchmark parses a string (string) into a TOML object. I used [Tommy](https://github.com/dezhidki/Tommy), [Tomlet](https://github.com/SamboyCoding/Tomlet) and [Tomlyn](https://github.com/xoofx/Tomlyn) for comparison. `CsToml(v1.7.0)` includes additional `UTF8.GetBytes` calls. This benchmark code is [sandbox/Benchmark](https://github.com/prozolic/CsToml/blob/main/sandbox/Benchmark/Benchmark/ParseBenchmark.cs).
 
 ![Serialize TestTomlSerializedObject (9 values with table and array of tables)](./img/benchmark_serialization.png)
 ![Deserialize TestTomlSerializedObject (9 values with table and array of tables)](./img/benchmark_deserialization.png)
 
-> This benchmark converts custom class to string and string to custom class. I used [Tomlet](https://github.com/SamboyCoding/Tomlet) and [Tomlyn](https://github.com/xoofx/Tomlyn) for comparison. `CsToml(v1.6.0)` includes additional `UTF8.GetBytes` calls. This benchmark code is [sandbox/Benchmark Deserialization](https://github.com/prozolic/CsToml/blob/main/sandbox/Benchmark/Benchmark/ClassDeserializationBenchmark.cs), [sandbox/Benchmark Serialization](https://github.com/prozolic/CsToml/blob/main/sandbox/Benchmark/Benchmark/ClassSerializationBenchmark.cs).
+> This benchmark converts custom class to string and string to custom class. I used [Tomlet](https://github.com/SamboyCoding/Tomlet) and [Tomlyn](https://github.com/xoofx/Tomlyn) for comparison. `CsToml(v1.7.0)` includes additional `UTF8.GetBytes` calls. This benchmark code is [sandbox/Benchmark Deserialization](https://github.com/prozolic/CsToml/blob/main/sandbox/Benchmark/Benchmark/ClassDeserializationBenchmark.cs), [sandbox/Benchmark Serialization](https://github.com/prozolic/CsToml/blob/main/sandbox/Benchmark/Benchmark/ClassSerializationBenchmark.cs).
 
 CsToml has the following features.
 
 - It complies with [TOML v1.0.0](https://toml.io/en/v1.0.0).
-- .NET 8 or later is supported.
+- .NET 8, .NET 9 are supported.
 - Parsing is performed using byte sequence instead of `string`.
 - It is processed byte sequence directly by the API defined in `System.Buffers`(`IBufferWriter<byte>`,`ReadOnlySequence<byte>`), memory allocation is small and fast.
 - Buffers are rented from the pool(`ArrayPool<T>`), reducing the allocation.
 - Core APIs compatible with Native AOT.
+- It supports new features planned for the upcoming TOML v1.1.0 as optional support. 
 - CsToml deserializer has been tested using [the standard TOML v1.0.0 test cases](https://github.com/toml-lang/toml-test/tree/master/tests) and all have passed.
 - The serialization interface and implementation is influenced by [MemoryPack](https://github.com/Cysharp/MemoryPack) and [VYaml](https://github.com/hadashiA/VYaml).
 
@@ -639,8 +640,8 @@ T Deserialize<T>(Stream stream, CsTomlSerializerOptions? options = null)
 DeserializeAsync<T>(Stream stream, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
 ```
 
-Asynchronous API is available `CsTomlSerializer.DeserializeAsync`.
-this only supports `Stream`.
+Asynchronous API is available as `CsTomlSerializer.DeserializeAsync`.
+This only supports `Stream`.
 
 ```csharp
 var ms = new MemoryStream(tomlText); // FileStream is also OK.
@@ -710,8 +711,8 @@ using var result = CsTomlSerializer.Serialize(document);
 Console.WriteLine(Encoding.UTF8.GetString(result.ByteSpan));
 ```
 
-Asynchronous API is available `CsTomlSerializer.SerializeAsync`.
-this only supports `Stream`, the same as deserialization.
+Asynchronous API is available as `CsTomlSerializer.SerializeAsync`.
+This only supports `Stream`, the same as deserialization.
 
 ```csharp
 var ms2 = new MemoryStream(65536);
@@ -722,7 +723,7 @@ Console.WriteLine(Encoding.UTF8.GetString(ms2.ToArray()));
 Other Deserialize/Serialize APIs
 ---
 
-`CsTomlSerializer.DeserializeValueType<T>` deserialize TOML values to a specified type.
+`CsTomlSerializer.DeserializeValueType<T>` deserializes TOML values to a specified type.
 `CsTomlSerializer.SerializeValueType` serializes the value into TOML format.  
 The object can be used with the type listed in [Built-in support type](#built-in-support-type).
 
@@ -769,7 +770,7 @@ For example, in the following Key/Value Pair
 key = "value"
 ```
 
-This can retrieve as follows.
+This can be retrieved as follows.
 
 ```csharp
 var document = CsTomlSerializer.Deserialize<TomlDocument>(toml);
@@ -793,7 +794,7 @@ For example:
 key = "value"
 ```
 
-This can retrieve as follows.
+This can be retrieved as follows.
 
 ```csharp
 string str = document.RootNode["key"u8].GetString();    // "value"
@@ -814,7 +815,7 @@ For example:
 key = 1234
 ```
 
-This can retrieve value as follows.
+This can retrieve the value as follows.
 
 ```csharp
 long value = document.RootNode["key"u8].GetInt64();     // 1234
@@ -827,7 +828,7 @@ if (document.RootNode["key"u8].TryGetInt64(out long value))
 }
 ```
 
-It can also retrieve value as another primitive type (`string`, `double`, `bool`, etc...) as follows.
+It can also retrieve the value as another primitive type (`string`, `double`, `bool`, etc...) as follows.
 
 ```csharp
 string strValue = document.RootNode["key"u8].GetString();       // "1234"
@@ -843,7 +844,7 @@ For example:
 key = 3.1415
 ```
 
-This can retrieve value as follows.
+This can retrieve the value as follows.
 
 ```csharp
 double value = document.RootNode["key"u8].GetDouble();  // 3.1415
@@ -856,7 +857,7 @@ if (document.RootNode["key"u8].TryGetDouble(out double value))
 }
 ```
 
-It can also retrieve value as another primitive type (`string`,`long`, `bool`, etc...) as follows.
+It can also retrieve the value as another primitive type (`string`,`long`, `bool`, etc...) as follows.
 
 ```csharp
 string strValue = document.RootNode["key"u8].GetString();       // "3.1415"
@@ -872,7 +873,7 @@ For example:
 key = true
 ```
 
-This can retrieve value as follows.
+This can retrieve the value as follows.
 
 ```csharp
 bool value = document.RootNode["key"u8].GetBool();  // true
@@ -885,7 +886,7 @@ if (document.RootNode["key"u8].TryGetBool(out bool value))
 }
 ```
 
-It can also retrieve value as another primitive type (`string`,`long`, `bool`, etc...) as follows.
+It can also retrieve the value as another primitive type (`string`,`long`, `bool`, etc...) as follows.
 
 ```csharp
 string strValue = document.RootNode["key"u8].GetString();       // "True" ( bool.TrueString )
@@ -901,7 +902,7 @@ For example:
 key = 1979-05-27T07:32:00Z
 ```
 
-This can retrieve value as follows.
+This can retrieve the value as follows.
 
 ```csharp
 DateTimeOffset dateTimeOffsetValue = document.RootNode["key"u8].GetDateTimeOffset();
@@ -914,7 +915,7 @@ if (document.RootNode["key"u8].TryGetDateTimeOffset(out DateTimeOffset value))
 }
 ```
 
-It can also retrieve value as another primitive type (`string`,`DateTime`, `DateOnly`,`TimeOnly`, etc...) as follows.
+It can also retrieve the value as another primitive type (`string`,`DateTime`, `DateOnly`,`TimeOnly`, etc...) as follows.
 
 ```csharp
 string value = document.RootNode["key"u8].GetString();              // "1979-05-27T07:32:00.0000000+00:00"
@@ -931,7 +932,7 @@ For example:
 key = 1979-05-27T07:32:00
 ```
 
-This can retrieve value as follows.
+This can retrieve the value as follows.
 
 ```csharp
 DateTime value = document.RootNode["key"u8].GetDateTime();
@@ -944,7 +945,7 @@ if (document.RootNode["key"u8].TryGetDateTime(out DateTime value))
 }
 ```
 
-It can also retrieve value as another primitive type (`string`,`DateTimeOffset`, `DateOnly`,`TimeOnly`, etc...) as follows.
+It can also retrieve the value as another primitive type (`string`,`DateTimeOffset`, `DateOnly`,`TimeOnly`, etc...) as follows.
 
 ```csharp
 string value = document.RootNode["key"u8].GetString();              // "1979-05-27T07:32:00.0000000"
@@ -961,7 +962,7 @@ For example:
 key = 1979-05-27
 ```
 
-This can retrieve value as follows.
+This can retrieve the value as follows.
 
 ```csharp
 DateOnly value = document.RootNode["key"u8].GetDateOnly();
@@ -974,7 +975,7 @@ if (document.RootNode["key"u8].TryGetDateOnly(out DateOnly value))
 }
 ```
 
-It can also retrieve value as another primitive type (`string`,`DateTime`, `DateOnly`, etc...) as follows.
+It can also retrieve the value as another primitive type (`string`,`DateTime`, `DateOnly`, etc...) as follows.
 
 ```csharp
 string value = document.RootNode["key"u8].GetString();              // "1979-05-27"
@@ -990,7 +991,7 @@ For example:
 key = 07:32:00
 ```
 
-This can retrieve value as follows.
+This can retrieve the value as follows.
 
 ```csharp
 TimeOnly value = document.RootNode["key"u8].GetTimeOnly(); 
@@ -1003,7 +1004,7 @@ if (document.RootNode["key"u8].TryGetTimeOnly(out TimeOnly value))
 }
 ```
 
-It can also retrieve value as another primitive type (`string`, etc...) as follows.
+It can also retrieve the value as another primitive type (`string`, etc...) as follows.
 
 ```csharp
 string value = document.RootNode["key"u8].GetString();              // "07:32:00.0000000"
@@ -1017,8 +1018,8 @@ For example:
 array = [ 1, 2, 3 ]
 ```
 
-This can retrieve value as follows.
-`TomlValue` is the class that actually has the TOML value, and the value can retrieve value with almost the same API as the `TomlDocumentNode`.
+This can retrieve the value as follows.
+`TomlValue` is the class that actually has the TOML value, and the value can be retrieved with almost the same API as the `TomlDocumentNode`.
 
 ```csharp
 ReadOnlyCollection<TomlValue> array = document.RootNode["array"u8].GetArray();
@@ -1313,7 +1314,7 @@ without-seconds-4 = 1979-05-27T07:32
 
 ### SupportsEscapeSequenceE
 
-This feature supports for the `\e` escape sequence as a shorthand for the escape character (ASCII code 27).  
+This feature provides support for the `\e` escape sequence as a shorthand for the escape character (ASCII code 27).  
 For example:
 
 ```toml
@@ -1322,7 +1323,7 @@ key = "\e There is no escape! \e"
 
 ### SupportsEscapeSequenceX
 
-This feature supports for hexadecimal escape notation (`\x00`) in basic strings.  
+This feature provides support for hexadecimal escape notation (`\x00`) in basic strings.  
 For example:
 
 ```toml

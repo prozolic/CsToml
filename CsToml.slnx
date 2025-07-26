@@ -1,4 +1,13 @@
 <Solution>
+  <Folder Name="/doc/">
+    <File Path="README.md" />
+    <File Path=".editorconfig" />
+    <File Path="ThirdParty.txt" />
+    <File Path="LICENSE" />
+    <File Path="exclusion.dic" />
+    <File Path="CLAUDE.md" />
+    <File Path=".github/workflows/build.yml" />
+  </Folder>
   <Folder Name="/sandbox/">
     <Project Path="sandbox/Benchmark/Benchmark.csproj" />
     <Project Path="sandbox/ConsoleApp/ConsoleApp.csproj" />
