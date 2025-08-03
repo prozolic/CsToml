@@ -15,5 +15,7 @@ internal enum TomlSerializationKind
     CollectionOfITomlSerializedObject,
     Dictionary,
     TomlSerializedObject,
+    TypeParameter,
+    NullableStructWithTypeParameter,
     Error
 }

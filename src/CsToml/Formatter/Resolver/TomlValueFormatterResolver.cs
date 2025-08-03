@@ -29,8 +29,8 @@ public sealed class TomlValueFormatterResolver : ITomlValueFormatterResolver
 
             if (typeof(T) == typeof(object))
             {
-                CacheCheck<T>.Registered = true;
                 Formatter = PrimitiveObjectFormatterResolver.Instance.GetFormatter<T>();
+                CacheCheck<T>.Registered = true;
                 return;
             }
             else
@@ -38,16 +38,16 @@ public sealed class TomlValueFormatterResolver : ITomlValueFormatterResolver
                 var formatter = BuiltinFormatterResolver.Instance.GetFormatter<T>();
                 if (formatter != null)
                 {
-                    CacheCheck<T>.Registered = true;
                     Formatter = formatter;
+                    CacheCheck<T>.Registered = true;
                     return;
                 }
 
                 var serializedObjectformatter = TomlSerializedObjectFormatterResolver.Instance.GetFormatter<T>();
                 if (serializedObjectformatter != null)
                 {
-                    CacheCheck<T>.Registered = true;
                     Formatter = serializedObjectformatter;
+                    CacheCheck<T>.Registered = true;
                     return;
                 }
             }

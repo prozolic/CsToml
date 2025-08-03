@@ -234,6 +234,12 @@ internal static class FormatterTypeMetaData
 
     public static bool ContainsBuiltInFormatterType(ITypeSymbol typeSymbol)
     {
+        // If typeSymbol is SymbolKind.TypeParameter, it always return false.
+        if (typeSymbol.Kind == SymbolKind.TypeParameter)
+        {
+            return false;
+        }
+
         if (TryGetNullableParameterType(typeSymbol, out var nullableTypeSymbol))
         {
             return builtInFormatterTypeMap.Contains(nullableTypeSymbol!.ToFullFormatString());
@@ -247,6 +253,24 @@ internal static class FormatterTypeMetaData
         if (ContainsBuiltInFormatterType(type))
         {
             return TomlSerializationKind.Primitive;
+        }
+
+        if (type.Kind == SymbolKind.TypeParameter)
+        {
+            return TomlSerializationKind.TypeParameter;
+        }
+
+        // TypeParameter with nullable struct is a special case.
+        if (type is INamedTypeSymbol namedTypeSymbol && namedTypeSymbol.TypeArguments.Length > 0)
+        {
+            var isTypeParameter = namedTypeSymbol.TypeArguments[0].Kind;
+            if (namedTypeSymbol.IsGenericType &&
+                namedTypeSymbol.IsValueType &&
+                namedTypeSymbol.ConstructedFrom.SpecialType == SpecialType.System_Nullable_T &&
+                namedTypeSymbol.TypeArguments[0].Kind == SymbolKind.TypeParameter)
+            {
+                return TomlSerializationKind.NullableStructWithTypeParameter;
+            }
         }
 
         if (type.SpecialType == SpecialType.System_Object)
