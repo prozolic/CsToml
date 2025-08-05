@@ -32,3 +32,23 @@ internal partial class TypeTableB
     [TomlValueOnSerialized]
     public List<TypeTableE> TableECollection { get; set; }
 }
+
+[TomlSerializedObject]
+internal partial class GenericType<T>
+{
+    [TomlValueOnSerialized]
+    public T Value { get; set; }
+
+    [TomlValueOnSerialized]
+    public T? NullableValue { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class GenericTypeWhereStruct<T> where T : struct
+{
+    [TomlValueOnSerialized]
+    public T Value { get; set; }
+
+    [TomlValueOnSerialized]
+    public T? NullableValue { get; set; }
+}

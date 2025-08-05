@@ -3774,6 +3774,139 @@ public class AliasNameTest
     }
 }
 
+public class GenericTypeTest
+{
+    [Fact]
+    public void Deserialize()
+    {
+        {
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = 123");
+            writer.AppendLine("NullableValue = 456");
+            writer.Flush();
+
+            var value = CsTomlSerializer.Deserialize<GenericType<int>>(buffer.WrittenSpan);
+            value.Value.ShouldBe(123);
+            value.NullableValue.ShouldBe(456);
+        }
+        {
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = \"value\"");
+            writer.AppendLine("NullableValue = \"nullablevalue\"");
+            writer.Flush();
+
+            var value = CsTomlSerializer.Deserialize<GenericType<string>>(buffer.WrittenSpan);
+            value.Value.ShouldBe("value");
+            value.NullableValue.ShouldBe("nullablevalue");
+        }
+    }
+
+    [Fact]
+    public void Serialize()
+    {
+        {
+            var value = new GenericType<int>()
+            {
+                Value = 123,
+                NullableValue = 456
+            };
+            using var bytes = CsTomlSerializer.Serialize(value);
+            var __ = CsTomlSerializer.Deserialize<GenericType<int>>(bytes.ByteSpan);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = 123");
+            writer.AppendLine("NullableValue = 456");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
+        }
+        {
+            var value = new GenericType<string>()
+            {
+                Value = "value",
+                NullableValue = "nullablevalue"
+            };
+            using var bytes = CsTomlSerializer.Serialize(value);
+            var __ = CsTomlSerializer.Deserialize<GenericType<string>>(bytes.ByteSpan);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = \"value\"");
+            writer.AppendLine("NullableValue = \"nullablevalue\"");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
+        }
+    }
+}
+
+public class GenericTypeWhereStructTest
+{
+    [Fact]
+    public void Deserialize()
+    {
+        {
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = 123");
+            writer.AppendLine("NullableValue = 456");
+            writer.Flush();
+
+            var value = CsTomlSerializer.Deserialize<GenericTypeWhereStruct<int>>(buffer.WrittenSpan);
+            value.Value.ShouldBe(123);
+            value.NullableValue.ShouldBe(456);
+        }
+        {
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = [ 10, \"ten\" ]");
+            writer.AppendLine("NullableValue = [ 11, \"eleven\" ]");
+            writer.Flush();
+
+            var value = CsTomlSerializer.Deserialize<GenericTypeWhereStruct<ValueTuple<int, string>>>(buffer.WrittenSpan);
+            value.Value.ShouldBe((10, "ten"));
+            value.NullableValue.GetValueOrDefault().ShouldBe((11, "eleven"));
+        }
+    }
+
+    [Fact]
+    public void Serialize()
+    {
+        {
+            var intValue = new GenericTypeWhereStruct<int>()
+            {
+                Value = 123,
+                NullableValue = 456
+            };
+            using var bytes = CsTomlSerializer.Serialize(intValue);
+            var __ = CsTomlSerializer.Deserialize<GenericTypeWhereStruct<int>>(bytes.ByteSpan);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = 123");
+            writer.AppendLine("NullableValue = 456");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
+        }
+        {
+            var intValue = new GenericTypeWhereStruct<ValueTuple<int, string>>()
+            {
+                Value = (10, "ten"),
+                NullableValue = (11, "eleven")
+            };
+            using var bytes = CsTomlSerializer.Serialize(intValue);
+            var __ = CsTomlSerializer.Deserialize<GenericTypeWhereStruct<ValueTuple<int, string>>>(bytes.ByteSpan);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = [ 10, \"ten\" ]");
+            writer.AppendLine("NullableValue = [ 11, \"eleven\" ]");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
+        }
+    }
+}
 
 #if NET9_0_OR_GREATER
 
