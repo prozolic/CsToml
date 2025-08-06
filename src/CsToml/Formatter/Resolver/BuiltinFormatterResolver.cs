@@ -98,7 +98,7 @@ internal sealed class BuiltinFormatterResolver : ITomlValueFormatterResolver
         public static bool Registered;
     }
 
-    private sealed class DefaultFormatterCache<T>
+    private sealed class BuiltinFormatterCache<T>
     {
         public static ITomlValueFormatter<T>? Formatter;
     }
@@ -113,22 +113,34 @@ internal sealed class BuiltinFormatterResolver : ITomlValueFormatterResolver
 
             if (typeof(T).IsEnum)
             {
-                CacheCheck<T>.Registered = true;
-                Formatter = GetEnumFormatter<T>() as ITomlValueFormatter<T>;
+                var formatter = GetEnumFormatter<T>() as ITomlValueFormatter<T>;
+                if (formatter != null)
+                {
+                    Formatter = formatter;
+                    CacheCheck<T>.Registered = true;
+                }
                 return;
             }
 
             if (typeof(T).IsArray)
             {
-                CacheCheck<T>.Registered = true;
-                Formatter = GetArrayFormatter<T>() as ITomlValueFormatter<T>;
+                var formatter = GetArrayFormatter<T>() as ITomlValueFormatter<T>;
+                if (formatter != null)
+                {
+                    Formatter = formatter;
+                    CacheCheck<T>.Registered = true;
+                }
                 return;
             }
 
             if (typeof(T).IsGenericType)
             {
-                CacheCheck<T>.Registered = true;
-                Formatter = GetGenericTypeFormatter<T>() as ITomlValueFormatter<T>;
+                var formatter = GetGenericTypeFormatter<T>() as ITomlValueFormatter<T>;
+                if (formatter != null)
+                {
+                    Formatter = formatter;
+                    CacheCheck<T>.Registered = true;
+                }
                 return;
             }
         }
@@ -136,108 +148,108 @@ internal sealed class BuiltinFormatterResolver : ITomlValueFormatterResolver
 
     static BuiltinFormatterResolver()
     {
-        DefaultFormatterCache<bool>.Formatter = BooleanFormatter.Instance;
-        DefaultFormatterCache<bool?>.Formatter = NullableBooleanFormatter.Instance;
-        DefaultFormatterCache<byte>.Formatter = ByteFormatter.Instance;
-        DefaultFormatterCache<byte?>.Formatter = NullableByteFormatter.Instance;
-        DefaultFormatterCache<sbyte>.Formatter = SByteFormatter.Instance;
-        DefaultFormatterCache<sbyte?>.Formatter = NullableSByteFormatter.Instance;
-        DefaultFormatterCache<char>.Formatter = CharFormatter.Instance;
-        DefaultFormatterCache<char?>.Formatter = NullableCharFormatter.Instance;
-        DefaultFormatterCache<float>.Formatter = FloatFormatter.Instance;
-        DefaultFormatterCache<float?>.Formatter = NullableFloatFormatter.Instance;
-        DefaultFormatterCache<double>.Formatter = DoubleFormatter.Instance;
-        DefaultFormatterCache<double?>.Formatter = NullableDoubleFormatter.Instance;
-        DefaultFormatterCache<short>.Formatter = Int16Formatter.Instance;
-        DefaultFormatterCache<short?>.Formatter = NullableInt16Formatter.Instance;
-        DefaultFormatterCache<ushort>.Formatter = UInt16Formatter.Instance;
-        DefaultFormatterCache<ushort?>.Formatter = NullableUInt16Formatter.Instance;
-        DefaultFormatterCache<int>.Formatter = Int32Formatter.Instance;
-        DefaultFormatterCache<int?>.Formatter = NullableInt32Formatter.Instance;
-        DefaultFormatterCache<uint>.Formatter = UInt32Formatter.Instance;
-        DefaultFormatterCache<uint?>.Formatter = NullableUInt32Formatter.Instance;
-        DefaultFormatterCache<long>.Formatter = Int64Formatter.Instance;
-        DefaultFormatterCache<long?>.Formatter = NullableInt64Formatter.Instance;
-        DefaultFormatterCache<ulong>.Formatter = UInt64Formatter.Instance;
-        DefaultFormatterCache<ulong?>.Formatter = NullableUInt64Formatter.Instance;
+        BuiltinFormatterCache<bool>.Formatter = BooleanFormatter.Instance;
+        BuiltinFormatterCache<bool?>.Formatter = NullableBooleanFormatter.Instance;
+        BuiltinFormatterCache<byte>.Formatter = ByteFormatter.Instance;
+        BuiltinFormatterCache<byte?>.Formatter = NullableByteFormatter.Instance;
+        BuiltinFormatterCache<sbyte>.Formatter = SByteFormatter.Instance;
+        BuiltinFormatterCache<sbyte?>.Formatter = NullableSByteFormatter.Instance;
+        BuiltinFormatterCache<char>.Formatter = CharFormatter.Instance;
+        BuiltinFormatterCache<char?>.Formatter = NullableCharFormatter.Instance;
+        BuiltinFormatterCache<float>.Formatter = FloatFormatter.Instance;
+        BuiltinFormatterCache<float?>.Formatter = NullableFloatFormatter.Instance;
+        BuiltinFormatterCache<double>.Formatter = DoubleFormatter.Instance;
+        BuiltinFormatterCache<double?>.Formatter = NullableDoubleFormatter.Instance;
+        BuiltinFormatterCache<short>.Formatter = Int16Formatter.Instance;
+        BuiltinFormatterCache<short?>.Formatter = NullableInt16Formatter.Instance;
+        BuiltinFormatterCache<ushort>.Formatter = UInt16Formatter.Instance;
+        BuiltinFormatterCache<ushort?>.Formatter = NullableUInt16Formatter.Instance;
+        BuiltinFormatterCache<int>.Formatter = Int32Formatter.Instance;
+        BuiltinFormatterCache<int?>.Formatter = NullableInt32Formatter.Instance;
+        BuiltinFormatterCache<uint>.Formatter = UInt32Formatter.Instance;
+        BuiltinFormatterCache<uint?>.Formatter = NullableUInt32Formatter.Instance;
+        BuiltinFormatterCache<long>.Formatter = Int64Formatter.Instance;
+        BuiltinFormatterCache<long?>.Formatter = NullableInt64Formatter.Instance;
+        BuiltinFormatterCache<ulong>.Formatter = UInt64Formatter.Instance;
+        BuiltinFormatterCache<ulong?>.Formatter = NullableUInt64Formatter.Instance;
 
-        DefaultFormatterCache<DateTimeOffset>.Formatter = DateTimeOffsetFormatter.Instance;
-        DefaultFormatterCache<DateTimeOffset?>.Formatter = NullableDateTimeOffsetFormatter.Instance;
-        DefaultFormatterCache<DateTime>.Formatter = DateTimeFormatter.Instance;
-        DefaultFormatterCache<DateTime?>.Formatter = NullableDateTimeFormatter.Instance;
-        DefaultFormatterCache<DateOnly>.Formatter = DateOnlyFormatter.Instance;
-        DefaultFormatterCache<DateOnly?>.Formatter = NullableDateOnlyFormatter.Instance;
-        DefaultFormatterCache<TimeOnly>.Formatter = TimeOnlyFormatter.Instance;
-        DefaultFormatterCache<TimeOnly?>.Formatter = NullableTimeOnlyFormatter.Instance;
-        DefaultFormatterCache<string?>.Formatter = NullableStringFormatter.Instance;
-        DefaultFormatterCache<decimal>.Formatter = DecimalFormatter.Instance;
-        DefaultFormatterCache<decimal?>.Formatter = NullableDecimalFormatter.Instance;
-        DefaultFormatterCache<Half>.Formatter = HalfFormatter.Instance;
-        DefaultFormatterCache<Half?>.Formatter = NullableHalfFormatter.Instance;
-        DefaultFormatterCache<Int128>.Formatter = Int128Formatter.Instance;
-        DefaultFormatterCache<Int128?>.Formatter = NullableInt128Formatter.Instance;
-        DefaultFormatterCache<UInt128>.Formatter = UInt128Formatter.Instance;
-        DefaultFormatterCache<UInt128?>.Formatter = NullableUInt128Formatter.Instance;
-        DefaultFormatterCache<BigInteger>.Formatter = BigIntegerFormatter.Instance;
-        DefaultFormatterCache<BigInteger?>.Formatter = NullableBigIntegerFormatter.Instance;
-        DefaultFormatterCache<TimeSpan>.Formatter = TimeSpanFormatter.Instance;
-        DefaultFormatterCache<TimeSpan?>.Formatter = NullableTimeSpanFormatter.Instance;
+        BuiltinFormatterCache<DateTimeOffset>.Formatter = DateTimeOffsetFormatter.Instance;
+        BuiltinFormatterCache<DateTimeOffset?>.Formatter = NullableDateTimeOffsetFormatter.Instance;
+        BuiltinFormatterCache<DateTime>.Formatter = DateTimeFormatter.Instance;
+        BuiltinFormatterCache<DateTime?>.Formatter = NullableDateTimeFormatter.Instance;
+        BuiltinFormatterCache<DateOnly>.Formatter = DateOnlyFormatter.Instance;
+        BuiltinFormatterCache<DateOnly?>.Formatter = NullableDateOnlyFormatter.Instance;
+        BuiltinFormatterCache<TimeOnly>.Formatter = TimeOnlyFormatter.Instance;
+        BuiltinFormatterCache<TimeOnly?>.Formatter = NullableTimeOnlyFormatter.Instance;
+        BuiltinFormatterCache<string?>.Formatter = NullableStringFormatter.Instance;
+        BuiltinFormatterCache<decimal>.Formatter = DecimalFormatter.Instance;
+        BuiltinFormatterCache<decimal?>.Formatter = NullableDecimalFormatter.Instance;
+        BuiltinFormatterCache<Half>.Formatter = HalfFormatter.Instance;
+        BuiltinFormatterCache<Half?>.Formatter = NullableHalfFormatter.Instance;
+        BuiltinFormatterCache<Int128>.Formatter = Int128Formatter.Instance;
+        BuiltinFormatterCache<Int128?>.Formatter = NullableInt128Formatter.Instance;
+        BuiltinFormatterCache<UInt128>.Formatter = UInt128Formatter.Instance;
+        BuiltinFormatterCache<UInt128?>.Formatter = NullableUInt128Formatter.Instance;
+        BuiltinFormatterCache<BigInteger>.Formatter = BigIntegerFormatter.Instance;
+        BuiltinFormatterCache<BigInteger?>.Formatter = NullableBigIntegerFormatter.Instance;
+        BuiltinFormatterCache<TimeSpan>.Formatter = TimeSpanFormatter.Instance;
+        BuiltinFormatterCache<TimeSpan?>.Formatter = NullableTimeSpanFormatter.Instance;
 
-        DefaultFormatterCache<Uri?>.Formatter = UriFormatter.Instance;
-        DefaultFormatterCache<Guid>.Formatter = GuidFormatter.Instance;
-        DefaultFormatterCache<Guid?>.Formatter = NullableGuidFormatter.Instance;
-        DefaultFormatterCache<Version?>.Formatter = VersionFormatter.Instance;
-        DefaultFormatterCache<StringBuilder?>.Formatter = StringBuilderFormatter.Instance;
-        DefaultFormatterCache<BitArray?>.Formatter = BitArrayFormatter.Instance;
-        DefaultFormatterCache<Type?>.Formatter = TypeFormatter.Instance;
-        DefaultFormatterCache<Complex>.Formatter = ComplexFormatter.Instance;
-        DefaultFormatterCache<Complex?>.Formatter = NullableComplexFormatter.Instance;
+        BuiltinFormatterCache<Uri?>.Formatter = UriFormatter.Instance;
+        BuiltinFormatterCache<Guid>.Formatter = GuidFormatter.Instance;
+        BuiltinFormatterCache<Guid?>.Formatter = NullableGuidFormatter.Instance;
+        BuiltinFormatterCache<Version?>.Formatter = VersionFormatter.Instance;
+        BuiltinFormatterCache<StringBuilder?>.Formatter = StringBuilderFormatter.Instance;
+        BuiltinFormatterCache<BitArray?>.Formatter = BitArrayFormatter.Instance;
+        BuiltinFormatterCache<Type?>.Formatter = TypeFormatter.Instance;
+        BuiltinFormatterCache<Complex>.Formatter = ComplexFormatter.Instance;
+        BuiltinFormatterCache<Complex?>.Formatter = NullableComplexFormatter.Instance;
 
-        DefaultFormatterCache<bool[]?>.Formatter = new ArrayFormatter<bool>();
-        DefaultFormatterCache<byte[]?>.Formatter = new ArrayFormatter<byte>();
-        DefaultFormatterCache<sbyte[]?>.Formatter = new ArrayFormatter<sbyte>();
-        DefaultFormatterCache<short[]?>.Formatter = new ArrayFormatter<short>();
-        DefaultFormatterCache<ushort[]?>.Formatter = new ArrayFormatter<ushort>();
-        DefaultFormatterCache<int[]?>.Formatter = new ArrayFormatter<int>();
-        DefaultFormatterCache<uint[]?>.Formatter = new ArrayFormatter<uint>();
-        DefaultFormatterCache<long[]?>.Formatter = new ArrayFormatter<long>();
-        DefaultFormatterCache<ulong[]?>.Formatter = new ArrayFormatter<ulong>();
-        DefaultFormatterCache<float[]?>.Formatter = new ArrayFormatter<float>();
-        DefaultFormatterCache<double[]?>.Formatter = new ArrayFormatter<double>();
-        DefaultFormatterCache<decimal[]?>.Formatter = new ArrayFormatter<decimal>();
-        DefaultFormatterCache<DateTimeOffset[]?>.Formatter = new ArrayFormatter<DateTimeOffset>();
-        DefaultFormatterCache<DateTime[]?>.Formatter = new ArrayFormatter<DateTime>();
-        DefaultFormatterCache<DateOnly[]?>.Formatter = new ArrayFormatter<DateOnly>();
-        DefaultFormatterCache<TimeOnly[]?>.Formatter = new ArrayFormatter<TimeOnly>();
-        DefaultFormatterCache<char[]?>.Formatter = new ArrayFormatter<char>();
-        DefaultFormatterCache<string[]?>.Formatter = new ArrayFormatter<string>();
+        BuiltinFormatterCache<bool[]?>.Formatter = new ArrayFormatter<bool>();
+        BuiltinFormatterCache<byte[]?>.Formatter = new ArrayFormatter<byte>();
+        BuiltinFormatterCache<sbyte[]?>.Formatter = new ArrayFormatter<sbyte>();
+        BuiltinFormatterCache<short[]?>.Formatter = new ArrayFormatter<short>();
+        BuiltinFormatterCache<ushort[]?>.Formatter = new ArrayFormatter<ushort>();
+        BuiltinFormatterCache<int[]?>.Formatter = new ArrayFormatter<int>();
+        BuiltinFormatterCache<uint[]?>.Formatter = new ArrayFormatter<uint>();
+        BuiltinFormatterCache<long[]?>.Formatter = new ArrayFormatter<long>();
+        BuiltinFormatterCache<ulong[]?>.Formatter = new ArrayFormatter<ulong>();
+        BuiltinFormatterCache<float[]?>.Formatter = new ArrayFormatter<float>();
+        BuiltinFormatterCache<double[]?>.Formatter = new ArrayFormatter<double>();
+        BuiltinFormatterCache<decimal[]?>.Formatter = new ArrayFormatter<decimal>();
+        BuiltinFormatterCache<DateTimeOffset[]?>.Formatter = new ArrayFormatter<DateTimeOffset>();
+        BuiltinFormatterCache<DateTime[]?>.Formatter = new ArrayFormatter<DateTime>();
+        BuiltinFormatterCache<DateOnly[]?>.Formatter = new ArrayFormatter<DateOnly>();
+        BuiltinFormatterCache<TimeOnly[]?>.Formatter = new ArrayFormatter<TimeOnly>();
+        BuiltinFormatterCache<char[]?>.Formatter = new ArrayFormatter<char>();
+        BuiltinFormatterCache<string[]?>.Formatter = new ArrayFormatter<string>();
 
-        DefaultFormatterCache<List<bool>?>.Formatter = new ListFormatter<bool>();
-        DefaultFormatterCache<List<byte>?>.Formatter = new ListFormatter<byte>();
-        DefaultFormatterCache<List<sbyte>?>.Formatter = new ListFormatter<sbyte>();
-        DefaultFormatterCache<List<short>?>.Formatter = new ListFormatter<short>();
-        DefaultFormatterCache<List<ushort>?>.Formatter = new ListFormatter<ushort>();
-        DefaultFormatterCache<List<int>?>.Formatter = new ListFormatter<int>();
-        DefaultFormatterCache<List<uint>?>.Formatter = new ListFormatter<uint>();
-        DefaultFormatterCache<List<long>?>.Formatter = new ListFormatter<long>();
-        DefaultFormatterCache<List<ulong>?>.Formatter = new ListFormatter<ulong>();
-        DefaultFormatterCache<List<float>?>.Formatter = new ListFormatter<float>();
-        DefaultFormatterCache<List<double>?>.Formatter = new ListFormatter<double>();
-        DefaultFormatterCache<List<decimal>?>.Formatter = new ListFormatter<decimal>();
-        DefaultFormatterCache<List<DateTimeOffset>?>.Formatter = new ListFormatter<DateTimeOffset>();
-        DefaultFormatterCache<List<DateTime>?>.Formatter = new ListFormatter<DateTime>();
-        DefaultFormatterCache<List<DateOnly>?>.Formatter = new ListFormatter<DateOnly>();
-        DefaultFormatterCache<List<TimeOnly>?>.Formatter = new ListFormatter<TimeOnly>();
-        DefaultFormatterCache<List<char>?>.Formatter = new ListFormatter<char>();
-        DefaultFormatterCache<List<string>?>.Formatter = new ListFormatter<string>();
+        BuiltinFormatterCache<List<bool>?>.Formatter = new ListFormatter<bool>();
+        BuiltinFormatterCache<List<byte>?>.Formatter = new ListFormatter<byte>();
+        BuiltinFormatterCache<List<sbyte>?>.Formatter = new ListFormatter<sbyte>();
+        BuiltinFormatterCache<List<short>?>.Formatter = new ListFormatter<short>();
+        BuiltinFormatterCache<List<ushort>?>.Formatter = new ListFormatter<ushort>();
+        BuiltinFormatterCache<List<int>?>.Formatter = new ListFormatter<int>();
+        BuiltinFormatterCache<List<uint>?>.Formatter = new ListFormatter<uint>();
+        BuiltinFormatterCache<List<long>?>.Formatter = new ListFormatter<long>();
+        BuiltinFormatterCache<List<ulong>?>.Formatter = new ListFormatter<ulong>();
+        BuiltinFormatterCache<List<float>?>.Formatter = new ListFormatter<float>();
+        BuiltinFormatterCache<List<double>?>.Formatter = new ListFormatter<double>();
+        BuiltinFormatterCache<List<decimal>?>.Formatter = new ListFormatter<decimal>();
+        BuiltinFormatterCache<List<DateTimeOffset>?>.Formatter = new ListFormatter<DateTimeOffset>();
+        BuiltinFormatterCache<List<DateTime>?>.Formatter = new ListFormatter<DateTime>();
+        BuiltinFormatterCache<List<DateOnly>?>.Formatter = new ListFormatter<DateOnly>();
+        BuiltinFormatterCache<List<TimeOnly>?>.Formatter = new ListFormatter<TimeOnly>();
+        BuiltinFormatterCache<List<char>?>.Formatter = new ListFormatter<char>();
+        BuiltinFormatterCache<List<string>?>.Formatter = new ListFormatter<string>();
 
-        DefaultFormatterCache<Hashtable>.Formatter = HashtableFormatter.Instance;
-        DefaultFormatterCache<ArrayList?>.Formatter = ArrayListFormatter.Instance;
+        BuiltinFormatterCache<Hashtable>.Formatter = HashtableFormatter.Instance;
+        BuiltinFormatterCache<ArrayList?>.Formatter = ArrayListFormatter.Instance;
 
-        DefaultFormatterCache<Dictionary<string, object?>>.Formatter = new DictionaryFormatter<string, object?>();
-        DefaultFormatterCache<Dictionary<object, object?>>.Formatter = new DictionaryFormatter<object, object?>();
-        DefaultFormatterCache<IDictionary<string, object?>>.Formatter = new IDictionaryFormatter<string, object?>();
-        DefaultFormatterCache<IDictionary<object, object?>>.Formatter = new IDictionaryFormatter<object, object?>();
+        BuiltinFormatterCache<Dictionary<string, object?>>.Formatter = new DictionaryFormatter<string, object?>();
+        BuiltinFormatterCache<Dictionary<object, object?>>.Formatter = new DictionaryFormatter<object, object?>();
+        BuiltinFormatterCache<IDictionary<string, object?>>.Formatter = new IDictionaryFormatter<string, object?>();
+        BuiltinFormatterCache<IDictionary<object, object?>>.Formatter = new IDictionaryFormatter<object, object?>();
 
         CacheCheck<bool>.Registered = true;
         CacheCheck<bool?>.Registered = true;
@@ -372,7 +384,7 @@ internal sealed class BuiltinFormatterResolver : ITomlValueFormatterResolver
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ITomlValueFormatter<T>? GetFormatter<T>()
     {
-        var formatter = DefaultFormatterCache<T>.Formatter;
+        var formatter = BuiltinFormatterCache<T>.Formatter;
         if (formatter != null)
             return formatter;
 
