@@ -3801,25 +3801,25 @@ public class GenericTypeTest
         }
         {
             using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("Value.Value = \"This is TypeTable3\"");
-            writer.AppendLine("NullableValue.Value = \"This is Nullable TypeTable3\"");
+            writer.AppendLine("Value.Value = \"This is Simple\"");
+            writer.AppendLine("NullableValue.Value = \"This is Nullable Simple\"");
             writer.Flush();
 
-            var value = CsTomlSerializer.Deserialize<GenericType<TypeTable3>>(buffer.WrittenSpan);
-            value.Value.Value.ShouldBe("This is TypeTable3");
-            value.NullableValue!.Value.ShouldBe("This is Nullable TypeTable3");
+            var value = CsTomlSerializer.Deserialize<GenericType<Simple>>(buffer.WrittenSpan);
+            value.Value.Value.ShouldBe("This is Simple");
+            value.NullableValue!.Value.ShouldBe("This is Nullable Simple");
         }
         {
             using var buffer = Utf8String.CreateWriter(out var writer);
             writer.AppendLine("[Value]");
-            writer.AppendLine("Value = \"This is TypeTable3\"");
+            writer.AppendLine("Value = \"This is Simple\"");
             writer.AppendLine("[NullableValue]");
-            writer.AppendLine("Value = \"This is Nullable TypeTable3\"");
+            writer.AppendLine("Value = \"This is Nullable Simple\"");
             writer.Flush();
 
-            var value = CsTomlSerializer.Deserialize<GenericType<TypeTable3>>(buffer.WrittenSpan);
-            value.Value.Value.ShouldBe("This is TypeTable3");
-            value.NullableValue!.Value.ShouldBe("This is Nullable TypeTable3");
+            var value = CsTomlSerializer.Deserialize<GenericType<Simple>>(buffer.WrittenSpan);
+            value.Value.Value.ShouldBe("This is Simple");
+            value.NullableValue!.Value.ShouldBe("This is Nullable Simple");
         }
     }
 
@@ -3861,36 +3861,36 @@ public class GenericTypeTest
             bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
         {
-            var value = new GenericType<TypeTable3>()
+            var value = new GenericType<Simple>()
             {
-                Value = new TypeTable3() { Value = "This is TypeTable3" },
-                NullableValue = new TypeTable3() { Value = "This is Nullable TypeTable3" }
+                Value = new Simple() { Value = "This is Simple" },
+                NullableValue = new Simple() { Value = "This is Nullable Simple" }
             };
             using var bytes = CsTomlSerializer.Serialize(value);
-            var __ = CsTomlSerializer.Deserialize<GenericType<TypeTable3>>(bytes.ByteSpan);
+            var __ = CsTomlSerializer.Deserialize<GenericType<Simple>>(bytes.ByteSpan);
 
             using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("Value.Value = \"This is TypeTable3\"");
-            writer.AppendLine("NullableValue.Value = \"This is Nullable TypeTable3\"");
+            writer.AppendLine("Value.Value = \"This is Simple\"");
+            writer.AppendLine("NullableValue.Value = \"This is Nullable Simple\"");
             writer.Flush();
 
             var expected = buffer.ToArray();
             bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
         {
-            var value = new GenericType<TypeTable3>()
+            var value = new GenericType<Simple>()
             {
-                Value = new TypeTable3() { Value = "This is TypeTable3" },
-                NullableValue = new TypeTable3() { Value = "This is Nullable TypeTable3" }
+                Value = new Simple() { Value = "This is Simple" },
+                NullableValue = new Simple() { Value = "This is Nullable Simple" }
             };
             using var bytes = CsTomlSerializer.Serialize(value, options: Option.Header);
-            var __ = CsTomlSerializer.Deserialize<GenericType<TypeTable3>>(bytes.ByteSpan);
+            var __ = CsTomlSerializer.Deserialize<GenericType<Simple>>(bytes.ByteSpan);
 
             using var buffer = Utf8String.CreateWriter(out var writer);
             writer.AppendLine("[Value]");
-            writer.AppendLine("Value = \"This is TypeTable3\"");
+            writer.AppendLine("Value = \"This is Simple\"");
             writer.AppendLine("[NullableValue]");
-            writer.AppendLine("Value = \"This is Nullable TypeTable3\"");
+            writer.AppendLine("Value = \"This is Nullable Simple\"");
             writer.Flush();
 
             var expected = buffer.ToArray();
@@ -3923,6 +3923,28 @@ public class GenericTypeWhereStructTest
             var value = CsTomlSerializer.Deserialize<GenericTypeWhereStruct<ValueTuple<int, string>>>(buffer.WrittenSpan);
             value.Value.ShouldBe((10, "ten"));
             value.NullableValue.GetValueOrDefault().ShouldBe((11, "eleven"));
+        }
+        {
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value.Value = \"This is SimpleStruct\"");
+            writer.AppendLine("NullableValue.Value = \"This is Nullable SimpleStruct\"");
+            writer.Flush();
+
+            var value = CsTomlSerializer.Deserialize<GenericTypeWhereStruct<SimpleStruct>>(buffer.WrittenSpan);
+            value.Value.Value.ShouldBe("This is SimpleStruct");
+            value.NullableValue.GetValueOrDefault().Value.ShouldBe("This is Nullable SimpleStruct");
+        }
+        {
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("[Value]");
+            writer.AppendLine("Value = \"This is SimpleStruct\"");
+            writer.AppendLine("[NullableValue]");
+            writer.AppendLine("Value = \"This is Nullable SimpleStruct\"");
+            writer.Flush();
+
+            var value = CsTomlSerializer.Deserialize<GenericTypeWhereStruct<SimpleStruct>>(buffer.WrittenSpan);
+            value.Value.Value.ShouldBe("This is SimpleStruct");
+            value.NullableValue.GetValueOrDefault().Value.ShouldBe("This is Nullable SimpleStruct");
         }
     }
 
@@ -3958,6 +3980,42 @@ public class GenericTypeWhereStructTest
             using var buffer = Utf8String.CreateWriter(out var writer);
             writer.AppendLine("Value = [ 10, \"ten\" ]");
             writer.AppendLine("NullableValue = [ 11, \"eleven\" ]");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
+        }
+        {
+            var value = new GenericTypeWhereStruct<SimpleStruct>()
+            {
+                Value = new SimpleStruct() { Value = "This is SimpleStruct" },
+                NullableValue = new SimpleStruct() { Value = "This is Nullable SimpleStruct" }
+            };
+            using var bytes = CsTomlSerializer.Serialize(value);
+            var __ = CsTomlSerializer.Deserialize<GenericTypeWhereStruct<SimpleStruct>>(bytes.ByteSpan);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value.Value = \"This is SimpleStruct\"");
+            writer.AppendLine("NullableValue.Value = \"This is Nullable SimpleStruct\"");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
+        }
+        {
+            var value = new GenericTypeWhereStruct<SimpleStruct>()
+            {
+                Value = new SimpleStruct() { Value = "This is SimpleStruct" },
+                NullableValue = new SimpleStruct() { Value = "This is Nullable SimpleStruct" }
+            };
+            using var bytes = CsTomlSerializer.Serialize(value, options: Option.Header);
+            var __ = CsTomlSerializer.Deserialize<GenericTypeWhereStruct<SimpleStruct>>(bytes.ByteSpan);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("[Value]");
+            writer.AppendLine("Value = \"This is SimpleStruct\"");
+            writer.AppendLine("[NullableValue]");
+            writer.AppendLine("Value = \"This is Nullable SimpleStruct\"");
             writer.Flush();
 
             var expected = buffer.ToArray();

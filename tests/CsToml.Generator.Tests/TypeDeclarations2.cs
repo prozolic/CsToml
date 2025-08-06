@@ -46,6 +46,13 @@ internal partial class GenericType<T>
 }
 
 [TomlSerializedObject]
+internal partial class Simple
+{
+    [TomlValueOnSerialized]
+    public string Value { get; set; }
+}
+
+[TomlSerializedObject]
 internal partial class GenericTypeWhereStruct<T> where T : struct
 {
     [TomlValueOnSerialized]
@@ -53,4 +60,11 @@ internal partial class GenericTypeWhereStruct<T> where T : struct
 
     [TomlValueOnSerialized]
     public T? NullableValue { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial struct SimpleStruct
+{
+    [TomlValueOnSerialized]
+    public string Value { get; set; }
 }

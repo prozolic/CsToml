@@ -310,7 +310,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
         if (__{{propertyName}}Formatter != null)
         {
             var __{{propertyName}}__ = target.{{propertyName}};
-            if (__{{propertyName}}__ is ITomlSerializedObject<{{namedTypeName}}>)
+            if (__{{propertyName}}__ is ITomlSerializedObject<{{namedType.TypeArguments[0].ToFullFormatString()}}>)
             {
                 if (options.SerializeOptions.TableStyle == TomlTableStyle.Header && (writer.State == TomlValueState.Default || writer.State == TomlValueState.Table))
                 {
