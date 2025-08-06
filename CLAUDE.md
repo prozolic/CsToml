@@ -79,6 +79,8 @@ dotnet publish --configuration Release
 - Supports `[TomlSerializedObject]` and `[TomlValueOnSerialized]` attributes
 - Handles complex type hierarchies and constructor patterns
 - AOT (Native AOT) compatible code generation
+- **Generic Type Support**: Enhanced support for generic type parameters (`TypeParameter`, `NullableStructWithTypeParameter`)
+- **File Naming**: Replaces `<`, `>`, `,` with underscores in generated filenames for filesystem compatibility
 
 ### Target Frameworks
 - **Main libraries**: .NET 8.0, 9.0, 10.0
@@ -109,6 +111,9 @@ Official TOML test cases are located at `tests/CsToml.Tests/toml-test/` with bot
 2. Test generation: `dotnet build sandbox/ConsoleApp` (triggers source generation)
 3. Run generator tests: `dotnet test tests/CsToml.Generator.Tests/`
 4. Debug generator using `sandbox/ConsoleApp` project as target
+5. **AOT Testing**: Use `sandbox/ConsoleNativeAOT` to test Native AOT compatibility
+   - Build: `dotnet publish --configuration Release`
+   - Run: `./bin/Release/net8.0/linux-x64/publish/ConsoleNativeAOT`
 
 ### Memory and Performance Considerations
 - All buffer operations should use `ArrayPool<byte>.Shared` when possible
@@ -129,4 +134,22 @@ Official TOML test cases are located at `tests/CsToml.Tests/toml-test/` with bot
 - `src/CsToml/TomlDocument.cs` - Document model for preserving TOML structure
 - `src/CsToml/Formatter/*Formatter.cs` - Built-in support type serialization behavior
 - `src/CsToml.Generator/Generator.cs` - Source generator implementation
+- `src/CsToml.Generator/TypeMeta.cs` - Type analysis and metadata for code generation
+- `src/CsToml.Generator/FormatterTypeMetaData.cs` - Formatter resolution and type mapping logic
+- `src/CsToml.Generator/TomlSerializationKind.cs` - Serialization kind enumeration (includes TypeParameter support)
 - `tests/CsToml.Tests/TomlTest.cs` - TOML compliance test runner
+- `tests/CsToml.Generator.Tests/` - Source generator specific tests
+
+## Source Generator Architecture
+
+The source generator operates in several phases:
+
+1. **Type Discovery**: Identifies types marked with `[TomlSerializedObject]`
+2. **Type Analysis**: `TypeMeta` analyzes properties, constructors, and type relationships
+3. **Serialization Kind Detection**: `FormatterTypeMetaData.GetTomlSerializationKind()` determines how each type should be serialized
+4. **Code Generation**: Generates `ITomlSerializedObject<T>` implementations with proper formatter registration
+
+### Type Parameter Handling
+- `TypeParameter` and `NullableStructWithTypeParameter` serialization kinds handle generic constraints
+- Generated code includes runtime type checking for generic type parameters
+- AOT-compatible patterns avoid reflection where possible
