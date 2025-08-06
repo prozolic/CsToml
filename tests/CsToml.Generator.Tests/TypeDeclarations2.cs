@@ -1,4 +1,6 @@
-﻿using CsToml.Generator.Tests;
+﻿#pragma warning disable CS8618
+
+using CsToml.Generator.Tests;
 
 namespace CsToml.Generator.Other; // Separate namespace for verification.
 

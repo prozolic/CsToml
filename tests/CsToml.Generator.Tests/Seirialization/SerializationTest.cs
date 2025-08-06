@@ -3799,6 +3799,28 @@ public class GenericTypeTest
             value.Value.ShouldBe("value");
             value.NullableValue.ShouldBe("nullablevalue");
         }
+        {
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value.Value = \"This is TypeTable3\"");
+            writer.AppendLine("NullableValue.Value = \"This is Nullable TypeTable3\"");
+            writer.Flush();
+
+            var value = CsTomlSerializer.Deserialize<GenericType<TypeTable3>>(buffer.WrittenSpan);
+            value.Value.Value.ShouldBe("This is TypeTable3");
+            value.NullableValue!.Value.ShouldBe("This is Nullable TypeTable3");
+        }
+        {
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("[Value]");
+            writer.AppendLine("Value = \"This is TypeTable3\"");
+            writer.AppendLine("[NullableValue]");
+            writer.AppendLine("Value = \"This is Nullable TypeTable3\"");
+            writer.Flush();
+
+            var value = CsTomlSerializer.Deserialize<GenericType<TypeTable3>>(buffer.WrittenSpan);
+            value.Value.Value.ShouldBe("This is TypeTable3");
+            value.NullableValue!.Value.ShouldBe("This is Nullable TypeTable3");
+        }
     }
 
     [Fact]
@@ -3833,6 +3855,42 @@ public class GenericTypeTest
             using var buffer = Utf8String.CreateWriter(out var writer);
             writer.AppendLine("Value = \"value\"");
             writer.AppendLine("NullableValue = \"nullablevalue\"");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
+        }
+        {
+            var value = new GenericType<TypeTable3>()
+            {
+                Value = new TypeTable3() { Value = "This is TypeTable3" },
+                NullableValue = new TypeTable3() { Value = "This is Nullable TypeTable3" }
+            };
+            using var bytes = CsTomlSerializer.Serialize(value);
+            var __ = CsTomlSerializer.Deserialize<GenericType<TypeTable3>>(bytes.ByteSpan);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value.Value = \"This is TypeTable3\"");
+            writer.AppendLine("NullableValue.Value = \"This is Nullable TypeTable3\"");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
+        }
+        {
+            var value = new GenericType<TypeTable3>()
+            {
+                Value = new TypeTable3() { Value = "This is TypeTable3" },
+                NullableValue = new TypeTable3() { Value = "This is Nullable TypeTable3" }
+            };
+            using var bytes = CsTomlSerializer.Serialize(value, options: Option.Header);
+            var __ = CsTomlSerializer.Deserialize<GenericType<TypeTable3>>(bytes.ByteSpan);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("[Value]");
+            writer.AppendLine("Value = \"This is TypeTable3\"");
+            writer.AppendLine("[NullableValue]");
+            writer.AppendLine("Value = \"This is Nullable TypeTable3\"");
             writer.Flush();
 
             var expected = buffer.ToArray();
