@@ -60,7 +60,7 @@ internal sealed class TomlValueOnSerializedAttribute : Attribute
             return;
 
         // '<' and '>' are not allowed in file names.
-        var replaceTypeName = typeMeta.TypeName.Replace("<", "_").Replace(">", "_").Replace(",", "_");
+        var replaceTypeName = typeMeta.TypeName.Replace("<", "_").Replace(">", "_").Replace(",", "_").Replace(" ", "");
 
         context.AddSource($"{replaceTypeName}_generated.g.cs", Generate(typeMeta, constructorMeta));
     }
