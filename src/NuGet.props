@@ -1,4 +1,4 @@
-<Project>
+﻿<Project>
     <PropertyGroup>
         <Authors>prozolic</Authors>
         <Description>Microsoft.Extensions.Configuration extensions using CsToml.</Description>
@@ -8,7 +8,7 @@
         <RepositoryUrl>$(PackageProjectUrl)</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <VersionPrefix>1.7.1</VersionPrefix>
+        <VersionPrefix>1.7.2</VersionPrefix>
     </PropertyGroup>
 
     <ItemGroup>

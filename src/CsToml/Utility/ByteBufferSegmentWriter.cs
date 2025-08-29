@@ -47,20 +47,17 @@ internal sealed class ByteBufferSegmentWriter : IBufferWriter<byte>, IDisposable
     private List<ByteBufferSegment> segments;
     private ByteBufferSegment currentSegment;
     private int segmentSize;
-    private long written;
 
     public ByteBufferSegmentWriter()
     {
         segments = new List<ByteBufferSegment>();
         currentSegment = new ByteBufferSegment(DefaultBufferSize);
         segmentSize = DefaultBufferSize;
-        written = 0;
     }
 
     public void Advance(int count)
     {
         currentSegment.Advance(count);
-        written += count;
     }
 
     public Memory<byte> GetMemory(int sizeHint = 0)
@@ -116,7 +113,6 @@ internal sealed class ByteBufferSegmentWriter : IBufferWriter<byte>, IDisposable
         }
         segments.Clear();
         currentSegment.Return();
-        written = 0;
     }
 
     public void WriteTo<TByteWriter>(TByteWriter writer)
