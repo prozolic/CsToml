@@ -14,7 +14,7 @@ public partial class TomlDocument : ITomlValueFormatter<TomlDocument>
     private readonly TomlTable table;
 
     public TomlDocumentNode RootNode
-        => new(table.RootNode);
+        => new(table.RootNode, true);
 
     public long LineNumber { get; internal set; }
 

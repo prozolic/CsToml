@@ -3297,6 +3297,9 @@ public class TypeImmutableTest2
             ImmutableArray = [new TypeTable3() { Value = "[1] This is TypeTable3 in ImmutableArray" },
                               new TypeTable3() { Value = "[2] This is TypeTable3 in ImmutableArray" },
                               new TypeTable3() { Value = "[3] This is TypeTable3 in ImmutableArray" }],
+            NullableImmutableArray = [new TypeTable3() { Value = "[1] This is TypeTable3 in NullableImmutableArray" },
+                                      new TypeTable3() { Value = "[2] This is TypeTable3 in NullableImmutableArray" },
+                                      new TypeTable3() { Value = "[3] This is TypeTable3 in NullableImmutableArray" }],
             ImmutableList = [new TypeTable3() { Value = "[1] This is TypeTable3 in ImmutableList" },
                               new TypeTable3() { Value = "[2] This is TypeTable3 in ImmutableList" },
                               new TypeTable3() { Value = "[3] This is TypeTable3 in ImmutableList" }],
@@ -3310,6 +3313,7 @@ public class TypeImmutableTest2
 
             using var buffer = Utf8String.CreateWriter(out var writer);
             writer.AppendLine("ImmutableArray = [ {Value = \"[1] This is TypeTable3 in ImmutableArray\"}, {Value = \"[2] This is TypeTable3 in ImmutableArray\"}, {Value = \"[3] This is TypeTable3 in ImmutableArray\"} ]");
+            writer.AppendLine("NullableImmutableArray = [ {Value = \"[1] This is TypeTable3 in NullableImmutableArray\"}, {Value = \"[2] This is TypeTable3 in NullableImmutableArray\"}, {Value = \"[3] This is TypeTable3 in NullableImmutableArray\"} ]");
             writer.AppendLine("ImmutableList = [ {Value = \"[1] This is TypeTable3 in ImmutableList\"}, {Value = \"[2] This is TypeTable3 in ImmutableList\"}, {Value = \"[3] This is TypeTable3 in ImmutableList\"} ]");
             writer.AppendLine("IImmutableList = [ {Value = \"[1] This is TypeTable3 in IImmutableList\"}, {Value = \"[2] This is TypeTable3 in IImmutableList\"}, {Value = \"[3] This is TypeTable3 in IImmutableList\"} ]");
             writer.Flush();
@@ -3322,6 +3326,7 @@ public class TypeImmutableTest2
 
             using var buffer = Utf8String.CreateWriter(out var writer);
             writer.AppendLine("ImmutableArray = [ {Value = \"[1] This is TypeTable3 in ImmutableArray\"}, {Value = \"[2] This is TypeTable3 in ImmutableArray\"}, {Value = \"[3] This is TypeTable3 in ImmutableArray\"} ]");
+            writer.AppendLine("NullableImmutableArray = [ {Value = \"[1] This is TypeTable3 in NullableImmutableArray\"}, {Value = \"[2] This is TypeTable3 in NullableImmutableArray\"}, {Value = \"[3] This is TypeTable3 in NullableImmutableArray\"} ]");
             writer.AppendLine("ImmutableList = [ {Value = \"[1] This is TypeTable3 in ImmutableList\"}, {Value = \"[2] This is TypeTable3 in ImmutableList\"}, {Value = \"[3] This is TypeTable3 in ImmutableList\"} ]");
             writer.AppendLine("IImmutableList = [ {Value = \"[1] This is TypeTable3 in IImmutableList\"}, {Value = \"[2] This is TypeTable3 in IImmutableList\"}, {Value = \"[3] This is TypeTable3 in IImmutableList\"} ]");
             writer.Flush();
@@ -3338,6 +3343,7 @@ public class TypeImmutableTest2
         writer.AppendLine("ImmutableArray = [ {Value = \"[1] This is TypeTable3 in ImmutableArray\"}, {Value = \"[2] This is TypeTable3 in ImmutableArray\"}, {Value = \"[3] This is TypeTable3 in ImmutableArray\"} ]");
         writer.AppendLine("ImmutableList = [ {Value = \"[1] This is TypeTable3 in ImmutableList\"}, {Value = \"[2] This is TypeTable3 in ImmutableList\"}, {Value = \"[3] This is TypeTable3 in ImmutableList\"} ]");
         writer.AppendLine("IImmutableList = [ {Value = \"[1] This is TypeTable3 in IImmutableList\"}, {Value = \"[2] This is TypeTable3 in IImmutableList\"}, {Value = \"[3] This is TypeTable3 in IImmutableList\"} ]");
+        writer.AppendLine("NullableImmutableArray = [ {Value = \"[1] This is TypeTable3 in NullableImmutableArray\"}, {Value = \"[2] This is TypeTable3 in NullableImmutableArray\"}, {Value = \"[3] This is TypeTable3 in NullableImmutableArray\"} ]");
         writer.Flush();
 
         var typeImmutable2 = CsTomlSerializer.Deserialize<TypeImmutable2>(buffer.WrittenSpan);
@@ -3356,6 +3362,11 @@ public class TypeImmutableTest2
         typeImmutable2.ImmutableArray[0].Value.ShouldBe("[1] This is TypeTable3 in ImmutableArray");
         typeImmutable2.ImmutableArray[1].Value.ShouldBe("[2] This is TypeTable3 in ImmutableArray");
         typeImmutable2.ImmutableArray[2].Value.ShouldBe("[3] This is TypeTable3 in ImmutableArray");
+
+        typeImmutable2.NullableImmutableArray!.Value.Length.ShouldBe(3);
+        typeImmutable2.NullableImmutableArray.Value[0].Value.ShouldBe("[1] This is TypeTable3 in NullableImmutableArray");
+        typeImmutable2.NullableImmutableArray.Value[1].Value.ShouldBe("[2] This is TypeTable3 in NullableImmutableArray");
+        typeImmutable2.NullableImmutableArray.Value[2].Value.ShouldBe("[3] This is TypeTable3 in NullableImmutableArray");
     }
 }
 
@@ -4020,6 +4031,32 @@ public class GenericTypeWhereStructTest
 
             var expected = buffer.ToArray();
             bytes.ByteSpan.ToArray().ShouldBe(expected);
+        }
+    }
+}
+
+public class NullableValueTest
+{
+    [Fact]
+    public void Deserialize()
+    {
+        {
+            var value = CsTomlSerializer.Deserialize<A>(@"
+Value = 12345
+
+[B]
+Name = ""This is B""
+"u8);
+            value.Value.ShouldBe(12345);
+            value.B.ShouldNotBeNull();
+            value.B!.Name.ShouldBe("This is B");
+        }
+        {
+            var value = CsTomlSerializer.Deserialize<A>(@""u8);
+
+            value.ShouldNotBeNull();
+            value.Value.ShouldBeNull();
+            value.B.ShouldBeNull();
         }
     }
 }

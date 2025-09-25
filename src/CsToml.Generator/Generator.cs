@@ -79,22 +79,24 @@ internal sealed class TomlValueOnSerializedAttribute : Attribute
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
 #pragma warning disable CS8603 // Possible null reference return.
 #pragma warning disable CS8604 // Possible null reference argument for parameter.
-#pragma warning disable CS8619 // Possible null reference assignment fix
+#pragma warning disable CS8619 // Possible null reference assignment fix.
+#pragma warning disable CS8620 // Argument cannot be used for parameter due to differences in the nullability of reference types.
 
 using CsToml;
+using CsToml.Error;
 using CsToml.Formatter;
 using CsToml.Formatter.Resolver;
 
 {{namespaceTag}}
 
-partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{{typeMeta.TypeName}}>
+partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{{typeMeta.GenericTypeParameterName}}>
 {
 
-    static {{typeMeta.TypeName}} ITomlSerializedObject<{{typeMeta.TypeName}}>.Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
+    static {{typeMeta.GenericTypeParameterName}} ITomlSerializedObject<{{typeMeta.GenericTypeParameterName}}>.Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
 {{GenerateDeserializePart(typeMeta, constructorMeta)}}    }
 
-    static void ITomlSerializedObject<{{typeMeta.TypeName}}>.Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, {{typeMeta.TypeName}} target, CsTomlSerializerOptions options)
+    static void ITomlSerializedObject<{{typeMeta.GenericTypeParameterName}}>.Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, {{typeMeta.GenericTypeParameterName}} target, CsTomlSerializerOptions options)
     {
 {{GenerateSerializePart(typeMeta)}}    }
 
@@ -112,6 +114,14 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
     {
         var builder = new StringBuilder();
 
+        if (typeMeta.IsReferenceType)
+        {
+            builder.AppendLine($$"""
+        if (!(rootNode.HasValue || rootNode.IsTableHeader)) return default;
+
+""");
+        }
+            
         foreach (var member in typeMeta.Members)
         {
             var propertyName = member.DefinedName;
@@ -177,6 +187,14 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
     private string GenerateSerializePart(TypeMeta typeMeta)
     {
         var builder = new StringBuilder();
+
+        if (typeMeta.IsReferenceType)
+        {
+            builder.AppendLine($$"""
+        if (target == null) ThrowIfNull(nameof(target));
+
+""");
+        }
 
         var members = typeMeta.Members;
         var onlyTomlSerializedObject = members.Length == 1 && members[0].SerializationKind == TomlSerializationKind.TomlSerializedObject;
@@ -355,6 +373,17 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
         {
             builder.AppendLine("        writer.EndScope();");
         }
+
+        if (typeMeta.IsReferenceType)
+        {
+            builder.AppendLine($$"""
+
+        static void ThrowIfNull(string args)
+        {
+            throw new CsTomlException($@"Serialization failed because the argument '{args}' is null.");
+        }
+""");
+        }
         return builder.ToString();
     }
 
@@ -397,19 +426,52 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
 """);
                     break;
                 case TomlSerializationKind.CollectionOfITomlSerializedObject:
-                    if (FormatterTypeMetaData.TryGetGenericFormatterType(type, out var formatter) != GenericFormatterType.None)
+                    if (type is INamedTypeSymbol namedTypeSymbol && namedTypeSymbol.IsGenericType)
                     {
-                        var collectionNamedType = (INamedTypeSymbol)type;
-                        var typeParameters = string.Join(",", collectionNamedType.TypeArguments.Select(x => x.ToFullFormatString()));
-                        formatter = formatter!.Replace("TYPEPARAMETER", typeParameters);
+                        // Nullable<T> is a special case.
+                        var typeSymbol = namedTypeSymbol.ConstructUnboundGenericType();
+                        if (typeSymbol.ToDisplayString() == "T?")
+                        {
+                            builder.AppendLine($$"""
+        if (!TomlValueFormatterResolver.IsRegistered<{{fullTypeName}}>())
+        {
+            TomlValueFormatterResolver.Register(new NullableFormatter<{{namedTypeSymbol.TypeArguments[0].ToFullFormatString()}}>());
+        }
+""");
+                            break;
+                        }
 
-                        builder.AppendLine($$"""
+                        if (FormatterTypeMetaData.TryGetGenericFormatterType(typeSymbol.ToFullFormatString(), out var typeFormatter) != GenericFormatterType.None)
+                        {
+                            var typeParameters = string.Join(",", namedTypeSymbol.TypeArguments.Select(x => x.ToFullFormatString()));
+                            typeFormatter = typeFormatter.Replace("TYPEPARAMETER", typeParameters);
+
+                            builder.AppendLine($$"""
+        if (!TomlValueFormatterResolver.IsRegistered<{{fullTypeName}}>())
+        {
+            TomlValueFormatterResolver.Register(new {{typeFormatter}}());
+        }
+""");
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        if (FormatterTypeMetaData.TryGetGenericFormatterType(type, out var formatter) != GenericFormatterType.None)
+                        {
+                            var collectionNamedType = (INamedTypeSymbol)type;
+                            var typeParameters = string.Join(",", collectionNamedType.TypeArguments.Select(x => x.ToFullFormatString()));
+                            formatter = formatter!.Replace("TYPEPARAMETER", typeParameters);
+
+                            builder.AppendLine($$"""
         if (!TomlValueFormatterResolver.IsRegistered<{{fullTypeName}}>())
         {
             TomlValueFormatterResolver.Register(new {{formatter}}());
         }
 """);
+                        }
                     }
+
                     break;
                 case TomlSerializationKind.Dictionary:
                     if (FormatterTypeMetaData.TryGetGenericFormatterType(type, out var dictFormatter) != GenericFormatterType.None)
@@ -442,16 +504,16 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                     if (FormatterTypeMetaData.ContainsBuiltInFormatterType(type))
                         break;
 
-                    if (type is INamedTypeSymbol namedTypeSymbol && namedTypeSymbol.IsGenericType)
+                    if (type is INamedTypeSymbol namedTypeSymbol2 && namedTypeSymbol2.IsGenericType)
                     {
                         // Nullable<T> is a special case.
-                        var typeSymbol = namedTypeSymbol.ConstructUnboundGenericType();
+                        var typeSymbol = namedTypeSymbol2.ConstructUnboundGenericType();
                         if (typeSymbol.ToDisplayString() == "T?")
                         {
                             builder.AppendLine($$"""
         if (!TomlValueFormatterResolver.IsRegistered<{{fullTypeName}}>())
         {
-            TomlValueFormatterResolver.Register(new NullableFormatter<{{namedTypeSymbol.TypeArguments[0].ToFullFormatString()}}>());
+            TomlValueFormatterResolver.Register(new NullableFormatter<{{namedTypeSymbol2.TypeArguments[0].ToFullFormatString()}}>());
         }
 """);
                             break;
@@ -459,7 +521,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
 
                         if (FormatterTypeMetaData.TryGetGenericFormatterType(typeSymbol.ToFullFormatString(), out var typeFormatter) != GenericFormatterType.None)
                         {
-                            var typeParameters = string.Join(",", namedTypeSymbol.TypeArguments.Select(x => x.ToFullFormatString()));
+                            var typeParameters = string.Join(",", namedTypeSymbol2.TypeArguments.Select(x => x.ToFullFormatString()));
                             typeFormatter = typeFormatter.Replace("TYPEPARAMETER", typeParameters);
 
                             builder.AppendLine($$"""
@@ -475,7 +537,9 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
             }
         }
 
-        var code = $$"""
+        if (typeMeta.IsReferenceType)
+        {
+            var code = $$"""
         if (!TomlValueFormatterResolver.IsRegistered<{{typeMeta.TypeName}}>())
         {
             TomlValueFormatterResolver.Register(new TomlSerializedObjectFormatter<{{typeMeta.TypeName}}>());
@@ -484,7 +548,21 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
         // Register Formatter in advance.
 {{builder}}
 """;
-        return code;
+            return code;
+        }
+        else
+        {
+            var code = $$"""
+        if (!TomlValueFormatterResolver.IsRegistered<{{typeMeta.TypeName}}>())
+        {
+            TomlValueFormatterResolver.Register(new StructTomlSerializedObjectFormatter<{{typeMeta.TypeName}}>());
+        }
+
+        // Register Formatter in advance.
+{{builder}}
+""";
+            return code;
+        }
     }
 }
 
