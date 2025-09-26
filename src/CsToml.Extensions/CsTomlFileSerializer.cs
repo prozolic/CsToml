@@ -98,7 +98,7 @@ public partial class CsTomlFileSerializer
         }
     }
 
-    public static void Serialize<T>(string tomlFilePath, T? value, CsTomlSerializerOptions? options = null)
+    public static void Serialize<T>(string tomlFilePath, T value, CsTomlSerializerOptions? options = null)
     {
         if (Path.GetExtension(tomlFilePath) != TomlExtension)
             throw new FormatException($"TOML file should use the extension .toml");
@@ -116,7 +116,7 @@ public partial class CsTomlFileSerializer
         bufferWriter.WriteTo(fileWriter.ByteWriter);
     }
 
-    public static async ValueTask SerializeAsync<T>(string tomlFilePath, T? value, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
+    public static async ValueTask SerializeAsync<T>(string tomlFilePath, T value, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
     {
         if (Path.GetExtension(tomlFilePath) != TomlExtension)
             throw new FormatException($"TOML file should use the extension .toml");

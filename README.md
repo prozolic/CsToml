@@ -110,16 +110,16 @@ Define the `class`, `struct`, `record` and `record struct` to be serialized and 
 public partial class CsTomlClass
 {
     [TomlValueOnSerialized]
-    public string Key { get; set; }
+    public string? Key { get; set; }
 
     [TomlValueOnSerialized]
     public int? Number { get; set; }
 
     [TomlValueOnSerialized]
-    public int[] Array { get; set; }
+    public int[]? Array { get; set; }
 
     [TomlValueOnSerialized(aliasName: "alias")]
-    public string Value { get; set; }
+    public string? Value { get; set; }
 
     [TomlValueOnSerialized]
     public TableClass Table { get; set; } = new TableClass();
@@ -129,7 +129,7 @@ public partial class CsTomlClass
 public partial class TableClass
 {
     [TomlValueOnSerialized]
-    public string Key { get; set; }
+    public string? Key { get; set; }
 
     [TomlValueOnSerialized]
     public int Number { get; set; }
@@ -150,76 +150,57 @@ See [Built-in support type](#built-in-support-type) for more information on avai
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
 #pragma warning disable CS8603 // Possible null reference return.
 #pragma warning disable CS8604 // Possible null reference argument for parameter.
-#pragma warning disable CS8619 // Possible null reference assignment fix
+#pragma warning disable CS8619 // Possible null reference assignment fix.
+#pragma warning disable CS8620 // Argument cannot be used for parameter due to differences in the nullability of reference types.
 
 using CsToml;
+using CsToml.Error;
 using CsToml.Formatter;
 using CsToml.Formatter.Resolver;
 
 namespace ConsoleApp;
 
-partial class CsTomlClass : ITomlSerializedObject<CsTomlClass>
+partial class CsTomlClass : ITomlSerializedObject<CsTomlClass?>
 {
 
-    static CsTomlClass ITomlSerializedObject<CsTomlClass>.Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
+    static CsTomlClass? ITomlSerializedObject<CsTomlClass?>.Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
-        var __Key__RootNode = rootNode["Key"u8];
-        var __Key__ = options.Resolver.GetFormatter<string>()!.Deserialize(ref __Key__RootNode, options);
-        var __Value__RootNode = rootNode["alias"u8];
-        var __Value__ = options.Resolver.GetFormatter<string>()!.Deserialize(ref __Value__RootNode, options);
-        var __Array__RootNode = rootNode["Array"u8];
-        var __Array__ = options.Resolver.GetFormatter<int[]>()!.Deserialize(ref __Array__RootNode, options);
-        var __Number__RootNode = rootNode["Number"u8];
-        var __Number__ = options.Resolver.GetFormatter<int?>()!.Deserialize(ref __Number__RootNode, options);
-        var __Table__RootNode = rootNode["Table"u8];
+        if (!(rootNode.HasValue || rootNode.IsTableHeader)) return default;
+
+        var __Table__RootNode = rootNode[@"Table"u8];
         var __Table__ = options.Resolver.GetFormatter<global::ConsoleApp.TableClass>()!.Deserialize(ref __Table__RootNode, options);
 
         var target = new CsTomlClass(){
-            Key = __Key__,
-            Value = __Value__,
-            Array = __Array__,
-            Number = __Number__,
             Table = __Table__,
         };
 
         return target;
     }
 
-    static void ITomlSerializedObject<CsTomlClass>.Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, CsTomlClass target, CsTomlSerializerOptions options)
+    static void ITomlSerializedObject<CsTomlClass?>.Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, CsTomlClass? target, CsTomlSerializerOptions options)
     {
-        writer.BeginScope();
-        writer.WriteKey("Key"u8);
-        writer.WriteEqual();
-        options.Resolver.GetFormatter<string>()!.Serialize(ref writer, target.Key, options);
-        writer.EndKeyValue();
-        writer.WriteKey("alias"u8);
-        writer.WriteEqual();
-        options.Resolver.GetFormatter<string>()!.Serialize(ref writer, target.Value, options);
-        writer.EndKeyValue();
-        writer.WriteKey("Array"u8);
-        writer.WriteEqual();
-        options.Resolver.GetFormatter<int[]>()!.Serialize(ref writer, target.Array, options);
-        writer.EndKeyValue();
-        writer.WriteKey("Number"u8);
-        writer.WriteEqual();
-        options.Resolver.GetFormatter<int?>()!.Serialize(ref writer, target.Number, options);
-        writer.EndKeyValue();
+        if (target == null) ThrowIfNull(nameof(target));
+
         if (options.SerializeOptions.TableStyle == TomlTableStyle.Header && (writer.State == TomlValueState.Default || writer.State == TomlValueState.Table)){
-            writer.WriteTableHeader("Table"u8);
+            writer.WriteTableHeader(@"Table"u8);
             writer.WriteNewLine();
             writer.BeginCurrentState(TomlValueState.Table);
-            writer.PushKey("Table"u8);
+            writer.PushKey(@"Table"u8);
             options.Resolver.GetFormatter<global::ConsoleApp.TableClass>()!.Serialize(ref writer, target.Table, options);
             writer.PopKey();
             writer.EndCurrentState();
         }
         else
         {
-            writer.PushKey("Table"u8);
+            writer.PushKey(@"Table"u8);
             options.Resolver.GetFormatter<global::ConsoleApp.TableClass>()!.Serialize(ref writer, target.Table, options);
             writer.PopKey();
         }
-        writer.EndScope();
+
+        static void ThrowIfNull(string args)
+        {
+            throw new CsTomlException($@"Serialization failed because the argument '{args}' is null.");
+        }
     }
 
     static void ITomlSerializedObjectRegister.Register()
@@ -230,10 +211,6 @@ partial class CsTomlClass : ITomlSerializedObject<CsTomlClass>
         }
 
         // Register Formatter in advance.
-        if (!TomlValueFormatterResolver.IsRegistered<int?>())
-        {
-            TomlValueFormatterResolver.Register(new NullableFormatter<int>());
-        }
         if (!TomlValueFormatterResolver.IsRegistered<global::ConsoleApp.TableClass>())
         {
             TomlValueFormatterResolver.Register<global::ConsoleApp.TableClass>();
@@ -256,22 +233,26 @@ partial class CsTomlClass : ITomlSerializedObject<CsTomlClass>
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
 #pragma warning disable CS8603 // Possible null reference return.
 #pragma warning disable CS8604 // Possible null reference argument for parameter.
-#pragma warning disable CS8619 // Possible null reference assignment fix
+#pragma warning disable CS8619 // Possible null reference assignment fix.
+#pragma warning disable CS8620 // Argument cannot be used for parameter due to differences in the nullability of reference types.
 
 using CsToml;
+using CsToml.Error;
 using CsToml.Formatter;
 using CsToml.Formatter.Resolver;
 
 namespace ConsoleApp;
 
-partial class TableClass : ITomlSerializedObject<TableClass>
+partial class TableClass : ITomlSerializedObject<TableClass?>
 {
 
-    static TableClass ITomlSerializedObject<TableClass>.Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
+    static TableClass? ITomlSerializedObject<TableClass?>.Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
-        var __Key__RootNode = rootNode["Key"u8];
+        if (!(rootNode.HasValue || rootNode.IsTableHeader)) return default;
+
+        var __Key__RootNode = rootNode[@"Key"u8];
         var __Key__ = options.Resolver.GetFormatter<string>()!.Deserialize(ref __Key__RootNode, options);
-        var __Number__RootNode = rootNode["Number"u8];
+        var __Number__RootNode = rootNode[@"Number"u8];
         var __Number__ = options.Resolver.GetFormatter<int>()!.Deserialize(ref __Number__RootNode, options);
 
         var target = new TableClass(){
@@ -282,18 +263,25 @@ partial class TableClass : ITomlSerializedObject<TableClass>
         return target;
     }
 
-    static void ITomlSerializedObject<TableClass>.Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TableClass target, CsTomlSerializerOptions options)
+    static void ITomlSerializedObject<TableClass?>.Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TableClass? target, CsTomlSerializerOptions options)
     {
+        if (target == null) ThrowIfNull(nameof(target));
+
         writer.BeginScope();
-        writer.WriteKey("Key"u8);
+        writer.WriteKey(@"Key"u8);
         writer.WriteEqual();
         options.Resolver.GetFormatter<string>()!.Serialize(ref writer, target.Key, options);
         writer.EndKeyValue();
-        writer.WriteKey("Number"u8);
+        writer.WriteKey(@"Number"u8);
         writer.WriteEqual();
         options.Resolver.GetFormatter<int>()!.Serialize(ref writer, target.Number, options);
         writer.EndKeyValue(true);
         writer.EndScope();
+
+        static void ThrowIfNull(string args)
+        {
+            throw new CsTomlException($@"Serialization failed because the argument '{args}' is null.");
+        }
     }
 
     static void ITomlSerializedObjectRegister.Register()
