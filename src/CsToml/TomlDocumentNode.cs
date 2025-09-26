@@ -25,6 +25,7 @@ public struct TomlDocumentNode
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private readonly TomlValue value;
     private readonly TomlTableNode node;
+    private readonly bool isRoot;
 
     internal readonly int NodeCount => node?.NodeCount ?? 0;
 
@@ -32,13 +33,16 @@ public struct TomlDocumentNode
 
     internal readonly TomlTableNode Node => node;
 
-    public readonly bool HasValue => Value.HasValue || NodeCount > 0;
+    public readonly bool HasValue => Value.HasValue || NodeCount > 0 || isRoot;
 
     [EditorBrowsable(EditorBrowsableState.Never)]
     public readonly bool HasNodeOnly => !Value.HasValue && NodeCount > 0;
 
     [EditorBrowsable(EditorBrowsableState.Never)]
     public readonly bool HasValueOnly => Value.HasValue && NodeCount == 0;
+
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public readonly bool IsTableHeader => node?.IsTableHeader ?? false;
 
     public readonly TomlValueType ValueType => Value.Type;
 
@@ -110,10 +114,11 @@ public struct TomlDocumentNode
         }
     }
 
-    internal TomlDocumentNode(TomlTableNode node)
+    internal TomlDocumentNode(TomlTableNode node, bool isRoot = false)
     {
         this.node = node;
         this.value = node.Value!;
+        this.isRoot = isRoot;
     }
 
     public TomlDocumentNode(TomlValue value)

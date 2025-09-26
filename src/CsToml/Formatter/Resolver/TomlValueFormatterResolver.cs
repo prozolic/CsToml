@@ -95,7 +95,13 @@ public sealed class TomlValueFormatterResolver : ITomlValueFormatterResolver
     }
 
     public static void Register<T>(TomlSerializedObjectFormatter<T> formatter)
-        where T : ITomlSerializedObject<T>
+        where T : class, ITomlSerializedObject<T?>
+    {
+        TomlSerializedObjectFormatterResolver.Instance.Register(formatter);
+    }
+
+    public static void Register<T>(StructTomlSerializedObjectFormatter<T> formatter)
+        where T : struct, ITomlSerializedObject<T>
     {
         TomlSerializedObjectFormatterResolver.Instance.Register(formatter);
     }

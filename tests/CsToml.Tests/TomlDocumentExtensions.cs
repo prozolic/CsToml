@@ -115,7 +115,7 @@ internal static class TomlDocumentExtensions
                 Add(jsonObj, key, arrayJsonObj);
                 foreach (var v in arrayValue)
                 {
-                    AddChildTomlValue(arrayJsonObj, v, null);
+                    AddChildTomlValue(arrayJsonObj, v!, null);
                 }
                 break;
             case TomlTable tableValue: // Array of Tables

@@ -326,6 +326,13 @@ internal static class FormatterTypeMetaData
                     return TomlSerializationKind.TomlSerializedObject;
                 }
 
+                // For a Nullable<T> Collection/Dictionary like ImmutableArray<T>?
+                if (TryGetNullableParameterType(type, out var nullableType) &&
+                    (ContainsCollectionType(nullableType!) || ContainsDictionary(nullableType!)))
+                {
+                    type = nullableType!;
+                }
+
                 var genericFormatterType = TryGetGenericFormatterType(type, out var _);
                 if (genericFormatterType != GenericFormatterType.None)
                 {

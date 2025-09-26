@@ -834,6 +834,9 @@ internal partial class TypeImmutable2
     public ImmutableArray<TypeTable3> ImmutableArray { get; set; }
 
     [TomlValueOnSerialized]
+    public ImmutableArray<TypeTable3>? NullableImmutableArray { get; set; }
+
+    [TomlValueOnSerialized]
     public ImmutableList<TypeTable3> ImmutableList { get; set; }
 
     [TomlValueOnSerialized]

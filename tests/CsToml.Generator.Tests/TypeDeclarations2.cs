@@ -68,3 +68,20 @@ internal partial struct SimpleStruct
     [TomlValueOnSerialized]
     public string Value { get; set; }
 }
+
+[TomlSerializedObject]
+public partial class A
+{
+    [TomlValueOnSerialized]
+    public B? B { get; set; }
+
+    [TomlValueOnSerialized]
+    public int? Value { get; set; }
+}
+
+[TomlSerializedObject]
+public partial class B
+{
+    [TomlValueOnSerialized]
+    public string Name { get; set; }
+}

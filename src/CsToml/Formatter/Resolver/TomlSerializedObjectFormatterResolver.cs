@@ -44,7 +44,16 @@ internal sealed class TomlSerializedObjectFormatterResolver : ITomlValueFormatte
         => CacheCheck<T>.Registered;
 
     public void Register<T>(TomlSerializedObjectFormatter<T> fomatter)
-        where T : ITomlSerializedObject<T>
+        where T : class, ITomlSerializedObject<T?>
+    {
+        if (CacheCheck<T>.Registered) return;
+
+        CacheCheck<T>.Registered = true;
+        Cache<T>.Formatter = fomatter!;
+    }
+
+    public void Register<T>(StructTomlSerializedObjectFormatter<T> fomatter)
+        where T : struct, ITomlSerializedObject<T>
     {
         if (CacheCheck<T>.Registered) return;
 

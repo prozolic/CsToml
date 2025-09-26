@@ -18,6 +18,8 @@ internal sealed class TypeMeta
     public string TypeName { get; }
     public string FullTypeName { get; }
     public string TypeKeyword { get; }
+    public string GenericTypeParameterName { get; }
+    public bool IsReferenceType => !symbol.IsValueType;
 
     public TypeMeta(INamedTypeSymbol symbol, TypeDeclarationSyntax syntax)
     {
@@ -26,8 +28,7 @@ internal sealed class TypeMeta
 
         TypeName = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
         FullTypeName = symbol.ToFullFormatString();
-
-        Console.WriteLine(FullTypeName);
+        GenericTypeParameterName = symbol.IsValueType ? TypeName : $"{TypeName}?";
 
         if (symbol.IsRecord)
             TypeKeyword = symbol.IsValueType ? "record struct" : "record";
