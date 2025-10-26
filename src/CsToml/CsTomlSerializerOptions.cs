@@ -10,18 +10,26 @@ public enum TomlTableStyle
     Header = 1
 }
 
+public enum TomlNullBehavior
+{
+    Default = 0,
+    Skip = 1
+}
+
 public record CsTomlSerializerOptions(ITomlValueFormatterResolver Resolver)
 {
     public static readonly CsTomlSerializerOptions Default = new(TomlValueFormatterResolver.Instance) { };
 
-    public SerializeOptions SerializeOptions { get; init; } = new ();
+    public SerializeOptions SerializeOptions { get; init; } = new();
 
-    public TomlSpec Spec { get; init; } = new ();
+    public TomlSpec Spec { get; init; } = new();
 }
 
 public record SerializeOptions
 {
     public TomlTableStyle TableStyle { get; init; } = TomlTableStyle.Default;
+
+    public TomlNullBehavior DefaultNullBehavior { get; init; } = TomlNullBehavior.Default;
 }
 
 public record TomlSpec
@@ -42,4 +50,3 @@ public record TomlSpec
 
     #endregion
 }
-

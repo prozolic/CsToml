@@ -231,7 +231,7 @@ internal sealed class ConstructorMeta
         this.syntax = syntax;
 
         var instanceConstructors = new List<(IMethodSymbol ctor, ImmutableArray<IParameterSymbol> parameters)>(symbol.InstanceConstructors.Length);
-        foreach (var constructor in symbol.InstanceConstructors.Where(c => c is IMethodSymbol and { DeclaredAccessibility: Accessibility.Public}))
+        foreach (var constructor in symbol.InstanceConstructors.Where(c => c is IMethodSymbol and { DeclaredAccessibility: Accessibility.Public }))
         {
             if (constructor.Parameters.Any(p => p.Type.MetadataName == symbol.MetadataName))
             {
@@ -353,4 +353,6 @@ internal struct TomlValueOnSerializedData
     public string? AliasName { get; init; }
 
     public bool CanAliasName { get; init; }
+
+    public bool SkipNull { get; init; }
 }

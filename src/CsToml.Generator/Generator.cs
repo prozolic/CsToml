@@ -38,6 +38,8 @@ internal sealed class TomlValueOnSerializedAttribute : Attribute
 {
     public string? AliasName { get; }
 
+    public bool SkipNull { get; set; } = false;
+
     public TomlValueOnSerializedAttribute() {  }
 
     public TomlValueOnSerializedAttribute(string? aliasName) { this.AliasName = aliasName; }
@@ -226,14 +228,40 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
             var symbol = member.Symbol;
             var endKeyValue = memberCount == members.Length ? "true" : "";
             var fullTypeName = symbol.Type.ToFullFormatString();
+            var skipNull = member.SkipNull;
+
+            // Check if the property type is nullable (reference type or Nullable<T>)
+            var isNullable = symbol.Type.NullableAnnotation == NullableAnnotation.Annotated
+                || (symbol.Type is INamedTypeSymbol namedSymbol && namedSymbol.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T);
+
+            // Generate null check wrapper if needed
+            // Only Primitive and Object types need null check wrapping
+            // For other types, the formatter handles null internally
+            var needsNullCheck = isNullable && (skipNull || kind == TomlSerializationKind.Primitive || kind == TomlSerializationKind.Object);
+
+            if (needsNullCheck)
+            {
+                // If SkipNull is explicitly set to true, only check if value is not null
+                // Otherwise, also check the global setting
+                var condition = skipNull
+                    ? $"target.{propertyName} != null"
+                    : $"target.{propertyName} != null || (int)options.SerializeOptions.DefaultNullBehavior == 0";
+
+                builder.AppendLine($$"""
+        if ({{condition}})
+        {
+""");
+            }
+
+            var indent = needsNullCheck ? "    " : "";
 
             if (kind == TomlSerializationKind.Primitive || kind == TomlSerializationKind.Object)
             {
                 builder.AppendLine($$"""
-        writer.WriteKey({{$"@\"{accessName}\"u8"}});
-        writer.WriteEqual();
-        options.Resolver.GetFormatter<{{fullTypeName}}>()!.Serialize(ref writer, target.{{propertyName}}, options);
-        writer.EndKeyValue({{endKeyValue}});
+        {{indent}}writer.WriteKey({{$"@\"{accessName}\"u8"}});
+        {{indent}}writer.WriteEqual();
+        {{indent}}options.Resolver.GetFormatter<{{fullTypeName}}>()!.Serialize(ref writer, target.{{propertyName}}, options);
+        {{indent}}writer.EndKeyValue({{endKeyValue}});
 """);
             }
             else if (kind == TomlSerializationKind.TomlSerializedObject)
@@ -278,7 +306,6 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
             writer.EndKeyValue({{endKeyValue}});
         }
 """);
-
             }
             else if (kind == TomlSerializationKind.ArrayOfITomlSerializedObject || kind == TomlSerializationKind.CollectionOfITomlSerializedObject)
             {
@@ -378,6 +405,14 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
         writer.WriteEqual();
         options.Resolver.GetFormatter<{{fullTypeName}}>()!.Serialize(ref writer, target.{{propertyName}}, options);
         writer.EndKeyValue({{endKeyValue}});
+""");
+            }
+
+            // Close the null check if block
+            if (needsNullCheck)
+            {
+                builder.AppendLine($$"""
+        }
 """);
             }
         }

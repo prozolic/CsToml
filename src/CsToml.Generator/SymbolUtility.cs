@@ -21,6 +21,18 @@ internal static class SymbolUtility
             if (attr == null) continue;
 
             var serializationKind = FormatterTypeMetaData.GetTomlSerializationKind(symbol.Type);
+
+            // Extract SkipNull property value from named arguments
+            var skipNull = false;
+            if (attr.NamedArguments.Length > 0)
+            {
+                var skipNullArg = attr.NamedArguments.FirstOrDefault(arg => arg.Key == "SkipNull");
+                if (skipNullArg.Value.Value is bool skipNullValue)
+                {
+                    skipNull = skipNullValue;
+                }
+            }
+
             if (attr.ConstructorArguments.Length > 0 && (attr.ConstructorArguments[0].Value as string) != null)
             {
                 // Use explicit alias name (takes precedence over naming convention)
@@ -31,7 +43,8 @@ internal static class SymbolUtility
                     DefinedName = symbol.Name,
                     TomlValueOnSerializedAttributeData = attr,
                     AliasName = (string)attr.ConstructorArguments[0].Value!,
-                    CanAliasName = true
+                    CanAliasName = true,
+                    SkipNull = skipNull
                 };
             }
             else
@@ -48,7 +61,8 @@ internal static class SymbolUtility
                     DefinedName = symbol.Name,
                     TomlValueOnSerializedAttributeData = attr,
                     AliasName = convertedName,
-                    CanAliasName = convertedName != null
+                    CanAliasName = convertedName != null,
+                    SkipNull = skipNull
                 };
             }
         }
