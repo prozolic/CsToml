@@ -7,6 +7,8 @@ using System.Text;
 using Tommy;
 using Tomlyn;
 
+#pragma warning disable CS8618
+
 namespace Benchmark;
 
 public class DefaultParseBenchmark
@@ -21,7 +23,7 @@ public class DefaultParseBenchmark
         tomlUtf16Text = File.ReadAllText(Constants.TomlFilePath);
     }
 
-    [BenchmarkCategory("Benchmark"), Benchmark()]
+    [BenchmarkCategory("Benchmark"), Benchmark]
     public CsToml.TomlDocument CsToml_Parse()
     {
         var document = CsTomlSerializer.Deserialize<TomlDocument>(Encoding.UTF8.GetBytes(tomlUtf16Text));

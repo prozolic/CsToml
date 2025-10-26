@@ -4,16 +4,33 @@ using CsToml.Formatter.Resolver;
 using System.Buffers;
 using System.Text;
 using ConsoleNativeAOT;
-using System.Reflection.Metadata;
-using System.Xml.Linq;
-using System.Collections.ObjectModel;
 using CsToml.Values;
 using System.Collections.Immutable;
 
 Console.WriteLine("Hello, World!");
 
+var valueA = CsTomlSerializer.Deserialize<A>(@"
+Value = 12345
+
+[B]
+Name = ""This is B""
+Number = 234
+test = { key = ""KeY""}
+"u8);
+
+var valueA2 = CsTomlSerializer.Deserialize<A>(@"
+
+"u8);
+
 TomlValueFormatterResolver.Register(new TestStruct2Formatter()); // Custom type formatter registration.
 TomlValueFormatterResolver.Register(new CustomFormatter()); // Custom type formatter registration.
+
+var testToml = @"
+inline = { key = { key = ""inlinetable"" } }
+"u8;
+
+var t = CsTomlSerializer.Deserialize<TomlDocument>(testToml);
+using var ts = CsTomlSerializer.Serialize(t);
 
 var tomlText = @"
 str = ""value""
@@ -127,9 +144,39 @@ var testClass = new TestClass()
 
 using var text = CsTomlSerializer.Serialize(testClass);
 Console.WriteLine(text.ToString());
+var deserializedTestClass = CsTomlSerializer.Deserialize<TestClass>(text.ByteSpan);
 Console.WriteLine("CsTomlSerializer.Serialize<TestClass> END");
 
-var deserializedTestClass = CsTomlSerializer.Deserialize<TestClass>(text.ByteSpan);
+
+// generic type
+Console.WriteLine("CsTomlSerializer.Serialize<GenericType<T>> Deserialize<GenericType<T>>");
+
+// An exception occurs when Native AOT compiling with .NET 8 and 9 due to a dotnet/runtime bug (https://github.com/dotnet/runtime/issues/113664).
+// This is fixed in .NET 10 so the exception no longer occurs.
+var genericType = new GenericType<int>()
+{
+    Value = 123,
+    NullableValue = 456
+};
+using var genericTypeBytes = CsTomlSerializer.Serialize(genericType);
+Console.WriteLine(genericTypeBytes.ToString());
+
+var deserializedGenericTypeBytes = CsTomlSerializer.Deserialize<GenericType<int>>(genericTypeBytes.ByteSpan);
+Console.WriteLine(deserializedGenericTypeBytes.Value.ToString());
+Console.WriteLine(deserializedGenericTypeBytes.NullableValue.ToString());
+
+var genericType2 = new GenericType<Simple>()
+{
+    Value = new Simple() { Value = "This is TypeTable3" },
+    NullableValue = new Simple() { Value = "This is Nullable TypeTable3" }
+};
+using var genericType2Bytes = CsTomlSerializer.Serialize(genericType2);
+Console.WriteLine(genericType2Bytes.ToString());
+var deserializedGenericType2Bytes = CsTomlSerializer.Deserialize<GenericType<Simple>>(genericType2Bytes.ByteSpan);
+
+Console.WriteLine(deserializedGenericType2Bytes.Value.Value.ToString());
+Console.WriteLine(deserializedGenericType2Bytes.NullableValue!.Value.ToString());
+Console.WriteLine("CsTomlSerializer.Serialize<GenericType<T>> Deserialize<GenericType<T>> END");
 
 var testEnum = CsTomlSerializer.Deserialize<TestEnum>(@"color = ""Red"""u8);
 Console.WriteLine(testEnum.color);
@@ -139,13 +186,13 @@ Console.WriteLine($"Sample.Custom = {sample.Key.Value}");
 
 var type = new TypeImmutable()
 {
-ImmutableArray = [new TypeTable() { Value = "[1] This is TypeTable in ImmutableArray" },
+    ImmutableArray = [new TypeTable() { Value = "[1] This is TypeTable in ImmutableArray" },
                               new TypeTable() { Value = "[2] This is TypeTable in ImmutableArray" },
                               new TypeTable() { Value = "[3] This is TypeTable in ImmutableArray" }],
-ImmutableList = [new TypeTable() { Value = "[1] This is TypeTable in ImmutableList" },
+    ImmutableList = [new TypeTable() { Value = "[1] This is TypeTable in ImmutableList" },
                               new TypeTable() { Value = "[2] This is TypeTable in ImmutableList" },
                               new TypeTable() { Value = "[3] This is TypeTable in ImmutableList" }],
-IImmutableList = [new TypeTable() { Value = "[1] This is TypeTable in IImmutableList" },
+    IImmutableList = [new TypeTable() { Value = "[1] This is TypeTable in IImmutableList" },
                               new TypeTable() { Value = "[2] This is TypeTable in IImmutableList" },
                               new TypeTable() { Value = "[3] This is TypeTable in IImmutableList" }],
 };
@@ -165,7 +212,10 @@ Console.WriteLine($"{nameof(typeImmutable2.IImmutableList)}.Count = {typeImmutab
 Console.WriteLine($"{nameof(typeImmutable2.IImmutableList)}[0] = {typeImmutable2.IImmutableList[0].Value}");
 Console.WriteLine($"{nameof(typeImmutable2.IImmutableList)}[1] = {typeImmutable2.IImmutableList[1].Value}");
 Console.WriteLine($"{nameof(typeImmutable2.IImmutableList)}[2] = {typeImmutable2.IImmutableList[2].Value}");
+
 Console.WriteLine("END!");
+
+#pragma warning disable CS8618
 
 [TomlSerializedObject]
 public partial class TestClass

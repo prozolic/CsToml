@@ -38,7 +38,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
 
     internal readonly bool IsRoot => valueStates.Count == 1 && !valueOnly;
 
-    public Utf8TomlDocumentWriter(ref TBufferWriter bufferWriter, bool valueOnly = false) : this(ref bufferWriter, valueOnly, null)
+    internal Utf8TomlDocumentWriter(ref TBufferWriter bufferWriter, bool valueOnly = false) : this(ref bufferWriter, valueOnly, null)
     {}
 
     internal Utf8TomlDocumentWriter(ref TBufferWriter bufferWriter, bool valueOnly, CsTomlSerializerOptions? options)

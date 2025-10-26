@@ -259,9 +259,6 @@ Console.WriteLine(Encoding.UTF8.GetString(result.ByteSpan));
 var buffer = new ArrayBufferWriter<byte>();
 CsTomlSerializer.Serialize(ref buffer, document);
 
-var part = new TestTomlSerializedObject();
-using var partBytes = CsTomlSerializer.Serialize(part);
-var partDocument = CsTomlSerializer.Deserialize<TomlDocument>(partBytes.ByteSpan);
 
 var tomlText2 = @"
 
@@ -427,6 +424,8 @@ Sample2();
 
 Console.WriteLine("END");
 
+#pragma warning disable CS8618
+
 [TomlSerializedObject]
 internal partial class TypeTable
 {
@@ -491,4 +490,99 @@ internal partial class TypeTable33
 {
     [TomlValueOnSerialized]
     public string Value { get; set; }
+}
+
+[TomlSerializedObject]
+public partial class TestClass123
+{
+    [TomlValueOnSerialized]
+    public string str { get; set; }
+
+    [TomlValueOnSerialized("int")]
+    public long IntValue { get; set; }
+    [TomlValueOnSerialized]
+    public float flt { get; set; }
+    [TomlValueOnSerialized]
+    public bool boolean { get; set; }
+
+    [TomlValueOnSerialized()]
+    public Dictionary<string, object?> Dict { get; set; }
+
+    [TomlValueOnSerialized()]
+    public IReadOnlyDictionary<string, object?> Dict2 { get; set; }
+
+    [TomlValueOnSerialized()]
+    public Dictionary<long, string> Dict3 { get; set; }
+
+    [TomlValueOnSerialized]
+    public KeyValuePair<int, StringBuilder> Pair { get; set; }
+
+    [TomlValueOnSerialized]
+    public ValueTuple<int, int>? TwoValueTuple { get; set; } = default!;
+
+    [TomlValueOnSerialized]
+    public IImmutableSet<TestStruct123?> TestStructArr { get; set; }
+
+    [TomlValueOnSerialized]
+    public Custom123 TestStruct2 { get; set; }
+
+}
+
+[TomlSerializedObject]
+public partial struct TestStruct123
+{
+    [TomlValueOnSerialized]
+    public int Value { get; set; }
+
+    [TomlValueOnSerialized]
+    public string Str { get; set; }
+}
+
+public struct Custom123
+{
+    public long Value { get; set; }
+
+    public Custom123(long value)
+    {
+        Value = value;
+    }
+    public Custom123(string str)
+    {
+        if (long.TryParse(str.AsSpan(), out var value))
+        {
+            Value = value;
+        }
+        else
+        {
+            Value = 0;
+        }
+    }
+}
+
+[TomlSerializedObject]
+public partial class WithValueTuple
+{
+    [TomlValueOnSerialized]
+    public ValueTuple<int> One { get; set; } = default!;
+    [TomlValueOnSerialized]
+    public ValueTuple<int, int> Two { get; set; } = default!;
+    [TomlValueOnSerialized]
+    public ValueTuple<int, int, int> Three { get; set; } = default!;
+    [TomlValueOnSerialized]
+    public ValueTuple<int, int, int, int> Four { get; set; } = default!;
+    [TomlValueOnSerialized]
+    public ValueTuple<int, int, int, int, int> Five { get; set; } = default!;
+    [TomlValueOnSerialized]
+    public ValueTuple<int, int, int, int, int, int> Six { get; set; } = default!;
+    [TomlValueOnSerialized]
+    public ValueTuple<int, int, int, int, int, int, int> Seven { get; set; } = default!;
+    [TomlValueOnSerialized]
+    public ValueTuple<int, int, int, int, int, int, int, ValueTuple<int>> Eight { get; set; } = default!;
+}
+
+[TomlSerializedObject]
+public partial class TestClass1234
+{
+    [TomlValueOnSerialized]
+    public int Name { get; set; }
 }

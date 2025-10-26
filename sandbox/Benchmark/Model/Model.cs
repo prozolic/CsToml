@@ -1,5 +1,7 @@
 ﻿using CsToml;
 
+#pragma warning disable CS8618
+
 namespace Benchmark.Model;
 
 

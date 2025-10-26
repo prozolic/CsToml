@@ -24,11 +24,11 @@ internal sealed class TomlSerializedObjectAttribute : Attribute
 [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
 internal sealed class TomlValueOnSerializedAttribute : Attribute
 {
-    public string AliasName { get; }
+    public string? AliasName { get; }
 
     public TomlValueOnSerializedAttribute() {  }
 
-    public TomlValueOnSerializedAttribute(string aliasName) { this.AliasName = aliasName; }
+    public TomlValueOnSerializedAttribute(string? aliasName) { this.AliasName = aliasName; }
 }
 
 """);

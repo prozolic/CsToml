@@ -1,7 +1,8 @@
-﻿
+﻿#pragma warning disable CS8618
+
 using CsToml;
-using System.Buffers;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 
 namespace ConsoleNativeAOT;
 
@@ -76,4 +77,49 @@ internal partial class TypeTable
 {
     [TomlValueOnSerialized]
     public string Value { get; set; }
+}
+
+
+[TomlSerializedObject]
+internal partial class AliasName
+{
+    [TomlValueOnSerialized("alias")]
+    public string? Key { get; set; }
+
+    [TomlValueOnSerialized("あいうえおa")]
+    public string? Hiragana { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class GenericType<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>
+{
+    [TomlValueOnSerialized]
+    public T Value { get; set; }
+
+    [TomlValueOnSerialized]
+    public T? NullableValue { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class Simple
+{
+    [TomlValueOnSerialized]
+    public string Value { get; set; }
+}
+
+[TomlSerializedObject]
+public partial class A
+{
+    [TomlValueOnSerialized]
+    public B? B { get; set; } 
+
+    [TomlValueOnSerialized]
+    public int? Value { get; set; }
+}
+
+[TomlSerializedObject]
+public partial class B
+{
+    [TomlValueOnSerialized]
+    public string Name { get; set; }
 }

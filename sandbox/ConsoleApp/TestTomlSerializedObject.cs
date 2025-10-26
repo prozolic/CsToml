@@ -1,15 +1,8 @@
-﻿
-
-using CsToml;
-using CsToml.Formatter;
-using CsToml.Formatter.Resolver;
-using System.Buffers;
-using System.Collections;
+﻿using CsToml;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Numerics;
 using System.Runtime.Serialization;
+
+#pragma warning disable CS8618
 
 namespace ConsoleApp;
 
@@ -64,51 +57,50 @@ public partial class TestTomlSerializedObject2
     [TomlValueOnSerialized()]
     public TestTomlSerializedObject3Nest physical2 { get; set; }
 
+    [TomlValueOnSerialized()]
+    public string str { get; set; }
 
-    //[TomlValueOnSerialized()]
-    //public string str { get; set; }
+    [TomlValueOnSerialized()]
+    public uint int1 { get; set; }
 
-    //[TomlValueOnSerialized()]
-    //public uint int1 { get; set; }
+    [TomlValueOnSerialized()]
+    public long int8 { get; set; }
 
-    //[TomlValueOnSerialized()]
-    //public long int8 { get; set; }
+    [TomlValueOnSerialized()]
+    public bool bool1 { get; set; }
 
-    //[TomlValueOnSerialized()]
-    //public bool bool1 { get; set; }
+    [TomlValueOnSerialized()]
+    public double flt2 { get; set; }
 
-    //[TomlValueOnSerialized()]
-    //public double flt2 { get; set; }
+    [TomlValueOnSerialized()]
+    public DateTimeOffset odt1 { get; set; }
 
-    //[TomlValueOnSerialized()]
-    //public DateTimeOffset odt1 { get; set; }
+    [TomlValueOnSerialized()]
+    public DateTimeOffset odt2 { get; set; }
 
-    //[TomlValueOnSerialized()]
-    //public DateTimeOffset odt2 { get; set; }
+    [TomlValueOnSerialized()]
+    public DateTimeOffset odt3 { get; set; }
 
-    //[TomlValueOnSerialized()]
-    //public DateTimeOffset odt3 { get; set; }
+    [TomlValueOnSerialized()]
+    public DateTime odt4 { get; set; }
 
-    //[TomlValueOnSerialized()]
-    //public DateTime odt4 { get; set; }
+    [TomlValueOnSerialized()]
+    public DateOnly odt5 { get; set; }
 
-    //[TomlValueOnSerialized()]
-    //public DateOnly odt5 { get; set; }
+    [TomlValueOnSerialized()]
+    public TimeOnly lt1 { get; set; }
 
-    //[TomlValueOnSerialized()]
-    //public TimeOnly lt1 { get; set; }
+    [TomlValueOnSerialized()]
+    public int[] integers { get; set; }
 
-    //[TomlValueOnSerialized()]
-    //public int[] integers { get; set; }
+    [TomlValueOnSerialized()]
+    public List<long> integers2 { get; set; }
 
-    //[TomlValueOnSerialized()]
-    //public List<long> integers2 { get; set; }
+    [TomlValueOnSerialized()]
+    public double[] numbers { get; set; }
 
-    //[TomlValueOnSerialized()]
-    //public double[] numbers { get; set; }
-
-    //[TomlValueOnSerialized()]
-    //public string[] colors { get; set; }
+    [TomlValueOnSerialized()]
+    public string[] colors { get; set; }
 }
 
 [TomlSerializedObject]
@@ -262,16 +254,16 @@ public partial class TestE_
 public partial class CsTomlClass
 {
     //[TomlValueOnSerialized]
-    //public string Key { get; set; }
+    //public string? Key { get; set; }
 
     //[TomlValueOnSerialized]
     //public int? Number { get; set; }
 
     //[TomlValueOnSerialized]
-    //public int[] Array { get; set; }
+    //public int[]? Array { get; set; }
 
     //[TomlValueOnSerialized(aliasName: "alias")]
-    //public string Value { get; set; }
+    //public string? Value { get; set; }
 
     [TomlValueOnSerialized]
     public TableClass Table { get; set; } = new TableClass();
@@ -281,7 +273,7 @@ public partial class CsTomlClass
 public partial class TableClass
 {
     [TomlValueOnSerialized()]
-    public string Key { get; set; }
+    public string? Key { get; set; }
 
     [TomlValueOnSerialized()]
     public int Number { get; set; }
@@ -309,4 +301,3 @@ public partial struct AliasName
     [TomlValueOnSerialized]
     public TableNest Table { get; set; }
 }
-
