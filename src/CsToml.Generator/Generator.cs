@@ -17,9 +17,34 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace CsToml;
 
+internal enum TomlNamingConvention
+{
+    None = 0,
+    LowerCase = 1,
+    UpperCase = 2,
+    PascalCase = 3,
+    CamelCase = 4,
+    SnakeCase = 5,
+    KebabCase = 6,
+    ScreamingSnakeCase = 7,
+    ScreamingKebabCase = 8
+}
+
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = false)]
 internal sealed class TomlSerializedObjectAttribute : Attribute
-{}
+{
+    public TomlNamingConvention NamingConvention { get; }
+
+    public TomlSerializedObjectAttribute()
+    {
+        NamingConvention = TomlNamingConvention.None;
+    }
+
+    public TomlSerializedObjectAttribute(TomlNamingConvention namingConvention)
+    {
+        NamingConvention = namingConvention;
+    }
+}
 
 [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
 internal sealed class TomlValueOnSerializedAttribute : Attribute
@@ -121,7 +146,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
 
 """);
         }
-            
+
         foreach (var member in typeMeta.Members)
         {
             var propertyName = member.DefinedName;

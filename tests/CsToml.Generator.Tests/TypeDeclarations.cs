@@ -814,7 +814,7 @@ internal partial class TypeImmutable
     [TomlValueOnSerialized]
     public ImmutableHashSet<int> ImmutableHashSet { get; set; }
 
-    [TomlValueOnSerialized] 
+    [TomlValueOnSerialized]
     public ImmutableSortedSet<int> ImmutableSortedSet { get; set; }
 
     [TomlValueOnSerialized]
@@ -989,6 +989,101 @@ internal partial record AliasName
 
     [TomlValueOnSerialized("<\\i\\c*\\s*\\\\>")]
     public string? Literal { get; set; }
+}
+
+// Naming Convention Tests
+[TomlSerializedObject(TomlNamingConvention.SnakeCase)]
+internal partial class TypeSnakeCase
+{
+    [TomlValueOnSerialized]
+    public string MyProperty { get; set; }
+
+    [TomlValueOnSerialized]
+    public int AnotherValue { get; set; }
+
+    [TomlValueOnSerialized]
+    public string XMLParser { get; set; }
+}
+
+[TomlSerializedObject(TomlNamingConvention.KebabCase)]
+internal partial class TypeKebabCase
+{
+    [TomlValueOnSerialized]
+    public string MyProperty { get; set; }
+
+    [TomlValueOnSerialized]
+    public int AnotherValue { get; set; }
+}
+
+[TomlSerializedObject(TomlNamingConvention.CamelCase)]
+internal partial class TypeCamelCase
+{
+    [TomlValueOnSerialized]
+    public string MyProperty { get; set; }
+
+    [TomlValueOnSerialized]
+    public int AnotherValue { get; set; }
+}
+
+[TomlSerializedObject(TomlNamingConvention.PascalCase)]
+internal partial class TypePascalCase
+{
+    [TomlValueOnSerialized]
+    public string myProperty { get; set; }
+
+    [TomlValueOnSerialized]
+    public int anotherValue { get; set; }
+}
+
+[TomlSerializedObject(TomlNamingConvention.LowerCase)]
+internal partial class TypeLowerCase
+{
+    [TomlValueOnSerialized]
+    public string MyProperty { get; set; }
+
+    [TomlValueOnSerialized]
+    public int AnotherValue { get; set; }
+}
+
+[TomlSerializedObject(TomlNamingConvention.UpperCase)]
+internal partial class TypeUpperCase
+{
+    [TomlValueOnSerialized]
+    public string MyProperty { get; set; }
+
+    [TomlValueOnSerialized]
+    public int AnotherValue { get; set; }
+}
+
+[TomlSerializedObject(TomlNamingConvention.ScreamingSnakeCase)]
+internal partial class TypeScreamingSnakeCase
+{
+    [TomlValueOnSerialized]
+    public string MyProperty { get; set; }
+
+    [TomlValueOnSerialized]
+    public int AnotherValue { get; set; }
+}
+
+[TomlSerializedObject(TomlNamingConvention.ScreamingKebabCase)]
+internal partial class TypeScreamingKebabCase
+{
+    [TomlValueOnSerialized]
+    public string MyProperty { get; set; }
+
+    [TomlValueOnSerialized]
+    public int AnotherValue { get; set; }
+}
+
+// Test that explicit alias overrides naming convention
+[TomlSerializedObject(TomlNamingConvention.SnakeCase)]
+internal partial class TypeAliasOverridesConvention
+{
+    [TomlValueOnSerialized]
+    public string MyProperty { get; set; }  // Will be converted to "my_property"
+
+    [TomlValueOnSerialized("custom_name")]
+    public int AnotherValue { get; set; }   // Will use "custom_name" instead of "another_value"
 }
 
 #if NET9_0_OR_GREATER

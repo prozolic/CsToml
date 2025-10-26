@@ -19,6 +19,7 @@ internal sealed class TypeMeta
     public string FullTypeName { get; }
     public string TypeKeyword { get; }
     public string GenericTypeParameterName { get; }
+    public TomlNamingConvention NamingConvention { get; }
     public bool IsReferenceType => !symbol.IsValueType;
 
     public TypeMeta(INamedTypeSymbol symbol, TypeDeclarationSyntax syntax)
@@ -39,7 +40,10 @@ internal sealed class TypeMeta
             string.Empty :
             $"{symbol.ContainingNamespace}";
 
-        Members = symbol.GetPublicProperties().FilterTomlValueOnSerializedMembers().OrderBy(m => m.SerializationKind).ToImmutableArray();
+        // Get naming convention from attribute
+        NamingConvention = GetNamingConvention(symbol);
+
+        Members = symbol.GetPublicProperties().FilterTomlValueOnSerializedMembers(NamingConvention).OrderBy(m => m.SerializationKind).ToImmutableArray();
 
         var typesymbols = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
         foreach (var member in Members)
@@ -150,6 +154,34 @@ internal sealed class TypeMeta
         return !error;
     }
 
+    private TomlNamingConvention GetNamingConvention(INamedTypeSymbol symbol)
+    {
+        var attr = symbol.GetAttributeData("CsToml", "TomlSerializedObjectAttribute").FirstOrDefault();
+        if (attr == null)
+            return TomlNamingConvention.None;
+
+        // Check for constructor argument
+        if (attr.ConstructorArguments.Length > 0)
+        {
+            var value = attr.ConstructorArguments[0].Value;
+            if (value is int intValue)
+            {
+                return (TomlNamingConvention)intValue;
+            }
+        }
+
+        // Check for named argument
+        foreach (var namedArg in attr.NamedArguments)
+        {
+            if (namedArg.Key == "NamingConvention" && namedArg.Value.Value is int namedValue)
+            {
+                return (TomlNamingConvention)namedValue;
+            }
+        }
+
+        return TomlNamingConvention.None;
+    }
+
     private Location GetPropertyLocation(IPropertySymbol propertySymbol, TypeDeclarationSyntax syntax)
     {
         return propertySymbol.Locations.FirstOrDefault() ?? syntax.Identifier.GetLocation();
@@ -172,7 +204,7 @@ internal sealed class TypeMeta
                     SearchTypeSymbol(typesymbols, typeParameter);
                 }
             }
-            foreach (var propetryParameter in namedSymbol.GetPublicProperties().FilterTomlValueOnSerializedMembers())
+            foreach (var propetryParameter in namedSymbol.GetPublicProperties().FilterTomlValueOnSerializedMembers(TomlNamingConvention.None))
             {
                 SearchTypeSymbol(typesymbols, propetryParameter.Symbol.Type);
             }
