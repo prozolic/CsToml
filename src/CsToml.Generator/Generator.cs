@@ -17,19 +17,6 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace CsToml;
 
-internal enum TomlNamingConvention
-{
-    None = 0,
-    LowerCase = 1,
-    UpperCase = 2,
-    PascalCase = 3,
-    CamelCase = 4,
-    SnakeCase = 5,
-    KebabCase = 6,
-    ScreamingSnakeCase = 7,
-    ScreamingKebabCase = 8
-}
-
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = false)]
 internal sealed class TomlSerializedObjectAttribute : Attribute
 {
