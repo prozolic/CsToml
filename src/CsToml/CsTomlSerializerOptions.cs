@@ -17,12 +17,6 @@ public enum TomlIgnoreCondition
     WhenWritingNull = 2
 }
 
-public enum TomlNullBehavior
-{
-    Default = 0,
-    Skip = 1
-}
-
 public record CsTomlSerializerOptions(ITomlValueFormatterResolver Resolver)
 {
     public static readonly CsTomlSerializerOptions Default = new(TomlValueFormatterResolver.Instance) { };
@@ -36,7 +30,7 @@ public record SerializeOptions
 {
     public TomlTableStyle TableStyle { get; init; } = TomlTableStyle.Default;
 
-    public TomlNullBehavior DefaultNullBehavior { get; init; } = TomlNullBehavior.Default;
+    public TomlIgnoreCondition DefaultIgnoreCondition { get; init; } = TomlIgnoreCondition.Never;
 }
 
 public record TomlSpec

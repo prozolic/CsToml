@@ -4313,7 +4313,7 @@ public class TypeNullBehaviorGlobalTest
 
         var options = CsTomlSerializerOptions.Default with
         {
-            SerializeOptions = new() { DefaultNullBehavior = TomlNullBehavior.Skip }
+            SerializeOptions = new() { DefaultIgnoreCondition = TomlIgnoreCondition.WhenWritingNull }
         };
 
         using var bytes = CsTomlSerializer.Serialize(type, options);
@@ -4333,7 +4333,7 @@ public class TypeNullBehaviorGlobalTest
 
         var options = CsTomlSerializerOptions.Default with
         {
-            SerializeOptions = new() { DefaultNullBehavior = TomlNullBehavior.Skip }
+            SerializeOptions = new() { DefaultIgnoreCondition = TomlIgnoreCondition.WhenWritingNull }
         };
 
         using var bytes = CsTomlSerializer.Serialize(type, options);
@@ -4359,7 +4359,7 @@ public class TypeNullBehaviorGlobalTest
 
         var options = CsTomlSerializerOptions.Default with
         {
-            SerializeOptions = new() { DefaultNullBehavior = TomlNullBehavior.Default }
+            SerializeOptions = new() { DefaultIgnoreCondition = TomlIgnoreCondition.Never }
         };
 
         Should.Throw<CsTomlSerializeException>(() => CsTomlSerializer.Serialize(type, options));
@@ -4377,7 +4377,7 @@ public class TypeNullBehaviorGlobalTest
 
         var options = CsTomlSerializerOptions.Default with
         {
-            SerializeOptions = new() { DefaultNullBehavior = TomlNullBehavior.Skip }
+            SerializeOptions = new() { DefaultIgnoreCondition = TomlIgnoreCondition.WhenWritingNull }
         };
 
         using var serialized = CsTomlSerializer.Serialize(original, options);
@@ -4403,7 +4403,7 @@ public class TypeNullBehaviorMixedTest
 
         var options = CsTomlSerializerOptions.Default with
         {
-            SerializeOptions = new() { DefaultNullBehavior = TomlNullBehavior.Default }
+            SerializeOptions = new() { DefaultIgnoreCondition = TomlIgnoreCondition.Never }
         };
 
         // SkippableField has SkipNull = true, so it should be skipped
@@ -4423,7 +4423,7 @@ public class TypeNullBehaviorMixedTest
 
         var options = CsTomlSerializerOptions.Default with
         {
-            SerializeOptions = new() { DefaultNullBehavior = TomlNullBehavior.Skip }
+            SerializeOptions = new() { DefaultIgnoreCondition = TomlIgnoreCondition.WhenWritingNull }
         };
 
         using var bytes = CsTomlSerializer.Serialize(type, options);
@@ -4473,7 +4473,7 @@ public class TypeNullBehaviorMixedTest
 
         var options = CsTomlSerializerOptions.Default with
         {
-            SerializeOptions = new() { DefaultNullBehavior = TomlNullBehavior.Skip }
+            SerializeOptions = new() { DefaultIgnoreCondition = TomlIgnoreCondition.WhenWritingNull }
         };
 
         using var bytes = CsTomlSerializer.Serialize(type, options);

@@ -257,7 +257,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                 // Otherwise, also check the global setting
                 var condition = ignoreCondition == TomlIgnoreCondition.WhenWritingNull
                     ? $"target.{propertyName} != null"
-                    : $"target.{propertyName} != null || (int)options.SerializeOptions.DefaultNullBehavior == 0";
+                    : $"target.{propertyName} != null || (int)options.SerializeOptions.DefaultIgnoreCondition == 0";
 
                 builder.AppendLine($$"""
         if ({{condition}})
