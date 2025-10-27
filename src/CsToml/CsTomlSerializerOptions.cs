@@ -10,11 +10,10 @@ public enum TomlTableStyle
     Header = 1
 }
 
-public enum TomlIgnoreCondition
+public enum TomlNullHandling
 {
-    Never = 0,
-    Always = 1,
-    WhenWritingNull = 2
+    Error = 0,
+    Ignore = 1
 }
 
 public record CsTomlSerializerOptions(ITomlValueFormatterResolver Resolver)
@@ -30,7 +29,7 @@ public record SerializeOptions
 {
     public TomlTableStyle TableStyle { get; init; } = TomlTableStyle.Default;
 
-    public TomlIgnoreCondition DefaultIgnoreCondition { get; init; } = TomlIgnoreCondition.Never;
+    public TomlNullHandling DefaultNullHandling { get; init; } = TomlNullHandling.Error;
 }
 
 public record TomlSpec

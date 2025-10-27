@@ -38,17 +38,11 @@ internal sealed class TomlValueOnSerializedAttribute : Attribute
 {
     public string? AliasName { get; }
 
+    public TomlNullHandling NullHandling { get; set; } = TomlNullHandling.Error;
+
     public TomlValueOnSerializedAttribute() {  }
 
     public TomlValueOnSerializedAttribute(string? aliasName) { this.AliasName = aliasName; }
-}
-
-[AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
-internal sealed class TomlIgnoreAttribute : Attribute
-{
-    public TomlIgnoreCondition Condition { get; set; } = TomlIgnoreCondition.Never;
-
-    public TomlIgnoreAttribute() {  }
 }
 
 """);
@@ -234,13 +228,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
             var symbol = member.Symbol;
             var endKeyValue = memberCount == members.Length ? "true" : "";
             var fullTypeName = symbol.Type.ToFullFormatString();
-            var ignoreCondition = member.IgnoreCondition; // 0 = Never, 1 = Always, 2 = WhenWritingNull
-
-            // Skip if Always
-            if (ignoreCondition == TomlIgnoreCondition.Always)
-            {
-                continue;
-            }
+            var nullHandling = member.NullHandling; // 0 = Error, 1 = Ignore
 
             // Check if the property type is nullable (reference type or Nullable<T>)
             var isNullable = symbol.Type.NullableAnnotation == NullableAnnotation.Annotated
@@ -249,15 +237,15 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
             // Generate null check wrapper if needed
             // Only Primitive and Object types need null check wrapping
             // For other types, the formatter handles null internally
-            var needsNullCheck = isNullable && (ignoreCondition == TomlIgnoreCondition.WhenWritingNull || kind == TomlSerializationKind.Primitive || kind == TomlSerializationKind.Object);
+            var needsNullCheck = isNullable && (nullHandling == TomlNullHandling.Ignore || kind == TomlSerializationKind.Primitive || kind == TomlSerializationKind.Object);
 
             if (needsNullCheck)
             {
-                // If Condition is WhenWritingNull, only check if value is not null
+                // If NullHandling is Ignore, only check if value is not null
                 // Otherwise, also check the global setting
-                var condition = ignoreCondition == TomlIgnoreCondition.WhenWritingNull
+                var condition = nullHandling == TomlNullHandling.Ignore
                     ? $"target.{propertyName} != null"
-                    : $"target.{propertyName} != null || (int)options.SerializeOptions.DefaultIgnoreCondition == 0";
+                    : $"target.{propertyName} != null || (int)options.SerializeOptions.DefaultNullHandling == 0";
 
                 builder.AppendLine($$"""
         if ({{condition}})

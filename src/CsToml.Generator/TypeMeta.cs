@@ -335,12 +335,11 @@ internal enum TomlSerializedObjectType
 }
 
 // Internal enum used by the generator for code generation
-// This matches the public TomlIgnoreCondition in CsToml library
-internal enum TomlIgnoreCondition
+// This matches the public TomlNullHandling in CsToml library
+internal enum TomlNullHandling
 {
-    Never = 0,
-    Always = 1,
-    WhenWritingNull = 2
+    Error = 0,
+    Ignore = 1
 }
 
 [StructLayout(LayoutKind.Auto)]
@@ -363,5 +362,5 @@ internal struct TomlValueOnSerializedData
 
     public bool CanAliasName { get; init; }
 
-    public TomlIgnoreCondition IgnoreCondition { get; init; }
+    public TomlNullHandling NullHandling { get; init; }
 }

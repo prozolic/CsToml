@@ -22,15 +22,14 @@ internal static class SymbolUtility
 
             var serializationKind = FormatterTypeMetaData.GetTomlSerializationKind(symbol.Type);
 
-            // Check for TomlIgnoreAttribute
-            var ignoreCondition = TomlIgnoreCondition.Never;
-            var ignoreAttr = symbol.GetAttributeData("CsToml", "TomlIgnoreAttribute").FirstOrDefault();
-            if (ignoreAttr != null && ignoreAttr.NamedArguments.Length > 0)
+            // Check for NullHandling property in TomlValueOnSerializedAttribute
+            var nullHandling = TomlNullHandling.Error;
+            if (attr.NamedArguments.Length > 0)
             {
-                var conditionArg = ignoreAttr.NamedArguments.FirstOrDefault(arg => arg.Key == "Condition");
-                if (conditionArg.Value.Value is int conditionValue)
+                var nullHandlingArg = attr.NamedArguments.FirstOrDefault(arg => arg.Key == "NullHandling");
+                if (nullHandlingArg.Value.Value is int nullHandlingValue)
                 {
-                    ignoreCondition = (TomlIgnoreCondition)conditionValue;
+                    nullHandling = (TomlNullHandling)nullHandlingValue;
                 }
             }
 
@@ -45,7 +44,7 @@ internal static class SymbolUtility
                     TomlValueOnSerializedAttributeData = attr,
                     AliasName = (string)attr.ConstructorArguments[0].Value!,
                     CanAliasName = true,
-                    IgnoreCondition = ignoreCondition
+                    NullHandling = nullHandling
                 };
             }
             else
@@ -63,7 +62,7 @@ internal static class SymbolUtility
                     TomlValueOnSerializedAttributeData = attr,
                     AliasName = convertedName,
                     CanAliasName = convertedName != null,
-                    IgnoreCondition = ignoreCondition
+                    NullHandling = nullHandling
                 };
             }
         }
