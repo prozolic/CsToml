@@ -1114,10 +1114,12 @@ internal partial class TypeNullBehaviorFieldLevel
     [TomlValueOnSerialized]
     public string? RequiredField { get; set; }
 
-    [TomlValueOnSerialized(SkipNull = true)]
+    [TomlValueOnSerialized]
+    [TomlIgnore(Condition = TomlIgnoreCondition.WhenWritingNull)]
     public string? OptionalField { get; set; }
 
-    [TomlValueOnSerialized(SkipNull = true)]
+    [TomlValueOnSerialized]
+    [TomlIgnore(Condition = TomlIgnoreCondition.WhenWritingNull)]
     public int? OptionalNumber { get; set; }
 }
 
@@ -1140,7 +1142,8 @@ internal partial class TypeNullBehaviorMixed
     [TomlValueOnSerialized]
     public string Name { get; set; } = "Default";
 
-    [TomlValueOnSerialized(SkipNull = true)]
+    [TomlValueOnSerialized]
+    [TomlIgnore(Condition = TomlIgnoreCondition.WhenWritingNull)]
     public string? SkippableField { get; set; }
 
     [TomlValueOnSerialized]

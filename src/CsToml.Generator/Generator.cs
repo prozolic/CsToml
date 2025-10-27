@@ -38,11 +38,17 @@ internal sealed class TomlValueOnSerializedAttribute : Attribute
 {
     public string? AliasName { get; }
 
-    public bool SkipNull { get; set; } = false;
-
     public TomlValueOnSerializedAttribute() {  }
 
     public TomlValueOnSerializedAttribute(string? aliasName) { this.AliasName = aliasName; }
+}
+
+[AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
+internal sealed class TomlIgnoreAttribute : Attribute
+{
+    public TomlIgnoreCondition Condition { get; set; } = TomlIgnoreCondition.Never;
+
+    public TomlIgnoreAttribute() {  }
 }
 
 """);
@@ -228,7 +234,13 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
             var symbol = member.Symbol;
             var endKeyValue = memberCount == members.Length ? "true" : "";
             var fullTypeName = symbol.Type.ToFullFormatString();
-            var skipNull = member.SkipNull;
+            var ignoreCondition = member.IgnoreCondition; // 0 = Never, 1 = Always, 2 = WhenWritingNull
+
+            // Skip if Always
+            if (ignoreCondition == TomlIgnoreCondition.Always)
+            {
+                continue;
+            }
 
             // Check if the property type is nullable (reference type or Nullable<T>)
             var isNullable = symbol.Type.NullableAnnotation == NullableAnnotation.Annotated
@@ -237,13 +249,13 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
             // Generate null check wrapper if needed
             // Only Primitive and Object types need null check wrapping
             // For other types, the formatter handles null internally
-            var needsNullCheck = isNullable && (skipNull || kind == TomlSerializationKind.Primitive || kind == TomlSerializationKind.Object);
+            var needsNullCheck = isNullable && (ignoreCondition == TomlIgnoreCondition.WhenWritingNull || kind == TomlSerializationKind.Primitive || kind == TomlSerializationKind.Object);
 
             if (needsNullCheck)
             {
-                // If SkipNull is explicitly set to true, only check if value is not null
+                // If Condition is WhenWritingNull, only check if value is not null
                 // Otherwise, also check the global setting
-                var condition = skipNull
+                var condition = ignoreCondition == TomlIgnoreCondition.WhenWritingNull
                     ? $"target.{propertyName} != null"
                     : $"target.{propertyName} != null || (int)options.SerializeOptions.DefaultNullBehavior == 0";
 

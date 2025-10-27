@@ -10,6 +10,13 @@ public enum TomlTableStyle
     Header = 1
 }
 
+public enum TomlIgnoreCondition
+{
+    Never = 0,
+    Always = 1,
+    WhenWritingNull = 2
+}
+
 public enum TomlNullBehavior
 {
     Default = 0,

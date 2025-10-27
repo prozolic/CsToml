@@ -334,6 +334,15 @@ internal enum TomlSerializedObjectType
     Record,
 }
 
+// Internal enum used by the generator for code generation
+// This matches the public TomlIgnoreCondition in CsToml library
+internal enum TomlIgnoreCondition
+{
+    Never = 0,
+    Always = 1,
+    WhenWritingNull = 2
+}
+
 [StructLayout(LayoutKind.Auto)]
 internal struct TomlValueOnSerializedData
 {
@@ -354,5 +363,5 @@ internal struct TomlValueOnSerializedData
 
     public bool CanAliasName { get; init; }
 
-    public bool SkipNull { get; init; }
+    public TomlIgnoreCondition IgnoreCondition { get; init; }
 }
