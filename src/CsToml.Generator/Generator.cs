@@ -245,8 +245,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                 // Otherwise, also check the global setting
                 var condition = nullHandling == TomlNullHandling.Ignore
                     ? $"target.{propertyName} != null"
-                    : $"target.{propertyName} != null || (int)options.SerializeOptions.DefaultNullHandling == 0";
-
+                    : $"target.{propertyName} != null || options.SerializeOptions.DefaultNullHandling == TomlNullHandling.Error";
                 builder.AppendLine($$"""
         if ({{condition}})
         {
