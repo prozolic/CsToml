@@ -1025,7 +1025,7 @@ internal partial class TypeCamelCase
     public int AnotherValue { get; set; }
 }
 
-[TomlSerializedObject(TomlNamingConvention.PascalCase)]
+[TomlSerializedObject(NamingConvention = TomlNamingConvention.PascalCase)]
 internal partial class TypePascalCase
 {
     [TomlValueOnSerialized]
@@ -1035,7 +1035,7 @@ internal partial class TypePascalCase
     public int anotherValue { get; set; }
 }
 
-[TomlSerializedObject(TomlNamingConvention.LowerCase)]
+[TomlSerializedObject(NamingConvention = TomlNamingConvention.LowerCase)]
 internal partial class TypeLowerCase
 {
     [TomlValueOnSerialized]

@@ -20,7 +20,7 @@ namespace CsToml;
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = false)]
 internal sealed class TomlSerializedObjectAttribute : Attribute
 {
-    public TomlNamingConvention NamingConvention { get; }
+    public TomlNamingConvention NamingConvention { get; init; }
 
     public TomlSerializedObjectAttribute()
     {
