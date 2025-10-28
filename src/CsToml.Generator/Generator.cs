@@ -19,7 +19,19 @@ namespace CsToml;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = false)]
 internal sealed class TomlSerializedObjectAttribute : Attribute
-{}
+{
+    public TomlNamingConvention NamingConvention { get; init; }
+
+    public TomlSerializedObjectAttribute()
+    {
+        NamingConvention = TomlNamingConvention.None;
+    }
+
+    public TomlSerializedObjectAttribute(TomlNamingConvention namingConvention)
+    {
+        NamingConvention = namingConvention;
+    }
+}
 
 [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
 internal sealed class TomlValueOnSerializedAttribute : Attribute
@@ -121,7 +133,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
 
 """);
         }
-            
+
         foreach (var member in typeMeta.Members)
         {
             var propertyName = member.DefinedName;

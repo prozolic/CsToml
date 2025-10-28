@@ -12,7 +12,8 @@ internal static class SymbolUtility
         => typeSymbol.GetAttributeData("CsToml", "TomlSerializedObjectAttribute").Any();
 
     public static IEnumerable<TomlValueOnSerializedData> FilterTomlValueOnSerializedMembers(
-        this IEnumerable<IPropertySymbol> symbols)
+        this IEnumerable<IPropertySymbol> symbols,
+        TomlNamingConvention namingConvention = TomlNamingConvention.None)
     {
         foreach (var symbol in symbols)
         {
@@ -22,6 +23,7 @@ internal static class SymbolUtility
             var serializationKind = FormatterTypeMetaData.GetTomlSerializationKind(symbol.Type);
             if (attr.ConstructorArguments.Length > 0 && (attr.ConstructorArguments[0].Value as string) != null)
             {
+                // Use explicit alias name (takes precedence over naming convention)
                 yield return new TomlValueOnSerializedData()
                 {
                     Symbol = symbol,
@@ -34,14 +36,19 @@ internal static class SymbolUtility
             }
             else
             {
+                // Apply naming convention if specified
+                var convertedName = namingConvention != TomlNamingConvention.None
+                    ? NamingConventionConverter.Convert(symbol.Name, namingConvention)
+                    : null;
+
                 yield return new TomlValueOnSerializedData()
                 {
                     Symbol = symbol,
                     SerializationKind = serializationKind,
                     DefinedName = symbol.Name,
                     TomlValueOnSerializedAttributeData = attr,
-                    AliasName = null,
-                    CanAliasName = false
+                    AliasName = convertedName,
+                    CanAliasName = convertedName != null
                 };
             }
         }
