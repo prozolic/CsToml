@@ -231,7 +231,7 @@ internal sealed class ConstructorMeta
         this.syntax = syntax;
 
         var instanceConstructors = new List<(IMethodSymbol ctor, ImmutableArray<IParameterSymbol> parameters)>(symbol.InstanceConstructors.Length);
-        foreach (var constructor in symbol.InstanceConstructors.Where(c => c is IMethodSymbol and { DeclaredAccessibility: Accessibility.Public}))
+        foreach (var constructor in symbol.InstanceConstructors.Where(c => c is IMethodSymbol and { DeclaredAccessibility: Accessibility.Public }))
         {
             if (constructor.Parameters.Any(p => p.Type.MetadataName == symbol.MetadataName))
             {
@@ -334,6 +334,14 @@ internal enum TomlSerializedObjectType
     Record,
 }
 
+// Internal enum used by the generator for code generation
+// This matches the public TomlNullHandling in CsToml library
+internal enum TomlNullHandling
+{
+    Error = 0,
+    Ignore = 1
+}
+
 [StructLayout(LayoutKind.Auto)]
 internal struct TomlValueOnSerializedData
 {
@@ -353,4 +361,6 @@ internal struct TomlValueOnSerializedData
     public string? AliasName { get; init; }
 
     public bool CanAliasName { get; init; }
+
+    public TomlNullHandling NullHandling { get; init; }
 }

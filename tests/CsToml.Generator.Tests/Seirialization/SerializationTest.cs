@@ -16,9 +16,9 @@ namespace CsToml.Generator.Tests.Seirialization;
 
 public static class Option
 {
-    public static CsTomlSerializerOptions Header { get; set; } = CsTomlSerializerOptions.Default with 
-    { 
-        SerializeOptions = new () { TableStyle = TomlTableStyle.Header} 
+    public static CsTomlSerializerOptions Header { get; set; } = CsTomlSerializerOptions.Default with
+    {
+        SerializeOptions = new() { TableStyle = TomlTableStyle.Header }
     };
 }
 
@@ -1003,7 +1003,7 @@ public class WithTupleTest
             bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
         {
-            using var bytes = CsTomlSerializer.Serialize(value,Option.Header);
+            using var bytes = CsTomlSerializer.Serialize(value, Option.Header);
 
             using var buffer = Utf8String.CreateWriter(out var writer);
             writer.AppendLine("One = 1");
@@ -1082,7 +1082,7 @@ public class WithValueTupleTest
             bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
         {
-            using var bytes = CsTomlSerializer.Serialize(value,Option.Header);
+            using var bytes = CsTomlSerializer.Serialize(value, Option.Header);
 
             using var buffer = Utf8String.CreateWriter(out var writer);
             writer.AppendLine("One = 1");
@@ -1190,12 +1190,15 @@ public class TypeTomlSerializedObjectListTest
     [Fact]
     public void Serialize()
     {
-        var type = new TypeTomlSerializedObjectList() {  Table2 = [
+        var type = new TypeTomlSerializedObjectList()
+        {
+            Table2 = [
             new TypeTable2() { Table3 = new TypeTable3() { Value = "[1] This is TypeTable3" } },
             new TypeTable2() { Table3 = new TypeTable3() { Value = "[2] This is TypeTable3" } },
             new TypeTable2() { Table3 = new TypeTable3() { Value = "[3] This is TypeTable3" } },
             new TypeTable2() { Table3 = new TypeTable3() { Value = "[4] This is TypeTable3" } },
-            new TypeTable2() { Table3 = new TypeTable3() { Value = "[5] This is TypeTable3" } }]  };
+            new TypeTable2() { Table3 = new TypeTable3() { Value = "[5] This is TypeTable3" } }]
+        };
         {
             using var bytes = CsTomlSerializer.Serialize(type);
 
@@ -1889,7 +1892,8 @@ public class TypeDictionaryTest2
             }
         };
 
-        var type = new TypeDictionary2() { 
+        var type = new TypeDictionary2()
+        {
             Value = dict,
             Value2 = dict.AsReadOnly(),
             Value3 = new SortedDictionary<object, object>(dict),
@@ -3378,7 +3382,7 @@ public class TestStructParentTest
         var parent = new TestStructParent()
         {
             Value = "I'm a string.",
-            TestStruct =  new TestStruct { Value = 0, Str = "Test" },
+            TestStruct = new TestStruct { Value = 0, Str = "Test" },
             TestStructList = new List<TestStruct>()
             {
                 new TestStruct { Value = 1, Str = "Test"},
@@ -3401,7 +3405,7 @@ public class TestStructParentTest
             bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
         {
-            using var bytes = CsTomlSerializer.Serialize(parent, options:Option.Header);
+            using var bytes = CsTomlSerializer.Serialize(parent, options: Option.Header);
 
             using var buffer = Utf8String.CreateWriter(out var writer);
             writer.AppendLine("Value = \"I'm a string.\"");
@@ -4196,3 +4200,287 @@ public class TypeReadOnlySetFormatterTest
 }
 
 #endif
+
+public class TypeNullBehaviorFieldLevelTest
+{
+    [Fact]
+    public void Serialize_FieldLevelSkipNull_ShouldSkipNullFields()
+    {
+        var type = new TypeNullBehaviorFieldLevel
+        {
+            Name = "Test",
+            RequiredField = "Value",
+            OptionalField = null,
+            OptionalNumber = null
+        };
+
+        using var bytes = CsTomlSerializer.Serialize(type);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Name = \"Test\"");
+        writer.AppendLine("RequiredField = \"Value\"");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void Serialize_FieldLevelSkipNull_WithValues_ShouldIncludeAll()
+    {
+        var type = new TypeNullBehaviorFieldLevel
+        {
+            Name = "Test",
+            RequiredField = "Required",
+            OptionalField = "Optional",
+            OptionalNumber = 123
+        };
+
+        using var bytes = CsTomlSerializer.Serialize(type);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Name = \"Test\"");
+        writer.AppendLine("RequiredField = \"Required\"");
+        writer.AppendLine("OptionalField = \"Optional\"");
+        writer.AppendLine("OptionalNumber = 123");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void Serialize_FieldLevelSkipNull_RequiredFieldNull_ShouldThrow()
+    {
+        var type = new TypeNullBehaviorFieldLevel
+        {
+            Name = "Test",
+            RequiredField = null,
+            OptionalField = null,
+            OptionalNumber = null
+        };
+
+        Should.Throw<CsTomlSerializeException>(() => CsTomlSerializer.Serialize(type));
+    }
+
+    [Fact]
+    public void Deserialize_MissingOptionalFields_ShouldSucceed()
+    {
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Name = \"Test\"");
+        writer.AppendLine("RequiredField = \"Value\"");
+        writer.Flush();
+
+        var type = CsTomlSerializer.Deserialize<TypeNullBehaviorFieldLevel>(buffer.WrittenSpan);
+        type.Name.ShouldBe("Test");
+        type.RequiredField.ShouldBe("Value");
+        type.OptionalField.ShouldBeNull();
+        type.OptionalNumber.ShouldBeNull();
+    }
+
+    [Fact]
+    public void RoundTrip_PartialNull_ShouldMaintainValues()
+    {
+        var original = new TypeNullBehaviorFieldLevel
+        {
+            Name = "RoundTrip",
+            RequiredField = "Required",
+            OptionalField = "HasValue",
+            OptionalNumber = null
+        };
+
+        using var serialized = CsTomlSerializer.Serialize(original);
+        var deserialized = CsTomlSerializer.Deserialize<TypeNullBehaviorFieldLevel>(serialized.ByteSpan);
+
+        deserialized.Name.ShouldBe(original.Name);
+        deserialized.RequiredField.ShouldBe(original.RequiredField);
+        deserialized.OptionalField.ShouldBe(original.OptionalField);
+        deserialized.OptionalNumber.ShouldBeNull();
+    }
+}
+
+public class TypeNullBehaviorGlobalTest
+{
+    [Fact]
+    public void Serialize_GlobalSkip_AllNull_ShouldSkipAll()
+    {
+        var type = new TypeNullBehaviorAllNullable
+        {
+            Field1 = null,
+            Field2 = null,
+            Field3 = null
+        };
+
+        var options = CsTomlSerializerOptions.Default with
+        {
+            SerializeOptions = new() { DefaultNullHandling = TomlNullHandling.Ignore }
+        };
+
+        using var bytes = CsTomlSerializer.Serialize(type, options);
+
+        bytes.ByteSpan.ToArray().ShouldBe(""u8.ToArray());
+    }
+
+    [Fact]
+    public void Serialize_GlobalSkip_MixedNull_ShouldSkipOnlyNull()
+    {
+        var type = new TypeNullBehaviorAllNullable
+        {
+            Field1 = "Value1",
+            Field2 = null,
+            Field3 = 123
+        };
+
+        var options = CsTomlSerializerOptions.Default with
+        {
+            SerializeOptions = new() { DefaultNullHandling = TomlNullHandling.Ignore }
+        };
+
+        using var bytes = CsTomlSerializer.Serialize(type, options);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Field1 = \"Value1\"");
+        writer.AppendLine("Field3 = 123");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void Serialize_GlobalDefault_HasNull_ShouldThrow()
+    {
+        var type = new TypeNullBehaviorAllNullable
+        {
+            Field1 = "Value",
+            Field2 = null,
+            Field3 = 123
+        };
+
+        var options = CsTomlSerializerOptions.Default with
+        {
+            SerializeOptions = new() { DefaultNullHandling = TomlNullHandling.Error }
+        };
+
+        Should.Throw<CsTomlSerializeException>(() => CsTomlSerializer.Serialize(type, options));
+    }
+
+    [Fact]
+    public void RoundTrip_GlobalSkip_ShouldWork()
+    {
+        var original = new TypeNullBehaviorAllNullable
+        {
+            Field1 = "Test",
+            Field2 = null,
+            Field3 = 456
+        };
+
+        var options = CsTomlSerializerOptions.Default with
+        {
+            SerializeOptions = new() { DefaultNullHandling = TomlNullHandling.Ignore }
+        };
+
+        using var serialized = CsTomlSerializer.Serialize(original, options);
+        var deserialized = CsTomlSerializer.Deserialize<TypeNullBehaviorAllNullable>(serialized.ByteSpan);
+
+        deserialized.Field1.ShouldBe(original.Field1);
+        deserialized.Field2.ShouldBeNull();
+        deserialized.Field3.ShouldBe(original.Field3);
+    }
+}
+
+public class TypeNullBehaviorMixedTest
+{
+    [Fact]
+    public void Serialize_FieldOverridesGlobal_SkipNullField()
+    {
+        var type = new TypeNullBehaviorMixed
+        {
+            Name = "Mixed",
+            SkippableField = null,
+            NonSkippableField = null
+        };
+
+        var options = CsTomlSerializerOptions.Default with
+        {
+            SerializeOptions = new() { DefaultNullHandling = TomlNullHandling.Error }
+        };
+
+        // SkippableField has SkipNull = true, so it should be skipped
+        // NonSkippableField has no SkipNull, so it uses global Default and should throw
+        Should.Throw<CsTomlSerializeException>(() => CsTomlSerializer.Serialize(type, options));
+    }
+
+    [Fact]
+    public void Serialize_FieldOverridesGlobal_WithGlobalSkip()
+    {
+        var type = new TypeNullBehaviorMixed
+        {
+            Name = "Mixed",
+            SkippableField = null,
+            NonSkippableField = null
+        };
+
+        var options = CsTomlSerializerOptions.Default with
+        {
+            SerializeOptions = new() { DefaultNullHandling = TomlNullHandling.Ignore }
+        };
+
+        using var bytes = CsTomlSerializer.Serialize(type, options);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Name = \"Mixed\"");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void Serialize_MixedValues_ShouldHandleCorrectly()
+    {
+        var type = new TypeNullBehaviorMixed
+        {
+            Name = "Test",
+            SkippableField = "Skippable",
+            NonSkippableField = "NonSkippable"
+        };
+
+        using var bytes = CsTomlSerializer.Serialize(type);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Name = \"Test\"");
+        writer.AppendLine("SkippableField = \"Skippable\"");
+        writer.AppendLine("NonSkippableField = \"NonSkippable\"");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData(null, "Value")]
+    [InlineData("Value", null)]
+    [InlineData("Value1", "Value2")]
+    public void Serialize_VariousCombinations_WithGlobalSkip(string? skippable, string? nonSkippable)
+    {
+        var type = new TypeNullBehaviorMixed
+        {
+            Name = "Theory",
+            SkippableField = skippable,
+            NonSkippableField = nonSkippable
+        };
+
+        var options = CsTomlSerializerOptions.Default with
+        {
+            SerializeOptions = new() { DefaultNullHandling = TomlNullHandling.Ignore }
+        };
+
+        using var bytes = CsTomlSerializer.Serialize(type, options);
+        var deserialized = CsTomlSerializer.Deserialize<TypeNullBehaviorMixed>(bytes.ByteSpan);
+
+        deserialized.Name.ShouldBe("Theory");
+        deserialized.SkippableField.ShouldBe(skippable);
+        deserialized.NonSkippableField.ShouldBe(nonSkippable);
+    }
+}

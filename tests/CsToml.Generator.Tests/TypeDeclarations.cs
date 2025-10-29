@@ -475,7 +475,7 @@ internal partial class TypeArrayOfTable2
 [TomlSerializedObject]
 internal partial class TypeAlias
 {
-    [TomlValueOnSerialized(aliasName:"alias")]
+    [TomlValueOnSerialized(aliasName: "alias")]
     public string Value { get; set; }
 }
 
@@ -533,7 +533,7 @@ internal partial class TypeSortedList
 internal partial class Constructor
 {
     public Constructor()
-    {}
+    { }
 
     [TomlValueOnSerialized]
     public string Str { get; set; }
@@ -592,7 +592,7 @@ internal partial class Constructor4
         IntValue = intValue;
     }
 
-    public Constructor4(string str,double floatValue, long intValue)
+    public Constructor4(string str, double floatValue, long intValue)
     {
         Str = str;
         IntValue = intValue;
@@ -605,7 +605,7 @@ internal partial class Constructor4
         BooleanValue = booleanValue;
     }
 
-        [TomlValueOnSerialized]
+    [TomlValueOnSerialized]
     public string Str { get; set; }
 
     [TomlValueOnSerialized]
@@ -686,7 +686,7 @@ internal partial class Constructor7
     public string Str { get; }
 
     [TomlValueOnSerialized]
-    public long IntValue { get;}
+    public long IntValue { get; }
 }
 
 [TomlSerializedObject]
@@ -1103,3 +1103,46 @@ internal partial class TypeReadOnlySetFormatter
 }
 
 #endif
+
+// Null Behavior Tests
+[TomlSerializedObject]
+internal partial class TypeNullBehaviorFieldLevel
+{
+    [TomlValueOnSerialized]
+    public string Name { get; set; } = string.Empty;
+
+    [TomlValueOnSerialized]
+    public string? RequiredField { get; set; }
+
+    [TomlValueOnSerialized(NullHandling = TomlNullHandling.Ignore)]
+    public string? OptionalField { get; set; }
+
+    [TomlValueOnSerialized(NullHandling = TomlNullHandling.Ignore)]
+    public int? OptionalNumber { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class TypeNullBehaviorAllNullable
+{
+    [TomlValueOnSerialized]
+    public string? Field1 { get; set; }
+
+    [TomlValueOnSerialized]
+    public string? Field2 { get; set; }
+
+    [TomlValueOnSerialized]
+    public int? Field3 { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class TypeNullBehaviorMixed
+{
+    [TomlValueOnSerialized]
+    public string Name { get; set; } = "Default";
+
+    [TomlValueOnSerialized(NullHandling = TomlNullHandling.Ignore)]
+    public string? SkippableField { get; set; }
+
+    [TomlValueOnSerialized]
+    public string? NonSkippableField { get; set; }
+}
