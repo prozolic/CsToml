@@ -326,6 +326,66 @@ using var serializedText = CsTomlSerializer.Serialize(value);
 var serializedTomlText = Encoding.UTF8.GetString(serializedText.ByteSpan);
 ```
 
+### Naming convention support
+
+In v1.7.4 and later versions, the `NamingConvention` property of `[TomlSerializedObject]` can be used to configure automatic naming conversion between property names and TOML keys during serialization and deserialization.
+For example, when `TomlNamingConvention.CamelCase` is set, the property name `MyProperty` is converted to the TOML key `myProperty`.
+This conversion applies to custom types marked with `[TomlSerializedObject]`.
+
+```csharp
+[TomlSerializedObject(TomlNamingConvention.CamelCase)]
+internal partial class TypeCamelCase
+{
+    [TomlValueOnSerialized]
+    public string MyProperty { get; set; }
+
+    [TomlValueOnSerialized]
+    public int AnotherValue { get; set; }
+}
+```
+
+```csharp
+var type = new TypeCamelCase
+{
+    MyProperty = "test",
+    AnotherValue = 42
+};
+
+using var serializedText = CsTomlSerializer.Serialize(type);
+
+var serializedTomlText = Encoding.UTF8.GetString(serializedText.ByteSpan);
+// myProperty = "test"
+// anotherValue = 42
+```
+
+The following naming conversion options are supported: `None`, `LowerCase`, `UpperCase`, `PascalCase`, `CamelCase`, `SnakeCase`, `KebabCase`, `ScreamingSnakeCase`, `ScreamingKebabCase`.
+
+For example, when the property name is `MyProperty`:
+- `None`: converts to `MyProperty` (no conversion)
+- `LowerCase`: converts to `myproperty`
+- `UpperCase`: converts to `MYPROPERTY`
+- `PascalCase`: converts to `MyProperty`
+- `CamelCase`: converts to `myProperty`
+- `SnakeCase`: converts to `my_property`
+- `KebabCase`: converts to `my-property`
+- `ScreamingSnakeCase`: converts to `MY_PROPERTY`
+- `ScreamingKebabCase`: converts to `MY-PROPERTY`
+
+```csharp
+public enum TomlNamingConvention
+{
+    None = 0,
+    LowerCase = 1,
+    UpperCase = 2,
+    PascalCase = 3,
+    CamelCase = 4,
+    SnakeCase = 5,
+    KebabCase = 6,
+    ScreamingSnakeCase = 7,
+    ScreamingKebabCase = 8
+}
+```
+
 ### Properties
 
 `[TomlValueOnSerialized]` serializes public instance properties.
@@ -374,6 +434,24 @@ internal partial class TypeTable(long intValue, string strValue)
 
     [TomlValueOnSerialized]
     public string StrValue { get; private set; } = strValue;
+}
+```
+
+In v1.7.4 and later versions, the `NullHandling` property of `[TomlValueOnSerialized]` can be used to configure how individual properties handle null values for nullable type (nullable reference types or `Nullable<T>`).
+When `TomlNullHandling.Error` is set, serialization throws an error if the property is null. When `TomlNullHandling.Ignore` is set, the property is skipped during serialization if it is null.
+
+```csharp
+[TomlSerializedObject]
+internal partial class TypeNullBehaviorMixed
+{
+    [TomlValueOnSerialized]
+    public string Name { get; set; } = "Default";
+
+    [TomlValueOnSerialized(NullHandling = TomlNullHandling.Ignore)]
+    public string? SkippableField { get; set; }
+
+    [TomlValueOnSerialized]
+    public string? NonSkippableField { get; set; }
 }
 ```
 
@@ -502,6 +580,48 @@ Number = 123
 [Table]
 Key = "kEY"
 Number = 123
+```
+
+#### SerializeOptions.DefaultNullHandling
+
+In v1.7.4 and later versions, `SerializeOptions.DefaultNullHandling` can configure the default null handling behavior for properties with nullable reference types or `Nullable<T>` in custom types marked with `[TomlSerializedObject]`.
+When `TomlNullHandling.Error` is set, serialization throws an error if any property is null. When `TomlNullHandling.Ignore` is set, properties are skipped during serialization if they are null.
+This setting applies to all properties unless overridden by the individual `NullHandling` property in `[TomlValueOnSerialized]`.
+The default value of `SerializeOptions.DefaultNullHandling` is `TomlNullHandling.Error`.
+
+```csharp
+[TomlSerializedObject]
+internal partial class TypeNullBehaviorMixed
+{
+    [TomlValueOnSerialized]
+    public string Name { get; set; } = "Default";
+
+    [TomlValueOnSerialized(NullHandling = TomlNullHandling.Ignore)]
+    public string? SkippableField { get; set; }
+
+    [TomlValueOnSerialized]
+    public string? NonSkippableField { get; set; }
+}
+```
+
+```csharp
+var type = new TypeNullBehaviorMixed
+{
+    Name = "Mixed",
+    SkippableField = null,
+    NonSkippableField = null
+};
+
+var options = CsTomlSerializerOptions.Default with
+{
+    SerializeOptions = new() { DefaultNullHandling = TomlNullHandling.Ignore }
+};
+
+// Serialization of properties with null values is skipped (no error is thrown)
+using var serializedText = CsTomlSerializer.Serialize(type, options);
+
+var serializedTomlText = Encoding.UTF8.GetString(serializedText.ByteSpan);
+// Name = "Mixed"
 ```
 
 #### Spec
