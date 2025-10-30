@@ -363,4 +363,6 @@ internal struct TomlValueOnSerializedData
     public bool CanAliasName { get; init; }
 
     public TomlNullHandling NullHandling { get; init; }
+
+    public bool IsNullable { get; init; }
 }

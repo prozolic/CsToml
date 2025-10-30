@@ -211,6 +211,42 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
         }
 
         var members = typeMeta.Members;
+
+        // Implement the setting process for each lastValue.
+        var lastValueVariableBuilder = new StringBuilder();
+        for (var i = 0; i < members.Length; i++)
+        {
+            var propertyName = members[i].DefinedName!;
+            if (i == members.Length - 1)
+            {
+                lastValueVariableBuilder.AppendLine($"        var lastValue_{propertyName} = true;");
+                lastValueVariableBuilder.AppendLine();
+            }
+            else
+            {
+                lastValueVariableBuilder.AppendLine($"        var lastValue_{propertyName} = false;");
+            }
+        }
+
+        for (var i = members.Length - 1; i >= 0; i--)
+        {
+            if (!members[i].IsNullable) break;
+
+            var propertyName = members[i].DefinedName!;
+            if (i != 0)
+            {
+                lastValueVariableBuilder.AppendLine($$"""
+        if (lastValue_{{propertyName}} && target.{{propertyName}} == null)
+        {
+            lastValue_{{members[i - 1].DefinedName!}} = true;
+            lastValue_{{propertyName}} = false;
+        }
+""");
+            }
+        }
+        
+        builder.AppendLine(lastValueVariableBuilder.ToString());
+
         var onlyTomlSerializedObject = members.Length == 1 && members[0].SerializationKind == TomlSerializationKind.TomlSerializedObject;
         if (!onlyTomlSerializedObject)
         {
@@ -226,20 +262,12 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
             var accessName = member.CanAliasName ? member.AliasName : propertyName;
             var kind = member.SerializationKind;
             var symbol = member.Symbol;
-            var endKeyValue = memberCount == members.Length ? "true" : "";
             var fullTypeName = symbol.Type.ToFullFormatString();
             var nullHandling = member.NullHandling; // 0 = Error, 1 = Ignore
+            var isNullable = member.IsNullable;
 
-            // Check if the property type is nullable (reference type or Nullable<T>)
-            var isNullable = symbol.Type.NullableAnnotation == NullableAnnotation.Annotated
-                || (symbol.Type is INamedTypeSymbol namedSymbol && namedSymbol.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T);
-
-            // Generate null check wrapper if needed
-            // Only Primitive and Object types need null check wrapping
-            // For other types, the formatter handles null internally
-            var needsNullCheck = isNullable && (nullHandling == TomlNullHandling.Ignore || kind == TomlSerializationKind.Primitive || kind == TomlSerializationKind.Object);
-
-            if (needsNullCheck)
+            // Generate null check if isNullable is true.
+            if (isNullable)
             {
                 // If NullHandling is Ignore, only check if value is not null
                 // Otherwise, also check the global setting
@@ -252,7 +280,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
 """);
             }
 
-            var indent = needsNullCheck ? "    " : "";
+            var indent = isNullable ? "    " : "";
 
             if (kind == TomlSerializationKind.Primitive || kind == TomlSerializationKind.Object)
             {
@@ -260,99 +288,119 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
         {{indent}}writer.WriteKey({{$"@\"{accessName}\"u8"}});
         {{indent}}writer.WriteEqual();
         {{indent}}options.Resolver.GetFormatter<{{fullTypeName}}>()!.Serialize(ref writer, target.{{propertyName}}, options);
-        {{indent}}writer.EndKeyValue({{endKeyValue}});
+        {{indent}}writer.EndKeyValue(lastValue_{{propertyName}});
 """);
             }
             else if (kind == TomlSerializationKind.TomlSerializedObject)
             {
                 builder.AppendLine($$"""
-        if (options.SerializeOptions.TableStyle == TomlTableStyle.Header && (writer.State == TomlValueState.Default || writer.State == TomlValueState.Table)){
-            writer.WriteTableHeader({{$"@\"{accessName}\"u8"}});
-            writer.WriteNewLine();
-            writer.BeginCurrentState(TomlValueState.Table);
-            writer.PushKey({{$"@\"{accessName}\"u8"}});
-            options.Resolver.GetFormatter<{{fullTypeName}}>()!.Serialize(ref writer, target.{{propertyName}}, options);
-            writer.PopKey();
-            writer.EndCurrentState();
-        }
-        else
-        {
-            writer.PushKey({{$"@\"{accessName}\"u8"}});
-            options.Resolver.GetFormatter<{{fullTypeName}}>()!.Serialize(ref writer, target.{{propertyName}}, options);
-            writer.PopKey();
-        }
+        {{indent}}if (options.SerializeOptions.TableStyle == TomlTableStyle.Header && (writer.State == TomlValueState.Default || writer.State == TomlValueState.Table)){
+        {{indent}}    writer.WriteTableHeader({{$"@\"{accessName}\"u8"}});
+        {{indent}}    writer.WriteNewLine();
+        {{indent}}    writer.BeginCurrentState(TomlValueState.Table);
+        {{indent}}    writer.PushKey({{$"@\"{accessName}\"u8"}});
+        {{indent}}    options.Resolver.GetFormatter<{{fullTypeName}}>()!.Serialize(ref writer, target.{{propertyName}}, options);
+        {{indent}}    writer.PopKey();
+        {{indent}}    writer.EndCurrentState();
+        {{indent}}}
 """);
+                // Serialize as an array of tables if there are multiple properties
+                if (members.Length == 1)
+                {
+                    builder.AppendLine($$"""
+        {{indent}}else
+        {{indent}}{
+        {{indent}}    writer.PushKey({{$"@\"{accessName}\"u8"}});
+        {{indent}}    options.Resolver.GetFormatter<{{fullTypeName}}>()!.Serialize(ref writer, target.{{propertyName}}, options);
+        {{indent}}    writer.PopKey();
+        {{indent}}}
+""");
+                }
+                else
+                {
+                    builder.AppendLine($$"""
+        {{indent}}else
+        {{indent}}{
+        {{indent}}    writer.WriteKey({{$"@\"{accessName}\"u8"}});
+        {{indent}}    writer.WriteEqual();
+        {{indent}}    writer.BeginCurrentState(TomlValueState.ArrayOfTable);
+        {{indent}}    options.Resolver.GetFormatter<{{fullTypeName}}>()!.Serialize(ref writer, target.{{propertyName}}, options);
+        {{indent}}    writer.EndCurrentState();
+        {{indent}}    writer.EndKeyValue(lastValue_{{propertyName}});
+        {{indent}}}
+""");
+                }
             }
             else if (kind == TomlSerializationKind.Dictionary)
             {
                 builder.AppendLine($$"""
-        if (options.SerializeOptions.TableStyle == TomlTableStyle.Header && (writer.State == TomlValueState.Default || writer.State == TomlValueState.Table)){
-            writer.WriteTableHeader({{$"@\"{accessName}\"u8"}});
-            writer.WriteNewLine();
-            writer.BeginCurrentState(TomlValueState.Table);
-            writer.PushKey({{$"@\"{accessName}\"u8"}});
-            options.Resolver.GetFormatter<{{fullTypeName}}>()!.Serialize(ref writer, target.{{propertyName}}, options);
-            writer.PopKey();
-            writer.EndCurrentState();
-        }
-        else
-        {
-            writer.WriteKey({{$"@\"{accessName}\"u8"}});
-            writer.WriteEqual();
-            writer.BeginCurrentState(TomlValueState.ArrayOfTable);
-            options.Resolver.GetFormatter<{{fullTypeName}}>()!.Serialize(ref writer, target.{{propertyName}}, options);
-            writer.EndCurrentState();
-            writer.EndKeyValue({{endKeyValue}});
-        }
+        {{indent}}if (options.SerializeOptions.TableStyle == TomlTableStyle.Header && (writer.State == TomlValueState.Default || writer.State == TomlValueState.Table)){
+        {{indent}}    writer.WriteTableHeader({{$"@\"{accessName}\"u8"}});
+        {{indent}}    writer.WriteNewLine();
+        {{indent}}    writer.BeginCurrentState(TomlValueState.Table);
+        {{indent}}    writer.PushKey({{$"@\"{accessName}\"u8"}});
+        {{indent}}    options.Resolver.GetFormatter<{{fullTypeName}}>()!.Serialize(ref writer, target.{{propertyName}}, options);
+        {{indent}}    writer.PopKey();
+        {{indent}}    writer.EndCurrentState();
+        {{indent}}}
+        {{indent}}else
+        {{indent}}{
+        {{indent}}    writer.WriteKey({{$"@\"{accessName}\"u8"}});
+        {{indent}}    writer.WriteEqual();
+        {{indent}}    writer.BeginCurrentState(TomlValueState.ArrayOfTable);
+        {{indent}}    options.Resolver.GetFormatter<{{fullTypeName}}>()!.Serialize(ref writer, target.{{propertyName}}, options);
+        {{indent}}    writer.EndCurrentState();
+        {{indent}}    writer.EndKeyValue(lastValue_{{propertyName}});
+        {{indent}}}
 """);
             }
             else if (kind == TomlSerializationKind.ArrayOfITomlSerializedObject || kind == TomlSerializationKind.CollectionOfITomlSerializedObject)
             {
                 builder.AppendLine($$"""
-        writer.WriteKey({{$"@\"{accessName}\"u8"}});
-        writer.WriteEqual();
-        writer.BeginCurrentState(TomlValueState.ArrayOfTable);
-        options.Resolver.GetFormatter<{{fullTypeName}}>()!.Serialize(ref writer, target.{{propertyName}}, options);
-        writer.EndCurrentState();
-        writer.EndKeyValue({{endKeyValue}});
+        {{indent}}writer.WriteKey({{$"@\"{accessName}\"u8"}});
+        {{indent}}writer.WriteEqual();
+        {{indent}}writer.BeginCurrentState(TomlValueState.ArrayOfTable);
+        {{indent}}options.Resolver.GetFormatter<{{fullTypeName}}>()!.Serialize(ref writer, target.{{propertyName}}, options);
+        {{indent}}writer.EndCurrentState();
+        {{indent}}writer.EndKeyValue(lastValue_{{propertyName}});
 """);
             }
             else if (kind == TomlSerializationKind.TypeParameter)
             {
                 builder.AppendLine($$"""
-        var __{{propertyName}}Formatter = options.Resolver.GetFormatter<{{fullTypeName}}>();
-        if (__{{propertyName}}Formatter != null)
-        {
-            var __{{propertyName}}__ = target.{{propertyName}};
-            if (__{{propertyName}}__ is ITomlSerializedObject<{{fullTypeName}}>)
-            {
-                if (options.SerializeOptions.TableStyle == TomlTableStyle.Header && (writer.State == TomlValueState.Default || writer.State == TomlValueState.Table))
-                {
-                    writer.WriteTableHeader({{$"@\"{accessName}\"u8"}});
-                    writer.WriteNewLine();
-                    writer.BeginCurrentState(TomlValueState.Table);
-                    writer.PushKey({{$"@\"{accessName}\"u8"}});
-                    __{{propertyName}}Formatter!.Serialize(ref writer, __{{propertyName}}__, options);
-                    writer.PopKey();
-                    writer.EndCurrentState();
-                }
-                else
-                {
-                    writer.PushKey({{$"@\"{accessName}\"u8"}});
-                    __{{propertyName}}Formatter!.Serialize(ref writer, __{{propertyName}}__, options);
-                    writer.PopKey();
-                }
-            }
-            else
-            {
-                writer.WriteKey({{$"@\"{accessName}\"u8"}});
-                writer.WriteEqual();
-                writer.BeginCurrentState(TomlValueState.ArrayOfTable);
-                __{{propertyName}}Formatter!.Serialize(ref writer, __{{propertyName}}__, options);
-                writer.EndCurrentState();
-                writer.EndKeyValue({{endKeyValue}});
-            }
-        }
+        {{indent}}var __{{propertyName}}Formatter = options.Resolver.GetFormatter<{{fullTypeName}}>();
+        {{indent}}if (__{{propertyName}}Formatter != null)
+        {{indent}}{
+        {{indent}}    var __{{propertyName}}__ = target.{{propertyName}};
+        {{indent}}    if (__{{propertyName}}__ is ITomlSerializedObject<{{fullTypeName}}>)
+        {{indent}}    {
+        {{indent}}        if (options.SerializeOptions.TableStyle == TomlTableStyle.Header && (writer.State == TomlValueState.Default || writer.State == TomlValueState.Table))
+        {{indent}}        {
+        {{indent}}            writer.WriteTableHeader({{$"@\"{accessName}\"u8"}});
+        {{indent}}            writer.WriteNewLine();
+        {{indent}}            writer.BeginCurrentState(TomlValueState.Table);
+        {{indent}}            writer.PushKey({{$"@\"{accessName}\"u8"}});
+        {{indent}}            __{{propertyName}}Formatter!.Serialize(ref writer, __{{propertyName}}__, options);
+        {{indent}}            writer.PopKey();
+        {{indent}}            writer.EndCurrentState();
+        {{indent}}        }
+        {{indent}}        else
+        {{indent}}        {
+        {{indent}}            writer.PushKey({{$"@\"{accessName}\"u8"}});
+        {{indent}}            __{{propertyName}}Formatter!.Serialize(ref writer, __{{propertyName}}__, options);
+        {{indent}}            writer.PopKey();
+        {{indent}}        }
+        {{indent}}    }
+        {{indent}}    else
+        {{indent}}    {
+        {{indent}}        writer.WriteKey({{$"@\"{accessName}\"u8"}});
+        {{indent}}        writer.WriteEqual();
+        {{indent}}        writer.BeginCurrentState(TomlValueState.ArrayOfTable);
+        {{indent}}        __{{propertyName}}Formatter!.Serialize(ref writer, __{{propertyName}}__, options);
+        {{indent}}        writer.EndCurrentState();
+        {{indent}}        writer.EndKeyValue(lastValue_{{propertyName}});
+        {{indent}}    }
+        {{indent}}}
 """);
             }
             else if (kind == TomlSerializationKind.NullableStructWithTypeParameter)
@@ -362,53 +410,53 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                 var namedTypeName = namedType.ToFullFormatString();
 
                 builder.AppendLine($$"""
-        var __{{propertyName}}Formatter = options.Resolver.GetFormatter<{{namedTypeName}}>();
-        if (__{{propertyName}}Formatter != null)
-        {
-            var __{{propertyName}}__ = target.{{propertyName}};
-            if (__{{propertyName}}__ is ITomlSerializedObject<{{namedType.TypeArguments[0].ToFullFormatString()}}>)
-            {
-                if (options.SerializeOptions.TableStyle == TomlTableStyle.Header && (writer.State == TomlValueState.Default || writer.State == TomlValueState.Table))
-                {
-                    writer.WriteTableHeader({{$"@\"{accessName}\"u8"}});
-                    writer.WriteNewLine();
-                    writer.BeginCurrentState(TomlValueState.Table);
-                    writer.PushKey({{$"@\"{accessName}\"u8"}});
-                    __{{propertyName}}Formatter!.Serialize(ref writer, __{{propertyName}}__, options);
-                    writer.PopKey();
-                    writer.EndCurrentState();
-                }
-                else
-                {
-                    writer.PushKey({{$"@\"{accessName}\"u8"}});
-                    __{{propertyName}}Formatter!.Serialize(ref writer, __{{propertyName}}__, options);
-                    writer.PopKey();
-                }
-            }
-            else
-            {
-                writer.WriteKey({{$"@\"{accessName}\"u8"}});
-                writer.WriteEqual();
-                writer.BeginCurrentState(TomlValueState.ArrayOfTable);
-                __{{propertyName}}Formatter!.Serialize(ref writer, __{{propertyName}}__, options);
-                writer.EndCurrentState();
-                writer.EndKeyValue({{endKeyValue}});
-            }
-        }
+        {{indent}}var __{{propertyName}}Formatter = options.Resolver.GetFormatter<{{namedTypeName}}>();
+        {{indent}}if (__{{propertyName}}Formatter != null)
+        {{indent}}{
+        {{indent}}    var __{{propertyName}}__ = target.{{propertyName}};
+        {{indent}}    if (__{{propertyName}}__ is ITomlSerializedObject<{{namedType.TypeArguments[0].ToFullFormatString()}}>)
+        {{indent}}    {
+        {{indent}}        if (options.SerializeOptions.TableStyle == TomlTableStyle.Header && (writer.State == TomlValueState.Default || writer.State == TomlValueState.Table))
+        {{indent}}        {
+        {{indent}}            writer.WriteTableHeader({{$"@\"{accessName}\"u8"}});
+        {{indent}}            writer.WriteNewLine();
+        {{indent}}            writer.BeginCurrentState(TomlValueState.Table);
+        {{indent}}            writer.PushKey({{$"@\"{accessName}\"u8"}});
+        {{indent}}            __{{propertyName}}Formatter!.Serialize(ref writer, __{{propertyName}}__, options);
+        {{indent}}            writer.PopKey();
+        {{indent}}            writer.EndCurrentState();
+        {{indent}}        }
+        {{indent}}        else
+        {{indent}}        {
+        {{indent}}            writer.PushKey({{$"@\"{accessName}\"u8"}});
+        {{indent}}            __{{propertyName}}Formatter!.Serialize(ref writer, __{{propertyName}}__, options);
+        {{indent}}            writer.PopKey();
+        {{indent}}        }
+        {{indent}}    }
+        {{indent}}    else
+        {{indent}}    {
+        {{indent}}        writer.WriteKey({{$"@\"{accessName}\"u8"}});
+        {{indent}}        writer.WriteEqual();
+        {{indent}}        writer.BeginCurrentState(TomlValueState.ArrayOfTable);
+        {{indent}}        __{{propertyName}}Formatter!.Serialize(ref writer, __{{propertyName}}__, options);
+        {{indent}}        writer.EndCurrentState();
+        {{indent}}        writer.EndKeyValue(lastValue_{{propertyName}});
+        {{indent}}    }
+        {{indent}}}
 """);
             }
             else
             {
                 builder.AppendLine($$"""
-        writer.WriteKey({{$"@\"{accessName}\"u8"}});
-        writer.WriteEqual();
-        options.Resolver.GetFormatter<{{fullTypeName}}>()!.Serialize(ref writer, target.{{propertyName}}, options);
-        writer.EndKeyValue({{endKeyValue}});
+        {{indent}}writer.WriteKey({{$"@\"{accessName}\"u8"}});
+        {{indent}}writer.WriteEqual();
+        {{indent}}options.Resolver.GetFormatter<{{fullTypeName}}>()!.Serialize(ref writer, target.{{propertyName}}, options);
+        {{indent}}writer.EndKeyValue(lastValue_{{propertyName}});
 """);
             }
 
             // Close the null check if block
-            if (needsNullCheck)
+            if (isNullable)
             {
                 builder.AppendLine($$"""
         }

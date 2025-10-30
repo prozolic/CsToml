@@ -2289,11 +2289,10 @@ public class TypeTableATest
 
             using var buffer = Utf8String.CreateWriter(out var writer);
             writer.AppendLine("Dict = {1 = \"2\", 3 = \"4\"}");
-            writer.AppendLine("TableB.Value = \"This is TypeTableB\"");
-            writer.AppendLine("TableB.TableECollection = [ {TableF.Value = \"[1] This is TypeTableF\"}, {TableF.Value = \"[2] This is TypeTableF\"}, {TableF.Value = \"[3] This is TypeTableF\"} ]");
-            writer.AppendLine("TableB.TableC.Value = \"This is TypeTableC\"");
-            writer.AppendLine("TableB.TableC.TableD.Value = \"This is TypeTableD\"");
+            writer.AppendLine("TableB = {Value = \"This is TypeTableB\", TableECollection = [ {TableF.Value = \"[1] This is TypeTableF\"}, {TableF.Value = \"[2] This is TypeTableF\"}, {TableF.Value = \"[3] This is TypeTableF\"} ], TableC = {Value = \"This is TypeTableC\", TableD = {Value = \"This is TypeTableD\"}}}");
             writer.Flush();
+
+            var _ = CsTomlSerializer.Deserialize<TypeTableA>(buffer.WrittenSpan);
 
             var expected = buffer.ToArray();
             bytes.ByteSpan.ToArray().ShouldBe(expected);
@@ -3397,9 +3396,10 @@ public class TestStructParentTest
             using var buffer = Utf8String.CreateWriter(out var writer);
             writer.AppendLine("Value = \"I'm a string.\"");
             writer.AppendLine("TestStructList = [ {Value = 1, Str = \"Test\"}, {Value = 2, Str = \"Test2\"}, {Value = 3, Str = \"Test3\"} ]");
-            writer.AppendLine("TestStruct.Value = 0");
-            writer.AppendLine("TestStruct.Str = \"Test\"");
+            writer.AppendLine("TestStruct = {Value = 0, Str = \"Test\"}");
             writer.Flush();
+
+            var _ = CsTomlSerializer.Deserialize<TestStructParent>(buffer.WrittenSpan);
 
             var expected = buffer.ToArray();
             bytes.ByteSpan.ToArray().ShouldBe(expected);
@@ -4482,5 +4482,69 @@ public class TypeNullBehaviorMixedTest
         deserialized.Name.ShouldBe("Theory");
         deserialized.SkippableField.ShouldBe(skippable);
         deserialized.NonSkippableField.ShouldBe(nonSkippable);
+    }
+}
+
+// https://github.com/prozolic/CsToml/issues/70
+public class Issue70
+{
+    [Fact]
+    public void Test()
+    {
+        var interchangeChallenge = new InterchangeChallenge
+        {
+            Title = "Crypto Challenge",
+            Content = "Decrypt this",
+            Flags = new FlagsSection
+            {
+                Static = [new() { Value = "flag{crypto_master}" }]
+            }
+        };
+
+        {
+            using var bytes = CsTomlSerializer.Serialize(interchangeChallenge);
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("title = \"Crypto Challenge\"");
+            writer.AppendLine("content = \"Decrypt this\"");
+            writer.AppendLine("flags = {static = [ {value = \"flag{crypto_master}\"} ]}");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
+
+            var deserialized = CsTomlSerializer.Deserialize<InterchangeChallenge>(bytes.ByteSpan);
+            deserialized.ShouldNotBeNull();
+            deserialized.Title.ShouldBe("Crypto Challenge");
+            deserialized.Content.ShouldBe("Decrypt this");
+            deserialized.Flags.ShouldNotBeNull();
+            deserialized.Flags!.Static.ShouldNotBeNull();
+            deserialized.Flags!.Static!.Count.ShouldBe(1);
+            deserialized.Flags.Static[0].ShouldNotBeNull();
+            deserialized.Flags.Static[0].Value.ShouldBe("flag{crypto_master}");
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(interchangeChallenge, options: Option.Header);
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("title = \"Crypto Challenge\"");
+            writer.AppendLine("content = \"Decrypt this\"");
+            writer.AppendLine("[flags]");
+            writer.AppendLine("static = [ {value = \"flag{crypto_master}\"} ]");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
+
+            var deserialized = CsTomlSerializer.Deserialize<InterchangeChallenge>(bytes.ByteSpan);
+            deserialized.ShouldNotBeNull();
+            deserialized.Title.ShouldBe("Crypto Challenge");
+            deserialized.Content.ShouldBe("Decrypt this");
+            deserialized.Flags.ShouldNotBeNull();
+            deserialized.Flags!.Static.ShouldNotBeNull();
+            deserialized.Flags!.Static!.Count.ShouldBe(1);
+            deserialized.Flags.Static[0].ShouldNotBeNull();
+            deserialized.Flags.Static[0].Value.ShouldBe("flag{crypto_master}");
+        }
+
+
     }
 }
