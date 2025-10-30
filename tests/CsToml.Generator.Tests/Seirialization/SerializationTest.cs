@@ -2347,6 +2347,14 @@ public class TypeTableATest
             writer.AppendLine("Value = \"This is TypeTableD\"");
             writer.Flush();
 
+            var tableA = CsTomlSerializer.Deserialize<TypeTableA>(buffer.WrittenSpan);
+            Validate(tableA);
+        }
+        {
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Dict = {1 = \"2\", 3 = \"4\"}");
+            writer.AppendLine("TableB = {Value = \"This is TypeTableB\", TableECollection = [ {TableF.Value = \"[1] This is TypeTableF\"}, {TableF.Value = \"[2] This is TypeTableF\"}, {TableF.Value = \"[3] This is TypeTableF\"} ], TableC = {Value = \"This is TypeTableC\", TableD = {Value = \"This is TypeTableD\"}}}");
+            writer.Flush();
 
             var tableA = CsTomlSerializer.Deserialize<TypeTableA>(buffer.WrittenSpan);
             Validate(tableA);
@@ -3448,6 +3456,23 @@ public class TestStructParentTest
             writer.AppendLine("[TestStruct]");
             writer.AppendLine("Value = 0");
             writer.AppendLine("Str = \"Test\"");
+            writer.Flush();
+
+            var parent = CsTomlSerializer.Deserialize<TestStructParent>(buffer.WrittenSpan);
+            parent.Value.ShouldBe("I'm a string.");
+            parent.TestStructList.ShouldBe(new List<TestStruct>
+            {
+                new TestStruct { Value = 1, Str = "Test"},
+                new TestStruct { Value = 2, Str = "Test2"},
+                new TestStruct { Value = 3, Str = "Test3"},
+            });
+            parent.TestStruct.ShouldBe(new TestStruct { Value = 0, Str = "Test" });
+        }
+        {
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value = \"I'm a string.\"");
+            writer.AppendLine("TestStructList = [ {Value = 1, Str = \"Test\"}, {Value = 2, Str = \"Test2\"}, {Value = 3, Str = \"Test3\"} ]");
+            writer.AppendLine("TestStruct = {Value = 0, Str = \"Test\"}");
             writer.Flush();
 
             var parent = CsTomlSerializer.Deserialize<TestStructParent>(buffer.WrittenSpan);
