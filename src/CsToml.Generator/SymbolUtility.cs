@@ -44,7 +44,10 @@ internal static class SymbolUtility
                     TomlValueOnSerializedAttributeData = attr,
                     AliasName = (string)attr.ConstructorArguments[0].Value!,
                     CanAliasName = true,
-                    NullHandling = nullHandling
+                    NullHandling = nullHandling,
+                    // Check if the property type is nullable (reference type or Nullable<T>)
+                    IsNullable = symbol.Type.NullableAnnotation == NullableAnnotation.Annotated
+                        || (symbol.Type is INamedTypeSymbol namedSymbol && namedSymbol.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T)
                 };
             }
             else
@@ -62,7 +65,10 @@ internal static class SymbolUtility
                     TomlValueOnSerializedAttributeData = attr,
                     AliasName = convertedName,
                     CanAliasName = convertedName != null,
-                    NullHandling = nullHandling
+                    NullHandling = nullHandling,
+                    // Check if the property type is nullable (reference type or Nullable<T>)
+                    IsNullable = symbol.Type.NullableAnnotation == NullableAnnotation.Annotated
+                        || (symbol.Type is INamedTypeSymbol namedSymbol && namedSymbol.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T)
                 };
             }
         }

@@ -469,7 +469,7 @@ internal partial class TypeArrayOfTable2
     public ImmutableArray<TestStruct?> TestStructArray { get; set; }
 
     [TomlValueOnSerialized]
-    public Dictionary<long, string> Dict { get; set; }
+    public Dictionary<long, string>? Dict { get; set; }
 }
 
 [TomlSerializedObject]
@@ -1145,4 +1145,42 @@ internal partial class TypeNullBehaviorMixed
 
     [TomlValueOnSerialized]
     public string? NonSkippableField { get; set; }
+}
+
+[TomlSerializedObject(TomlNamingConvention.SnakeCase)]
+internal partial class InterchangeChallenge
+{
+    [TomlValueOnSerialized]
+    public string Title { get; set; } = string.Empty;
+
+    [TomlValueOnSerialized]
+    public string Content { get; set; } = string.Empty;
+
+    [TomlValueOnSerialized]
+    public FlagsSection Flags { get; set; } = new();
+}
+
+[TomlSerializedObject(TomlNamingConvention.SnakeCase)]
+internal partial class FlagsSection
+{
+
+    [TomlValueOnSerialized(NullHandling = TomlNullHandling.Ignore)]
+    public List<StaticFlagSection>? Static { get; set; }
+}
+
+[TomlSerializedObject(TomlNamingConvention.SnakeCase)]
+internal partial class StaticFlagSection
+{
+    [TomlValueOnSerialized]
+    public string Value { get; set; } = string.Empty;
+
+    [TomlValueOnSerialized(NullHandling = TomlNullHandling.Ignore)]
+    public AttachmentSection? Attachment { get; set; }
+}
+
+[TomlSerializedObject(TomlNamingConvention.SnakeCase)]
+internal partial class AttachmentSection
+{
+    [TomlValueOnSerialized(NullHandling = TomlNullHandling.Ignore)]
+    public string? Value { get; set; }
 }
