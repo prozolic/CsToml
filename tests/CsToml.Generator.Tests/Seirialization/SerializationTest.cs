@@ -1728,6 +1728,7 @@ public class TypeArrayOfTables2Test
             writer.Flush();
 
             var type = CsTomlSerializer.Deserialize<TypeArrayOfTable2>(buffer.WrittenSpan);
+            type.Dict.ShouldNotBeNull();
             type.Dict[123].ShouldBe("Value");
             type.Dict[-1].ShouldBe("Value");
             type.Dict[123456789].ShouldBe("Value");
@@ -1744,6 +1745,7 @@ public class TypeArrayOfTables2Test
             writer.Flush();
 
             var type = CsTomlSerializer.Deserialize<TypeArrayOfTable2>(buffer.WrittenSpan);
+            type.Dict.ShouldNotBeNull();
             type.Dict[123].ShouldBe("Value");
             type.Dict[-1].ShouldBe("Value");
             type.Dict[123456789].ShouldBe("Value");
@@ -1763,6 +1765,7 @@ public class TypeArrayOfTables2Test
             writer.Flush();
 
             var type = CsTomlSerializer.Deserialize<TypeArrayOfTable2>(buffer.WrittenSpan);
+            type.Dict.ShouldNotBeNull();
             type.Dict[123].ShouldBe("Value");
             type.Dict[-1].ShouldBe("Value");
             type.Dict[123456789].ShouldBe("Value");
