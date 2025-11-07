@@ -475,7 +475,7 @@ internal partial class TypeArrayOfTable2
 [TomlSerializedObject]
 internal partial class TypeAlias
 {
-    [TomlValueOnSerialized(aliasName: "alias")]
+    [TomlValueOnSerialized(AliasName = "alias")]
     public string Value { get; set; }
 }
 
@@ -972,27 +972,27 @@ public partial class WithLazy
 [TomlSerializedObject]
 internal partial record AliasName
 {
-    [TomlValueOnSerialized("ba-re_Key")]
+    [TomlValueOnSerialized(AliasName = "ba-re_Key")]
     public string? BareKey { get; set; }
 
-    [TomlValueOnSerialized("")]
+    [TomlValueOnSerialized(AliasName = "")]
     public string? Empty { get; set; }
 
-    [TomlValueOnSerialized("あいうえお")]
+    [TomlValueOnSerialized(AliasName = "あいうえお")]
     public string? Hiragana { get; set; }
 
-    [TomlValueOnSerialized("127.0.0.1")]
+    [TomlValueOnSerialized(AliasName = "127.0.0.1")]
     public string? IpAddress { get; set; }
 
-    [TomlValueOnSerialized("https://github.com/prozolic/CsToml")]
+    [TomlValueOnSerialized(AliasName = "https://github.com/prozolic/CsToml")]
     public string? Url { get; set; }
 
-    [TomlValueOnSerialized("<\\i\\c*\\s*\\\\>")]
+    [TomlValueOnSerialized(AliasName = "<\\i\\c*\\s*\\\\>")]
     public string? Literal { get; set; }
 }
 
 // Naming Convention Tests
-[TomlSerializedObject(TomlNamingConvention.SnakeCase)]
+[TomlSerializedObject(NamingConvention = TomlNamingConvention.SnakeCase)]
 internal partial class TypeSnakeCase
 {
     [TomlValueOnSerialized]
@@ -1005,7 +1005,7 @@ internal partial class TypeSnakeCase
     public string XMLParser { get; set; }
 }
 
-[TomlSerializedObject(TomlNamingConvention.KebabCase)]
+[TomlSerializedObject(NamingConvention = TomlNamingConvention.KebabCase)]
 internal partial class TypeKebabCase
 {
     [TomlValueOnSerialized]
@@ -1015,7 +1015,7 @@ internal partial class TypeKebabCase
     public int AnotherValue { get; set; }
 }
 
-[TomlSerializedObject(TomlNamingConvention.CamelCase)]
+[TomlSerializedObject(NamingConvention = TomlNamingConvention.CamelCase)]
 internal partial class TypeCamelCase
 {
     [TomlValueOnSerialized]
@@ -1045,7 +1045,7 @@ internal partial class TypeLowerCase
     public int AnotherValue { get; set; }
 }
 
-[TomlSerializedObject(TomlNamingConvention.UpperCase)]
+[TomlSerializedObject(NamingConvention = TomlNamingConvention.UpperCase)]
 internal partial class TypeUpperCase
 {
     [TomlValueOnSerialized]
@@ -1055,7 +1055,7 @@ internal partial class TypeUpperCase
     public int AnotherValue { get; set; }
 }
 
-[TomlSerializedObject(TomlNamingConvention.ScreamingSnakeCase)]
+[TomlSerializedObject(NamingConvention = TomlNamingConvention.ScreamingSnakeCase)]
 internal partial class TypeScreamingSnakeCase
 {
     [TomlValueOnSerialized]
@@ -1065,7 +1065,7 @@ internal partial class TypeScreamingSnakeCase
     public int AnotherValue { get; set; }
 }
 
-[TomlSerializedObject(TomlNamingConvention.ScreamingKebabCase)]
+[TomlSerializedObject(NamingConvention = TomlNamingConvention.ScreamingKebabCase)]
 internal partial class TypeScreamingKebabCase
 {
     [TomlValueOnSerialized]
@@ -1076,13 +1076,13 @@ internal partial class TypeScreamingKebabCase
 }
 
 // Test that explicit alias overrides naming convention
-[TomlSerializedObject(TomlNamingConvention.SnakeCase)]
+[TomlSerializedObject(NamingConvention = TomlNamingConvention.SnakeCase)]
 internal partial class TypeAliasOverridesConvention
 {
     [TomlValueOnSerialized]
     public string MyProperty { get; set; }  // Will be converted to "my_property"
 
-    [TomlValueOnSerialized("custom_name")]
+    [TomlValueOnSerialized(AliasName = "custom_name")]
     public int AnotherValue { get; set; }   // Will use "custom_name" instead of "another_value"
 }
 
@@ -1147,7 +1147,7 @@ internal partial class TypeNullBehaviorMixed
     public string? NonSkippableField { get; set; }
 }
 
-[TomlSerializedObject(TomlNamingConvention.SnakeCase)]
+[TomlSerializedObject(NamingConvention = TomlNamingConvention.SnakeCase)]
 internal partial class InterchangeChallenge
 {
     [TomlValueOnSerialized]
@@ -1160,7 +1160,7 @@ internal partial class InterchangeChallenge
     public FlagsSection Flags { get; set; } = new();
 }
 
-[TomlSerializedObject(TomlNamingConvention.SnakeCase)]
+[TomlSerializedObject(NamingConvention = TomlNamingConvention.SnakeCase)]
 internal partial class FlagsSection
 {
 
@@ -1168,7 +1168,7 @@ internal partial class FlagsSection
     public List<StaticFlagSection>? Static { get; set; }
 }
 
-[TomlSerializedObject(TomlNamingConvention.SnakeCase)]
+[TomlSerializedObject(NamingConvention = TomlNamingConvention.SnakeCase)]
 internal partial class StaticFlagSection
 {
     [TomlValueOnSerialized]
@@ -1178,7 +1178,7 @@ internal partial class StaticFlagSection
     public AttachmentSection? Attachment { get; set; }
 }
 
-[TomlSerializedObject(TomlNamingConvention.SnakeCase)]
+[TomlSerializedObject(NamingConvention = TomlNamingConvention.SnakeCase)]
 internal partial class AttachmentSection
 {
     [TomlValueOnSerialized(NullHandling = TomlNullHandling.Ignore)]

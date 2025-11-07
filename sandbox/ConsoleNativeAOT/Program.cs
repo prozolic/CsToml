@@ -223,7 +223,7 @@ public partial class TestClass
     [TomlValueOnSerialized]
     public string str { get; set; }
 
-    [TomlValueOnSerialized("int")]
+    [TomlValueOnSerialized(AliasName = "int")]
     public long IntValue { get; set; }
     [TomlValueOnSerialized]
     public float flt { get; set; }

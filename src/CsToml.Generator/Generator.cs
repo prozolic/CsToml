@@ -23,26 +23,18 @@ internal sealed class TomlSerializedObjectAttribute : Attribute
     public TomlNamingConvention NamingConvention { get; init; }
 
     public TomlSerializedObjectAttribute()
-    {
-        NamingConvention = TomlNamingConvention.None;
-    }
-
-    public TomlSerializedObjectAttribute(TomlNamingConvention namingConvention)
-    {
-        NamingConvention = namingConvention;
-    }
+    {}
 }
 
 [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
 internal sealed class TomlValueOnSerializedAttribute : Attribute
 {
-    public string? AliasName { get; }
+    public string? AliasName { get; init; }
 
-    public TomlNullHandling NullHandling { get; set; } = TomlNullHandling.Error;
+    public TomlNullHandling NullHandling { get; init; }
 
-    public TomlValueOnSerializedAttribute() {  }
-
-    public TomlValueOnSerializedAttribute(string? aliasName) { this.AliasName = aliasName; }
+    public TomlValueOnSerializedAttribute()
+    {}
 }
 
 """);
