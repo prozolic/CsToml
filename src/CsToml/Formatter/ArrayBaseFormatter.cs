@@ -6,7 +6,7 @@ using System.ComponentModel;
 namespace CsToml.Formatter;
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-public abstract class ArrayBaseFormatter<TArray, TElement> : ITomlValueFormatter<TArray?>
+public abstract class ArrayBaseFormatter<TArray, TElement> : ITomlValueFormatter<TArray?>, ITomlArrayHeaderFormatter<TArray?>
 {
     public TArray? Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
@@ -64,6 +64,36 @@ public abstract class ArrayBaseFormatter<TArray, TElement> : ITomlValueFormatter
         }
         writer.WriteSpace();
         writer.EndArray();
+    }
+
+    bool ITomlArrayHeaderFormatter<TArray?>.TrySerialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, TArray? target, CsTomlSerializerOptions options)
+    {
+        if (target == null)
+        {
+            ExceptionHelper.ThrowSerializationFailed(typeof(TArray));
+            return false; // not reached.
+        }
+
+        var targetSpan = AsSpan(target);
+        if (targetSpan.Length == 0)
+        {
+            return false;
+        }
+
+        var formatter = options.Resolver.GetFormatter<TElement>()!;
+        for (int i = 0; i < targetSpan.Length; i++)
+        {
+            writer.BeginArrayOfTablesHeader();
+            writer.WriteKey(header);
+            writer.EndArrayOfTablesHeader();
+            writer.WriteNewLine();
+            writer.BeginCurrentState(TomlValueState.ArrayOfTableForMulitiLine);
+            formatter.Serialize(ref writer, targetSpan[i], options);
+            writer.EndCurrentState();
+            writer.EndKeyValue(false);
+        }
+
+        return true;
     }
 
     protected abstract ReadOnlySpan<TElement> AsSpan(TArray array);

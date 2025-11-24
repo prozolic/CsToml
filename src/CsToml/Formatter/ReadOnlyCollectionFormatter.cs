@@ -47,4 +47,30 @@ public sealed class ReadOnlyCollectionFormatter<T> : CollectionBaseFormatter<Rea
         writer.WriteSpace();
         writer.EndArray();
     }
+
+    protected override bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, ReadOnlyCollection<T> target, CsTomlSerializerOptions options)
+    {
+        if (target.Count == 0)
+        {
+            // Header-style table arrays must have at least one element
+            // If there are 0 elements, return false to serialize in inline table format.
+            return false;
+        }
+
+        var formatter = options.Resolver.GetFormatter<T>()!;
+        for (int i = 0; i < target.Count; i++)
+        {
+            writer.BeginArrayOfTablesHeader();
+            writer.WriteKey(header);
+            writer.EndArrayOfTablesHeader();
+            writer.WriteNewLine();
+            writer.BeginCurrentState(TomlValueState.ArrayOfTableForMulitiLine);
+            formatter.Serialize(ref writer, target[i], options);
+            writer.EndCurrentState();
+            writer.EndKeyValue(false);
+        }
+
+        // Return true if serialized in header style.
+        return true;
+    }
 }

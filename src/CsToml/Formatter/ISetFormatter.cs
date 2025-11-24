@@ -54,6 +54,30 @@ public sealed class ISetFormatter<T> : CollectionBaseFormatter<ISet<T>, T, HashS
             return;
         }
 
-        base.SerializeCollection(ref writer, target, options);
+        IEnumerableSerializer<T>.Instance.Serialize(ref writer, new CollectionContent(target), options);
+    }
+
+    protected override bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, ISet<T> target, CsTomlSerializerOptions options)
+    {
+        if (target.Count == 0)
+        {
+            return false;
+        }
+
+        var formatter = options.Resolver.GetFormatter<T>()!;
+        foreach (var item in target)
+        {
+            writer.BeginArrayOfTablesHeader();
+            writer.WriteKey(header);
+            writer.EndArrayOfTablesHeader();
+            writer.WriteNewLine();
+            writer.BeginCurrentState(TomlValueState.ArrayOfTableForMulitiLine);
+            formatter.Serialize(ref writer, item, options);
+            writer.EndCurrentState();
+            writer.EndKeyValue(false);
+        }
+
+        // Return true if serialized in header style.
+        return true;
     }
 }

@@ -23,4 +23,14 @@ public sealed class ConcurrentStackFormatter<T> : CollectionBaseFormatter<Concur
     {
         return new List<T>(capacity);
     }
+
+    protected override void SerializeCollection<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ConcurrentStack<T> target, CsTomlSerializerOptions options)
+    {
+        IEnumerableSerializer<T>.Instance.Serialize(ref writer, new CollectionContent(target), options);
+    }
+
+    protected override bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, ConcurrentStack<T> target, CsTomlSerializerOptions options)
+    {
+        return IEnumerableSerializer<T>.Instance.TrySerializeTomlArrayHeaderStyle(ref writer, header, new CollectionContent(target), options);
+    }
 }

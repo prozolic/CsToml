@@ -2,7 +2,7 @@
 
 namespace CsToml.Formatter;
 
-public sealed class ImmutableListFormatter<T> : CollectionBaseFormatter<ImmutableList<T>, T, List<T>>
+public sealed class ImmutableListFormatter<T> : StructuralCollectionBaseFormatter<ImmutableList<T>, T, List<T>>
 {
     protected override void AddValue(List<T> mediator, T element)
     {
@@ -19,7 +19,7 @@ public sealed class ImmutableListFormatter<T> : CollectionBaseFormatter<Immutabl
         return new List<T>(capacity);
     }
 
-    protected override void SerializeCollection<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ImmutableList<T> target, CsTomlSerializerOptions options)
+    public override void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ImmutableList<T> target, CsTomlSerializerOptions options)
     {
         writer.BeginArray();
         if (target.Count == 0)
@@ -46,4 +46,29 @@ public sealed class ImmutableListFormatter<T> : CollectionBaseFormatter<Immutabl
         writer.WriteSpace();
         writer.EndArray();
     }
+
+    public override bool TrySerialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, ImmutableList<T> target, CsTomlSerializerOptions options)
+    {
+        if (target.Count == 0)
+        {
+            return false;
+        }
+
+        var formatter = options.Resolver.GetFormatter<T>()!;
+        foreach (var item in target)
+        {
+            writer.BeginArrayOfTablesHeader();
+            writer.WriteKey(header);
+            writer.EndArrayOfTablesHeader();
+            writer.WriteNewLine();
+            writer.BeginCurrentState(TomlValueState.ArrayOfTableForMulitiLine);
+            formatter.Serialize(ref writer, item, options);
+            writer.EndCurrentState();
+            writer.EndKeyValue(false);
+        }
+
+        // Return true if serialized in header style.
+        return true;
+    }
+
 }

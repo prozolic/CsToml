@@ -22,88 +22,33 @@ public sealed class IListFormatter<T> : CollectionBaseFormatter<IList<T>, T, Lis
 
     protected override void SerializeCollection<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, IList<T> target, CsTomlSerializerOptions options)
     {
-        if (target is T[] arrayTarget)
+        if (target is T[])
         {
-            writer.BeginArray();
-            if (arrayTarget.Length == 0)
-            {
-                writer.EndArray();
-                return;
-            }
-
-            var targetSpan = arrayTarget.AsSpan();
-            var formatter = options.Resolver.GetFormatter<T>()!;
-            formatter.Serialize(ref writer, targetSpan[0], options);
-            if (targetSpan.Length == 1)
-            {
-                writer.WriteSpace();
-                writer.EndArray();
-                return;
-            }
-
-            for (int i = 1; i < targetSpan.Length; i++)
-            {
-                writer.Write(TomlCodes.Symbol.COMMA);
-                writer.WriteSpace();
-                formatter.Serialize(ref writer, targetSpan[i], options);
-            }
-            writer.WriteSpace();
-            writer.EndArray();
-            return;
+            ArraySerializer<T>.Instance.Serialize(ref writer, new CollectionContent(target), options);
         }
-        if (target is List<T> listTarget)
+        else if (target is List<T>)
         {
-            writer.BeginArray();
-            if (listTarget.Count == 0)
-            {
-                writer.EndArray();
-                return;
-            }
-
-            var targetSpan = CollectionsMarshal.AsSpan(listTarget);
-            var formatter = options.Resolver.GetFormatter<T>()!;
-            formatter.Serialize(ref writer, targetSpan[0], options);
-            if (targetSpan.Length == 1)
-            {
-                writer.WriteSpace();
-                writer.EndArray();
-                return;
-            }
-
-            for (int i = 1; i < targetSpan.Length; i++)
-            {
-                writer.Write(TomlCodes.Symbol.COMMA);
-                writer.WriteSpace();
-                formatter.Serialize(ref writer, targetSpan[i], options);
-            }
-            writer.WriteSpace();
-            writer.EndArray();
-            return;
+            ListSerializer<T>.Instance.Serialize(ref writer, new CollectionContent(target), options);
         }
-
-        writer.BeginArray();
-        if (target.Count == 0)
+        else
         {
-            writer.EndArray();
-            return;
+            IListSerializer<T>.Instance.Serialize(ref writer, new CollectionContent(target), options);
         }
+    }
 
-        var formatter2 = options.Resolver.GetFormatter<T>()!;
-        formatter2.Serialize(ref writer, target[0], options);
-        if (target.Count == 1)
+    protected override bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, IList<T> target, CsTomlSerializerOptions options)
+    {
+        if (target is T[])
         {
-            writer.WriteSpace();
-            writer.EndArray();
-            return;
+            return ArraySerializer<T>.Instance.TrySerializeTomlArrayHeaderStyle(ref writer, header, new CollectionContent(target), options);
         }
-
-        for (int i = 1; i < target.Count; i++)
+        else if (target is List<T> stTarget)
         {
-            writer.Write(TomlCodes.Symbol.COMMA);
-            writer.WriteSpace();
-            formatter2.Serialize(ref writer, target[i], options);
+            return ListSerializer<T>.Instance.TrySerializeTomlArrayHeaderStyle(ref writer, header, new CollectionContent(target), options);
         }
-        writer.WriteSpace();
-        writer.EndArray();
+        else
+        {
+            return IListSerializer<T>.Instance.TrySerializeTomlArrayHeaderStyle(ref writer, header, new CollectionContent(target), options);
+        }
     }
 }

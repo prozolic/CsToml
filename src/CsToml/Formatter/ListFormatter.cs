@@ -1,5 +1,7 @@
-﻿
+﻿using CsToml.Error;
+using System.Buffers;
 using System.Runtime.InteropServices;
+using System.Xml.Linq;
 
 namespace CsToml.Formatter;
 
@@ -48,5 +50,32 @@ public sealed class ListFormatter<T> : CollectionBaseFormatter<List<T>, T, List<
         writer.WriteSpace();
         writer.EndArray();
 
+    }
+
+    protected override bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, List<T> target, CsTomlSerializerOptions options)
+    {
+        var targetSpan = CollectionsMarshal.AsSpan(target);
+        if (targetSpan.Length == 0)
+        {
+            // Header-style table arrays must have at least one element
+            // If there are 0 elements, return false to serialize in inline table format.
+            return false;
+        }
+
+        var formatter = options.Resolver.GetFormatter<T>()!;
+        for (int i = 0; i < targetSpan.Length; i++)
+        {
+            writer.BeginArrayOfTablesHeader();
+            writer.WriteKey(header);
+            writer.EndArrayOfTablesHeader();
+            writer.WriteNewLine();
+            writer.BeginCurrentState(TomlValueState.ArrayOfTableForMulitiLine);
+            formatter.Serialize(ref writer, targetSpan[i], options);
+            writer.EndCurrentState();
+            writer.EndKeyValue(false);
+        }
+
+        // Return true if serialized in header style.
+        return true;
     }
 }
