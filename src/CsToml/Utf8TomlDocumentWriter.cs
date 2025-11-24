@@ -16,6 +16,7 @@ public enum TomlValueState
     Array,
     ArrayOfTable,
     Table,
+    ArrayOfTableForMulitiLine,
 }
 
 [StructLayout(LayoutKind.Auto)]
@@ -36,7 +37,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
 
     public readonly TomlValueState State => CurrentState.state;
 
-    internal readonly bool IsRoot => valueStates.Count == 1 && !valueOnly;
+    public readonly bool IsRoot => valueStates.Count == 1 && !valueOnly;
 
     internal Utf8TomlDocumentWriter(ref TBufferWriter bufferWriter, bool valueOnly = false) : this(ref bufferWriter, valueOnly, null)
     {}
