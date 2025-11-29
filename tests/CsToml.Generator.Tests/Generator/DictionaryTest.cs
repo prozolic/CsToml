@@ -7,13 +7,14 @@ namespace CsToml.Generator.Tests;
 
 public class DictionaryTest
 {
-    [Fact]
-    public void Serialize()
+    private Dictionary<object, object?> dict;
+
+    public DictionaryTest()
     {
-        var dict = new Dictionary<object, object?>()
+        dict = new Dictionary<object, object?>()
         {
             ["key"] = new object[]
-            {
+                    {
                 999,
                 "Value",
                 Color.Red,
@@ -28,7 +29,7 @@ public class DictionaryTest
                         }
                     }
                 }
-            },
+                    },
             ["Table"] = new Dictionary<object, object>()
             {
                 [1] = "2",
@@ -42,13 +43,13 @@ public class DictionaryTest
                     [1] = new Dictionary<string, object?>()
                     {
                         ["key"] = new object[]
-                        {
+                                {
                             new long[] {1, 2, 3},
                             new Dictionary<string, object?>()
                             {
                                 ["key"] = "value"
                             }
-                        }
+                                }
                     },
                     [2] = new Dictionary<string, object?>()
                     {
@@ -58,40 +59,84 @@ public class DictionaryTest
                 }
             }
         };
+    }
 
-        {
-            using var bytes = CsTomlSerializer.Serialize(dict);
+    [Fact]
+    public void Serialize()
+    {
+        using var bytes = CsTomlSerializer.Serialize(dict);
 
-            using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("key = [ 999, \"Value\", \"Red\", {key = [ [ 1, 2, 3 ], {key = \"value\"} ]} ]");
-            writer.AppendLine("Table = {1 = \"2\", 3 = \"4\"}");
-            writer.AppendLine("Array = [ 123, 456.0, \"789\" ]");
-            writer.AppendLine("TableParent = {Table3 = {1 = {key = [ [ 1, 2, 3 ], {key = \"value\"} ]}, 2 = {key = \"value\"}}}");
-            writer.Flush();
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("key = [ 999, \"Value\", \"Red\", {key = [ [ 1, 2, 3 ], {key = \"value\"} ]} ]");
+        writer.AppendLine("Table = {1 = \"2\", 3 = \"4\"}");
+        writer.AppendLine("Array = [ 123, 456.0, \"789\" ]");
+        writer.AppendLine("TableParent = {Table3 = {1 = {key = [ [ 1, 2, 3 ], {key = \"value\"} ]}, 2 = {key = \"value\"}}}");
+        writer.Flush();
 
-            var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().ShouldBe(expected);
-        }
-        {
-            using var bytes = CsTomlSerializer.Serialize(dict, options: Option.Header);
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
 
-            using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("key = [ 999, \"Value\", \"Red\", {key = [ [ 1, 2, 3 ], {key = \"value\"} ]} ]");
-            writer.AppendLine("Array = [ 123, 456.0, \"789\" ]");
-            writer.AppendLine("[Table]");
-            writer.AppendLine("1 = \"2\"");
-            writer.AppendLine("3 = \"4\"");
-            writer.AppendLine("[TableParent]");
-            writer.AppendLine("[TableParent.Table3]");
-            writer.AppendLine("[TableParent.Table3.1]");
-            writer.AppendLine("key = [ [ 1, 2, 3 ], {key = \"value\"} ]");
-            writer.AppendLine("[TableParent.Table3.2]");
-            writer.AppendLine("key = \"value\"");
-            writer.Flush();
+    [Fact]
+    public void SerializeWithHeaderOption()
+    {
+        using var bytes = CsTomlSerializer.Serialize(dict, options: Option.Header);
 
-            var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().ShouldBe(expected);
-        }
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("key = [ 999, \"Value\", \"Red\", {key = [ [ 1, 2, 3 ], {key = \"value\"} ]} ]");
+        writer.AppendLine("Array = [ 123, 456.0, \"789\" ]");
+        writer.AppendLine("[Table]");
+        writer.AppendLine("1 = \"2\"");
+        writer.AppendLine("3 = \"4\"");
+        writer.AppendLine("[TableParent]");
+        writer.AppendLine("[TableParent.Table3]");
+        writer.AppendLine("[TableParent.Table3.1]");
+        writer.AppendLine("key = [ [ 1, 2, 3 ], {key = \"value\"} ]");
+        writer.AppendLine("[TableParent.Table3.2]");
+        writer.AppendLine("key = \"value\"");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void SerializeWithArrayHeaderOption()
+    {
+        using var bytes = CsTomlSerializer.Serialize(dict, options: Option.ArrayHeader);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("key = [ 999, \"Value\", \"Red\", {key = [ [ 1, 2, 3 ], {key = \"value\"} ]} ]");
+        writer.AppendLine("Table = {1 = \"2\", 3 = \"4\"}");
+        writer.AppendLine("Array = [ 123, 456.0, \"789\" ]");
+        writer.AppendLine("TableParent = {Table3 = {1 = {key = [ [ 1, 2, 3 ], {key = \"value\"} ]}, 2 = {key = \"value\"}}}");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void SerializeWithHeaderAndArrayHeaderOption()
+    {
+        using var bytes = CsTomlSerializer.Serialize(dict, options: Option.HeaderAndArrayHeader);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("key = [ 999, \"Value\", \"Red\", {key = [ [ 1, 2, 3 ], {key = \"value\"} ]} ]");
+        writer.AppendLine("Array = [ 123, 456.0, \"789\" ]");
+        writer.AppendLine("[Table]");
+        writer.AppendLine("1 = \"2\"");
+        writer.AppendLine("3 = \"4\"");
+        writer.AppendLine("[TableParent]");
+        writer.AppendLine("[TableParent.Table3]");
+        writer.AppendLine("[TableParent.Table3.1]");
+        writer.AppendLine("key = [ [ 1, 2, 3 ], {key = \"value\"} ]");
+        writer.AppendLine("[TableParent.Table3.2]");
+        writer.AppendLine("key = \"value\"");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
     [Fact]

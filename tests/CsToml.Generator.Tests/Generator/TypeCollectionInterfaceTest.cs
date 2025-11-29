@@ -1,15 +1,16 @@
-﻿using Shouldly;
+﻿using Newtonsoft.Json.Linq;
+using Shouldly;
 using System.Collections.ObjectModel;
+using System.Text.Json.Serialization.Metadata;
 using Utf8StringInterpolation;
 
 namespace CsToml.Generator.Tests;
 
 public class TypeCollectionInterfaceTest
 {
-    [Fact]
-    public void Serialize()
+    public static IEnumerable<object[]> GetTypeCollectionInterfaces()
     {
-        var type = new TypeCollectionInterface()
+        yield return new object[] { new TypeCollectionInterface()
         {
             Value = new List<int>([1, 2, 3, 4, 5]),
             Value2 = new List<int>([1, 2, 3, 4, 5]),
@@ -18,46 +19,8 @@ public class TypeCollectionInterfaceTest
             Value5 = new List<int>([1, 2, 3, 4, 5]),
             Value6 = new List<int>([1, 2, 3, 4, 5]),
             Value7 = new HashSet<int>([1, 2, 3, 4, 5]),
-        };
-
-        {
-            using var bytes = CsTomlSerializer.Serialize(type);
-
-            using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("Value2 = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("Value3 = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("Value4 = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("Value5 = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("Value6 = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("Value7 = [ 1, 2, 3, 4, 5 ]");
-            writer.Flush();
-
-            var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().ShouldBe(expected);
-        }
-        {
-            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
-
-            using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("Value2 = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("Value3 = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("Value4 = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("Value5 = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("Value6 = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("Value7 = [ 1, 2, 3, 4, 5 ]");
-            writer.Flush();
-
-            var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().ShouldBe(expected);
-        }
-    }
-
-    [Fact]
-    public void Serialize2()
-    {
-        var type = new TypeCollectionInterface()
+        }};
+        yield return new object[] { new TypeCollectionInterface()
         {
             Value = new ReadOnlyCollection<int>([1, 2, 3, 4, 5]),
             Value2 = new ReadOnlyCollection<int>([1, 2, 3, 4, 5]),
@@ -66,40 +29,87 @@ public class TypeCollectionInterfaceTest
             Value5 = new ReadOnlyCollection<int>([1, 2, 3, 4, 5]),
             Value6 = new ReadOnlyCollection<int>([1, 2, 3, 4, 5]),
             Value7 = new SortedSet<int>([1, 2, 3, 4, 5]),
-        };
+        }};
+    }
 
-        {
-            using var bytes = CsTomlSerializer.Serialize(type);
+    [Theory]
+    [MemberData(nameof(GetTypeCollectionInterfaces))]
+    public void Serialize(TypeCollectionInterface typeCollectionInterface)
+    {
+        using var bytes = CsTomlSerializer.Serialize(typeCollectionInterface);
 
-            using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("Value2 = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("Value3 = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("Value4 = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("Value5 = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("Value6 = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("Value7 = [ 1, 2, 3, 4, 5 ]");
-            writer.Flush();
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value2 = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value3 = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value4 = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value5 = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value6 = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value7 = [ 1, 2, 3, 4, 5 ]");
+        writer.Flush();
 
-            var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().ShouldBe(expected);
-        }
-        {
-            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
 
-            using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("Value2 = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("Value3 = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("Value4 = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("Value5 = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("Value6 = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("Value7 = [ 1, 2, 3, 4, 5 ]");
-            writer.Flush();
+    [Theory]
+    [MemberData(nameof(GetTypeCollectionInterfaces))]
+    public void SerializeWithHeaderOption(TypeCollectionInterface typeCollectionInterface)
+    {
+        using var bytes = CsTomlSerializer.Serialize(typeCollectionInterface, Option.Header);
 
-            var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().ShouldBe(expected);
-        }
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value2 = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value3 = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value4 = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value5 = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value6 = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value7 = [ 1, 2, 3, 4, 5 ]");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Theory]
+    [MemberData(nameof(GetTypeCollectionInterfaces))]
+    public void SerializeWithArrayHeaderOption(TypeCollectionInterface typeCollectionInterface)
+    {
+        using var bytes = CsTomlSerializer.Serialize(typeCollectionInterface, Option.ArrayHeader);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value2 = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value3 = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value4 = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value5 = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value6 = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value7 = [ 1, 2, 3, 4, 5 ]");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Theory]
+    [MemberData(nameof(GetTypeCollectionInterfaces))]
+    public void SerializeWithHeaderAndArrayHeaderOption(TypeCollectionInterface typeCollectionInterface)
+    {
+        using var bytes = CsTomlSerializer.Serialize(typeCollectionInterface, Option.HeaderAndArrayHeader);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value2 = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value3 = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value4 = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value5 = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value6 = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value7 = [ 1, 2, 3, 4, 5 ]");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
     [Fact]

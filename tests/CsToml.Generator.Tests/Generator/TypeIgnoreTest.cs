@@ -5,34 +5,67 @@ namespace CsToml.Generator.Tests;
 
 public class TypeIgnoreTest
 {
-    [Fact]
-    public void Serialize()
+    private TypeIgnore typeIgnore;
+
+    public TypeIgnoreTest()
     {
-        var type = new TypeIgnore
+        typeIgnore = new TypeIgnore
         {
             Value = 999,
             Str = "This is TypeIgnore"
         };
-        {
-            using var bytes = CsTomlSerializer.Serialize(type);
+    }
 
-            using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("Value = 999");
-            writer.Flush();
+    [Fact]
+    public void Serialize()
+    {
+        using var bytes = CsTomlSerializer.Serialize(typeIgnore);
 
-            var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().ShouldBe(expected);
-        }
-        {
-            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = 999");
+        writer.Flush();
 
-            using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("Value = 999");
-            writer.Flush();
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
 
-            var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().ShouldBe(expected);
-        }
+    [Fact]
+    public void SerializeWithHeaderOption()
+    {
+        using var bytes = CsTomlSerializer.Serialize(typeIgnore, Option.Header);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = 999");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void SerializeWithArrayHeaderOption()
+    {
+        using var bytes = CsTomlSerializer.Serialize(typeIgnore, Option.ArrayHeader);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = 999");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void SerializeWithHeaderAndArrayHeaderOption()
+    {
+        using var bytes = CsTomlSerializer.Serialize(typeIgnore, Option.HeaderAndArrayHeader);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = 999");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
     [Fact]

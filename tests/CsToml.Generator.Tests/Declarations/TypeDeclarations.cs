@@ -235,6 +235,18 @@ public partial class TypeTomlDouble
     public double Normal { get; set; }
 
     [TomlValueOnSerialized]
+    public double Normal2 { get; set; }
+
+    [TomlValueOnSerialized]
+    public double Normal3 { get; set; }
+
+    [TomlValueOnSerialized]
+    public double Normal4 { get; set; }
+
+    [TomlValueOnSerialized]
+    public double Normal5 { get; set; }
+
+    [TomlValueOnSerialized]
     public double Inf { get; set; }
 
     [TomlValueOnSerialized]
@@ -361,7 +373,7 @@ internal partial class TypeCollection
 }
 
 [TomlSerializedObject]
-internal partial class TypeCollectionInterface
+public partial class TypeCollectionInterface
 {
     [TomlValueOnSerialized]
     public IEnumerable<int> Value { get; set; }
@@ -844,7 +856,7 @@ internal partial class TypeImmutable2
 }
 
 [TomlSerializedObject]
-internal partial class TypeImmutableInterface
+public partial class TypeImmutableInterface
 {
     [TomlValueOnSerialized]
     public IImmutableList<int> IImmutableList { get; set; }

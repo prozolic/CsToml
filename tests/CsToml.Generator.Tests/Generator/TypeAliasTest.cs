@@ -5,31 +5,63 @@ namespace CsToml.Generator.Tests;
 
 public class TypeAliasTest
 {
+    private TypeAlias type;
+
+    public TypeAliasTest()
+    {
+        type = new TypeAlias() { Value = "This is TypeAlias" };
+    }
+
     [Fact]
     public void Serialize()
     {
-        var type = new TypeAlias() { Value = "This is TypeAlias" };
+        using var bytes = CsTomlSerializer.Serialize(type);
 
-        {
-            using var bytes = CsTomlSerializer.Serialize(type);
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("alias = \"This is TypeAlias\"");
+        writer.Flush();
 
-            using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("alias = \"This is TypeAlias\"");
-            writer.Flush();
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
 
-            var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().ShouldBe(expected);
-        }
-        {
-            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+    [Fact]
+    public void SerializeWithHeaderOption()
+    {
+        using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
 
-            using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("alias = \"This is TypeAlias\"");
-            writer.Flush();
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("alias = \"This is TypeAlias\"");
+        writer.Flush();
 
-            var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().ShouldBe(expected);
-        }
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void SerializeWithArrayHeaderOption()
+    {
+        using var bytes = CsTomlSerializer.Serialize(type, Option.ArrayHeader);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("alias = \"This is TypeAlias\"");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void SerializeWithHeaderAndArrayHeaderOption()
+    {
+        using var bytes = CsTomlSerializer.Serialize(type, Option.HeaderAndArrayHeader);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("alias = \"This is TypeAlias\"");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
     [Fact]

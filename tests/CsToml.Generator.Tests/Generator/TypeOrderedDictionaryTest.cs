@@ -1,17 +1,16 @@
-﻿using CsToml.Formatter.Resolver;
+﻿
+#if NET9_0_OR_GREATER
+
 using Shouldly;
-using System.Collections.Frozen;
 using Utf8StringInterpolation;
-using CsToml.Generator.Other;
 
 namespace CsToml.Generator.Tests;
 
-#if NET9_0_OR_GREATER
-
 public class TypeOrderedDictionaryTest
 {
-    [Fact]
-    public void Serialize()
+    private TypeDictionary typeDictionary;
+
+    public TypeOrderedDictionaryTest()
     {
         var dict = new OrderedDictionary<string, object?>()
         {
@@ -33,28 +32,61 @@ public class TypeOrderedDictionaryTest
             }
         };
 
-        var type = new TypeDictionary() { Value = dict };
-        {
-            using var bytes = CsTomlSerializer.Serialize(type);
+        typeDictionary = new TypeDictionary() { Value = dict };
+    }
 
-            using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("Value = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3 ], {key = \"value\"} ]} ]}");
-            writer.Flush();
+    [Fact]
+    public void Serialize()
+    {
+        using var bytes = CsTomlSerializer.Serialize(typeDictionary);
 
-            var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().ShouldBe(expected);
-        }
-        {
-            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3 ], {key = \"value\"} ]} ]}");
+        writer.Flush();
 
-            using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("[Value]");
-            writer.AppendLine("key = [ 999, \"Value\", {key = [ [ 1, 2, 3 ], {key = \"value\"} ]} ]");
-            writer.Flush();
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
 
-            var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().ShouldBe(expected);
-        }
+    [Fact]
+    public void SerializeWithHeaderOption()
+    {
+        using var bytes = CsTomlSerializer.Serialize(typeDictionary, Option.Header);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("[Value]");
+        writer.AppendLine("key = [ 999, \"Value\", {key = [ [ 1, 2, 3 ], {key = \"value\"} ]} ]");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void SerializeWithArrayHeaderOption()
+    {
+        using var bytes = CsTomlSerializer.Serialize(typeDictionary, Option.ArrayHeader);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3 ], {key = \"value\"} ]} ]}");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void SerializeWithHeaderAndArrayHeaderOption()
+    {
+        using var bytes = CsTomlSerializer.Serialize(typeDictionary, Option.HeaderAndArrayHeader);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("[Value]");
+        writer.AppendLine("key = [ 999, \"Value\", {key = [ [ 1, 2, 3 ], {key = \"value\"} ]} ]");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
     [Fact]

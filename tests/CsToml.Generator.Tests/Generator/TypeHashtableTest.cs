@@ -6,10 +6,11 @@ namespace CsToml.Generator.Tests;
 
 public class TypeHashtableTest
 {
-    [Fact]
-    public void Serialize()
+    private TypeHashtable typeHashtable;
+
+    public TypeHashtableTest()
     {
-        var type = new TypeHashtable()
+        typeHashtable = new TypeHashtable()
         {
             Value = new Hashtable()
             {
@@ -18,27 +19,59 @@ public class TypeHashtableTest
                 [123456789] = "Value",
             }
         };
+    }
 
-        {
-            using var bytes = CsTomlSerializer.Serialize(type);
+    [Fact]
+    public void Serialize()
+    {
+        using var bytes = CsTomlSerializer.Serialize(typeHashtable);
 
-            using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("Value = {123 = \"Value\", 123456789 = \"Value\", -1 = \"Value\"}");
-            writer.Flush();
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = {123 = \"Value\", 123456789 = \"Value\", -1 = \"Value\"}");
+        writer.Flush();
 
-            var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().ShouldBe(expected);
-        }
-        {
-            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
 
-            using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("Value = {123 = \"Value\", 123456789 = \"Value\", -1 = \"Value\"}");
-            writer.Flush();
+    [Fact]
+    public void SerializeWithHeaderOption()
+    {
+        using var bytes = CsTomlSerializer.Serialize(typeHashtable, Option.Header);
 
-            var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().ShouldBe(expected);
-        }
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = {123 = \"Value\", 123456789 = \"Value\", -1 = \"Value\"}");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void SerializeWithArrayHeaderOption()
+    {
+        using var bytes = CsTomlSerializer.Serialize(typeHashtable, Option.ArrayHeader);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = {123 = \"Value\", 123456789 = \"Value\", -1 = \"Value\"}");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void SerializeWithHeaderAndArrayHeaderOption()
+    {
+        using var bytes = CsTomlSerializer.Serialize(typeHashtable, Option.HeaderAndArrayHeader);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = {123 = \"Value\", 123456789 = \"Value\", -1 = \"Value\"}");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+
     }
 
     [Fact]

@@ -6,36 +6,69 @@ namespace CsToml.Generator.Tests;
 
 public class TypeTableTest
 {
-    [Fact]
-    public void Serialize()
+    private TypeTable table;
+
+    public TypeTableTest()
     {
-        var table = new TypeTable();
+        table = new TypeTable();
         table.Table2 = new TypeTable2();
         table.Table2.Table3 = new TypeTable3() { Value = "This is TypeTable3" };
 
-        {
-            using var bytes = CsTomlSerializer.Serialize(table);
+    }
 
-            using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("Table2.Table3.Value = \"This is TypeTable3\"");
-            writer.Flush();
+    [Fact]
+    public void Serialize()
+    {
+        using var bytes = CsTomlSerializer.Serialize(table);
 
-            var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().ShouldBe(expected);
-        }
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Table2.Table3.Value = \"This is TypeTable3\"");
+        writer.Flush();
 
-        {
-            using var bytes = CsTomlSerializer.Serialize(table, Option.Header);
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
 
-            using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("[Table2]");
-            writer.AppendLine("[Table2.Table3]");
-            writer.AppendLine("Value = \"This is TypeTable3\"");
-            writer.Flush();
+    [Fact]
+    public void SerializeWithHeaderOption()
+    {
+        using var bytes = CsTomlSerializer.Serialize(table, Option.Header);
 
-            var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().ShouldBe(expected);
-        }
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("[Table2]");
+        writer.AppendLine("[Table2.Table3]");
+        writer.AppendLine("Value = \"This is TypeTable3\"");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void SerializeWithArrayHeaderOption()
+    {
+        using var bytes = CsTomlSerializer.Serialize(table, Option.ArrayHeader);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Table2.Table3.Value = \"This is TypeTable3\"");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void SerializeWithHeaderAndArrayHeaderOption()
+    {
+        using var bytes = CsTomlSerializer.Serialize(table, Option.HeaderAndArrayHeader);
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("[Table2]");
+        writer.AppendLine("[Table2.Table3]");
+        writer.AppendLine("Value = \"This is TypeTable3\"");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
     [Fact]

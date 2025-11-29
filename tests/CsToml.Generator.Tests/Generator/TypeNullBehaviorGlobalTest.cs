@@ -2,7 +2,6 @@
 using CsToml.Formatter.Resolver;
 using Shouldly;
 using Utf8StringInterpolation;
-using CsToml.Generator.Other;
 
 namespace CsToml.Generator.Tests;
 
@@ -18,12 +17,7 @@ public class TypeNullBehaviorGlobalTest
             Field3 = null
         };
 
-        var options = CsTomlSerializerOptions.Default with
-        {
-            SerializeOptions = new() { DefaultNullHandling = TomlNullHandling.Ignore }
-        };
-
-        using var bytes = CsTomlSerializer.Serialize(type, options);
+        using var bytes = CsTomlSerializer.Serialize(type, Option.IgnoreTomlNullHandling);
 
         bytes.ByteSpan.ToArray().ShouldBe(""u8.ToArray());
     }
@@ -38,12 +32,7 @@ public class TypeNullBehaviorGlobalTest
             Field3 = 123
         };
 
-        var options = CsTomlSerializerOptions.Default with
-        {
-            SerializeOptions = new() { DefaultNullHandling = TomlNullHandling.Ignore }
-        };
-
-        using var bytes = CsTomlSerializer.Serialize(type, options);
+        using var bytes = CsTomlSerializer.Serialize(type, Option.IgnoreTomlNullHandling);
 
         using var buffer = Utf8String.CreateWriter(out var writer);
         writer.AppendLine("Field1 = \"Value1\"");
@@ -64,12 +53,7 @@ public class TypeNullBehaviorGlobalTest
             Field3 = 123
         };
 
-        var options = CsTomlSerializerOptions.Default with
-        {
-            SerializeOptions = new() { DefaultNullHandling = TomlNullHandling.Error }
-        };
-
-        Should.Throw<CsTomlSerializeException>(() => CsTomlSerializer.Serialize(type, options));
+        Should.Throw<CsTomlSerializeException>(() => CsTomlSerializer.Serialize(type, Option.ErrorTomlNullHandling));
     }
 
     [Fact]
@@ -82,12 +66,7 @@ public class TypeNullBehaviorGlobalTest
             Field3 = 456
         };
 
-        var options = CsTomlSerializerOptions.Default with
-        {
-            SerializeOptions = new() { DefaultNullHandling = TomlNullHandling.Ignore }
-        };
-
-        using var serialized = CsTomlSerializer.Serialize(original, options);
+        using var serialized = CsTomlSerializer.Serialize(original, Option.IgnoreTomlNullHandling);
         var deserialized = CsTomlSerializer.Deserialize<TypeNullBehaviorAllNullable>(serialized.ByteSpan);
 
         deserialized.Field1.ShouldBe(original.Field1);

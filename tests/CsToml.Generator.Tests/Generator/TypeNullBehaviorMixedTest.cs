@@ -2,7 +2,6 @@
 using CsToml.Formatter.Resolver;
 using Shouldly;
 using Utf8StringInterpolation;
-using CsToml.Generator.Other;
 
 namespace CsToml.Generator.Tests;
 
@@ -18,14 +17,9 @@ public class TypeNullBehaviorMixedTest
             NonSkippableField = null
         };
 
-        var options = CsTomlSerializerOptions.Default with
-        {
-            SerializeOptions = new() { DefaultNullHandling = TomlNullHandling.Error }
-        };
-
         // SkippableField has SkipNull = true, so it should be skipped
         // NonSkippableField has no SkipNull, so it uses global Default and should throw
-        Should.Throw<CsTomlSerializeException>(() => CsTomlSerializer.Serialize(type, options));
+        Should.Throw<CsTomlSerializeException>(() => CsTomlSerializer.Serialize(type, Option.ErrorTomlNullHandling));
     }
 
     [Fact]
@@ -38,12 +32,7 @@ public class TypeNullBehaviorMixedTest
             NonSkippableField = null
         };
 
-        var options = CsTomlSerializerOptions.Default with
-        {
-            SerializeOptions = new() { DefaultNullHandling = TomlNullHandling.Ignore }
-        };
-
-        using var bytes = CsTomlSerializer.Serialize(type, options);
+        using var bytes = CsTomlSerializer.Serialize(type, Option.IgnoreTomlNullHandling);
 
         using var buffer = Utf8String.CreateWriter(out var writer);
         writer.AppendLine("Name = \"Mixed\"");
@@ -88,12 +77,7 @@ public class TypeNullBehaviorMixedTest
             NonSkippableField = nonSkippable
         };
 
-        var options = CsTomlSerializerOptions.Default with
-        {
-            SerializeOptions = new() { DefaultNullHandling = TomlNullHandling.Ignore }
-        };
-
-        using var bytes = CsTomlSerializer.Serialize(type, options);
+        using var bytes = CsTomlSerializer.Serialize(type, Option.IgnoreTomlNullHandling);
         var deserialized = CsTomlSerializer.Deserialize<TypeNullBehaviorMixed>(bytes.ByteSpan);
 
         deserialized.Name.ShouldBe("Theory");

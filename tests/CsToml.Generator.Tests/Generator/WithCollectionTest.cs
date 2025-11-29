@@ -1,38 +1,71 @@
 ﻿using Shouldly;
+using System.Collections;
 using Utf8StringInterpolation;
 
 namespace CsToml.Generator.Tests;
 
 public class WithCollectionTest
 {
-    [Fact]
-    public void Serialize()
+    private WithCollection withCollection;
+
+    public WithCollectionTest()
     {
-        var type = new WithCollection
+        withCollection = new WithCollection
         {
             Value = [1, 2, 3, 4, 5]
         };
+    }
 
-        {
-            using var bytes = CsTomlSerializer.Serialize(type);
+    [Fact]
+    public void Serialize()
+    {
+        using var bytes = CsTomlSerializer.Serialize(withCollection);
 
-            using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
-            writer.Flush();
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
+        writer.Flush();
 
-            var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().ShouldBe(expected);
-        }
-        {
-            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
 
-            using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
-            writer.Flush();
+    [Fact]
+    public void SerializeWithHeaderOption()
+    {
+        using var bytes = CsTomlSerializer.Serialize(withCollection, Option.Header);
 
-            var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().ShouldBe(expected);
-        }
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void SerializeWithArrayHeaderOption()
+    {
+        using var bytes = CsTomlSerializer.Serialize(withCollection, Option.ArrayHeader);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void SerializeWithHeaderAndArrayHeaderOption()
+    {
+        using var bytes = CsTomlSerializer.Serialize(withCollection, Option.HeaderAndArrayHeader);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
     [Fact]

@@ -5,10 +5,11 @@ namespace CsToml.Generator.Tests;
 
 public class TomlPrimitiveTest
 {
-    [Fact]
-    public void Serialize()
+    private TomlPrimitive tomlPrimitive;
+
+    public TomlPrimitiveTest()
     {
-        var primitive = new TomlPrimitive
+        tomlPrimitive = new TomlPrimitive
         {
             Str = @"I'm a string.",
             Long = 123,
@@ -19,41 +20,86 @@ public class TomlPrimitiveTest
             LocalDate = new DateOnly(1979, 5, 27),
             LocalTime = new TimeOnly(7, 32, 30)
         };
+    }
 
-        {
-            using var bytes = CsTomlSerializer.Serialize(primitive);
+    [Fact]
+    public void Serialize()
+    {
+        using var bytes = CsTomlSerializer.Serialize(tomlPrimitive);
 
-            using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("Str = \"I'm a string.\"");
-            writer.AppendLine("Long = 123");
-            writer.AppendLine("Float = 123.456");
-            writer.AppendLine("Boolean = true");
-            writer.AppendLine("OffsetDateTime = 1979-05-27T07:32:00Z");
-            writer.AppendLine("LocalDateTime = 1979-05-27T07:32:00");
-            writer.AppendLine("LocalDate = 1979-05-27");
-            writer.AppendLine("LocalTime = 07:32:30");
-            writer.Flush();
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Str = \"I'm a string.\"");
+        writer.AppendLine("Long = 123");
+        writer.AppendLine("Float = 123.456");
+        writer.AppendLine("Boolean = true");
+        writer.AppendLine("OffsetDateTime = 1979-05-27T07:32:00Z");
+        writer.AppendLine("LocalDateTime = 1979-05-27T07:32:00");
+        writer.AppendLine("LocalDate = 1979-05-27");
+        writer.AppendLine("LocalTime = 07:32:30");
+        writer.Flush();
 
-            var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().ShouldBe(expected);
-        }
-        {
-            using var bytes = CsTomlSerializer.Serialize(primitive, Option.Header);
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
 
-            using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("Str = \"I'm a string.\"");
-            writer.AppendLine("Long = 123");
-            writer.AppendLine("Float = 123.456");
-            writer.AppendLine("Boolean = true");
-            writer.AppendLine("OffsetDateTime = 1979-05-27T07:32:00Z");
-            writer.AppendLine("LocalDateTime = 1979-05-27T07:32:00");
-            writer.AppendLine("LocalDate = 1979-05-27");
-            writer.AppendLine("LocalTime = 07:32:30");
-            writer.Flush();
+    [Fact]
+    public void SerializeWithHeaderOption()
+    {
+        using var bytes = CsTomlSerializer.Serialize(tomlPrimitive, Option.Header);
 
-            var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().ShouldBe(expected);
-        }
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Str = \"I'm a string.\"");
+        writer.AppendLine("Long = 123");
+        writer.AppendLine("Float = 123.456");
+        writer.AppendLine("Boolean = true");
+        writer.AppendLine("OffsetDateTime = 1979-05-27T07:32:00Z");
+        writer.AppendLine("LocalDateTime = 1979-05-27T07:32:00");
+        writer.AppendLine("LocalDate = 1979-05-27");
+        writer.AppendLine("LocalTime = 07:32:30");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void SerializeWithArrayHeaderOption()
+    {
+        using var bytes = CsTomlSerializer.Serialize(tomlPrimitive, Option.ArrayHeader);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Str = \"I'm a string.\"");
+        writer.AppendLine("Long = 123");
+        writer.AppendLine("Float = 123.456");
+        writer.AppendLine("Boolean = true");
+        writer.AppendLine("OffsetDateTime = 1979-05-27T07:32:00Z");
+        writer.AppendLine("LocalDateTime = 1979-05-27T07:32:00");
+        writer.AppendLine("LocalDate = 1979-05-27");
+        writer.AppendLine("LocalTime = 07:32:30");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void SerializeWithHeaderAndArrayHeaderOption()
+    {
+        using var bytes = CsTomlSerializer.Serialize(tomlPrimitive, Option.HeaderAndArrayHeader);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Str = \"I'm a string.\"");
+        writer.AppendLine("Long = 123");
+        writer.AppendLine("Float = 123.456");
+        writer.AppendLine("Boolean = true");
+        writer.AppendLine("OffsetDateTime = 1979-05-27T07:32:00Z");
+        writer.AppendLine("LocalDateTime = 1979-05-27T07:32:00");
+        writer.AppendLine("LocalDate = 1979-05-27");
+        writer.AppendLine("LocalTime = 07:32:30");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
     [Fact]

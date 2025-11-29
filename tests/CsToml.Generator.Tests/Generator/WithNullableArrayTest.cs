@@ -5,34 +5,66 @@ namespace CsToml.Generator.Tests;
 
 public class WithNullableArrayTest
 {
-    [Fact]
-    public void Serialize()
+    private WithNullableArray withNullableArray;
+
+    public WithNullableArrayTest()
     {
-        var type = new WithNullableArray
+        withNullableArray = new WithNullableArray
         {
             Value = [1, 2, 3, 4, 5]
         };
+    }
 
-        {
-            using var bytes = CsTomlSerializer.Serialize(type);
+    [Fact]
+    public void Serialize()
+    {
+        using var bytes = CsTomlSerializer.Serialize(withNullableArray);
 
-            using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
-            writer.Flush();
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
+        writer.Flush();
 
-            var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().ShouldBe(expected);
-        }
-        {
-            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
 
-            using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
-            writer.Flush();
+    [Fact]
+    public void SerializeWithHeaderOption()
+    {
+        using var bytes = CsTomlSerializer.Serialize(withNullableArray, Option.Header);
 
-            var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().ShouldBe(expected);
-        }
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void SerializeWithArrayHeaderOption()
+    {
+        using var bytes = CsTomlSerializer.Serialize(withNullableArray, Option.ArrayHeader);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void SerializeWithHeaderAndArrayHeaderOption()
+    {
+        using var bytes = CsTomlSerializer.Serialize(withNullableArray, Option.HeaderAndArrayHeader);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
     [Fact]
@@ -42,44 +74,77 @@ public class WithNullableArrayTest
         nullableValue.Value.ShouldBeNull();
 
         using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("Value = [1,3,5]");
+        writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
         writer.Flush();
 
         var type = CsTomlSerializer.Deserialize<WithNullableArray>(buffer.WrittenSpan);
-        type.Value.ShouldBe([1, 3, 5]);
+        type.Value.ShouldBe([1, 2, 3, 4, 5]);
     }
 }
 
 public class WithNullableArray2Test
 {
-    [Fact]
-    public void Serialize()
+    private WithNullableArray2 withNullableArray2;
+
+    public WithNullableArray2Test()
     {
-        var type = new WithNullableArray2
+        withNullableArray2 = new WithNullableArray2
         {
             Value = [1, 2, 3, 4, 5]
         };
+    }
 
-        {
-            using var bytes = CsTomlSerializer.Serialize(type);
+    [Fact]
+    public void Serialize()
+    {
+        using var bytes = CsTomlSerializer.Serialize(withNullableArray2);
 
-            using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
-            writer.Flush();
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
+        writer.Flush();
 
-            var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().ShouldBe(expected);
-        }
-        {
-            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
 
-            using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
-            writer.Flush();
+    [Fact]
+    public void SerializeWithHeaderOption()
+    {
+        using var bytes = CsTomlSerializer.Serialize(withNullableArray2, Option.Header);
 
-            var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().ShouldBe(expected);
-        }
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+
+    }
+
+    [Fact]
+    public void SerializeWithArrayHeaderOption()
+    {
+        using var bytes = CsTomlSerializer.Serialize(withNullableArray2, Option.ArrayHeader);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void SerializeWithHeaderAndArrayHeaderOption()
+    {
+        using var bytes = CsTomlSerializer.Serialize(withNullableArray2, Option.HeaderAndArrayHeader);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
     [Fact]
@@ -89,11 +154,11 @@ public class WithNullableArray2Test
         nullableValue.Value.ShouldBeNull();
 
         using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("Value = [1,3,5]");
+        writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
         writer.Flush();
 
-        var type = CsTomlSerializer.Deserialize<WithNullableArray>(buffer.WrittenSpan);
-        type.Value.ShouldBe([1, 3, 5]);
+        var type = CsTomlSerializer.Deserialize<WithNullableArray2>(buffer.WrittenSpan);
+        type.Value.ShouldBe([1, 2, 3, 4, 5]);
     }
 }
 

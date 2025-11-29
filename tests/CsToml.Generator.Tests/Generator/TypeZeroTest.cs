@@ -36,7 +36,7 @@ public class TypeZeroTest
     [Fact]
     public void SerializeWithHeaderAndArrayHeaderOption()
     {
-        using var bytes = CsTomlSerializer.Serialize(type, Option.AllHeader);
+        using var bytes = CsTomlSerializer.Serialize(type, Option.HeaderAndArrayHeader);
         bytes.ByteSpan.ToArray().ShouldBe(""u8.ToArray());
     }
 
@@ -105,7 +105,7 @@ public class TypeOneTest
         writer.Flush();
         var expected = buffer.ToArray();
 
-        using var bytes = CsTomlSerializer.Serialize(type, Option.AllHeader);
+        using var bytes = CsTomlSerializer.Serialize(type, Option.HeaderAndArrayHeader);
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
@@ -175,7 +175,7 @@ public class TypeTwoTest
     [Fact]
     public void SerializeWithHeaderAndArrayHeaderOption()
     {
-        using var bytes = CsTomlSerializer.Serialize(type, Option.AllHeader);
+        using var bytes = CsTomlSerializer.Serialize(type, Option.HeaderAndArrayHeader);
 
         using var buffer = Utf8String.CreateWriter(out var writer);
         writer.AppendLine("Value = 999");

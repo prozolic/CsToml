@@ -9,8 +9,9 @@ namespace CsToml.Generator.Tests;
 
 public class TypeImmutableTest
 {
-    [Fact]
-    public void Serialize()
+    private TypeImmutable typeImmutable;
+
+    public TypeImmutableTest()
     {
         int[] array = [1, 2, 3, 4, 5];
         var set = new HashSet<int>(array);
@@ -41,7 +42,7 @@ public class TypeImmutableTest
             }
         };
 
-        var type = new TypeImmutable()
+        typeImmutable = new TypeImmutable()
         {
             ImmutableArray = ImmutableCollectionsMarshal.AsImmutableArray(array),
             ImmutableList = array.ToImmutableList(),
@@ -52,42 +53,90 @@ public class TypeImmutableTest
             ImmutableDictionary = dict.ToImmutableDictionary(),
             ImmutableSortedDictionary = dict.ToImmutableSortedDictionary(),
         };
-        {
-            using var bytes = CsTomlSerializer.Serialize(type);
+    }
 
-            using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("ImmutableArray = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("ImmutableList = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("ImmutableStack = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("ImmutableHashSet = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("ImmutableSortedSet = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("ImmutableQueue = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("ImmutableDictionary = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3 ], {key = \"value\"} ]} ]}");
-            writer.AppendLine("ImmutableSortedDictionary = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3 ], {key = \"value\"} ]} ]}");
-            writer.Flush();
+    [Fact]
+    public void Serialize()
+    {
+        using var bytes = CsTomlSerializer.Serialize(typeImmutable);
 
-            var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().ShouldBe(expected);
-        }
-        {
-            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("ImmutableArray = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("ImmutableList = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("ImmutableStack = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("ImmutableHashSet = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("ImmutableSortedSet = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("ImmutableQueue = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("ImmutableDictionary = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3 ], {key = \"value\"} ]} ]}");
+        writer.AppendLine("ImmutableSortedDictionary = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3 ], {key = \"value\"} ]} ]}");
+        writer.Flush();
 
-            using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("ImmutableArray = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("ImmutableList = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("ImmutableStack = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("ImmutableHashSet = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("ImmutableSortedSet = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("ImmutableQueue = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("[ImmutableDictionary]");
-            writer.AppendLine("key = [ 999, \"Value\", {key = [ [ 1, 2, 3 ], {key = \"value\"} ]} ]");
-            writer.AppendLine("[ImmutableSortedDictionary]");
-            writer.AppendLine("key = [ 999, \"Value\", {key = [ [ 1, 2, 3 ], {key = \"value\"} ]} ]");
-            writer.Flush();
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
 
-            var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().ShouldBe(expected);
-        }
+    [Fact]
+    public void SerializeWithHeaderOption()
+    {
+        using var bytes = CsTomlSerializer.Serialize(typeImmutable, Option.Header);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("ImmutableArray = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("ImmutableList = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("ImmutableStack = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("ImmutableHashSet = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("ImmutableSortedSet = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("ImmutableQueue = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("[ImmutableDictionary]");
+        writer.AppendLine("key = [ 999, \"Value\", {key = [ [ 1, 2, 3 ], {key = \"value\"} ]} ]");
+        writer.AppendLine("[ImmutableSortedDictionary]");
+        writer.AppendLine("key = [ 999, \"Value\", {key = [ [ 1, 2, 3 ], {key = \"value\"} ]} ]");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void SerializeWithArrayHeaderOption()
+    {
+        using var bytes = CsTomlSerializer.Serialize(typeImmutable, Option.ArrayHeader);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("ImmutableArray = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("ImmutableList = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("ImmutableStack = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("ImmutableHashSet = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("ImmutableSortedSet = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("ImmutableQueue = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("ImmutableDictionary = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3 ], {key = \"value\"} ]} ]}");
+        writer.AppendLine("ImmutableSortedDictionary = {key = [ 999, \"Value\", {key = [ [ 1, 2, 3 ], {key = \"value\"} ]} ]}");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void SerializeWithHeaderAndArrayHeaderOption()
+    {
+        using var bytes = CsTomlSerializer.Serialize(typeImmutable, Option.HeaderAndArrayHeader);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("ImmutableArray = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("ImmutableList = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("ImmutableStack = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("ImmutableHashSet = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("ImmutableSortedSet = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("ImmutableQueue = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("[ImmutableDictionary]");
+        writer.AppendLine("key = [ 999, \"Value\", {key = [ [ 1, 2, 3 ], {key = \"value\"} ]} ]");
+        writer.AppendLine("[ImmutableSortedDictionary]");
+        writer.AppendLine("key = [ 999, \"Value\", {key = [ [ 1, 2, 3 ], {key = \"value\"} ]} ]");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
     [Fact]
@@ -106,14 +155,7 @@ public class TypeImmutableTest
             writer.Flush();
 
             var typeImmutable = CsTomlSerializer.Deserialize<TypeImmutable>(buffer.WrittenSpan);
-
-            typeImmutable.ImmutableArray.ShouldBe([1, 2, 3, 4, 5]);
-            typeImmutable.ImmutableList.ShouldBe([1, 2, 3, 4, 5]);
-            typeImmutable.ImmutableStack.ShouldBe([5, 4, 3, 2, 1]);
-            typeImmutable.ImmutableHashSet.ShouldBe([1, 2, 3, 4, 5]);
-            typeImmutable.ImmutableSortedSet.ShouldBe([1, 2, 3, 4, 5]);
-            Validate(typeImmutable.ImmutableDictionary);
-            Validate(typeImmutable.ImmutableSortedDictionary);
+            Validate(typeImmutable);
         }
         {
             using var buffer = Utf8String.CreateWriter(out var writer);
@@ -130,26 +172,39 @@ public class TypeImmutableTest
             writer.Flush();
 
             var typeImmutable = CsTomlSerializer.Deserialize<TypeImmutable>(buffer.WrittenSpan);
+            Validate(typeImmutable);
+        }
 
+        static void Validate(TypeImmutable typeImmutable)
+        {
             typeImmutable.ImmutableArray.ShouldBe([1, 2, 3, 4, 5]);
             typeImmutable.ImmutableList.ShouldBe([1, 2, 3, 4, 5]);
             typeImmutable.ImmutableStack.ShouldBe([5, 4, 3, 2, 1]);
             typeImmutable.ImmutableHashSet.ShouldBe([1, 2, 3, 4, 5]);
             typeImmutable.ImmutableSortedSet.ShouldBe([1, 2, 3, 4, 5]);
-            Validate(typeImmutable.ImmutableDictionary);
-            Validate(typeImmutable.ImmutableSortedDictionary);
-        }
 
-        static void Validate(dynamic dict)
-        {
-            long value = dict["key"][0];
-            value.ShouldBe(999);
-            string value2 = dict["key"][1];
-            value2.ShouldBe("Value");
-            object[] value3 = dict["key"][2]["key"][0];
-            value3.ShouldBe(new object[] { 1, 2, 3 });
-            string value4 = dict["key"][2]["key"][1]["key"];
-            value4.ShouldBe("value");
+            {
+                dynamic dict = typeImmutable.ImmutableDictionary;
+                long value = dict["key"][0];
+                value.ShouldBe(999);
+                string value2 = dict["key"][1];
+                value2.ShouldBe("Value");
+                object[] value3 = dict["key"][2]["key"][0];
+                value3.ShouldBe(new object[] { 1, 2, 3 });
+                string value4 = dict["key"][2]["key"][1]["key"];
+                value4.ShouldBe("value");
+            }
+            {
+                dynamic dict = typeImmutable.ImmutableSortedDictionary;
+                long value = dict["key"][0];
+                value.ShouldBe(999);
+                string value2 = dict["key"][1];
+                value2.ShouldBe("Value");
+                object[] value3 = dict["key"][2]["key"][0];
+                value3.ShouldBe(new object[] { 1, 2, 3 });
+                string value4 = dict["key"][2]["key"][1]["key"];
+                value4.ShouldBe("value");
+            }
         }
     }
 }

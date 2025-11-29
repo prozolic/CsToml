@@ -6,10 +6,11 @@ namespace CsToml.Generator.Tests;
 
 public class TypeFrozenTest
 {
-    [Fact]
-    public void Serialize()
+    private TypeFrozen typeFrozen;
+
+    public TypeFrozenTest()
     {
-        var type = new TypeFrozen()
+        typeFrozen = new TypeFrozen()
         {
             Value = new HashSet<long>([1, 2, 3, 4, 5]).ToFrozenSet(),
             Value2 = new Dictionary<long, string>()
@@ -19,32 +20,68 @@ public class TypeFrozenTest
                 [123456789] = "Value3",
             }.ToFrozenDictionary()
         };
+    }
 
-        {
-            using var bytes = CsTomlSerializer.Serialize(type);
+    [Fact]
+    public void Serialize()
+    {
+        using var bytes = CsTomlSerializer.Serialize(typeFrozen);
 
-            using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("Value2 = {-1 = \"Value2\", 123 = \"Value\", 123456789 = \"Value3\"}");
-            writer.Flush();
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value2 = {-1 = \"Value2\", 123 = \"Value\", 123456789 = \"Value3\"}");
+        writer.Flush();
 
-            var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().ShouldBe(expected);
-        }
-        {
-            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
 
-            using var buffer = Utf8String.CreateWriter(out var writer);
-            writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
-            writer.AppendLine("[Value2]");
-            writer.AppendLine("-1 = \"Value2\"");
-            writer.AppendLine("123 = \"Value\"");
-            writer.AppendLine("123456789 = \"Value3\"");
-            writer.Flush();
+    [Fact]
+    public void SerializeWithHeaderOption()
+    {
+        using var bytes = CsTomlSerializer.Serialize(typeFrozen, Option.Header);
 
-            var expected = buffer.ToArray();
-            bytes.ByteSpan.ToArray().ShouldBe(expected);
-        }
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("[Value2]");
+        writer.AppendLine("-1 = \"Value2\"");
+        writer.AppendLine("123 = \"Value\"");
+        writer.AppendLine("123456789 = \"Value3\"");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void SerializeWithArrayHeaderOption()
+    {
+        using var bytes = CsTomlSerializer.Serialize(typeFrozen, Option.ArrayHeader);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("Value2 = {-1 = \"Value2\", 123 = \"Value\", 123456789 = \"Value3\"}");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void SerializeWithHeaderAndArrayHeaderOption()
+    {
+        using var bytes = CsTomlSerializer.Serialize(typeFrozen, Option.HeaderAndArrayHeader);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = [ 1, 2, 3, 4, 5 ]");
+        writer.AppendLine("[Value2]");
+        writer.AppendLine("-1 = \"Value2\"");
+        writer.AppendLine("123 = \"Value\"");
+        writer.AppendLine("123456789 = \"Value3\"");
+        writer.Flush();
+
+        var expected = buffer.ToArray();
+        bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
     [Fact]

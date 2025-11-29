@@ -1,9 +1,4 @@
 ﻿using Shouldly;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Utf8StringInterpolation;
 
 namespace CsToml.Generator.Tests;
@@ -66,7 +61,7 @@ public class TypeRecordTest
     [Fact]
     public void SerializeWithHeaderAndArrayHeaderOption()
     {
-        using var bytes = CsTomlSerializer.Serialize(type, Option.AllHeader);
+        using var bytes = CsTomlSerializer.Serialize(type, Option.HeaderAndArrayHeader);
 
         using var buffer = Utf8String.CreateWriter(out var writer);
         writer.AppendLine("Value = 999");

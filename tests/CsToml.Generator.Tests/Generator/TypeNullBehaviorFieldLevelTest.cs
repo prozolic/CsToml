@@ -2,7 +2,6 @@
 using CsToml.Formatter.Resolver;
 using Shouldly;
 using Utf8StringInterpolation;
-using CsToml.Generator.Other;
 
 namespace CsToml.Generator.Tests;
 
