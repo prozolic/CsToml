@@ -54,7 +54,7 @@ public sealed class ISetFormatter<T> : CollectionBaseFormatter<ISet<T>, T, HashS
             return;
         }
 
-        IEnumerableSerializer<T>.Instance.Serialize(ref writer, new CollectionContent(target), options);
+        IEnumerableSerializer<T>.Serialize(ref writer, new CollectionContent(target), options);
     }
 
     protected override bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, ISet<T> target, CsTomlSerializerOptions options)

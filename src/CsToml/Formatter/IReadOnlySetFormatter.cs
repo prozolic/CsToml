@@ -56,7 +56,7 @@ public sealed class IReadOnlySetFormatter<T> : CollectionBaseFormatter<IReadOnly
             return;
         }
 
-        IEnumerableSerializer<T>.Instance.Serialize(ref writer, new CollectionContent(target), options);
+        IEnumerableSerializer<T>.Serialize(ref writer, new CollectionContent(target), options);
     }
 
     protected override bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, IReadOnlySet<T> target, CsTomlSerializerOptions options)

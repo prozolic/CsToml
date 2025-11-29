@@ -39,31 +39,8 @@ public abstract class ArrayBaseFormatter<TArray, TElement> : ITomlValueFormatter
             ExceptionHelper.ThrowSerializationFailed(typeof(TArray));
             return;
         }
-        var targetSpan = AsSpan(target);
-        writer.BeginArray();
-        if (targetSpan.Length == 0)
-        {
-            writer.EndArray();
-            return;
-        }
 
-        var formatter = options.Resolver.GetFormatter<TElement>()!;
-        formatter.Serialize(ref writer, targetSpan[0], options);
-        if (targetSpan.Length == 1)
-        {
-            writer.WriteSpace();
-            writer.EndArray();
-            return;
-        }
-
-        for (int i = 1; i < targetSpan.Length; i++)
-        {
-            writer.Write(TomlCodes.Symbol.COMMA);
-            writer.WriteSpace();
-            formatter.Serialize(ref writer, targetSpan[i], options);
-        }
-        writer.WriteSpace();
-        writer.EndArray();
+        ArraySerializer<TElement>.Serialize(ref writer, new CollectionContent(target), options);
     }
 
     bool ITomlArrayHeaderFormatter<TArray?>.TrySerialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, TArray? target, CsTomlSerializerOptions options)
@@ -74,30 +51,10 @@ public abstract class ArrayBaseFormatter<TArray, TElement> : ITomlValueFormatter
             return false; // not reached.
         }
 
-        var targetSpan = AsSpan(target);
-        if (targetSpan.Length == 0)
-        {
-            return false;
-        }
-
-        var formatter = options.Resolver.GetFormatter<TElement>()!;
-        for (int i = 0; i < targetSpan.Length; i++)
-        {
-            writer.BeginArrayOfTablesHeader();
-            writer.WriteKey(header);
-            writer.EndArrayOfTablesHeader();
-            writer.WriteNewLine();
-            writer.BeginCurrentState(TomlValueState.ArrayOfTableForMulitiLine);
-            formatter.Serialize(ref writer, targetSpan[i], options);
-            writer.EndCurrentState();
-            writer.EndKeyValue(false);
-        }
-
-        return true;
+        return ArraySerializer<TElement>.TrySerializeTomlArrayHeaderStyle(ref writer, header, new CollectionContent(target), options);
     }
 
     protected abstract ReadOnlySpan<TElement> AsSpan(TArray array);
 
     protected abstract TArray Complete(TElement[] array);
 }
-

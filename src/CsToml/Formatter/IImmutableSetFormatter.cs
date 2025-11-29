@@ -1,4 +1,5 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections.Frozen;
+using System.Collections.Immutable;
 
 namespace CsToml.Formatter;
 
@@ -21,91 +22,33 @@ public sealed class IImmutableSetFormatter<T> : CollectionBaseFormatter<IImmutab
     {
         if (target is ImmutableHashSet<T> immHashSetTarget)
         {
-            writer.BeginArray();
-            if (immHashSetTarget.IsEmpty)
-            {
-                writer.EndArray();
-                return;
-            }
-
-            // Use ImmutableHashSet<T>.GetEnumerator directly instead of IEnumerable<T>.GetEnumerator.
-            var en = immHashSetTarget.GetEnumerator();
-            en.MoveNext();
-
-            var formatter = options.Resolver.GetFormatter<T>()!;
-            formatter.Serialize(ref writer, en.Current!, options);
-            if (!en.MoveNext())
-            {
-                writer.WriteSpace();
-                writer.EndArray();
-                return;
-            }
-
-            do
-            {
-                writer.Write(TomlCodes.Symbol.COMMA);
-                writer.WriteSpace();
-                formatter.Serialize(ref writer, en.Current!, options);
-
-            } while (en.MoveNext());
-            writer.WriteSpace();
-            writer.EndArray();
-            return;
+            var serializer = new EnumeratorStructSerializer<T, ImmutableHashSet<T>.Enumerator>(target.Count, immHashSetTarget.GetEnumerator());
+            serializer.Serialize(ref writer, options);
+        }
+        else if (target is ImmutableSortedSet<T> immutableSortedSet)
+        {
+            var serializer = new EnumeratorStructSerializer<T, ImmutableSortedSet<T>.Enumerator>(target.Count, immutableSortedSet.GetEnumerator());
+            serializer.Serialize(ref writer, options);
         }
         else
         {
-            writer.BeginArray();
-            if (target.Count == 0)
-            {
-                writer.EndArray();
-                return;
-            }
-
-            var en = target.GetEnumerator();
-            en.MoveNext();
-
-            var formatter = options.Resolver.GetFormatter<T>()!;
-            formatter.Serialize(ref writer, en.Current!, options);
-            if (!en.MoveNext())
-            {
-                writer.WriteSpace();
-                writer.EndArray();
-                return;
-            }
-
-            do
-            {
-                writer.Write(TomlCodes.Symbol.COMMA);
-                writer.WriteSpace();
-                formatter.Serialize(ref writer, en.Current!, options);
-
-            } while (en.MoveNext());
-            writer.WriteSpace();
-            writer.EndArray();
+            IEnumerableSerializer<T>.Serialize(ref writer, new CollectionContent(target), options);
         }
     }
 
     protected override bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, IImmutableSet<T> target, CsTomlSerializerOptions options)
     {
-        if (target.Count == 0)
+        if (target is ImmutableHashSet<T> immutableHashSet)
         {
-            return false;
+            var serializer = new EnumeratorStructSerializer<T, ImmutableHashSet<T>.Enumerator>(target.Count, immutableHashSet.GetEnumerator());
+            return serializer.TrySerializeTomlArrayHeaderStyle(ref writer, header, options);
+        }
+        else if (target is ImmutableSortedSet<T> immutableSortedSet)
+        {
+            var serializer = new EnumeratorStructSerializer<T, ImmutableSortedSet<T>.Enumerator>(target.Count, immutableSortedSet.GetEnumerator());
+            return serializer.TrySerializeTomlArrayHeaderStyle(ref writer, header, options);
         }
 
-        var formatter = options.Resolver.GetFormatter<T>()!;
-        foreach (var item in target)
-        {
-            writer.BeginArrayOfTablesHeader();
-            writer.WriteKey(header);
-            writer.EndArrayOfTablesHeader();
-            writer.WriteNewLine();
-            writer.BeginCurrentState(TomlValueState.ArrayOfTableForMulitiLine);
-            formatter.Serialize(ref writer, item, options);
-            writer.EndCurrentState();
-            writer.EndKeyValue(false);
-        }
-
-        // Return true if serialized in header style.
-        return true;
+        return IEnumerableSerializer<T>.TrySerializeTomlArrayHeaderStyle(ref writer, header, new CollectionContent(target), options);
     }
 }

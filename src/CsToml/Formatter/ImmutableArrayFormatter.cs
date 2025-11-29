@@ -42,31 +42,8 @@ public sealed class ImmutableArrayFormatter<T> : ITomlValueFormatter<ImmutableAr
             return;
         }
 
-        var targetSpan = target.AsSpan();
-        writer.BeginArray();
-        if (targetSpan.Length == 0)
-        {
-            writer.EndArray();
-            return;
-        }
-
-        var formatter = options.Resolver.GetFormatter<T>()!;
-        formatter.Serialize(ref writer, targetSpan[0], options);
-        if (targetSpan.Length == 1)
-        {
-            writer.WriteSpace();
-            writer.EndArray();
-            return;
-        }
-
-        for (int i = 1; i < targetSpan.Length; i++)
-        {
-            writer.Write(TomlCodes.Symbol.COMMA);
-            writer.WriteSpace();
-            formatter.Serialize(ref writer, targetSpan[i], options);
-        }
-        writer.WriteSpace();
-        writer.EndArray();
+        var array = ImmutableCollectionsMarshal.AsArray(target);
+        ArraySerializer<T>.Serialize(ref writer, new CollectionContent(array!), options);
     }
 
     public bool TrySerialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, ImmutableArray<T> target, CsTomlSerializerOptions options) where TBufferWriter : IBufferWriter<byte>
@@ -77,25 +54,7 @@ public sealed class ImmutableArrayFormatter<T> : ITomlValueFormatter<ImmutableAr
             return false; // not reached.
         }
 
-        var targetSpan = target.AsSpan();
-        if (targetSpan.Length == 0)
-        {
-            return false;
-        }
-
-        var formatter = options.Resolver.GetFormatter<T>()!;
-        for (int i = 0; i < targetSpan.Length; i++)
-        {
-            writer.BeginArrayOfTablesHeader();
-            writer.WriteKey(header);
-            writer.EndArrayOfTablesHeader();
-            writer.WriteNewLine();
-            writer.BeginCurrentState(TomlValueState.ArrayOfTableForMulitiLine);
-            formatter.Serialize(ref writer, targetSpan[i], options);
-            writer.EndCurrentState();
-            writer.EndKeyValue(false);
-        }
-
-        return true;
+        var array = ImmutableCollectionsMarshal.AsArray(target);
+        return ArraySerializer<T>.TrySerializeTomlArrayHeaderStyle(ref writer, header, new CollectionContent(array!), options); ;
     }
 }

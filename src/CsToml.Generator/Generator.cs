@@ -208,7 +208,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
         }
 
         // Implement the setting process for each lastValue.        
-        builder.AppendLine(GenerateLastValueProcess(typeMeta));
+        GenerateLastValueDeclarations(builder, typeMeta);
 
         var onlyTomlSerializedObject = typeMeta.OrderedMembers.Length == 1 &&
             typeMeta.OrderedMembers[0].SerializationKind == TomlSerializationKind.TomlSerializedObject;
@@ -249,7 +249,8 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                 return m.SerializationKind;
             }).ToImmutableArray();
 
-            GenerateSerializePropertyPart(builder, orderedMembers, "    ");
+            GenerateLastValueProcess(builder, orderedMembers, "    ", true);
+            GenerateSerializePropertyPart(builder, orderedMembers, rootIndent: "    ", tableStyleHeader: false, arrayStyleHeader: true);
             builder.AppendLine($$"""
         }
 """);
@@ -257,14 +258,16 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
         else
         {
 """);
-            GenerateSerializePropertyPart(builder, typeMeta.OrderedMembers, "    ");
+            GenerateLastValueProcess(builder, typeMeta.OrderedMembers, "    ", false);
+            GenerateSerializePropertyPart(builder, typeMeta.OrderedMembers, rootIndent: "    ", tableStyleHeader: false, arrayStyleHeader: false);
             builder.AppendLine($$"""
         }
 """);
         }
         else
         {
-            GenerateSerializePropertyPart(builder, typeMeta.OrderedMembers, "");
+            GenerateLastValueProcess(builder, typeMeta.OrderedMembers, "", false);
+            GenerateSerializePropertyPart(builder, typeMeta.OrderedMembers, rootIndent: "", tableStyleHeader: false, arrayStyleHeader: false);
         }
 
         if (!onlyTomlSerializedObject)
@@ -285,22 +288,41 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
         return builder.ToString();
     }
 
-    private string GenerateLastValueProcess(TypeMeta typeMeta)
+    private void GenerateLastValueDeclarations(StringBuilder builder, TypeMeta typeMeta)
     {
         var members = typeMeta.OrderedMembers;
-        var lastValueVariableBuilder = new StringBuilder();
-
         for (var i = 0; i < members.Length; i++)
         {
             var propertyName = members[i].DefinedName!;
             if (i == members.Length - 1)
             {
-                lastValueVariableBuilder.AppendLine($"        var lastValue_{propertyName} = true;");
-                lastValueVariableBuilder.AppendLine();
+                builder.AppendLine($"        var lastValue_{propertyName} = true;");
+                builder.AppendLine();
             }
             else
             {
-                lastValueVariableBuilder.AppendLine($"        var lastValue_{propertyName} = false;");
+                builder.AppendLine($"        var lastValue_{propertyName} = false;");
+            }
+        }
+    }
+
+    private void GenerateLastValueProcess(StringBuilder builder, ImmutableArray<TomlValueOnSerializedData> members, string rootIndent, bool shouldInitializeVariable)
+    {
+        if (shouldInitializeVariable)
+        {
+            for (var i = 0; i < members.Length; i++)
+            {
+                var propertyName = members[i].DefinedName!;
+                if (i == members.Length - 1)
+                {
+                    builder.AppendLine($"        {rootIndent}lastValue_{propertyName} = true;");
+                    builder.AppendLine();
+
+                }
+                else
+                {
+                    builder.AppendLine($"        {rootIndent}lastValue_{propertyName} = false;");
+                }
             }
         }
 
@@ -311,20 +333,23 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
             var propertyName = members[i].DefinedName!;
             if (i != 0)
             {
-                lastValueVariableBuilder.AppendLine($$"""
-        if (lastValue_{{propertyName}} && target.{{propertyName}} == null)
-        {
-            lastValue_{{members[i - 1].DefinedName!}} = true;
-            lastValue_{{propertyName}} = false;
-        }
+                builder.AppendLine($$"""
+        {{rootIndent}}if (lastValue_{{propertyName}} && target.{{propertyName}} == null)
+        {{rootIndent}}{
+        {{rootIndent}}    lastValue_{{members[i - 1].DefinedName!}} = true;
+        {{rootIndent}}    lastValue_{{propertyName}} = false;
+        {{rootIndent}}}
 """);
             }
-        }
-
-        return lastValueVariableBuilder.ToString();
+        };
     }
 
-    private string GenerateSerializePropertyPart(StringBuilder builder, ImmutableArray<TomlValueOnSerializedData> members, string rootIndent)
+    private void GenerateSerializePropertyPart(
+        StringBuilder builder,
+        ImmutableArray<TomlValueOnSerializedData> members,
+        string rootIndent,
+        bool tableStyleHeader,
+        bool arrayStyleHeader)
     {
         var memberCount = 0;
         foreach (var member in members)
@@ -359,7 +384,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                     break;
                 case TomlSerializationKind.TomlSerializedObjectArray:
                 case TomlSerializationKind.TomlSerializedObjectCollection:
-                    GenerateSerializeTomlSerializedObjectArrayPart(builder, member, indent);
+                    GenerateSerializeTomlSerializedObjectArrayPart(builder, member, indent, tableStyleHeader, arrayStyleHeader);
                     break;
                 case TomlSerializationKind.TypeParameter:
                     GenerateSerializeTypeParameterPart(builder, member, indent);
@@ -368,7 +393,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                     GenerateSerializeNullableStructWithTypeParameterPart(builder, member, indent);
                     break;
                 case TomlSerializationKind.Dictionary:
-                    GenerateSerializeDictionaryPart(builder, member, indent);
+                    GenerateSerializeDictionaryPart(builder, member, indent, tableStyleHeader, arrayStyleHeader);
                     break;
                 case TomlSerializationKind.TomlSerializedObject:
                     GenerateSerializeTomlSerializedObjectPart(builder, member, indent, members.Length == 1);
@@ -386,8 +411,6 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
 """);
             }
         }
-
-        return builder.ToString();
     }
 
     private void GenerateSerializePrimitivePart(StringBuilder builder, TomlValueOnSerializedData tomlValueOnSerializedData, string indent)
@@ -453,18 +476,25 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
         }
     }
 
-    private void GenerateSerializeDictionaryPart(StringBuilder builder, TomlValueOnSerializedData tomlValueOnSerializedData, string indent)
+    private void GenerateSerializeDictionaryPart(
+        StringBuilder builder,
+        TomlValueOnSerializedData tomlValueOnSerializedData,
+        string indent,
+        bool tableStyleHeader,
+        bool arrayStyleHeader)
     {
         var propertyName = tomlValueOnSerializedData.DefinedName;
         var accessName = tomlValueOnSerializedData.CanAliasName ? tomlValueOnSerializedData.AliasName : propertyName;
         var kind = tomlValueOnSerializedData.SerializationKind;
         var symbol = tomlValueOnSerializedData.Symbol;
         var fullTypeName = symbol.Type.ToFullFormatString();
-        var nullHandling = tomlValueOnSerializedData.NullHandling; // 0 = Error, 1 = Ignore
-        var isNullable = tomlValueOnSerializedData.IsNullable;
+
+        var condition = tableStyleHeader ?
+            "writer.State == TomlValueState.Default || writer.State == TomlValueState.Table" :
+            "options.SerializeOptions.TableStyle == TomlTableStyle.Header && (writer.State == TomlValueState.Default || writer.State == TomlValueState.Table)";
 
         builder.AppendLine($$"""
-        {{indent}}if (options.SerializeOptions.TableStyle == TomlTableStyle.Header && (writer.State == TomlValueState.Default || writer.State == TomlValueState.Table)){
+        {{indent}}if ({{condition}}){
         {{indent}}    writer.WriteTableHeader({{$"@\"{accessName}\"u8"}});
         {{indent}}    writer.WriteNewLine();
         {{indent}}    writer.BeginCurrentState(TomlValueState.Table);
@@ -485,15 +515,17 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
 """);
     }
 
-    private void GenerateSerializeTomlSerializedObjectArrayPart(StringBuilder builder, TomlValueOnSerializedData tomlValueOnSerializedData, string indent)
+    private void GenerateSerializeTomlSerializedObjectArrayPart(
+        StringBuilder builder,
+        TomlValueOnSerializedData tomlValueOnSerializedData,
+        string indent,
+        bool tableStyleHeader,
+        bool arrayStyleHeader)
     {
         var propertyName = tomlValueOnSerializedData.DefinedName;
         var accessName = tomlValueOnSerializedData.CanAliasName ? tomlValueOnSerializedData.AliasName : propertyName;
-        var kind = tomlValueOnSerializedData.SerializationKind;
         var symbol = tomlValueOnSerializedData.Symbol;
         var fullTypeName = symbol.Type.ToFullFormatString();
-        var nullHandling = tomlValueOnSerializedData.NullHandling; // 0 = Error, 1 = Ignore
-        var isNullable = tomlValueOnSerializedData.IsNullable;
 
         var enableArrayOfTable = false;
         var elementFullName = "";
@@ -527,9 +559,13 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
 
         if (enableArrayOfTable)
         {
+            var arrayStyleCondition = arrayStyleHeader ?
+                "" :
+                "options.SerializeOptions.ArrayStyle == TomlArrayStyle.Header && ";
+
             // MEMO: Check null and write empty array when element of array is one. 
             builder.AppendLine($$"""
-                    {{indent}}if (!(options.SerializeOptions.ArrayStyle == TomlArrayStyle.Header && writer.State != TomlValueState.ArrayOfTableForMulitiLine &&
+                    {{indent}}if (!({{arrayStyleCondition}}writer.State != TomlValueState.ArrayOfTableForMulitiLine &&
                     {{indent}}  options.Resolver.GetFormatter<{{fullTypeName}}>()! is ITomlArrayHeaderFormatter<{{fullTypeName}}> _{{propertyName}}HeaderFormatter &&
                     {{indent}}  _{{propertyName}}HeaderFormatter.TrySerialize(ref writer, {{$"@\"{accessName}\"u8"}}, target.{{propertyName}}, options)))
                     {{indent}}{

@@ -24,15 +24,15 @@ public sealed class IReadOnlyListFormatter<T> : CollectionBaseFormatter<IReadOnl
     {
         if (target is T[])
         {
-            ArraySerializer<T>.Instance.Serialize(ref writer, new CollectionContent(target), options);
+            ArraySerializer<T>.Serialize(ref writer, new CollectionContent(target), options);
         }
         else if (target is List<T>)
         {
-            ListSerializer<T>.Instance.Serialize(ref writer, new CollectionContent(target), options);
+            ListSerializer<T>.Serialize(ref writer, new CollectionContent(target), options);
         }
         else
         {
-            IReadOnlyListSerializer<T>.Instance.Serialize(ref writer, new CollectionContent(target), options);
+            IReadOnlyListSerializer<T>.Serialize(ref writer, new CollectionContent(target), options);
         }
     }
 
@@ -40,15 +40,15 @@ public sealed class IReadOnlyListFormatter<T> : CollectionBaseFormatter<IReadOnl
     {
         if (target is T[])
         {
-            return ArraySerializer<T>.Instance.TrySerializeTomlArrayHeaderStyle(ref writer, header, new CollectionContent(target), options);
+            return ArraySerializer<T>.TrySerializeTomlArrayHeaderStyle(ref writer, header, new CollectionContent(target), options);
         }
         else if (target is List<T> stTarget)
         {
-            return ListSerializer<T>.Instance.TrySerializeTomlArrayHeaderStyle(ref writer, header, new CollectionContent(target), options);
+            return ListSerializer<T>.TrySerializeTomlArrayHeaderStyle(ref writer, header, new CollectionContent(target), options);
         }
         else
         {
-            return IReadOnlyListSerializer<T>.Instance.TrySerializeTomlArrayHeaderStyle(ref writer, header, new CollectionContent(target), options);
+            return IReadOnlyListSerializer<T>.TrySerializeTomlArrayHeaderStyle(ref writer, header, new CollectionContent(target), options);
         }
     }
 }

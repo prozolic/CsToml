@@ -11,20 +11,10 @@ internal struct CollectionContent(object collection)
     public object Collection = collection;
 }
 
-internal abstract class CollectionSerializer<T>
+internal static class IEnumerableSerializer<T>
 {
-    public abstract void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, CollectionContent content, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>;
-
-    public abstract bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, CollectionContent content, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>;
-}
-
-internal sealed class IEnumerableSerializer<T> : CollectionSerializer<T>
-{
-    public static readonly IEnumerableSerializer<T> Instance = new();
-
-    public override void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, CollectionContent content, CsTomlSerializerOptions options)
+    public static void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, CollectionContent content, CsTomlSerializerOptions options)
+        where TBufferWriter : IBufferWriter<byte>
     {
         var enumerable = Unsafe.As<IEnumerable<T>>(content.Collection);
         if (enumerable.TryGetNonEnumeratedCount2(out var count) && count == 0)
@@ -63,7 +53,8 @@ internal sealed class IEnumerableSerializer<T> : CollectionSerializer<T>
         writer.WriteSpace();
         writer.EndArray();
     }
-    public override bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, CollectionContent content, CsTomlSerializerOptions options)
+    public static bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, CollectionContent content, CsTomlSerializerOptions options)
+        where TBufferWriter : IBufferWriter<byte>
     {
         var enumerable = Unsafe.As<IEnumerable<T>>(content.Collection);
         if (enumerable.TryGetNonEnumeratedCount2(out var count) && count == 0)
@@ -98,11 +89,10 @@ internal sealed class IEnumerableSerializer<T> : CollectionSerializer<T>
     }
 }
 
-internal sealed class ArraySerializer<T> : CollectionSerializer<T>
+internal static class ArraySerializer<T>
 {
-    public static readonly ArraySerializer<T> Instance = new();
-
-    public override void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, CollectionContent content, CsTomlSerializerOptions options)
+    public static void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, CollectionContent content, CsTomlSerializerOptions options)
+        where TBufferWriter : IBufferWriter<byte>
     {
         var array = Unsafe.As<T[]>(content.Collection);
         writer.BeginArray();
@@ -132,8 +122,14 @@ internal sealed class ArraySerializer<T> : CollectionSerializer<T>
         writer.EndArray();
     }
 
-    public override bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, CollectionContent content, CsTomlSerializerOptions options)
+    public static bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, CollectionContent content, CsTomlSerializerOptions options)
+        where TBufferWriter : IBufferWriter<byte>
     {
+        if (!writer.IsRoot)
+        {
+            return false;
+        }
+
         var array = Unsafe.As<T[]>(content.Collection);
         var arraySpan = array.AsSpan();
         if (arraySpan.Length == 0)
@@ -158,11 +154,10 @@ internal sealed class ArraySerializer<T> : CollectionSerializer<T>
     }
 }
 
-internal sealed class ListSerializer<T> : CollectionSerializer<T>
+internal static class ListSerializer<T>
 {
-    public static readonly ListSerializer<T> Instance = new();
-
-    public override void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, CollectionContent content, CsTomlSerializerOptions options)
+    public static void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, CollectionContent content, CsTomlSerializerOptions options)
+        where TBufferWriter : IBufferWriter<byte>
     {
         var list = Unsafe.As<List<T>>(content.Collection);
 
@@ -193,8 +188,14 @@ internal sealed class ListSerializer<T> : CollectionSerializer<T>
         writer.EndArray();
     }
 
-    public override bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, CollectionContent content, CsTomlSerializerOptions options)
+    public static bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, CollectionContent content, CsTomlSerializerOptions options)
+        where TBufferWriter : IBufferWriter<byte>
     {
+        if (!writer.IsRoot)
+        {
+            return false;
+        }
+
         var list = Unsafe.As<List<T>>(content.Collection);
         var listSpan = CollectionsMarshal.AsSpan(list);
         if (listSpan.Length == 0)
@@ -219,11 +220,10 @@ internal sealed class ListSerializer<T> : CollectionSerializer<T>
     }
 }
 
-internal sealed class IListSerializer<T> : CollectionSerializer<T>
+internal static class IListSerializer<T> 
 {
-    public static readonly IListSerializer<T> Instance = new();
-
-    public override void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, CollectionContent content, CsTomlSerializerOptions options)
+    public static void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, CollectionContent content, CsTomlSerializerOptions options)
+        where TBufferWriter : IBufferWriter<byte>
     {
         var ilist = Unsafe.As<IList<T>>(content.Collection);
 
@@ -253,8 +253,14 @@ internal sealed class IListSerializer<T> : CollectionSerializer<T>
         writer.EndArray();
     }
 
-    public override bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, CollectionContent content, CsTomlSerializerOptions options)
+    public static bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, CollectionContent content, CsTomlSerializerOptions options)
+        where TBufferWriter : IBufferWriter<byte>
     {
+        if (!writer.IsRoot)
+        {
+            return false;
+        }
+
         var iList = Unsafe.As<IList<T>>(content.Collection);
         if (iList.Count == 0)
         {
@@ -278,11 +284,10 @@ internal sealed class IListSerializer<T> : CollectionSerializer<T>
     }
 }
 
-internal sealed class IReadOnlyListSerializer<T> : CollectionSerializer<T>
+internal static class IReadOnlyListSerializer<T>
 {
-    public static readonly IReadOnlyListSerializer<T> Instance = new();
-
-    public override void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, CollectionContent content, CsTomlSerializerOptions options)
+    public static void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, CollectionContent content, CsTomlSerializerOptions options)
+        where TBufferWriter : IBufferWriter<byte>
     {
         var iReadonlyList = Unsafe.As<IReadOnlyList<T>>(content.Collection);
 
@@ -312,8 +317,14 @@ internal sealed class IReadOnlyListSerializer<T> : CollectionSerializer<T>
         writer.EndArray();
     }
 
-    public override bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, CollectionContent content, CsTomlSerializerOptions options)
+    public static bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, CollectionContent content, CsTomlSerializerOptions options)
+        where TBufferWriter : IBufferWriter<byte>
     {
+        if (!writer.IsRoot)
+        {
+            return false;
+        }
+
         var iReadonlyList = Unsafe.As<IReadOnlyList<T>>(content.Collection);
         if (iReadonlyList.Count == 0)
         {
