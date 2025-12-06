@@ -6,7 +6,10 @@
     <File Path="LICENSE" />
     <File Path="exclusion.dic" />
     <File Path="CLAUDE.md" />
+    <File Path="src/Directory.Build.props" />
+    <File Path="src/NuGet.props" />
     <File Path=".github/workflows/build.yml" />
+    <File Path=".github/workflows/nuget-pack-push.yml" />
   </Folder>
   <Folder Name="/sandbox/">
     <Project Path="sandbox/Benchmark/Benchmark.csproj" />

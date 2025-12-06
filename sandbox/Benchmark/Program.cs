@@ -10,8 +10,8 @@ defaultBenchmark.CsToml_Parse();
 return;
 #else
 
-var config = new BenchmarkConfig();
-//var config = new BenchmarkConfig().AddTargetFramework();
+//var config = new BenchmarkConfig();
+var config = new BenchmarkConfig().AddTargetFramework();
 var summaries = BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args, config).ToArray();
 if (summaries.Length == 0)
 {
