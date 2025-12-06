@@ -48,7 +48,7 @@ public sealed class ICollectionFormatter<T> : CollectionBaseFormatter<ICollectio
         {
             return ArraySerializer<T>.TrySerializeTomlArrayHeaderStyle(ref writer, header, new CollectionContent(target), options);
         }
-        else if (target is List<T> stTarget)
+        else if (target is List<T>)
         {
             return ListSerializer<T>.TrySerializeTomlArrayHeaderStyle(ref writer, header, new CollectionContent(target), options);
         }
