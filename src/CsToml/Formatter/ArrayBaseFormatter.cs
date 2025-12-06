@@ -6,7 +6,7 @@ using System.ComponentModel;
 namespace CsToml.Formatter;
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-public abstract class ArrayBaseFormatter<TArray, TElement> : ITomlValueFormatter<TArray?>
+public abstract class ArrayBaseFormatter<TArray, TElement> : ITomlValueFormatter<TArray?>, ITomlArrayHeaderFormatter<TArray?>
 {
     public TArray? Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
@@ -39,35 +39,22 @@ public abstract class ArrayBaseFormatter<TArray, TElement> : ITomlValueFormatter
             ExceptionHelper.ThrowSerializationFailed(typeof(TArray));
             return;
         }
-        var targetSpan = AsSpan(target);
-        writer.BeginArray();
-        if (targetSpan.Length == 0)
+
+        ArraySerializer<TElement>.Serialize(ref writer, new CollectionContent(target), options);
+    }
+
+    bool ITomlArrayHeaderFormatter<TArray?>.TrySerialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, TArray? target, CsTomlSerializerOptions options)
+    {
+        if (target == null)
         {
-            writer.EndArray();
-            return;
+            ExceptionHelper.ThrowSerializationFailed(typeof(TArray));
+            return false; // not reached.
         }
 
-        var formatter = options.Resolver.GetFormatter<TElement>()!;
-        formatter.Serialize(ref writer, targetSpan[0], options);
-        if (targetSpan.Length == 1)
-        {
-            writer.WriteSpace();
-            writer.EndArray();
-            return;
-        }
-
-        for (int i = 1; i < targetSpan.Length; i++)
-        {
-            writer.Write(TomlCodes.Symbol.COMMA);
-            writer.WriteSpace();
-            formatter.Serialize(ref writer, targetSpan[i], options);
-        }
-        writer.WriteSpace();
-        writer.EndArray();
+        return ArraySerializer<TElement>.TrySerializeTomlArrayHeaderStyle(ref writer, header, new CollectionContent(target), options);
     }
 
     protected abstract ReadOnlySpan<TElement> AsSpan(TArray array);
 
     protected abstract TArray Complete(TElement[] array);
 }
-

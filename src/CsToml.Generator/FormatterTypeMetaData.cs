@@ -285,7 +285,7 @@ internal static class FormatterTypeMetaData
                 {
                     return TomlSerializationKind.PrimitiveArray;
                 }
-                return TomlSerializationKind.ArrayOfITomlSerializedObject;
+                return TomlSerializationKind.TomlSerializedObjectArray;
             case TypeKind.Enum:
                 return TomlSerializationKind.Enum;
             case TypeKind.Class:
@@ -299,7 +299,7 @@ internal static class FormatterTypeMetaData
                     {
                         return TomlSerializationKind.PrimitiveCollection;
                     }
-                    return TomlSerializationKind.CollectionOfITomlSerializedObject;
+                    return TomlSerializationKind.TomlSerializedObjectCollection;
                 }
                 if (ContainsDictionary(type))
                 {
@@ -317,7 +317,7 @@ internal static class FormatterTypeMetaData
                     {
                         return TomlSerializationKind.PrimitiveCollection;
                     }
-                    return TomlSerializationKind.CollectionOfITomlSerializedObject;
+                    return TomlSerializationKind.TomlSerializedObjectCollection;
                 }
                 return TomlSerializationKind.Interface;
             case TypeKind.Struct:
@@ -340,7 +340,7 @@ internal static class FormatterTypeMetaData
                     {
                         return TomlSerializationKind.PrimitiveCollection;
                     }
-                    return TomlSerializationKind.CollectionOfITomlSerializedObject;
+                    return TomlSerializationKind.TomlSerializedObjectCollection;
                 }
                 return TomlSerializationKind.Struct;
         }
@@ -355,7 +355,13 @@ internal static class FormatterTypeMetaData
 
         if (typeSymbol is IArrayTypeSymbol arrayTypeSymbol)
         {
-            var symbolKind = GetTomlSerializationKind(arrayTypeSymbol.ElementType);
+            ITypeSymbol elementType = arrayTypeSymbol.ElementType;
+            while(elementType is IArrayTypeSymbol t)
+            {
+                elementType = t.ElementType;
+            }
+
+            var symbolKind = GetTomlSerializationKind(elementType);
             return symbolKind == kind;
         }
 

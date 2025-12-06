@@ -179,7 +179,7 @@ public partial class TestClass
     [TomlValueOnSerialized()]
     public Guid? guid { get; set; }
 
-    [TomlValueOnSerialized(aliasName:"uri2")]
+    [TomlValueOnSerialized(AliasName = "uri2")]
     public Uri? uri { get; set; }
 
     //[TomlValueOnSerialized()]

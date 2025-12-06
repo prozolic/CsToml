@@ -33,7 +33,21 @@ internal static class SymbolUtility
                 }
             }
 
-            if (attr.ConstructorArguments.Length > 0 && (attr.ConstructorArguments[0].Value as string) != null)
+            // Check for AliasName property in TomlValueOnSerializedAttribute
+            // If AliasName is set, it always takes precedence over the value of TomlNamingConvention.
+            var enableAliasName = false;
+            var aliasName = "";
+            if (attr.NamedArguments.Length > 0)
+            {
+                var aliasNameArg = attr.NamedArguments.FirstOrDefault(arg => arg.Key == "AliasName");
+                if (aliasNameArg.Value.Value is string strValue)
+                {
+                    aliasName = (string)strValue;
+                    enableAliasName = true;
+                }
+            }
+
+            if (enableAliasName)
             {
                 // Use explicit alias name (takes precedence over naming convention)
                 yield return new TomlValueOnSerializedData()
@@ -42,7 +56,7 @@ internal static class SymbolUtility
                     SerializationKind = serializationKind,
                     DefinedName = symbol.Name,
                     TomlValueOnSerializedAttributeData = attr,
-                    AliasName = (string)attr.ConstructorArguments[0].Value!,
+                    AliasName = aliasName!,
                     CanAliasName = true,
                     NullHandling = nullHandling,
                     // Check if the property type is nullable (reference type or Nullable<T>)

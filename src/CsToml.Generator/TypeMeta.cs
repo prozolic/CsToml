@@ -1,5 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -10,8 +11,7 @@ internal sealed class TypeMeta
 {
     private INamedTypeSymbol symbol;
     private TypeDeclarationSyntax syntax;
-
-    public ImmutableArray<TomlValueOnSerializedData> Members { get; }
+    public ImmutableArray<TomlValueOnSerializedData> OrderedMembers { get; }
     public ImmutableArray<(ITypeSymbol, TomlSerializationKind)> DefinedTypes { get; }
     public string NameSpace { get; }
     public TomlSerializedObjectType Type { get; }
@@ -21,6 +21,7 @@ internal sealed class TypeMeta
     public string GenericTypeParameterName { get; }
     public TomlNamingConvention NamingConvention { get; }
     public bool IsReferenceType => !symbol.IsValueType;
+    public HashSet<TomlSerializationKind> TomlSerializationKindLookup { get; }
 
     public TypeMeta(INamedTypeSymbol symbol, TypeDeclarationSyntax syntax)
     {
@@ -43,10 +44,19 @@ internal sealed class TypeMeta
         // Get naming convention from attribute
         NamingConvention = GetNamingConvention(symbol);
 
-        Members = symbol.GetPublicProperties().FilterTomlValueOnSerializedMembers(NamingConvention).OrderBy(m => m.SerializationKind).ToImmutableArray();
+        OrderedMembers = symbol.GetPublicProperties().FilterTomlValueOnSerializedMembers(NamingConvention).OrderBy(m => m.SerializationKind).ToImmutableArray();
+
+        TomlSerializationKindLookup = new HashSet<TomlSerializationKind>([
+            TomlSerializationKind.TomlSerializedObjectArray,
+            TomlSerializationKind.TomlSerializedObjectCollection,
+            TomlSerializationKind.TypeParameter,
+            TomlSerializationKind.NullableStructWithTypeParameter,
+            TomlSerializationKind.Dictionary,
+            TomlSerializationKind.TomlSerializedObject
+        ]);
 
         var typesymbols = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
-        foreach (var member in Members)
+        foreach (var member in OrderedMembers)
         {
             SearchTypeSymbol(typesymbols, member.Symbol.Type);
         }
@@ -85,7 +95,7 @@ internal sealed class TypeMeta
 
         var error = false;
         var keyTable = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var member in Members)
+        foreach (var member in OrderedMembers)
         {
             var property = member.Symbol;
             var kind = member.SerializationKind;
@@ -250,7 +260,7 @@ internal sealed class ConstructorMeta
         IParameterSymbol[] constructorParameters = [];
         foreach (var constructor in this.InstanceConstructors)
         {
-            if (constructor.parameters.All(p => typeMeta.Members.Any(m => m.Symbol.Type.Equals(p.Type, SymbolEqualityComparer.Default) && m.Symbol.Name.Equals(p.Name, StringComparison.OrdinalIgnoreCase))))
+            if (constructor.parameters.All(p => typeMeta.OrderedMembers.Any(m => m.Symbol.Type.Equals(p.Type, SymbolEqualityComparer.Default) && m.Symbol.Name.Equals(p.Name, StringComparison.OrdinalIgnoreCase))))
             {
                 if ((constructorParameters?.Length ?? 0) <= constructor.parameters.Length)
                 {
@@ -262,7 +272,7 @@ internal sealed class ConstructorMeta
 
         var constructorParameterProperties = new List<IPropertySymbol>();
         var membersOfObjectInitialisers = new List<IPropertySymbol>();
-        foreach (var member in typeMeta.Members)
+        foreach (var member in typeMeta.OrderedMembers)
         {
             if (!ConstructorParameters.Any(c => c.Type.Equals(member.Symbol.Type, SymbolEqualityComparer.Default) && c.Name.Equals(member.Symbol.Name, StringComparison.OrdinalIgnoreCase)))
             {
@@ -271,7 +281,7 @@ internal sealed class ConstructorMeta
         }
         foreach (var member in constructorParameters!)
         {
-            var property = typeMeta.Members.FirstOrDefault(m => m.Symbol.Type.Equals(member.Type, SymbolEqualityComparer.Default) && m.Symbol.Name.Equals(member.Name, StringComparison.OrdinalIgnoreCase));
+            var property = typeMeta.OrderedMembers.FirstOrDefault(m => m.Symbol.Type.Equals(member.Type, SymbolEqualityComparer.Default) && m.Symbol.Name.Equals(member.Name, StringComparison.OrdinalIgnoreCase));
             constructorParameterProperties.Add(property.Symbol);
         }
 

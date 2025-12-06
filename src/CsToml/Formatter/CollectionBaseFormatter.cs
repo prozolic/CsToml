@@ -1,5 +1,4 @@
 ﻿using CsToml.Error;
-using CsToml.Extension;
 using CsToml.Values;
 using System.Buffers;
 using System.ComponentModel;
@@ -7,7 +6,7 @@ using System.ComponentModel;
 namespace CsToml.Formatter;
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-public abstract class CollectionBaseFormatter<TCollection, TElement, TMediator> : ITomlValueFormatter<TCollection?>
+public abstract class CollectionBaseFormatter<TCollection, TElement, TMediator> : ITomlValueFormatter<TCollection?>, ITomlArrayHeaderFormatter<TCollection?>
     where TCollection : IEnumerable<TElement>
 {
     public TCollection? Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
@@ -46,52 +45,25 @@ public abstract class CollectionBaseFormatter<TCollection, TElement, TMediator> 
         SerializeCollection(ref writer, target, options);
     }
 
-    protected virtual void SerializeCollection<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TCollection target, CsTomlSerializerOptions options)
+    protected abstract void SerializeCollection<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TCollection target, CsTomlSerializerOptions options)
+        where TBufferWriter : IBufferWriter<byte>;
+
+    public bool TrySerialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, TCollection? target, CsTomlSerializerOptions options)
         where TBufferWriter : IBufferWriter<byte>
     {
-        if (target.TryGetNonEnumeratedCount2(out var count))
+        if (target == null)
         {
-            if (count == 0)
-            {
-                writer.BeginArray();
-                writer.EndArray();
-                return;
-            }
+            ExceptionHelper.ThrowSerializationFailed(typeof(TCollection?));
+            return false; // not reached.
         }
 
-        var formatter = options.Resolver.GetFormatter<TElement>()!;
-        writer.BeginArray();
-        using (var en = target.GetEnumerator())
-        {
-            if (!en.MoveNext())
-            {
-                writer.EndArray();
-                return;
-            }
-
-            formatter.Serialize(ref writer, en.Current!, options);
-            if (!en.MoveNext())
-            {
-                writer.WriteSpace();
-                writer.EndArray();
-                return;
-            }
-
-            do
-            {
-                writer.Write(TomlCodes.Symbol.COMMA);
-                writer.WriteSpace();
-                formatter.Serialize(ref writer, en.Current!, options);
-
-            } while (en.MoveNext());
-        }
-        writer.WriteSpace();
-        writer.EndArray();
+        return TrySerializeTomlArrayHeaderStyle(ref writer, header, target, options);
     }
 
+    protected abstract bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, TCollection target, CsTomlSerializerOptions options)
+         where TBufferWriter : IBufferWriter<byte>;
 
     protected abstract TMediator CreateCollection(int capacity);
     protected abstract void AddValue(TMediator mediator, TElement element);
     protected abstract TCollection Complete(TMediator collection);
 }
-

@@ -1,4 +1,5 @@
 ﻿
+
 namespace CsToml.Formatter;
 
 public sealed class LinkedListFormatter<T> : CollectionBaseFormatter<LinkedList<T>, T, LinkedList<T>>
@@ -20,40 +21,13 @@ public sealed class LinkedListFormatter<T> : CollectionBaseFormatter<LinkedList<
 
     protected override void SerializeCollection<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, LinkedList<T> target, CsTomlSerializerOptions options)
     {
-        if (target.Count == 0)
-        {
-            writer.BeginArray();
-            writer.EndArray();
-            return;
-        }
+        var serializer = new EnumeratorStructSerializer<T, LinkedList<T>.Enumerator>(target.Count, target.GetEnumerator());
+        serializer.Serialize(ref writer, options);
+    }
 
-        var formatter = options.Resolver.GetFormatter<T>()!;
-        writer.BeginArray();
-
-        // Use LinkedList<T>.GetEnumerator directly instead of IEnumerable<T>.GetEnumerator.
-        var en = target.GetEnumerator();
-        if (!en.MoveNext())
-        {
-            writer.EndArray();
-            return;
-        }
-
-        formatter.Serialize(ref writer, en.Current!, options);
-        if (!en.MoveNext())
-        {
-            writer.WriteSpace();
-            writer.EndArray();
-            return;
-        }
-
-        do
-        {
-            writer.Write(TomlCodes.Symbol.COMMA);
-            writer.WriteSpace();
-            formatter.Serialize(ref writer, en.Current!, options);
-
-        } while (en.MoveNext());
-        writer.WriteSpace();
-        writer.EndArray();
+    protected override bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, LinkedList<T> target, CsTomlSerializerOptions options)
+    {
+        var serializer = new EnumeratorStructSerializer<T, LinkedList<T>.Enumerator>(target.Count, target.GetEnumerator());
+        return serializer.TrySerializeTomlArrayHeaderStyle(ref writer, header, options);
     }
 }

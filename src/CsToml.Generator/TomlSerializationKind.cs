@@ -11,11 +11,17 @@ internal enum TomlSerializationKind
     Class,
     Interface,
     Object,
-    ArrayOfITomlSerializedObject,
-    CollectionOfITomlSerializedObject,
-    Dictionary,
-    TomlSerializedObject,
+
+    // Inline format or Array of tables format
+    TomlSerializedObjectArray,
+    TomlSerializedObjectCollection,
+
+    // Inline format or table format
     TypeParameter,
     NullableStructWithTypeParameter,
+    Dictionary,
+    TomlSerializedObject,
+    TomlSerializedObjectArrayForHeaderStyle,
+    TomlSerializedObjectCollectionForHeaderStyle,
     Error
 }

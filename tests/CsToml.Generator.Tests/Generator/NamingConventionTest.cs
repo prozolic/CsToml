@@ -1,6 +1,6 @@
-using Shouldly;
+﻿using Shouldly;
 
-namespace CsToml.Generator.Tests.Seirialization;
+namespace CsToml.Generator.Tests;
 
 public class NamingConventionTest
 {

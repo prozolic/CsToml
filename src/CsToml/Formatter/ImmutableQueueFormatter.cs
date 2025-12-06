@@ -56,4 +56,28 @@ public sealed class ImmutableQueueFormatter<T> : CollectionBaseFormatter<Immutab
         writer.WriteSpace();
         writer.EndArray();
     }
+
+    protected override bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, ImmutableQueue<T> target, CsTomlSerializerOptions options)
+    {
+        if (target.IsEmpty)
+        {
+            return false;
+        }
+
+        var formatter = options.Resolver.GetFormatter<T>()!;
+        foreach (var item in target)
+        {
+            writer.BeginArrayOfTablesHeader();
+            writer.WriteKey(header);
+            writer.EndArrayOfTablesHeader();
+            writer.WriteNewLine();
+            writer.BeginCurrentState(TomlValueState.ArrayOfTableForMulitiLine);
+            formatter.Serialize(ref writer, item, options);
+            writer.EndCurrentState();
+            writer.EndKeyValue(false);
+        }
+
+        // Return true if serialized in header style.
+        return true;
+    }
 }

@@ -22,6 +22,16 @@ public sealed class ILookupFormatter<TKey, TValue> : CollectionBaseFormatter<ILo
         return new(capacity);
     }
 
+    protected override void SerializeCollection<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ILookup<TKey, TValue> target, CsTomlSerializerOptions options)
+    {
+        IEnumerableSerializer<IGrouping<TKey, TValue>>.Serialize(ref writer, new CollectionContent(target), options);
+    }
+
+    protected override bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, ILookup<TKey, TValue> target, CsTomlSerializerOptions options)
+    {
+        return IEnumerableSerializer<IGrouping<TKey, TValue>>.TrySerializeTomlArrayHeaderStyle(ref writer, header, new CollectionContent(target), options);
+    }
+
     [DebuggerDisplay("Count = {Count}")]
     private sealed class Lookup(Dictionary<TKey, IGrouping<TKey, TValue>> dictionary) : ILookup<TKey, TValue>
     {

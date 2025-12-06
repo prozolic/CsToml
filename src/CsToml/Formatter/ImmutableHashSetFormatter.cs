@@ -19,34 +19,13 @@ public sealed class ImmutableHashSetFormatter<T> : CollectionBaseFormatter<Immut
 
     protected override void SerializeCollection<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ImmutableHashSet<T> target, CsTomlSerializerOptions options)
     {
-        writer.BeginArray();
-        if (target.IsEmpty)
-        {
-            writer.EndArray();
-            return;
-        }
+        var serializer = new EnumeratorStructSerializer<T, ImmutableHashSet<T>.Enumerator>(target.Count, target.GetEnumerator());
+        serializer.Serialize(ref writer, options);
+    }
 
-        // Use ImmutableHashSet<T>.GetEnumerator directly instead of IEnumerable<T>.GetEnumerator.
-        var en = target.GetEnumerator();
-        en.MoveNext();
-
-        var formatter = options.Resolver.GetFormatter<T>()!;
-        formatter.Serialize(ref writer, en.Current!, options);
-        if (!en.MoveNext())
-        {
-            writer.WriteSpace();
-            writer.EndArray();
-            return;
-        }
-
-        do
-        {
-            writer.Write(TomlCodes.Symbol.COMMA);
-            writer.WriteSpace();
-            formatter.Serialize(ref writer, en.Current!, options);
-
-        } while (en.MoveNext());
-        writer.WriteSpace();
-        writer.EndArray();
+    protected override bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, ImmutableHashSet<T> target, CsTomlSerializerOptions options)
+    {
+        var serializer = new EnumeratorStructSerializer<T, ImmutableHashSet<T>.Enumerator>(target.Count, target.GetEnumerator());
+        return serializer.TrySerializeTomlArrayHeaderStyle(ref writer, header, options);
     }
 }

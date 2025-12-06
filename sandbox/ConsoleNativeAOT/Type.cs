@@ -80,13 +80,13 @@ internal partial class TypeTable
 }
 
 
-[TomlSerializedObject]
+[TomlSerializedObject(NamingConvention = TomlNamingConvention.KebabCase)]
 internal partial class AliasName
 {
-    [TomlValueOnSerialized("alias")]
+    [TomlValueOnSerialized(AliasName = "alias")]
     public string? Key { get; set; }
 
-    [TomlValueOnSerialized("あいうえおa")]
+    [TomlValueOnSerialized(AliasName = "あいうえおa")]
     public string? Hiragana { get; set; }
 }
 

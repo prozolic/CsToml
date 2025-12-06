@@ -10,6 +10,18 @@ public enum TomlTableStyle
     Header = 1
 }
 
+public enum TomlArrayStyle
+{
+    Default = 0,        // array or inline table style (one line)
+    Header = 1          // array of table style (multiple lines)
+}
+
+public enum TomlArrayOfTableSourceGenerationMode
+{
+    Default = 0,        // array or inline table (one line)
+    ArrayOfTable = 1    // array of table (multiple lines)
+}
+
 public enum TomlNullHandling
 {
     Error = 0,
@@ -28,6 +40,8 @@ public record CsTomlSerializerOptions(ITomlValueFormatterResolver Resolver)
 public record SerializeOptions
 {
     public TomlTableStyle TableStyle { get; init; } = TomlTableStyle.Default;
+
+    public TomlArrayStyle ArrayStyle { get; init; } = TomlArrayStyle.Default;
 
     public TomlNullHandling DefaultNullHandling { get; init; } = TomlNullHandling.Error;
 }

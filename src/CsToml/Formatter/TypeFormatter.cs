@@ -16,7 +16,7 @@ public sealed class TypeFormatter : ITomlValueFormatter<Type?>
 
         if (rootNode.TryGetString(out var value))
         {
-            return (Type)Type.GetType(value, true)!;
+            return Type.GetType(value, true)!;
         }
 
         ExceptionHelper.ThrowDeserializationFailed(typeof(Type));
