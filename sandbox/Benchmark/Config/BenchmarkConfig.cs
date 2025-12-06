@@ -10,7 +10,6 @@ using BenchmarkDotNet.Toolchains.CsProj;
 
 namespace Benchmark;
 
-
 internal class BenchmarkConfig : ManualConfig
 {
     public BenchmarkConfig()
@@ -29,12 +28,12 @@ internal class BenchmarkConfig : ManualConfig
         AddValidator(DefaultConfig.Instance.GetValidators().ToArray());
         AddLogger(ConsoleLogger.Default);
 
-        // .NET 9.0 as default.
+        // .NET 10.0 as default.
         AddJob(Job.ShortRun
             .WithStrategy(RunStrategy.Throughput)
             .DontEnforcePowerPlan()
-            .WithToolchain(CsProjCoreToolchain.NetCoreApp90)
-            .WithId($"Benchmark{CsProjCoreToolchain.NetCoreApp90.Name}"));
+            .WithToolchain(CsProjCoreToolchain.NetCoreApp10_0)
+            .WithId($"Benchmark{CsProjCoreToolchain.NetCoreApp10_0.Name}"));
     }
 
     public BenchmarkConfig AddTargetFramework()
@@ -45,6 +44,13 @@ internal class BenchmarkConfig : ManualConfig
             .DontEnforcePowerPlan()
             .WithToolchain(CsProjCoreToolchain.NetCoreApp80)
             .WithId($"Benchmark{CsProjCoreToolchain.NetCoreApp80.Name}"));
+
+        // Add .NET 9.0
+        AddJob(Job.ShortRun
+            .WithStrategy(RunStrategy.Throughput)
+            .DontEnforcePowerPlan()
+            .WithToolchain(CsProjCoreToolchain.NetCoreApp90)
+            .WithId($"Benchmark{CsProjCoreToolchain.NetCoreApp90.Name}"));
 
         return this;
     }

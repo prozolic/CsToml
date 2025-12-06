@@ -1,0 +1,65 @@
+﻿name: Pack and Push NuGet Package
+
+on:
+  push:
+    tags:
+      - 'v*.*.*' # v1.1.0, v1.2.3, etc.
+
+jobs:
+  pack:
+    permissions:
+      contents: read
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@71cf2267d89c5cb81562390fa70a37fa40b1305e # v6.pre.beta
+      - name: Setup .NET
+        uses: prozolic/Actions/.github/actions/setup-dotnet@main
+        with:
+          dotnet-version: |
+              8.0.x
+              9.0.x
+              10.0.x
+      - name: Build
+        run: dotnet build -c Release
+      - name: Pack
+        run: dotnet pack -c Release -o ./publish
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: nuget
+          path: ./publish/
+          retention-days: 1
+          if-no-files-found: error
+
+  publish:
+    needs: [pack]
+    permissions:
+      contents: write
+      id-token: write # for NuGet Trusted Publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: prozolic/Actions/.github/actions/setup-dotnet@main
+      # nuget
+      - name: NuGet login (OIDC → temp API key)
+        uses: NuGet/login@d22cc5f58ff5b88bf9bd452535b4335137e24544 # v1.1.0
+        id: login
+        with:
+          user: ${{ secrets.TARGET_NUGET_USER }}
+      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
+        with:
+          name: nuget
+          path: ./nuget
+      - name: List Nuget
+        run: ls -al ./nuget
+      - name: Create Release
+        shell: bash
+        run: gh release create ${{github.ref_name}} --title ${{github.ref_name}} --generate-notes --draft
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # upload nuget
+      - run: dotnet nuget push "./nuget/*.nupkg" --skip-duplicate -s https://api.nuget.org/v3/index.json -k "${NUGET_KEY}"
+        env:
+
+          NUGET_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}

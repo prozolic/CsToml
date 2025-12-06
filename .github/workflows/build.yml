@@ -1,4 +1,4 @@
-# This workflow will build a .NET project
+﻿# This workflow will build a .NET project
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
 
 name: Build
@@ -16,11 +16,12 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+      uses: prozolic/Actions/.github/actions/setup-dotnet@main
       with:
           dotnet-version: |
             8.0.x
             9.0.x
+            10.0.x
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
