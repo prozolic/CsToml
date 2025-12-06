@@ -1019,6 +1019,19 @@ internal partial record AliasName
     public string? Literal { get; set; }
 }
 
+[TomlSerializedObject]
+internal partial record AliasNameList
+{
+    [TomlValueOnSerialized]
+    public string Name { get; set; }
+
+    [TomlValueOnSerialized(AliasName = "DISPLAYNAME")]
+    public string DisplayName { get; set; }
+
+    [TomlValueOnSerialized]
+    public List<AliasName> Values { get; set; }
+}
+
 // Naming Convention Tests
 [TomlSerializedObject(NamingConvention = TomlNamingConvention.SnakeCase)]
 internal partial class TypeSnakeCase
