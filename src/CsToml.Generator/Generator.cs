@@ -1,8 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Security.Claims;
 using System.Text;
 
 namespace CsToml.Generator;
@@ -249,7 +247,11 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                 return m.SerializationKind;
             }).ToImmutableArray();
 
-            GenerateLastValueProcess(builder, orderedMembers, "    ", true);
+            // If orderedMembers differs from typeMeta.OrderedMembers, 
+            // the lastValue variables need to be initialized.
+            var shouldInitializeVariable = !typeMeta.OrderedMembers.SequenceEqual(orderedMembers);
+
+            GenerateLastValueProcess(builder, orderedMembers, "    ", shouldInitializeVariable);
             GenerateSerializePropertyPart(builder, orderedMembers, rootIndent: "    ", tableStyleHeader: false, arrayStyleHeader: true);
             builder.AppendLine($$"""
         }
@@ -369,6 +371,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
         {{rootIndent}}if ({{condition}})
         {{rootIndent}}{
 """);
+
             }
 
             switch (member.SerializationKind)
@@ -431,11 +434,8 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
     {
         var propertyName = tomlValueOnSerializedData.DefinedName;
         var accessName = tomlValueOnSerializedData.CanAliasName ? tomlValueOnSerializedData.AliasName : propertyName;
-        var kind = tomlValueOnSerializedData.SerializationKind;
         var symbol = tomlValueOnSerializedData.Symbol;
         var fullTypeName = symbol.Type.ToFullFormatString();
-        var nullHandling = tomlValueOnSerializedData.NullHandling; // 0 = Error, 1 = Ignore
-        var isNullable = tomlValueOnSerializedData.IsNullable;
 
         builder.AppendLine($$"""
         {{indent}}if (options.SerializeOptions.TableStyle == TomlTableStyle.Header && (writer.State == TomlValueState.Default || writer.State == TomlValueState.Table)){
@@ -485,7 +485,6 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
     {
         var propertyName = tomlValueOnSerializedData.DefinedName;
         var accessName = tomlValueOnSerializedData.CanAliasName ? tomlValueOnSerializedData.AliasName : propertyName;
-        var kind = tomlValueOnSerializedData.SerializationKind;
         var symbol = tomlValueOnSerializedData.Symbol;
         var fullTypeName = symbol.Type.ToFullFormatString();
 
@@ -528,11 +527,8 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
         var fullTypeName = symbol.Type.ToFullFormatString();
 
         var enableArrayOfTable = false;
-        var elementFullName = "";
-        if (symbol.Type is IArrayTypeSymbol arrayTypeSymbol)
+        if (symbol.Type is IArrayTypeSymbol)
         {
-            var elementType = arrayTypeSymbol.ElementType;
-            elementFullName = elementType.ToFullFormatString();
             enableArrayOfTable = true;
         }
         if (symbol.Type is INamedTypeSymbol namedTypeSymbol && namedTypeSymbol.IsGenericType && namedTypeSymbol.TypeArguments.Length == 1)
@@ -544,15 +540,11 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                 var typeArguments = namedTypeSymbol.TypeArguments;
                 if (typeArguments[0] is INamedTypeSymbol namedTypeSymbol2 && namedTypeSymbol2.IsGenericType && namedTypeSymbol2.TypeArguments.Length == 1)
                 {
-                    var typeArguments2 = namedTypeSymbol2.TypeArguments;
-                    elementFullName = typeArguments2[0].ToFullFormatString();
                     enableArrayOfTable = true;
                 }
             }
             else
             {
-                var typeArguments = namedTypeSymbol.TypeArguments;
-                elementFullName = typeArguments[0].ToFullFormatString();
                 enableArrayOfTable = true;
             }
         }
@@ -595,11 +587,8 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
     {
         var propertyName = tomlValueOnSerializedData.DefinedName;
         var accessName = tomlValueOnSerializedData.CanAliasName ? tomlValueOnSerializedData.AliasName : propertyName;
-        var kind = tomlValueOnSerializedData.SerializationKind;
         var symbol = tomlValueOnSerializedData.Symbol;
         var fullTypeName = symbol.Type.ToFullFormatString();
-        var nullHandling = tomlValueOnSerializedData.NullHandling; // 0 = Error, 1 = Ignore
-        var isNullable = tomlValueOnSerializedData.IsNullable;
 
         builder.AppendLine($$"""
         {{indent}}var __{{propertyName}}Formatter = options.Resolver.GetFormatter<{{fullTypeName}}>();
@@ -642,11 +631,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
     {
         var propertyName = tomlValueOnSerializedData.DefinedName;
         var accessName = tomlValueOnSerializedData.CanAliasName ? tomlValueOnSerializedData.AliasName : propertyName;
-        var kind = tomlValueOnSerializedData.SerializationKind;
         var symbol = tomlValueOnSerializedData.Symbol;
-        var fullTypeName = symbol.Type.ToFullFormatString();
-        var nullHandling = tomlValueOnSerializedData.NullHandling; // 0 = Error, 1 = Ignore
-        var isNullable = tomlValueOnSerializedData.IsNullable;
 
         if (symbol.Type is not INamedTypeSymbol namedType) return;
 
