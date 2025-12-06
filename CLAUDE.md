@@ -85,7 +85,7 @@ dotnet publish --configuration Release
 ### Target Frameworks
 - **Main libraries**: .NET 8.0, 9.0, 10.0
 - **Source generator**: .NET Standard 2.0 (for Roslyn compatibility)
-- **Language version**: C# 13.0
+- **Language version**: C# 14.0
 
 ## Testing Strategy
 
