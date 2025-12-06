@@ -256,7 +256,146 @@ public class TypeImmutableTest2
             var expected = buffer.ToArray();
             bytes.ByteSpan.ToArray().ShouldBe(expected);
         }
+        {
+            using var bytes = CsTomlSerializer.Serialize(type, Option.ArrayHeader);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("[[ImmutableArray]]");
+            writer.AppendLine("Value = \"[1] This is TypeTable3 in ImmutableArray\"");
+            writer.AppendLine();
+            writer.AppendLine("[[ImmutableArray]]");
+            writer.AppendLine("Value = \"[2] This is TypeTable3 in ImmutableArray\"");
+            writer.AppendLine();
+            writer.AppendLine("[[ImmutableArray]]");
+            writer.AppendLine("Value = \"[3] This is TypeTable3 in ImmutableArray\"");
+            writer.AppendLine();
+            writer.AppendLine("[[NullableImmutableArray]]");
+            writer.AppendLine("Value = \"[1] This is TypeTable3 in NullableImmutableArray\"");
+            writer.AppendLine();
+            writer.AppendLine("[[NullableImmutableArray]]");
+            writer.AppendLine("Value = \"[2] This is TypeTable3 in NullableImmutableArray\"");
+            writer.AppendLine();
+            writer.AppendLine("[[NullableImmutableArray]]");
+            writer.AppendLine("Value = \"[3] This is TypeTable3 in NullableImmutableArray\"");
+            writer.AppendLine();
+            writer.AppendLine("[[ImmutableList]]");
+            writer.AppendLine("Value = \"[1] This is TypeTable3 in ImmutableList\"");
+            writer.AppendLine();
+            writer.AppendLine("[[ImmutableList]]");
+            writer.AppendLine("Value = \"[2] This is TypeTable3 in ImmutableList\"");
+            writer.AppendLine();
+            writer.AppendLine("[[ImmutableList]]");
+            writer.AppendLine("Value = \"[3] This is TypeTable3 in ImmutableList\"");
+            writer.AppendLine();
+            writer.AppendLine("[[IImmutableList]]");
+            writer.AppendLine("Value = \"[1] This is TypeTable3 in IImmutableList\"");
+            writer.AppendLine();
+            writer.AppendLine("[[IImmutableList]]");
+            writer.AppendLine("Value = \"[2] This is TypeTable3 in IImmutableList\"");
+            writer.AppendLine();
+            writer.AppendLine("[[IImmutableList]]");
+            writer.AppendLine("Value = \"[3] This is TypeTable3 in IImmutableList\"");
+            writer.AppendLine();
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
+        }
     }
+
+    [Fact]
+    public void Serialize2()
+    {
+        ImmutableArray<TypeTable3> immutableArray = [new TypeTable3() { Value = "[1] This is TypeTable3 in IImmutableList" },
+                              new TypeTable3() { Value = "[2] This is TypeTable3 in IImmutableList" },
+                              new TypeTable3() { Value = "[3] This is TypeTable3 in IImmutableList" }];
+        var type = new TypeImmutable2()
+        {
+            ImmutableArray = [new TypeTable3() { Value = "[1] This is TypeTable3 in ImmutableArray" },
+                              new TypeTable3() { Value = "[2] This is TypeTable3 in ImmutableArray" },
+                              new TypeTable3() { Value = "[3] This is TypeTable3 in ImmutableArray" }],
+            NullableImmutableArray = [new TypeTable3() { Value = "[1] This is TypeTable3 in NullableImmutableArray" },
+                                      new TypeTable3() { Value = "[2] This is TypeTable3 in NullableImmutableArray" },
+                                      new TypeTable3() { Value = "[3] This is TypeTable3 in NullableImmutableArray" }],
+            ImmutableList = [new TypeTable3() { Value = "[1] This is TypeTable3 in ImmutableList" },
+                              new TypeTable3() { Value = "[2] This is TypeTable3 in ImmutableList" },
+                              new TypeTable3() { Value = "[3] This is TypeTable3 in ImmutableList" }],
+            IImmutableList = immutableArray,
+        };
+
+        {
+            using var bytes = CsTomlSerializer.Serialize(type);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("ImmutableArray = [ {Value = \"[1] This is TypeTable3 in ImmutableArray\"}, {Value = \"[2] This is TypeTable3 in ImmutableArray\"}, {Value = \"[3] This is TypeTable3 in ImmutableArray\"} ]");
+            writer.AppendLine("NullableImmutableArray = [ {Value = \"[1] This is TypeTable3 in NullableImmutableArray\"}, {Value = \"[2] This is TypeTable3 in NullableImmutableArray\"}, {Value = \"[3] This is TypeTable3 in NullableImmutableArray\"} ]");
+            writer.AppendLine("ImmutableList = [ {Value = \"[1] This is TypeTable3 in ImmutableList\"}, {Value = \"[2] This is TypeTable3 in ImmutableList\"}, {Value = \"[3] This is TypeTable3 in ImmutableList\"} ]");
+            writer.AppendLine("IImmutableList = [ {Value = \"[1] This is TypeTable3 in IImmutableList\"}, {Value = \"[2] This is TypeTable3 in IImmutableList\"}, {Value = \"[3] This is TypeTable3 in IImmutableList\"} ]");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("ImmutableArray = [ {Value = \"[1] This is TypeTable3 in ImmutableArray\"}, {Value = \"[2] This is TypeTable3 in ImmutableArray\"}, {Value = \"[3] This is TypeTable3 in ImmutableArray\"} ]");
+            writer.AppendLine("NullableImmutableArray = [ {Value = \"[1] This is TypeTable3 in NullableImmutableArray\"}, {Value = \"[2] This is TypeTable3 in NullableImmutableArray\"}, {Value = \"[3] This is TypeTable3 in NullableImmutableArray\"} ]");
+            writer.AppendLine("ImmutableList = [ {Value = \"[1] This is TypeTable3 in ImmutableList\"}, {Value = \"[2] This is TypeTable3 in ImmutableList\"}, {Value = \"[3] This is TypeTable3 in ImmutableList\"} ]");
+            writer.AppendLine("IImmutableList = [ {Value = \"[1] This is TypeTable3 in IImmutableList\"}, {Value = \"[2] This is TypeTable3 in IImmutableList\"}, {Value = \"[3] This is TypeTable3 in IImmutableList\"} ]");
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(type, Option.ArrayHeader);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("[[ImmutableArray]]");
+            writer.AppendLine("Value = \"[1] This is TypeTable3 in ImmutableArray\"");
+            writer.AppendLine();
+            writer.AppendLine("[[ImmutableArray]]");
+            writer.AppendLine("Value = \"[2] This is TypeTable3 in ImmutableArray\"");
+            writer.AppendLine();
+            writer.AppendLine("[[ImmutableArray]]");
+            writer.AppendLine("Value = \"[3] This is TypeTable3 in ImmutableArray\"");
+            writer.AppendLine();
+            writer.AppendLine("[[NullableImmutableArray]]");
+            writer.AppendLine("Value = \"[1] This is TypeTable3 in NullableImmutableArray\"");
+            writer.AppendLine();
+            writer.AppendLine("[[NullableImmutableArray]]");
+            writer.AppendLine("Value = \"[2] This is TypeTable3 in NullableImmutableArray\"");
+            writer.AppendLine();
+            writer.AppendLine("[[NullableImmutableArray]]");
+            writer.AppendLine("Value = \"[3] This is TypeTable3 in NullableImmutableArray\"");
+            writer.AppendLine();
+            writer.AppendLine("[[ImmutableList]]");
+            writer.AppendLine("Value = \"[1] This is TypeTable3 in ImmutableList\"");
+            writer.AppendLine();
+            writer.AppendLine("[[ImmutableList]]");
+            writer.AppendLine("Value = \"[2] This is TypeTable3 in ImmutableList\"");
+            writer.AppendLine();
+            writer.AppendLine("[[ImmutableList]]");
+            writer.AppendLine("Value = \"[3] This is TypeTable3 in ImmutableList\"");
+            writer.AppendLine();
+            writer.AppendLine("[[IImmutableList]]");
+            writer.AppendLine("Value = \"[1] This is TypeTable3 in IImmutableList\"");
+            writer.AppendLine();
+            writer.AppendLine("[[IImmutableList]]");
+            writer.AppendLine("Value = \"[2] This is TypeTable3 in IImmutableList\"");
+            writer.AppendLine();
+            writer.AppendLine("[[IImmutableList]]");
+            writer.AppendLine("Value = \"[3] This is TypeTable3 in IImmutableList\"");
+            writer.AppendLine();
+            writer.Flush();
+
+            var expected = buffer.ToArray();
+            bytes.ByteSpan.ToArray().ShouldBe(expected);
+        }
+    }
+
 
     [Fact]
     public void Deserialize()

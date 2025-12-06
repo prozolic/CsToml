@@ -38,7 +38,7 @@ public sealed class IImmutableListFormatter<T> : CollectionBaseFormatter<IImmuta
         if (target is ImmutableArray<T> immArrayTarget)
         {
             var array = ImmutableCollectionsMarshal.AsArray(immArrayTarget);
-            return ArraySerializer<T>.TrySerializeTomlArrayHeaderStyle(ref writer, header, new CollectionContent(target), options);
+            return ArraySerializer<T>.TrySerializeTomlArrayHeaderStyle(ref writer, header, new CollectionContent(array!), options);
         }
         else
         {
