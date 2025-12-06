@@ -441,8 +441,11 @@ In v1.7.4 and later versions, the `NamingConvention` property of `[TomlSerialize
 For example, when `TomlNamingConvention.CamelCase` is set, the property name `MyProperty` is converted to the TOML key `myProperty`.
 This conversion applies to custom types marked with `[TomlSerializedObject]`.
 
+> [!NOTE]
+> From v1.8.0, constructor parameter specification has been removed. It has been replaced with optional properties configurable through option arguments.
+
 ```csharp
-[TomlSerializedObject(TomlNamingConvention.CamelCase)]
+[TomlSerializedObject(NamingConvention = TomlNamingConvention.CamelCase)]
 internal partial class TypeCamelCase
 {
     [TomlValueOnSerialized]
