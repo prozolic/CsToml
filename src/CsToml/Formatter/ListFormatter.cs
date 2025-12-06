@@ -1,7 +1,4 @@
-﻿using CsToml.Error;
-using System.Buffers;
-using System.Runtime.InteropServices;
-using System.Xml.Linq;
+﻿
 
 namespace CsToml.Formatter;
 

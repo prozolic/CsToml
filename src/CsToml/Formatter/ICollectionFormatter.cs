@@ -1,8 +1,4 @@
 ﻿
-using System.Collections.Concurrent;
-using System.Collections.ObjectModel;
-using System.Runtime.InteropServices;
-
 namespace CsToml.Formatter;
 
 public sealed class ICollectionFormatter<T> : CollectionBaseFormatter<ICollection<T>, T, List<T>>

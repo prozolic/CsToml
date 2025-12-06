@@ -1,8 +1,6 @@
 ﻿
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Xml.Linq;
 
 namespace CsToml.Formatter;
 

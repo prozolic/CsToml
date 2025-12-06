@@ -387,7 +387,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                     break;
                 case TomlSerializationKind.TomlSerializedObjectArray:
                 case TomlSerializationKind.TomlSerializedObjectCollection:
-                    GenerateSerializeTomlSerializedObjectArrayPart(builder, member, indent, tableStyleHeader, arrayStyleHeader);
+                    GenerateSerializeTomlSerializedObjectArrayPart(builder, member, indent, arrayStyleHeader);
                     break;
                 case TomlSerializationKind.TypeParameter:
                     GenerateSerializeTypeParameterPart(builder, member, indent);
@@ -396,7 +396,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                     GenerateSerializeNullableStructWithTypeParameterPart(builder, member, indent);
                     break;
                 case TomlSerializationKind.Dictionary:
-                    GenerateSerializeDictionaryPart(builder, member, indent, tableStyleHeader, arrayStyleHeader);
+                    GenerateSerializeDictionaryPart(builder, member, indent, tableStyleHeader);
                     break;
                 case TomlSerializationKind.TomlSerializedObject:
                     GenerateSerializeTomlSerializedObjectPart(builder, member, indent, members.Length == 1);
@@ -480,8 +480,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
         StringBuilder builder,
         TomlValueOnSerializedData tomlValueOnSerializedData,
         string indent,
-        bool tableStyleHeader,
-        bool arrayStyleHeader)
+        bool tableStyleHeader)
     {
         var propertyName = tomlValueOnSerializedData.DefinedName;
         var accessName = tomlValueOnSerializedData.CanAliasName ? tomlValueOnSerializedData.AliasName : propertyName;
@@ -518,7 +517,6 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
         StringBuilder builder,
         TomlValueOnSerializedData tomlValueOnSerializedData,
         string indent,
-        bool tableStyleHeader,
         bool arrayStyleHeader)
     {
         var propertyName = tomlValueOnSerializedData.DefinedName;

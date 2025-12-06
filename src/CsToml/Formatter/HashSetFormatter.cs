@@ -1,7 +1,4 @@
 ﻿
-
-using System.Collections.Frozen;
-
 namespace CsToml.Formatter;
 
 public sealed class HashSetFormatter<T> : CollectionBaseFormatter<HashSet<T>, T, HashSet<T>>
