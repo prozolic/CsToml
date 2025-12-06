@@ -12,24 +12,24 @@ For more information about TOML, visit the official website at [https://toml.io/
 
 ![Parse Toml text](./img/benchmark_parse.png)
 
-> This benchmark parses a string (string) into a TOML object. I used [Tommy](https://github.com/dezhidki/Tommy), [Tomlet](https://github.com/SamboyCoding/Tomlet) and [Tomlyn](https://github.com/xoofx/Tomlyn) for comparison. `CsToml(v1.7.0)` includes additional `UTF8.GetBytes` calls. This benchmark code is [sandbox/Benchmark](https://github.com/prozolic/CsToml/blob/main/sandbox/Benchmark/Benchmark/ParseBenchmark.cs).
+> This benchmark parses a string (string) into a TOML object. I used [Tommy](https://github.com/dezhidki/Tommy), [Tomlet](https://github.com/SamboyCoding/Tomlet) and [Tomlyn](https://github.com/xoofx/Tomlyn) for comparison. `CsToml(v1.8.0)` includes additional `UTF8.GetBytes` calls. This benchmark code is [sandbox/Benchmark](https://github.com/prozolic/CsToml/blob/main/sandbox/Benchmark/Benchmark/ParseBenchmark.cs).
 
 ![Serialize TestTomlSerializedObject (9 values with table and array of tables)](./img/benchmark_serialization.png)
 ![Deserialize TestTomlSerializedObject (9 values with table and array of tables)](./img/benchmark_deserialization.png)
 
-> This benchmark converts custom class to string and string to custom class. I used [Tomlet](https://github.com/SamboyCoding/Tomlet) and [Tomlyn](https://github.com/xoofx/Tomlyn) for comparison. `CsToml(v1.7.0)` includes additional `UTF8.GetBytes` calls. This benchmark code is [sandbox/Benchmark Deserialization](https://github.com/prozolic/CsToml/blob/main/sandbox/Benchmark/Benchmark/ClassDeserializationBenchmark.cs), [sandbox/Benchmark Serialization](https://github.com/prozolic/CsToml/blob/main/sandbox/Benchmark/Benchmark/ClassSerializationBenchmark.cs).
+> This benchmark converts custom class to string and string to custom class. I used [Tomlet](https://github.com/SamboyCoding/Tomlet) and [Tomlyn](https://github.com/xoofx/Tomlyn) for comparison. `CsToml(v1.8.0)` includes additional `UTF8.GetBytes` calls. This benchmark code is [sandbox/Benchmark Deserialization](https://github.com/prozolic/CsToml/blob/main/sandbox/Benchmark/Benchmark/ClassDeserializationBenchmark.cs), [sandbox/Benchmark Serialization](https://github.com/prozolic/CsToml/blob/main/sandbox/Benchmark/Benchmark/ClassSerializationBenchmark.cs).
 
 CsToml has the following features.
 
 - It complies with [TOML v1.0.0](https://toml.io/en/v1.0.0).
-- .NET 8, .NET 9 are supported.
-- Parsing is performed using byte sequence instead of `string`.
-- It is processed byte sequence directly by the API defined in `System.Buffers`(`IBufferWriter<byte>`,`ReadOnlySequence<byte>`), memory allocation is small and fast.
+- .NET 8, .NET 9, .NET 10 are supported.
+- Parsing is performed using byte sequences instead of `string`.
+- Byte sequences are processed directly by the API defined in `System.Buffers`(`IBufferWriter<byte>`,`ReadOnlySequence<byte>`), resulting in small memory allocation and fast performance.
 - Buffers are rented from the pool(`ArrayPool<T>`), reducing the allocation.
-- Core APIs compatible with Native AOT.
-- It supports new features planned for the upcoming TOML v1.1.0 as optional support. 
+- Core APIs are compatible with Native AOT.
+- It supports new features planned for the upcoming TOML v1.1.0 as optional support.
 - CsToml deserializer has been tested using [the standard TOML v1.0.0 test cases](https://github.com/toml-lang/toml-test/tree/master/tests) and all have passed.
-- The serialization interface and implementation is influenced by [MemoryPack](https://github.com/Cysharp/MemoryPack) and [VYaml](https://github.com/hadashiA/VYaml).
+- The serialization interface and implementation are influenced by [MemoryPack](https://github.com/Cysharp/MemoryPack) and [VYaml](https://github.com/hadashiA/VYaml).
 
 Table of Contents
 ---
@@ -55,7 +55,7 @@ Installation
 > [!NOTE]
 > The official release version is v1.1.0 or higher. Less than v1.1.0 is deprecated.
 
-This library is distributed via NuGet. We target .NET 8, .NET 9.  
+This library is distributed via NuGet. We target .NET 8, .NET 9, .NET 10.  
 
 > PM> Install-Package [CsToml](https://www.nuget.org/packages/CsToml/)
 
@@ -118,7 +118,7 @@ public partial class CsTomlClass
     [TomlValueOnSerialized]
     public int[]? Array { get; set; }
 
-    [TomlValueOnSerialized(aliasName: "alias")]
+    [TomlValueOnSerialized(AliasName = "alias")]
     public string? Value { get; set; }
 
     [TomlValueOnSerialized]
@@ -167,10 +167,22 @@ partial class CsTomlClass : ITomlSerializedObject<CsTomlClass?>
     {
         if (!(rootNode.HasValue || rootNode.IsTableHeader)) return default;
 
+        var __Key__RootNode = rootNode[@"Key"u8];
+        var __Key__ = options.Resolver.GetFormatter<string>()!.Deserialize(ref __Key__RootNode, options);
+        var __Number__RootNode = rootNode[@"Number"u8];
+        var __Number__ = options.Resolver.GetFormatter<int?>()!.Deserialize(ref __Number__RootNode, options);
+        var __Value__RootNode = rootNode[@"alias"u8];
+        var __Value__ = options.Resolver.GetFormatter<string>()!.Deserialize(ref __Value__RootNode, options);
+        var __Array__RootNode = rootNode[@"Array"u8];
+        var __Array__ = options.Resolver.GetFormatter<int[]>()!.Deserialize(ref __Array__RootNode, options);
         var __Table__RootNode = rootNode[@"Table"u8];
-        var __Table__ = options.Resolver.GetFormatter<global::ConsoleApp.TableClass>()!.Deserialize(ref __Table__RootNode, options);
+        var __Table__ = options.Resolver.GetFormatter<global::CsToml.Generator.Tests.TableClass>()!.Deserialize(ref __Table__RootNode, options);
 
         var target = new CsTomlClass(){
+            Key = __Key__,
+            Number = __Number__,
+            Value = __Value__,
+            Array = __Array__,
             Table = __Table__,
         };
 
@@ -181,21 +193,112 @@ partial class CsTomlClass : ITomlSerializedObject<CsTomlClass?>
     {
         if (target == null) ThrowIfNull(nameof(target));
 
-        if (options.SerializeOptions.TableStyle == TomlTableStyle.Header && (writer.State == TomlValueState.Default || writer.State == TomlValueState.Table)){
-            writer.WriteTableHeader(@"Table"u8);
-            writer.WriteNewLine();
-            writer.BeginCurrentState(TomlValueState.Table);
-            writer.PushKey(@"Table"u8);
-            options.Resolver.GetFormatter<global::ConsoleApp.TableClass>()!.Serialize(ref writer, target.Table, options);
-            writer.PopKey();
-            writer.EndCurrentState();
+        var lastValue_Key = false;
+        var lastValue_Number = false;
+        var lastValue_Value = false;
+        var lastValue_Array = false;
+        var lastValue_Table = true;
+
+        writer.BeginScope();
+        if (options.SerializeOptions.TableStyle != TomlTableStyle.Header && options.SerializeOptions.ArrayStyle == TomlArrayStyle.Header)
+        {
+            if (target.Key != null || options.SerializeOptions.DefaultNullHandling == TomlNullHandling.Error)
+            {
+                writer.WriteKey(@"Key"u8);
+                writer.WriteEqual();
+                options.Resolver.GetFormatter<string>()!.Serialize(ref writer, target.Key, options);
+                writer.EndKeyValue(lastValue_Key);
+            }
+            if (target.Number != null || options.SerializeOptions.DefaultNullHandling == TomlNullHandling.Error)
+            {
+                writer.WriteKey(@"Number"u8);
+                writer.WriteEqual();
+                options.Resolver.GetFormatter<int?>()!.Serialize(ref writer, target.Number, options);
+                writer.EndKeyValue(lastValue_Number);
+            }
+            if (target.Value != null || options.SerializeOptions.DefaultNullHandling == TomlNullHandling.Error)
+            {
+                writer.WriteKey(@"alias"u8);
+                writer.WriteEqual();
+                options.Resolver.GetFormatter<string>()!.Serialize(ref writer, target.Value, options);
+                writer.EndKeyValue(lastValue_Value);
+            }
+            if (target.Array != null || options.SerializeOptions.DefaultNullHandling == TomlNullHandling.Error)
+            {
+                writer.WriteKey(@"Array"u8);
+                writer.WriteEqual();
+                options.Resolver.GetFormatter<int[]>()!.Serialize(ref writer, target.Array, options);
+                writer.EndKeyValue(lastValue_Array);
+            }
+            if (options.SerializeOptions.TableStyle == TomlTableStyle.Header && (writer.State == TomlValueState.Default || writer.State == TomlValueState.Table)){
+                writer.WriteTableHeader(@"Table"u8);
+                writer.WriteNewLine();
+                writer.BeginCurrentState(TomlValueState.Table);
+                writer.PushKey(@"Table"u8);
+                options.Resolver.GetFormatter<global::CsToml.Generator.Tests.TableClass>()!.Serialize(ref writer, target.Table, options);
+                writer.PopKey();
+                writer.EndCurrentState();
+            }
+            else
+            {
+                writer.WriteKey(@"Table"u8);
+                writer.WriteEqual();
+                writer.BeginCurrentState(TomlValueState.ArrayOfTable);
+                options.Resolver.GetFormatter<global::CsToml.Generator.Tests.TableClass>()!.Serialize(ref writer, target.Table, options);
+                writer.EndCurrentState();
+                writer.EndKeyValue(lastValue_Table);
+            }
         }
         else
         {
-            writer.PushKey(@"Table"u8);
-            options.Resolver.GetFormatter<global::ConsoleApp.TableClass>()!.Serialize(ref writer, target.Table, options);
-            writer.PopKey();
+            if (target.Key != null || options.SerializeOptions.DefaultNullHandling == TomlNullHandling.Error)
+            {
+                writer.WriteKey(@"Key"u8);
+                writer.WriteEqual();
+                options.Resolver.GetFormatter<string>()!.Serialize(ref writer, target.Key, options);
+                writer.EndKeyValue(lastValue_Key);
+            }
+            if (target.Number != null || options.SerializeOptions.DefaultNullHandling == TomlNullHandling.Error)
+            {
+                writer.WriteKey(@"Number"u8);
+                writer.WriteEqual();
+                options.Resolver.GetFormatter<int?>()!.Serialize(ref writer, target.Number, options);
+                writer.EndKeyValue(lastValue_Number);
+            }
+            if (target.Value != null || options.SerializeOptions.DefaultNullHandling == TomlNullHandling.Error)
+            {
+                writer.WriteKey(@"alias"u8);
+                writer.WriteEqual();
+                options.Resolver.GetFormatter<string>()!.Serialize(ref writer, target.Value, options);
+                writer.EndKeyValue(lastValue_Value);
+            }
+            if (target.Array != null || options.SerializeOptions.DefaultNullHandling == TomlNullHandling.Error)
+            {
+                writer.WriteKey(@"Array"u8);
+                writer.WriteEqual();
+                options.Resolver.GetFormatter<int[]>()!.Serialize(ref writer, target.Array, options);
+                writer.EndKeyValue(lastValue_Array);
+            }
+            if (options.SerializeOptions.TableStyle == TomlTableStyle.Header && (writer.State == TomlValueState.Default || writer.State == TomlValueState.Table)){
+                writer.WriteTableHeader(@"Table"u8);
+                writer.WriteNewLine();
+                writer.BeginCurrentState(TomlValueState.Table);
+                writer.PushKey(@"Table"u8);
+                options.Resolver.GetFormatter<global::CsToml.Generator.Tests.TableClass>()!.Serialize(ref writer, target.Table, options);
+                writer.PopKey();
+                writer.EndCurrentState();
+            }
+            else
+            {
+                writer.WriteKey(@"Table"u8);
+                writer.WriteEqual();
+                writer.BeginCurrentState(TomlValueState.ArrayOfTable);
+                options.Resolver.GetFormatter<global::CsToml.Generator.Tests.TableClass>()!.Serialize(ref writer, target.Table, options);
+                writer.EndCurrentState();
+                writer.EndKeyValue(lastValue_Table);
+            }
         }
+        writer.EndScope();
 
         static void ThrowIfNull(string args)
         {
@@ -211,9 +314,9 @@ partial class CsTomlClass : ITomlSerializedObject<CsTomlClass?>
         }
 
         // Register Formatter in advance.
-        if (!TomlValueFormatterResolver.IsRegistered<global::ConsoleApp.TableClass>())
+        if (!TomlValueFormatterResolver.IsRegistered<global::CsToml.Generator.Tests.TableClass>())
         {
-            TomlValueFormatterResolver.Register<global::ConsoleApp.TableClass>();
+            TomlValueFormatterResolver.Register<global::CsToml.Generator.Tests.TableClass>();
         }
 
     }
@@ -267,15 +370,21 @@ partial class TableClass : ITomlSerializedObject<TableClass?>
     {
         if (target == null) ThrowIfNull(nameof(target));
 
+        var lastValue_Key = false;
+        var lastValue_Number = true;
+
         writer.BeginScope();
-        writer.WriteKey(@"Key"u8);
-        writer.WriteEqual();
-        options.Resolver.GetFormatter<string>()!.Serialize(ref writer, target.Key, options);
-        writer.EndKeyValue();
+        if (target.Key != null || options.SerializeOptions.DefaultNullHandling == TomlNullHandling.Error)
+        {
+            writer.WriteKey(@"Key"u8);
+            writer.WriteEqual();
+            options.Resolver.GetFormatter<string>()!.Serialize(ref writer, target.Key, options);
+            writer.EndKeyValue(lastValue_Key);
+        }
         writer.WriteKey(@"Number"u8);
         writer.WriteEqual();
         options.Resolver.GetFormatter<int>()!.Serialize(ref writer, target.Number, options);
-        writer.EndKeyValue(true);
+        writer.EndKeyValue(lastValue_Number);
         writer.EndScope();
 
         static void ThrowIfNull(string args)
@@ -406,13 +515,16 @@ This is serialized as follows:
 Key = "value"
 ```
 
-The key name can also be changed with `[TomlValueOnSerialized(aliasName)]`.  
+The key name can also be changed with `[TomlValueOnSerialized(AliasName = "XXXXXX")]`.
+
+> [!NOTE]
+> From v1.8.0, constructor parameter specification has been removed. It has been replaced with optional properties configurable through option arguments.
 
 ```csharp
 [TomlSerializedObject]
 public partial class CsTomlClass
 {
-    [TomlValueOnSerialized(aliasName: "alias")]
+    [TomlValueOnSerialized(AliasName = "alias")]
     public string Key { get; set; }
 }
 ```
@@ -437,8 +549,11 @@ internal partial class TypeTable(long intValue, string strValue)
 }
 ```
 
-In v1.7.4 and later versions, the `NullHandling` property of `[TomlValueOnSerialized]` can be used to configure how individual properties handle null values for nullable type (nullable reference types or `Nullable<T>`).
+In v1.7.4 and later versions, the `NullHandling` property of `[TomlValueOnSerialized]` can be used to configure how individual properties handle null values for nullable types (nullable reference types or `Nullable<T>`).
 When `TomlNullHandling.Error` is set, serialization throws an error if the property is null. When `TomlNullHandling.Ignore` is set, the property is skipped during serialization if it is null.
+
+> [!NOTE]
+> From v1.8.0, constructor parameter specification has been removed. It has been replaced with optional properties configurable through option arguments.
 
 ```csharp
 [TomlSerializedObject]
@@ -538,7 +653,7 @@ var option = CsTomlSerializerOptions.Default with
 
 #### SerializeOptions.TableStyle
 
-`SerializeOptions.TableStyle` configure whether a custom type with the `[TomlSerializedObject]` attribute or Dictionary class and interface is serialized as TOML table format or TOML inline table format.
+`SerializeOptions.TableStyle` configures whether a custom type with the `[TomlSerializedObject]` attribute or Dictionary class and interface is serialized as TOML table format or TOML inline table format.
 This can be configured by passing `TomlTableStyle.Header` for TOML table format, `TomlTableStyle.Default` or `TomlTableStyle.DottedKey` for TOML inline table format.
 The default value is `TomlTableStyle.Default`.
 
@@ -580,6 +695,56 @@ Number = 123
 [Table]
 Key = "kEY"
 Number = 123
+```
+
+#### SerializeOptions.ArrayStyle
+
+This is an optional feature added from v1.8.0.
+`SerializeOptions.ArrayStyle` configures whether collection types with the `[TomlSerializedObject]` attribute are serialized as TOML array of tables format or TOML inline table format.
+By explicitly setting `TomlArrayStyle.Header`, you can serialize in TOML array of tables format.
+The default value is `TomlArrayStyle.Default`.
+
+For example:
+
+```csharp
+// You can create custom options by using a with expression.
+var option = CsTomlSerializerOptions.Default with
+{
+    SerializeOptions = new SerializeOptions { ArrayStyle = TomlArrayStyle.Header }
+};
+
+var value = new TomlArrayOfTableClass()
+{
+    Name = "TomlArrayOfTableClass",
+    TableClassList = [
+        new TableClass() { Key = "This is table 1", Number = 1 },
+        new TableClass() { Key = "This is table 2", Number = 2 }
+    ]
+};
+
+using var serializedText = CsTomlSerializer.Serialize<TomlArrayOfTableClass>(value, option);
+```
+
+In the case of TomlArrayStyle.Default, serialize as follows.
+
+```toml
+Name = "TomlArrayOfTableClass"
+TableClassList = [ {Key = "This is table 1", Number = 1}, {Key = "This is table 2", Number = 2} ]
+
+```
+
+In the case of TomlArrayStyle.Header, serialize as follows.
+
+```toml
+Name = "TomlArrayOfTableClass"
+[[TableClassList]]
+Key = "This is table 1"
+Number = 1
+
+[[TableClassList]]
+Key = "This is table 2"
+Number = 2
+
 ```
 
 #### SerializeOptions.DefaultNullHandling
@@ -654,7 +819,7 @@ Customize Formatter
 ---
 
 `ITomlValueFormatter<T>` is an interface that customizes the serialization behavior of a particular type.
-If implements `ITomlValueFormatter<T>`, you can configure to use custom type to `[TomlSerializedObject]` properties.  
+When implementing `ITomlValueFormatter<T>`, you can configure custom types for use with `[TomlSerializedObject]` properties.  
 
 For example, `Custom` structure can implement a custom formatter as follows.
 
@@ -882,11 +1047,11 @@ This can be retrieved as follows.
 
 ```csharp
 var document = CsTomlSerializer.Deserialize<TomlDocument>(toml);
-// this[ReadOnlySpan<char> key]
+// this[ReadOnlySpan<byte> key]
 TomlDocumentNode keyNode = document.RootNode["key"u8]; // this is best performance.
 var value = keyNode.GetString(); // value
 
-// this[ReadOnlySpan<byte> key]
+// this[ReadOnlySpan<char> key]
 TomlDocumentNode keyNode = document.RootNode["key"];
 var value = keyNode.GetString(); // value
 ```
@@ -1269,7 +1434,7 @@ public struct TomlDocumentNode
 
 ### Check the TOML type
 
-`TomlDocumentNode.ValueType` is possible to check the TOML type held.
+`TomlDocumentNode.ValueType` can be used to check the TOML type being held.
 
 ```csharp
 public enum TomlValueType

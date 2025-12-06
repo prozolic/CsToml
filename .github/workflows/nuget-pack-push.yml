@@ -23,7 +23,11 @@ jobs:
       - name: Build
         run: dotnet build -c Release
       - name: Pack
-        run: dotnet pack -c Release -o ./publish
+        run: |
+          dotnet pack -c Release -o ./publish ./src/CsToml/CsToml.csproj
+          dotnet pack -c Release -o ./publish ./src/CsToml.Extensions/CsToml.Extensions.csproj
+          dotnet pack -c Release -o ./publish ./src/CsToml.Generator/CsToml.Generator.csproj
+          dotnet pack -c Release -o ./publish ./src/CsToml.Extensions.Configuration/CsToml.Extensions.Configuration.csproj
       - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: nuget
@@ -61,5 +65,4 @@ jobs:
       # upload nuget
       - run: dotnet nuget push "./nuget/*.nupkg" --skip-duplicate -s https://api.nuget.org/v3/index.json -k "${NUGET_KEY}"
         env:
-
           NUGET_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
