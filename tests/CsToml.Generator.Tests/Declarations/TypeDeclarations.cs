@@ -485,6 +485,22 @@ internal partial class TypeArrayOfTable2
 }
 
 [TomlSerializedObject]
+internal partial class TypeArrayOfTable3
+{
+    [TomlValueOnSerialized]
+    public string Name { get; set; }
+
+    [TomlValueOnSerialized]
+    public ImmutableArray<TestStruct2?> TestStructArray { get; set; }
+
+    [TomlValueOnSerialized]
+    public Dictionary<long, string>? Dict { get; set; }
+
+    [TomlValueOnSerialized()]
+    public TestStruct[]? TestStructs { get; set; }
+}
+
+[TomlSerializedObject]
 internal partial class TypeAlias
 {
     [TomlValueOnSerialized(AliasName = "alias")]

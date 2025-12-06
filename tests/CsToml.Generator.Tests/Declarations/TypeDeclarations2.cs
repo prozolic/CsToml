@@ -14,6 +14,19 @@ internal partial struct TestStruct
     public string Str { get; set; }
 }
 
+[TomlSerializedObject]
+internal partial struct TestStruct2
+{
+    [TomlValueOnSerialized]
+    public int Value { get; set; }
+
+    [TomlValueOnSerialized]
+    public string[] Strs { get; set; }
+
+    [TomlValueOnSerialized(NullHandling = TomlNullHandling.Ignore)]
+    public Simple? Simple { get; set; }
+}
+
 
 [TomlSerializedObject]
 internal partial class TypeTable3
