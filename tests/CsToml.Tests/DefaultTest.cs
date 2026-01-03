@@ -1699,7 +1699,7 @@ value2 = ""rofl""
         });
         ex.ParseExceptions!.Count.ShouldBe(8);
 
-        var document = CsTomlSerializer.Deserialize<TomlDocument>(toml, Options.TomlSpecVersion110);
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(toml, Options.AllowUnicodeInBareKeys);
         using var serializeText = CsTomlSerializer.Serialize(document!);
 
         using var buffer = Utf8String.CreateWriter(out var writer);
