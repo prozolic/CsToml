@@ -22,7 +22,7 @@ For more information about TOML, visit the official website at [https://toml.io/
 CsToml has the following features.
 
 - It complies with [TOML v1.0.0](https://toml.io/en/v1.0.0) by default.
-- [TOML v1.1.0](https://toml.io/en/v1.1.0) is also supported as an optional features.
+- [TOML v1.1.0](https://toml.io/en/v1.1.0) is also supported as an optional feature.
 - .NET 8, .NET 9, .NET 10 are supported.
 - Parsing is performed using byte sequences instead of `string`.
 - Byte sequences are processed directly by the API defined in `System.Buffers`(`IBufferWriter<byte>`,`ReadOnlySequence<byte>`), resulting in small memory allocation and fast performance.
