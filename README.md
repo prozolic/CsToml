@@ -21,13 +21,13 @@ For more information about TOML, visit the official website at [https://toml.io/
 
 CsToml has the following features.
 
-- It complies with [TOML v1.0.0](https://toml.io/en/v1.0.0).
+- It complies with [TOML v1.0.0](https://toml.io/en/v1.0.0) by default.
+- [TOML v1.1.0](https://toml.io/en/v1.1.0) is also supported as an optional features.
 - .NET 8, .NET 9, .NET 10 are supported.
 - Parsing is performed using byte sequences instead of `string`.
 - Byte sequences are processed directly by the API defined in `System.Buffers`(`IBufferWriter<byte>`,`ReadOnlySequence<byte>`), resulting in small memory allocation and fast performance.
 - Buffers are rented from the pool(`ArrayPool<T>`), reducing the allocation.
 - Core APIs are compatible with Native AOT.
-- It supports new features planned for the upcoming TOML v1.1.0 as optional support.
 - CsToml deserializer has been tested using [the standard TOML v1.0.0 test cases](https://github.com/toml-lang/toml-test/tree/master/tests) and all have passed.
 - The serialization interface and implementation are influenced by [MemoryPack](https://github.com/Cysharp/MemoryPack) and [VYaml](https://github.com/hadashiA/VYaml).
 
@@ -43,7 +43,8 @@ Table of Contents
 * [Serialize API](#serialize-api)
 * [Other Deserialize/Serialize APIs](#other-deserializeserialize-apis)
 * [TomlDocument class](#tomldocument-class)
-* [Pre-release version features overview](#pre-release-version-features-overview)
+* [TOML v1.1.0 features overview](#toml-v110-features-overview)
+* [Unofficial extension features overview](#unofficial-extension-features-overview)
 * [Extensions (CsToml.Extensions)](#extensions-cstomlextensions)
 * [Microsoft.Extensions.Configuration extensions (CsToml.Extensions.Configuration)](#microsoftextensionsconfiguration-extensions-cstomlextensionsconfiguration)
 * [UnitTest](#unittest)
@@ -1518,21 +1519,23 @@ var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
 var dict = document.ToDictionary<object, object>();
 ```
 
-Pre-release version features overview
+TOML v1.1.0 features overview
 ---
 
-You can use the upcoming features planned for TOML v1.1.0, which has not been officially released yet.
-Each feature can be enabled individually from CsTomlSerializerOptions.Spec.
-
-> [!WARNING]
-> As these are features from an unreleased version, they may be subject to specification changes or deprecation in the future.
+Each feature in TOML v1.1.0 can be enabled individually or by using `TomlSpec.Version110` from `CsTomlSerializerOptions.Spec`.
 
 ```csharp
+// using TomlSpec.Version110
+var v110Options = CsTomlSerializerOptions.Default with
+{
+    Spec = TomlSpec.Version110
+};
+
+// Or enable features individually
 var v110Options = CsTomlSerializerOptions.Default with
 {
     Spec = new ()
     {
-        AllowUnicodeInBareKeys = true,
         AllowNewlinesInInlineTables = true,
         AllowTrailingCommaInInlineTables = true,
         AllowSecondsOmissionInTime = true,
@@ -1540,20 +1543,8 @@ var v110Options = CsTomlSerializerOptions.Default with
         SupportsEscapeSequenceX = true,
     }
 };
+
 var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText, v110Options);
-```
-
-### AllowUnicodeInBareKeys
-
-This feature enables the use of Unicode characters (non-ASCII) in unquoted (bare) keys. This allows you to use characters from non-English scripts directly in key names without requiring quotation marks.  
-For example:
-
-```toml
-€ = 'Euro'
-😂 = ""rofl""
-a‍b = ""zwj""
-ÅÅ = ""U+00C5 U+0041 U+030A""
-あイ宇絵ォ = ""Japanese""
 ```
 
 ### AllowNewlinesInInlineTables
@@ -1604,6 +1595,25 @@ For example:
 
 ```toml
 name = "this is \x43\x73\x54\x6f\x6d\x6c"
+```
+
+Unofficial extension features overview
+---
+
+This is an unofficial extension to the TOML specification and may not be supported by all TOML parsers.
+Each feature can be enabled individually via CsTomlSerializerOptions.Spec.
+
+### AllowUnicodeInBareKeys
+
+This feature enables the use of Unicode characters (non-ASCII) in unquoted (bare) keys. This allows you to use characters from non-English scripts directly in key names without requiring quotation marks.  
+For example:
+
+```toml
+€ = 'Euro'
+😂 = ""rofl""
+a‍b = ""zwj""
+ÅÅ = ""U+00C5 U+0041 U+030A""
+あイ宇絵ォ = ""Japanese""
 ```
 
 Extensions (`CsToml.Extensions`)
