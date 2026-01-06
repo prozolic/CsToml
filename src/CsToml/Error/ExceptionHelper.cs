@@ -399,6 +399,13 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ThrowKeyisNotSpecifiedAfterDot()
+    {
+        ThrowException($@"Key is not specified after dot.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ThrowExponentPartIsUsedAtTheEnd()
     {
         ThrowException($@"Exponent part is used at the end.");

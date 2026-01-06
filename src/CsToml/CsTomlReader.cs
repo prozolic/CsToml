@@ -180,6 +180,10 @@ internal ref struct CsTomlReader
                     dot = false;
                     key.Add(ReadSingleQuoteSingleLineString<TomlLiteralDottedKey>());
                     continue;
+                case TomlCodes.Symbol.NUMBERSIGN:
+                    SkipOneLine();
+                    SkipWhiteSpace();
+                    continue;
                 default:
                     ExceptionHelper.ThrowKeyContainsInvalid(c);
                     break;
@@ -244,6 +248,7 @@ internal ref struct CsTomlReader
                     tableHeaderKey.Add(ReadSingleQuoteSingleLineString<TomlLiteralDottedKey>());
                     continue;
                 case TomlCodes.Symbol.RIGHTSQUAREBRACKET:
+                    if (dot) ExceptionHelper.ThrowKeyisNotSpecifiedAfterDot();
                     closingRightRightSquareBracket = true;
                     Advance(1);
                     goto BREAK; // ]
@@ -304,6 +309,7 @@ internal ref struct CsTomlReader
                     tableHeaderKey.Add(ReadSingleQuoteSingleLineString<TomlLiteralDottedKey>());
                     continue;
                 case TomlCodes.Symbol.RIGHTSQUAREBRACKET:
+                    if (dot) ExceptionHelper.ThrowKeyisNotSpecifiedAfterDot();
                     closingRightRightSquareBracket = true;
                     Advance(1);
                     goto BREAK; // ]
@@ -1410,6 +1416,11 @@ internal ref struct CsTomlReader
                         if (spec.AllowNewlinesInInlineTables) // TOML v1.1.0
                         {
                             SkipWhiteSpaceAndNewLine();
+                            while (TryPeek(out var commentCh) && commentCh == TomlCodes.Symbol.NUMBERSIGN)
+                            {
+                                SkipOneLine();
+                                SkipWhiteSpaceAndNewLine();
+                            }
                         }
                         else
                         {
@@ -1433,6 +1444,11 @@ internal ref struct CsTomlReader
                     if (spec.AllowNewlinesInInlineTables) // TOML v1.1.0
                     {
                         SkipWhiteSpaceAndNewLine();
+                        while (TryPeek(out var commentCh) && commentCh == TomlCodes.Symbol.NUMBERSIGN)
+                        {
+                            SkipOneLine();
+                            SkipWhiteSpaceAndNewLine();
+                        }
                         if (TryPeek(out var ch2) && TomlCodes.IsRightBraces(ch2))
                         {
                             Advance(1);
@@ -2434,11 +2450,15 @@ internal ref struct CsTomlReader
         if (bytes.Length > TomlCodes.DateTime.LocalDateTimeFormatLength)
         {
             if (!TomlCodes.IsDot(Unsafe.Add(ref refBytes, 19))) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
+
+            var dot = true;
             var index = 20;
             while (index < bytes.Length)
             {
                 if (!TomlCodes.IsNumber(Unsafe.Add(ref refBytes, index++))) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
+                dot = false;
             }
+            if (dot) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
         }
 
         return TomlLocalDateTime.Parse(bytes);
@@ -2520,10 +2540,13 @@ internal ref struct CsTomlReader
             {
                 if (!TomlCodes.IsDot(Unsafe.Add(ref refBytes, 5))) ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
                 var index = 6;
+                var dot = true;
                 while (index < bytes.Length)
                 {
                     if (!TomlCodes.IsNumber(Unsafe.Add(ref refBytes, index++))) ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
+                    dot = false;
                 }
+                if (dot) ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
             }
 
             return TomlLocalTime.ParseToOmitSeconds(bytes);
@@ -2559,12 +2582,15 @@ internal ref struct CsTomlReader
             {
                 if (!TomlCodes.IsDot(Unsafe.Add(ref refBytes, 8))) ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
                 var index = 9;
+                var dot = true;
                 while (index < bytes.Length)
                 {
                     if (!TomlCodes.IsNumber(Unsafe.Add(ref refBytes, index++))) ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
+                    dot = false;
                 }
-            }
 
+                if (dot) ExceptionHelper.ThrowIncorrectTomlLocalTimeFormat();
+            }
             return TomlLocalTime.Parse(bytes);
         }
     }
@@ -2599,6 +2625,21 @@ internal ref struct CsTomlReader
         if (!TomlCodes.IsColon( bytes[16])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
         if (!TomlCodes.IsNumber(bytes[17])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
         if (!TomlCodes.IsNumber(bytes[18])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+
+        // YYYY-MM-DDTHH:MM:SS.ssssZ is valid, but YYYY-MM-DDTHH:MM:SS.Z is not.
+        if (TomlCodes.IsDot(bytes[19]))
+        {
+            var index = 20;
+            var dot = true;
+            while (index < bytes.Length - 1)
+            {
+                if (!TomlCodes.IsNumber(bytes[index++]))
+                    ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+
+                dot = false;
+            }
+            if (dot) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        }
 
         return TomlOffsetDateTime.Parse(bytes);
     }
