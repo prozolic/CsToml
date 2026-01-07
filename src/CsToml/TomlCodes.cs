@@ -255,16 +255,8 @@ internal static class TomlCodes
         => IsCr(rawByte) || IsLf(rawByte);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static bool IsKeySymbol(byte rawByte)
-        => IsUnderScore(rawByte) || IsDash(rawByte);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsUnderScore(byte rawByte)
         => rawByte == Symbol.UNDERSCORE;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static bool IsDash(byte rawByte)
-        => rawByte == Symbol.DASH;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsDoubleQuoted(byte rawByte)
@@ -275,20 +267,12 @@ internal static class TomlCodes
         => rawByte == Symbol.SINGLEQUOTED;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static bool IsQuoted(byte rawByte)
-        => IsDoubleQuoted(rawByte) || IsSingleQuoted(rawByte);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsLeftSquareBrackets(byte rawByte)
         => rawByte == Symbol.LEFTSQUAREBRACKET;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsRightSquareBrackets(byte rawByte)
         => rawByte == Symbol.RIGHTSQUAREBRACKET;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static bool IsLeftBraces(byte rawByte)
-        => rawByte == Symbol.LEFTBRACES;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsRightBraces(byte rawByte)
@@ -301,10 +285,6 @@ internal static class TomlCodes
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsWhiteSpace(byte rawByte)
         => rawByte == Symbol.SPACE;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static bool IsEqual(byte rawByte)
-        => rawByte == Symbol.EQUAL;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsNumber(byte rawByte)
@@ -485,56 +465,6 @@ internal static class TomlCodes
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static bool IsUpperAlphabet(byte rawByte)
-    {
-        ReadOnlySpan<bool> upperAlphabetTable =
-        [
-            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x00 - 0x0f
-            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x10 - 0x1f
-            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x20 - 0x2f
-            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x30 - 0x3f
-            false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,                // 0x40 - 0x4f
-            true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false,            // 0x50 - 0x5f
-            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x60 - 0x6f
-            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x70 - 0x7f
-            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x80 - 0x8f
-            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x90 - 0x9f
-            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xa0 - 0xaf
-            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xb0 - 0xbf
-            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xc0 - 0xcf
-            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xd0 - 0xdf
-            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
-            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
-        ];
-        return upperAlphabetTable[rawByte];
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static bool IsLowerAlphabet(byte rawByte)
-    {
-        ReadOnlySpan<bool> lowerAlphabetTable =
-        [
-            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x00 - 0x0f
-            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x10 - 0x1f
-            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x20 - 0x2f
-            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x30 - 0x3f
-            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x40 - 0x4f
-            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x50 - 0x5f
-            false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,                // 0x60 - 0x6f
-            true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false,            // 0x70 - 0x7f
-            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x80 - 0x8f
-            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0x90 - 0x9f
-            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xa0 - 0xaf
-            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xb0 - 0xbf
-            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xc0 - 0xcf
-            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xd0 - 0xdf
-            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
-            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
-        ];
-        return lowerAlphabetTable[rawByte];
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsPlusSign(byte rawByte)
         => rawByte == Symbol.PLUS;
 
@@ -561,10 +491,6 @@ internal static class TomlCodes
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsDot(byte rawByte)
         => rawByte == Symbol.DOT;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static bool IsExpSymbol(byte rawByte)
-        => rawByte == Alphabet.e || rawByte == Alphabet.E;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsComma(byte rawByte)
