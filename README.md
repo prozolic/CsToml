@@ -28,7 +28,7 @@ CsToml has the following features.
 - Byte sequences are processed directly by the API defined in `System.Buffers`(`IBufferWriter<byte>`,`ReadOnlySequence<byte>`), resulting in small memory allocation and fast performance.
 - Buffers are rented from the pool(`ArrayPool<T>`), reducing the allocation.
 - Core APIs are compatible with Native AOT.
-- CsToml deserializer has been tested using [the standard TOML v1.0.0 test cases](https://github.com/toml-lang/toml-test/tree/master/tests) and all have passed.
+- Deserialization has been tested using [the standard TOML v1.0.0 test cases and v1.1.0 test cases](https://github.com/toml-lang/toml-test/tree/master/tests) and all have passed.
 - The serialization interface and implementation are influenced by [MemoryPack](https://github.com/Cysharp/MemoryPack) and [VYaml](https://github.com/hadashiA/VYaml).
 
 Table of Contents
@@ -1600,8 +1600,8 @@ name = "this is \x43\x73\x54\x6f\x6d\x6c"
 Unofficial extension features overview
 ---
 
-This is an unofficial extension to the TOML specification and may not be supported by all TOML parsers.
-Each feature can be enabled individually via CsTomlSerializerOptions.Spec.
+This is an *unofficial extension* to the TOML specification and may not be supported by all TOML parsers.
+Each feature can be enabled individually via `CsTomlSerializerOptions.Spec`.
 
 ### AllowUnicodeInBareKeys
 
@@ -1676,6 +1676,7 @@ UnitTest
 ---
 
 Please note that we are using the TOML files located in the ['tests/' directory of the ‘toml-test repository (MIT License)’](https://github.com/toml-lang/toml-test/tree/master/tests) for some of our unit tests.
+The location is [here](https://github.com/prozolic/CsToml/tree/main/tests/CsToml.Tests/toml-test).
 
 License
 ---
