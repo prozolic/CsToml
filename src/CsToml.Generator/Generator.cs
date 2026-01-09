@@ -743,7 +743,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                         if (FormatterTypeMetaData.TryGetGenericFormatterType(typeSymbol.ToFullFormatString(), out var typeFormatter) != GenericFormatterType.None)
                         {
                             var typeParameters = string.Join(",", namedTypeSymbol.TypeArguments.Select(x => x.ToFullFormatString()));
-                            typeFormatter = typeFormatter.Replace("TYPEPARAMETER", typeParameters);
+                            typeFormatter = typeFormatter!.Replace("TYPEPARAMETER", typeParameters);
 
                             builder.AppendLine($$"""
         if (!TomlValueFormatterResolver.IsRegistered<{{fullTypeName}}>())
@@ -821,7 +821,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
                         if (FormatterTypeMetaData.TryGetGenericFormatterType(typeSymbol.ToFullFormatString(), out var typeFormatter) != GenericFormatterType.None)
                         {
                             var typeParameters = string.Join(",", namedTypeSymbol2.TypeArguments.Select(x => x.ToFullFormatString()));
-                            typeFormatter = typeFormatter.Replace("TYPEPARAMETER", typeParameters);
+                            typeFormatter = typeFormatter!.Replace("TYPEPARAMETER", typeParameters);
 
                             builder.AppendLine($$"""
         if (!TomlValueFormatterResolver.IsRegistered<{{fullTypeName}}>())

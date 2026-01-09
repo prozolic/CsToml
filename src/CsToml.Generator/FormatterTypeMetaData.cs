@@ -207,7 +207,7 @@ internal static class FormatterTypeMetaData
         return TryGetGenericFormatterType(formatterTypeString, out formatter);
     }
 
-    public static GenericFormatterType TryGetGenericFormatterType(string formatterType, out string formatter)
+    public static GenericFormatterType TryGetGenericFormatterType(string formatterType, out string? formatter)
     {
         if (builtInCollectionFormatterTypes.TryGetValue(formatterType, out formatter))
         {
