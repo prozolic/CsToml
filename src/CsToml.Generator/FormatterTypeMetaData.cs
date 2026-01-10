@@ -35,6 +35,11 @@ internal static class FormatterTypeMetaData
         { "global::System.Collections.Immutable.ImmutableHashSet<>", "ImmutableHashSetFormatter<TYPEPARAMETER>" },
         { "global::System.Collections.Immutable.ImmutableSortedSet<>", "ImmutableSortedSetFormatter<TYPEPARAMETER>" },
 
+        { "global::System.Collections.Frozen.FrozenSet<>", "FrozenSetFormatter<TYPEPARAMETER>" },
+    };
+
+    private static readonly Dictionary<string, string> builtInInterfaceCollectionFormatterTypes = new()
+    {
         { "global::System.Collections.Generic.IEnumerable<>", "IEnumerableFormatter<TYPEPARAMETER>" },
         { "global::System.Collections.Generic.ICollection<>", "ICollectionFormatter<TYPEPARAMETER>" },
         { "global::System.Collections.Generic.IReadOnlyCollection<>", "IReadOnlyCollectionFormatter<TYPEPARAMETER>" },
@@ -49,8 +54,6 @@ internal static class FormatterTypeMetaData
         { "global::System.Collections.Immutable.IImmutableStack<>", "IImmutableStackFormatter<TYPEPARAMETER>" },
         { "global::System.Collections.Immutable.IImmutableQueue<>", "IImmutableQueueFormatter<TYPEPARAMETER>" },
         { "global::System.Collections.Immutable.IImmutableSet<>", "IImmutableSetFormatter<TYPEPARAMETER>" },
-
-        { "global::System.Collections.Frozen.FrozenSet<>", "FrozenSetFormatter<TYPEPARAMETER>" },
     };
 
     private static readonly Dictionary<string, string> builtInDictionaryFormatterTypes = new()
@@ -158,7 +161,21 @@ internal static class FormatterTypeMetaData
             return false;
 
         var collectionType = nameType.ConstructUnboundGenericType();
-        return builtInCollectionFormatterTypes.TryGetValue(collectionType.ToFullFormatString(), out _);
+        var fullTypeString = collectionType.ToFullFormatString();
+        return builtInCollectionFormatterTypes.TryGetValue(fullTypeString, out _) ||
+               builtInInterfaceCollectionFormatterTypes.TryGetValue(fullTypeString, out _);
+    }
+
+    public static bool ContainsCollectionInterfaceType(ITypeSymbol type)
+    {
+        if (type is not INamedTypeSymbol nameType)
+            return false;
+        if (!nameType.IsGenericType)
+            return false;
+
+        var collectionType = nameType.ConstructUnboundGenericType();
+        var fullTypeString = collectionType.ToFullFormatString();
+        return builtInInterfaceCollectionFormatterTypes.TryGetValue(fullTypeString, out _);
     }
 
     public static bool ContainsCollectionAny(ITypeSymbol type)
@@ -207,9 +224,14 @@ internal static class FormatterTypeMetaData
         return TryGetGenericFormatterType(formatterTypeString, out formatter);
     }
 
-    public static GenericFormatterType TryGetGenericFormatterType(string formatterType, out string formatter)
+    public static GenericFormatterType TryGetGenericFormatterType(string formatterType, out string? formatter)
     {
         if (builtInCollectionFormatterTypes.TryGetValue(formatterType, out formatter))
+        {
+            return GenericFormatterType.Collection;
+        }
+
+        if (builtInInterfaceCollectionFormatterTypes.TryGetValue(formatterType, out formatter))
         {
             return GenericFormatterType.Collection;
         }

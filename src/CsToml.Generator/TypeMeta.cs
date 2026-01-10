@@ -219,6 +219,14 @@ internal sealed class TypeMeta
                 SearchTypeSymbol(typesymbols, propetryParameter.Symbol.Type);
             }
         }
+
+        foreach (var i in rootTypeSymbol.AllInterfaces.Where(i => i is { DeclaredAccessibility: Accessibility.Public, IsGenericType: true }))
+        {
+            if (!typesymbols.Contains(i) && FormatterTypeMetaData.ContainsCollectionInterfaceType(i))
+            {
+                SearchTypeSymbol(typesymbols, i);
+            }
+        }
     }
 }
 

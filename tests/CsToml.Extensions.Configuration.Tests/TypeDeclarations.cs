@@ -12,7 +12,7 @@ public record Test
     public DateTime Ldt2 { get; init; }
     public DateOnly Ld1 { get; init; }
     public TimeOnly Lt1 { get; init; }
-    public int[] Integers { get; init; }
+    public int[]? Integers { get; init; }
     public Table? Table { get; init; }
     public Dictionary<string, Fruit>? Fruit { get; init; }
     public List<Product>? Products { get; init; }

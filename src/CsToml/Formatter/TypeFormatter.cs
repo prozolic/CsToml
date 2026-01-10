@@ -1,5 +1,6 @@
 ﻿using CsToml.Error;
 using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 
 namespace CsToml.Formatter;
 
@@ -7,6 +8,8 @@ public sealed class TypeFormatter : ITomlValueFormatter<Type?>
 {
     public static readonly TypeFormatter Instance = new TypeFormatter();
 
+    [UnconditionalSuppressMessage("AotAnalysis", "IL2057",
+        Justification = "If type can be determined completely statically, it can be obtained using Type.GetType.")]
     public Type? Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
         if (!rootNode.HasValue)

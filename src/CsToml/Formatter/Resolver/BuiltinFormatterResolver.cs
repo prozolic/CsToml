@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Frozen;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -107,6 +108,8 @@ internal sealed class BuiltinFormatterResolver : ITomlValueFormatterResolver
     {
         public static ITomlValueFormatter<T>? Formatter = default!;
 
+        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2091",
+            Justification = "GeneratedFormatterCache is best effort when it comes to available information.")]
         static GeneratedFormatterCache()
         {
             if (CacheCheck<T>.Registered) return;
@@ -353,20 +356,38 @@ internal sealed class BuiltinFormatterResolver : ITomlValueFormatterResolver
         CacheCheck<IDictionary<object, object?>>.Registered = true;
     }
 
-    private static object? GetEnumFormatter<T>()
+    [UnconditionalSuppressMessage("AotAnalysis", "IL3050",
+        Justification = "When using a generator, it's fine to return null.")]
+    private static object? GetEnumFormatter<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)] T>()
     {
+        if (!RuntimeFeature.IsDynamicCodeCompiled)
+        {
+            return null;
+        }
         var enumFormatterType = typeof(EnumFormatter<>).MakeGenericType(typeof(T));
         return Activator.CreateInstance(enumFormatterType);
     }
 
+    [UnconditionalSuppressMessage("AotAnalysis", "IL3050",
+        Justification = "When using a generator, it's fine to return null.")]
     private static object? GetArrayFormatter<T>()
     {
+        if (!RuntimeFeature.IsDynamicCodeCompiled)
+        {
+            return null;
+        }
         var arrayFormatterType = typeof(ArrayFormatter<>).MakeGenericType(typeof(T).GetElementType()!);
         return Activator.CreateInstance(arrayFormatterType);
     }
 
+    [UnconditionalSuppressMessage("AotAnalysis", "IL3050",
+        Justification = "When using a generator, it's fine to return null.")]
     private static object? GetGenericTypeFormatter<T>()
     {
+        if (!RuntimeFeature.IsDynamicCodeCompiled)
+        {
+            return null;
+        }
         var type = typeof(T);
         var genericTypeDefinition = type.GetGenericTypeDefinition();
 
