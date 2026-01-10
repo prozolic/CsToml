@@ -1,4 +1,5 @@
 ﻿using CsToml.Error;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
@@ -17,6 +18,8 @@ internal sealed class TomlSerializedObjectFormatterResolver : ITomlValueFormatte
     {
         public static ITomlValueFormatter<T>? Formatter;
 
+        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2090",
+            Justification = "If T implements CsToml.ITomlSerializedObjectRegister.Register, it is executable.")]
         static Cache()
         {
             if (CacheCheck<T>.Registered) return;

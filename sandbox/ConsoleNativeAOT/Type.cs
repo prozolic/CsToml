@@ -13,6 +13,24 @@ public enum Color
     Blue
 }
 
+[TomlSerializedObject]
+internal partial class TypeLinqInterface
+{
+    [TomlValueOnSerialized]
+    public ILookup<string, KeyValuePair<int, string>> Lookup { get; set; }
+
+    [TomlValueOnSerialized]
+    public ILookup<string, KeyValuePair<int, TestStruct>> Lookup2 { get; set; }
+
+    [TomlValueOnSerialized]
+    public IGrouping<string, KeyValuePair<int, string>> Grouping { get; set; }
+
+    [TomlValueOnSerialized]
+    public IGrouping<string, KeyValuePair<int, TestStruct>> Grouping2 { get; set; }
+}
+
+
+
 public partial struct TestStruct2
 {
     public long Value { get; set; }

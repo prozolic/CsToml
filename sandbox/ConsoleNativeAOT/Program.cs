@@ -1,11 +1,28 @@
-﻿using CsToml;
+﻿using ConsoleNativeAOT;
+using CsToml;
 using CsToml.Formatter;
 using CsToml.Formatter.Resolver;
-using System.Buffers;
-using System.Text;
-using ConsoleNativeAOT;
 using CsToml.Values;
+using System;
+using System.Buffers;
 using System.Collections.Immutable;
+using System.IO;
+using System.Text;
+using System.Xml.Linq;
+
+
+var toml = @"
+foo = 1997-09-09T09:09:09
+key = ""value""
+key2 = 12345
+"u8;
+
+var settings = CsTomlSerializer.Deserialize<TomlDocument>(toml);
+var result = CsTomlSerializer.Serialize(settings);
+
+//var doc = CsTomlSerializer.Deserialize<Character>(question, null); // Returns a valid Character, with null values
+//var doc2 = CsTomlSerializer.Deserialize<Character[]>(question, null); // Throws an exception, but ParseExceptions is empty
+//var doc3 = CsTomlSerializer.Deserialize<TomlDocument>(question, null); // Works, has a single node inside, but I cannot figure how to 'cast' to a Character[]
 
 Console.WriteLine("Hello, World!");
 
@@ -212,6 +229,30 @@ Console.WriteLine($"{nameof(typeImmutable2.IImmutableList)}.Count = {typeImmutab
 Console.WriteLine($"{nameof(typeImmutable2.IImmutableList)}[0] = {typeImmutable2.IImmutableList[0].Value}");
 Console.WriteLine($"{nameof(typeImmutable2.IImmutableList)}[1] = {typeImmutable2.IImmutableList[1].Value}");
 Console.WriteLine($"{nameof(typeImmutable2.IImmutableList)}[2] = {typeImmutable2.IImmutableList[2].Value}");
+
+var dict = new Dictionary<int, string>()
+{
+    [1] = "1",
+    [2] = "1",
+    [3] = "3",
+};
+var dict2 = new Dictionary<int, TestStruct>()
+{
+    [1] = new() { Value = 123, Str = "123" },
+    [2] = new() { Value = 123, Str = "123" },
+    [3] = new() { Value = 789, Str = "789" },
+};
+var typeLinqInterface = new TypeLinqInterface()
+{
+    Lookup = dict.ToLookup(p => p.Value),
+    Lookup2 = dict2.ToLookup(p => p.Value.Str),
+    Grouping = dict.GroupBy(p => p.Value).First(),
+    Grouping2 = dict2.ToLookup(p => p.Value.Str).First(),
+};
+using var bytesForTypeLinqInterface = CsTomlSerializer.Serialize(typeLinqInterface);
+var typeLinqInterfaceSerialized = CsTomlSerializer.Deserialize<TypeLinqInterface>(bytesForTypeLinqInterface.ByteSpan);
+
+Console.WriteLine(Encoding.UTF8.GetString(bytesForTypeLinqInterface.ByteSpan));
 
 Console.WriteLine("END!");
 

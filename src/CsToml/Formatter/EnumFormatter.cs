@@ -1,11 +1,12 @@
 ﻿using CsToml.Error;
 using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.Serialization;
 
 namespace CsToml.Formatter;
 
-public sealed class EnumFormatter<TEnum> : ITomlValueFormatter<TEnum>
+public sealed class EnumFormatter<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)] TEnum> : ITomlValueFormatter<TEnum>
     where TEnum : Enum
 {
     private static readonly Dictionary<TEnum, string>? SerializedEnumTable;
