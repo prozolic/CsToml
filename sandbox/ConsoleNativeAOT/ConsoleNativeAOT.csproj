@@ -10,7 +10,7 @@
 
     <!-- AOT Options -->
     <!-- https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/ -->
-    <publishaot>true</publishaot>
+    <PublishAot>true</PublishAot>
     <!--<selfcontained>true</selfcontained>
     <ilcoptimizationpreference>speed</ilcoptimizationpreference>
     <ilcoptimizationpreference>size</ilcoptimizationpreference>
