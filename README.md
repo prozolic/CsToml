@@ -1,4 +1,4 @@
-﻿[CsToml - TOML Parser/Serializer  for .NET](https://prozolic.github.io/CsToml)
+﻿CsToml - TOML Parser/Serializer  for .NET
 ===
 
 [![MIT License](https://img.shields.io/github/license/prozolic/CsToml)](LICENSE)
@@ -177,7 +177,7 @@ partial class CsTomlClass : ITomlSerializedObject<CsTomlClass?>
         var __Array__RootNode = rootNode[@"Array"u8];
         var __Array__ = options.Resolver.GetFormatter<int[]>()!.Deserialize(ref __Array__RootNode, options);
         var __Table__RootNode = rootNode[@"Table"u8];
-        var __Table__ = options.Resolver.GetFormatter<global::CsToml.Generator.Tests.TableClass>()!.Deserialize(ref __Table__RootNode, options);
+        var __Table__ = options.Resolver.GetFormatter<global::ConsoleApp.TableClass>()!.Deserialize(ref __Table__RootNode, options);
 
         var target = new CsTomlClass(){
             Key = __Key__,
@@ -236,7 +236,7 @@ partial class CsTomlClass : ITomlSerializedObject<CsTomlClass?>
                 writer.WriteNewLine();
                 writer.BeginCurrentState(TomlValueState.Table);
                 writer.PushKey(@"Table"u8);
-                options.Resolver.GetFormatter<global::CsToml.Generator.Tests.TableClass>()!.Serialize(ref writer, target.Table, options);
+                options.Resolver.GetFormatter<global::ConsoleApp.TableClass>()!.Serialize(ref writer, target.Table, options);
                 writer.PopKey();
                 writer.EndCurrentState();
             }
@@ -245,7 +245,7 @@ partial class CsTomlClass : ITomlSerializedObject<CsTomlClass?>
                 writer.WriteKey(@"Table"u8);
                 writer.WriteEqual();
                 writer.BeginCurrentState(TomlValueState.ArrayOfTable);
-                options.Resolver.GetFormatter<global::CsToml.Generator.Tests.TableClass>()!.Serialize(ref writer, target.Table, options);
+                options.Resolver.GetFormatter<global::ConsoleApp.TableClass>()!.Serialize(ref writer, target.Table, options);
                 writer.EndCurrentState();
                 writer.EndKeyValue(lastValue_Table);
             }
@@ -285,7 +285,7 @@ partial class CsTomlClass : ITomlSerializedObject<CsTomlClass?>
                 writer.WriteNewLine();
                 writer.BeginCurrentState(TomlValueState.Table);
                 writer.PushKey(@"Table"u8);
-                options.Resolver.GetFormatter<global::CsToml.Generator.Tests.TableClass>()!.Serialize(ref writer, target.Table, options);
+                options.Resolver.GetFormatter<global::ConsoleApp.TableClass>()!.Serialize(ref writer, target.Table, options);
                 writer.PopKey();
                 writer.EndCurrentState();
             }
@@ -294,7 +294,7 @@ partial class CsTomlClass : ITomlSerializedObject<CsTomlClass?>
                 writer.WriteKey(@"Table"u8);
                 writer.WriteEqual();
                 writer.BeginCurrentState(TomlValueState.ArrayOfTable);
-                options.Resolver.GetFormatter<global::CsToml.Generator.Tests.TableClass>()!.Serialize(ref writer, target.Table, options);
+                options.Resolver.GetFormatter<global::ConsoleApp.TableClass>()!.Serialize(ref writer, target.Table, options);
                 writer.EndCurrentState();
                 writer.EndKeyValue(lastValue_Table);
             }
@@ -315,9 +315,9 @@ partial class CsTomlClass : ITomlSerializedObject<CsTomlClass?>
         }
 
         // Register Formatter in advance.
-        if (!TomlValueFormatterResolver.IsRegistered<global::CsToml.Generator.Tests.TableClass>())
+        if (!TomlValueFormatterResolver.IsRegistered<global::ConsoleApp.TableClass>())
         {
-            TomlValueFormatterResolver.Register<global::CsToml.Generator.Tests.TableClass>();
+            TomlValueFormatterResolver.Register<global::ConsoleApp.TableClass>();
         }
 
     }
@@ -795,8 +795,8 @@ var serializedTomlText = Encoding.UTF8.GetString(serializedText.ByteSpan);
 
 #### Spec
 
-`Spec` can enable features in Pre-release version features.
-For more information, please click [Pre-release version features overview](#pre-release-version-features-overview).
+`Spec` can enable features in TOML v1.1.0.
+For more information, please click [TOML v1.1.0 features overview](#toml-v110-features-overview).
 
 Built-in support type
 ---
@@ -1023,7 +1023,7 @@ using var serializedTomlValue1 = CsTomlSerializer.SerializeValueType(tomlIntValu
 // 1234
 using var serializedTomlValue2 = CsTomlSerializer.SerializeValueType(tomlStringValue);
 // "abc"
-using var serializedTomlValue3 = CsTomlSerializer.SerializeValueType(tomlDateTimeValue);
+using var serializedTomlValue3 = CsTomlSerializer.SerializeValueType(tomlDateTimeOffsetValue);
 // 2024-10-20T15:16:00
 using var serializedTomlValue4 = CsTomlSerializer.SerializeValueType(tomlArrayValue);
 // [ "red", "yellow", "green" ]
@@ -1037,7 +1037,7 @@ using var serializedTomlValue6 = CsTomlSerializer.SerializeValueType(tomlTupleVa
 ---
 
 Use `TomlDocument` when parsing with the TOML structure preserved.  
-It can get the TOML value by specifying the indexer in the `TomlDocumentNode.RootNode` property.
+It can get the TOML value by specifying the indexer in the `TomlDocument.RootNode` property.
 
 ### Key/Value Pair
 
@@ -1340,7 +1340,7 @@ var value = document.RootNode["table"u8]["key"u8].GetString(); // tablevalue
 For example:
 
 ```TOML
-key = { int = 123, type.name = ""inline table"" }
+key = { int = 123, type.name = "inline table" }
 ```
 
 the key/values of that table can also be retrieved as follows.
@@ -1383,8 +1383,8 @@ var arrayIndex2 = document.RootNode["array"u8]["of"u8]["tables"u8][2]["array"u8]
 ### Complex samples.
 
 ```TOML
-dotted.keys = ""value""
-configurations = [1, {key = [ { key2 = [""VALUE""]}]}]
+dotted.keys = "value"
+configurations = [1, {key = [ { key2 = ["VALUE"]}]}]
 ```
 
 ```csharp
@@ -1465,7 +1465,7 @@ public enum TomlValueType
 The type that can be specified for `T` is [Built-in support type](#built-in-support-type).
 
 ```TOML
-key = ""https://github.com/prozolic/CsToml""
+key = "https://github.com/prozolic/CsToml"
 ```
 
 ```csharp
@@ -1554,8 +1554,8 @@ For example:
 
 ```toml
 name = { 
-    first = ""CsToml"", 
-    last = ""prozolic"" }
+    first = "CsToml", 
+    last = "prozolic" }
 ```
 
 ### AllowTrailingCommaInInlineTables
@@ -1564,7 +1564,7 @@ This feature supports an optional trailing comma after the last key/value pair i
 For example:
 
 ```toml
-name = {  first = ""CsToml"",  last = ""prozolic"", }
+name = {  first = "CsToml",  last = "prozolic", }
 ```
 
 ### AllowSecondsOmissionInTime
