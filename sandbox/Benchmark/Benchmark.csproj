@@ -8,6 +8,13 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)'=='NuGetCsToml'">
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <DefineConstants>RELEASE;TRACE</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <None Remove="Toml\test.toml" />
   </ItemGroup>
@@ -25,13 +32,26 @@
     <PackageReference Include="Tommy" Version="3.1.2" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\CsToml.Extensions\CsToml.Extensions.csproj" />
-    <ProjectReference Include="..\..\src\CsToml\CsToml.csproj" />
-    <ProjectReference Include="..\..\src\CsToml.Generator\CsToml.Generator.csproj">
-      <OutputItemType>Analyzer</OutputItemType>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-  </ItemGroup>
-
+  <Choose>
+    <When Condition="'$(Configuration)'=='NuGetCsToml'">
+      <ItemGroup>
+        <PackageReference Include="CsToml" Version="1.8.1" />
+        <PackageReference Include="CsToml.Extensions" Version="1.8.1" />
+        <PackageReference Include="CsToml.Generator" Version="1.8.1">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <ProjectReference Include="..\..\src\CsToml.Extensions\CsToml.Extensions.csproj" />
+        <ProjectReference Include="..\..\src\CsToml\CsToml.csproj" />
+        <ProjectReference Include="..\..\src\CsToml.Generator\CsToml.Generator.csproj">
+          <OutputItemType>Analyzer</OutputItemType>
+          <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+        </ProjectReference>
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
 </Project>

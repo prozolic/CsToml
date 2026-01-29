@@ -28,16 +28,6 @@ internal class BenchmarkConfig : ManualConfig
         AddValidator(DefaultConfig.Instance.GetValidators().ToArray());
         AddLogger(ConsoleLogger.Default);
 
-        // .NET 10.0 as default.
-        AddJob(Job.ShortRun
-            .WithStrategy(RunStrategy.Throughput)
-            .DontEnforcePowerPlan()
-            .WithToolchain(CsProjCoreToolchain.NetCoreApp10_0)
-            .WithId($"Benchmark{CsProjCoreToolchain.NetCoreApp10_0.Name}"));
-    }
-
-    public BenchmarkConfig AddTargetFramework()
-    {
         // Add .NET 8.0
         AddJob(Job.ShortRun
             .WithStrategy(RunStrategy.Throughput)
@@ -52,7 +42,20 @@ internal class BenchmarkConfig : ManualConfig
             .WithToolchain(CsProjCoreToolchain.NetCoreApp90)
             .WithId($"Benchmark{CsProjCoreToolchain.NetCoreApp90.Name}"));
 
-        return this;
+        // .NET 10.0 as default.
+        AddJob(Job.ShortRun
+            .WithStrategy(RunStrategy.Throughput)
+            .DontEnforcePowerPlan()
+            .WithToolchain(CsProjCoreToolchain.NetCoreApp10_0)
+            .WithId($"Benchmark{CsProjCoreToolchain.NetCoreApp10_0.Name}"));
+
+        // NuGet version
+        AddJob(Job.ShortRun
+            .WithStrategy(RunStrategy.Throughput)
+            .DontEnforcePowerPlan()
+            .WithToolchain(CsProjCoreToolchain.NetCoreApp10_0)
+            .WithCustomBuildConfiguration("NuGetCsToml")
+            .WithId("NuGetCsToml"));
     }
 
 }
