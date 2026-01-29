@@ -49,7 +49,7 @@ internal class BenchmarkConfig : ManualConfig
             .WithToolchain(CsProjCoreToolchain.NetCoreApp10_0)
             .WithId($"Benchmark{CsProjCoreToolchain.NetCoreApp10_0.Name}"));
 
-        // Nuget version
+        // NuGet version
         AddJob(Job.ShortRun
             .WithStrategy(RunStrategy.Throughput)
             .DontEnforcePowerPlan()
