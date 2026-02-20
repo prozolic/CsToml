@@ -263,7 +263,8 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
                 }
                 writer.Advance(bytesWritten);
 
-                // If it is an integer, it will be output in exponential notation, so add .0 to the end.
+                // If the formatted value has no decimal point or exponent (i.e., looks like an integer),
+                // append .0 so that it is represented as a valid TOML float rather than an integer.
                 if (!writtenSpan.Slice(0, bytesWritten).ContainsAny(ExponentialBytes))
                 {
                     var writtenSpanEx = writer.GetWrittenSpan(2);
