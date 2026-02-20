@@ -3,7 +3,7 @@ using CsToml;
 using System.Buffers;
 using System.Text;
 
-namespace Benchmark.Benchmark;
+namespace Benchmark;
 
 public class Utf8TomlDocumentWriterBenchmark
 {
