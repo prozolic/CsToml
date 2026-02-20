@@ -198,24 +198,26 @@ internal sealed class TomlTableNode
             getOrAddChildNode = Empty;
             return NodeStatus.Empty;
         }
-        if (nodes.TryGetValueOrAdd(key, out var existingNode, out var newNode))
+
+        var result = nodes.GetOrAddIfNotFound(key);
+        if (result.IsExistingValueFound)
         {
-            getOrAddChildNode = existingNode!;
+            getOrAddChildNode = result.ExistingValue!;
             return NodeStatus.Existed;
         }
 
-        getOrAddChildNode = newNode!;
+
+        getOrAddChildNode = result.AddedValue!;
         return NodeStatus.NewAdd;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal bool TryGetChildNode(ReadOnlySpan<byte> key, out TomlTableNode? childNode)
     {
-        var nodes = this.nodes;
-        if (Value is TomlInlineTable t)
-        {
-            nodes = t.RootNode.nodes;
-        }
+        TomlTableNodeDictionary? nodes =
+            Value is TomlInlineTable inlineTable ?
+            inlineTable.RootNode.nodes :
+            this.nodes;
 
         if (nodes == null)
         {

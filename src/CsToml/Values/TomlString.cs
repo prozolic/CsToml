@@ -138,44 +138,58 @@ internal sealed class TomlBasicString(string value) : TomlString(value), ITomlSt
     {
         writer.WriteBytes("\""u8);
 
-        for (int i = 0; i < byteSpan.Length; i++)
+        var index = byteSpan.IndexOfAny(EscapedChars);
+        if (index < 0)
         {
-            var ch = byteSpan[i];
-            switch (ch)
+            writer.WriteBytes(byteSpan);
+        }
+        else
+        {
+            if (index > 0)
             {
-                case TomlCodes.Symbol.DOUBLEQUOTED:
-                    writer.Write(TomlCodes.Symbol.BACKSLASH);
-                    writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                    continue;
-                case TomlCodes.Symbol.BACKSLASH:
-                    writer.Write(TomlCodes.Symbol.BACKSLASH);
-                    writer.Write(TomlCodes.Symbol.BACKSLASH);
-                    continue;
-                case TomlCodes.Symbol.BACKSPACE:
-                    writer.Write(TomlCodes.Symbol.BACKSLASH);
-                    writer.Write(TomlCodes.Alphabet.b);
-                    continue;
-                case TomlCodes.Symbol.TAB:
-                    writer.Write(TomlCodes.Symbol.BACKSLASH);
-                    writer.Write(TomlCodes.Alphabet.t);
-                    continue;
-                case TomlCodes.Symbol.LINEFEED:
-                    writer.Write(TomlCodes.Symbol.BACKSLASH);
-                    writer.Write(TomlCodes.Alphabet.n);
-                    continue;
-                case TomlCodes.Symbol.FORMFEED:
-                    writer.Write(TomlCodes.Symbol.BACKSLASH);
-                    writer.Write(TomlCodes.Alphabet.f);
-                    continue;
-                case TomlCodes.Symbol.CARRIAGE:
-                    writer.Write(TomlCodes.Symbol.BACKSLASH);
-                    writer.Write(TomlCodes.Alphabet.r);
-                    continue;
-                default:
-                    writer.Write(ch);
-                    continue;
+                writer.WriteBytes(byteSpan.Slice(0, index));
+                byteSpan = byteSpan.Slice(index);
             }
 
+            for (index = 0; index < byteSpan.Length; index++)
+            {
+                var ch = byteSpan[index];
+                switch (ch)
+                {
+                    case TomlCodes.Symbol.DOUBLEQUOTED:
+                        writer.Write(TomlCodes.Symbol.BACKSLASH);
+                        writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
+                        continue;
+                    case TomlCodes.Symbol.BACKSLASH:
+                        writer.Write(TomlCodes.Symbol.BACKSLASH);
+                        writer.Write(TomlCodes.Symbol.BACKSLASH);
+                        continue;
+                    case TomlCodes.Symbol.BACKSPACE:
+                        writer.Write(TomlCodes.Symbol.BACKSLASH);
+                        writer.Write(TomlCodes.Alphabet.b);
+                        continue;
+                    case TomlCodes.Symbol.TAB:
+                        writer.Write(TomlCodes.Symbol.BACKSLASH);
+                        writer.Write(TomlCodes.Alphabet.t);
+                        continue;
+                    case TomlCodes.Symbol.LINEFEED:
+                        writer.Write(TomlCodes.Symbol.BACKSLASH);
+                        writer.Write(TomlCodes.Alphabet.n);
+                        continue;
+                    case TomlCodes.Symbol.FORMFEED:
+                        writer.Write(TomlCodes.Symbol.BACKSLASH);
+                        writer.Write(TomlCodes.Alphabet.f);
+                        continue;
+                    case TomlCodes.Symbol.CARRIAGE:
+                        writer.Write(TomlCodes.Symbol.BACKSLASH);
+                        writer.Write(TomlCodes.Alphabet.r);
+                        continue;
+                    default:
+                        writer.Write(ch);
+                        continue;
+                }
+
+            }
         }
 
         writer.WriteBytes("\""u8);
@@ -247,43 +261,58 @@ internal sealed class TomlMultiLineBasicString(string value) : TomlString(value)
     {
         writer.WriteBytes("\"\"\""u8);
 
-        for (int i = 0; i < byteSpan.Length; i++)
+        var index = byteSpan.IndexOfAny(EscapedChars);
+        if (index < 0)
         {
-            var ch = byteSpan[i];
-            switch (ch)
+            writer.WriteBytes(byteSpan);
+        }
+        else
+        {
+            if (index > 0)
             {
-                case TomlCodes.Symbol.DOUBLEQUOTED:
-                    writer.Write(TomlCodes.Symbol.BACKSLASH);
-                    writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                    continue;
-                case TomlCodes.Symbol.BACKSLASH:
-                    writer.Write(TomlCodes.Symbol.BACKSLASH);
-                    writer.Write(TomlCodes.Symbol.BACKSLASH);
-                    continue;
-                case TomlCodes.Symbol.BACKSPACE:
-                    writer.Write(TomlCodes.Symbol.BACKSLASH);
-                    writer.Write(TomlCodes.Alphabet.b);
-                    continue;
-                case TomlCodes.Symbol.TAB:
-                    writer.Write(TomlCodes.Symbol.BACKSLASH);
-                    writer.Write(TomlCodes.Alphabet.t);
-                    continue;
-                case TomlCodes.Symbol.LINEFEED:
-                    writer.Write(TomlCodes.Symbol.BACKSLASH);
-                    writer.Write(TomlCodes.Alphabet.n);
-                    continue;
-                case TomlCodes.Symbol.FORMFEED:
-                    writer.Write(TomlCodes.Symbol.BACKSLASH);
-                    writer.Write(TomlCodes.Alphabet.f);
-                    continue;
-                case TomlCodes.Symbol.CARRIAGE:
-                    writer.Write(TomlCodes.Symbol.BACKSLASH);
-                    writer.Write(TomlCodes.Alphabet.r);
-                    continue;
-                default:
-                    writer.Write(ch);
-                    continue;
+                writer.WriteBytes(byteSpan.Slice(0, index));
+                byteSpan = byteSpan.Slice(index);
             }
+
+            for (index = 0; index < byteSpan.Length; index++)
+            {
+                var ch = byteSpan[index];
+                switch (ch)
+                {
+                    case TomlCodes.Symbol.DOUBLEQUOTED:
+                        writer.Write(TomlCodes.Symbol.BACKSLASH);
+                        writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
+                        continue;
+                    case TomlCodes.Symbol.BACKSLASH:
+                        writer.Write(TomlCodes.Symbol.BACKSLASH);
+                        writer.Write(TomlCodes.Symbol.BACKSLASH);
+                        continue;
+                    case TomlCodes.Symbol.BACKSPACE:
+                        writer.Write(TomlCodes.Symbol.BACKSLASH);
+                        writer.Write(TomlCodes.Alphabet.b);
+                        continue;
+                    case TomlCodes.Symbol.TAB:
+                        writer.Write(TomlCodes.Symbol.BACKSLASH);
+                        writer.Write(TomlCodes.Alphabet.t);
+                        continue;
+                    case TomlCodes.Symbol.LINEFEED:
+                        writer.Write(TomlCodes.Symbol.BACKSLASH);
+                        writer.Write(TomlCodes.Alphabet.n);
+                        continue;
+                    case TomlCodes.Symbol.FORMFEED:
+                        writer.Write(TomlCodes.Symbol.BACKSLASH);
+                        writer.Write(TomlCodes.Alphabet.f);
+                        continue;
+                    case TomlCodes.Symbol.CARRIAGE:
+                        writer.Write(TomlCodes.Symbol.BACKSLASH);
+                        writer.Write(TomlCodes.Alphabet.r);
+                        continue;
+                    default:
+                        writer.Write(ch);
+                        continue;
+                }
+            }
+
         }
 
         writer.WriteBytes("\"\"\""u8);
@@ -430,6 +459,8 @@ internal sealed class TomlMultiLineLiteralString(string value) : TomlString(valu
 [DebuggerDisplay("{Utf16String}")]
 internal abstract partial class TomlString(string value) : TomlValue()
 {
+    protected static readonly SearchValues<byte> EscapedChars = SearchValues.Create("\"\\\b\t\n\f\r"u8);
+
     protected readonly string value = value;
 
     public override bool HasValue => true;

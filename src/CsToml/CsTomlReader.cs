@@ -92,6 +92,7 @@ internal ref struct CsTomlReader
             {
                 case TomlCodes.Symbol.TAB:
                 case TomlCodes.Symbol.SPACE:
+                    Advance(1);
                     SkipWhiteSpace();
                     continue;
                 case TomlCodes.Symbol.EQUAL:
@@ -150,6 +151,7 @@ internal ref struct CsTomlReader
             {
                 case TomlCodes.Symbol.TAB:
                 case TomlCodes.Symbol.SPACE:
+                    Advance(1);
                     SkipWhiteSpace();
                     continue;
                 case TomlCodes.Symbol.EQUAL:
@@ -223,6 +225,7 @@ internal ref struct CsTomlReader
             {
                 case TomlCodes.Symbol.TAB:
                 case TomlCodes.Symbol.SPACE:
+                    Advance(1);
                     SkipWhiteSpace();
                     continue;
                 case TomlCodes.Symbol.DOT:
@@ -284,6 +287,7 @@ internal ref struct CsTomlReader
             {
                 case TomlCodes.Symbol.TAB:
                 case TomlCodes.Symbol.SPACE:
+                    Advance(1);
                     SkipWhiteSpace();
                     continue;
                 case TomlCodes.Symbol.DOT:
@@ -354,6 +358,7 @@ internal ref struct CsTomlReader
             {
                 case TomlCodes.Symbol.TAB:
                 case TomlCodes.Symbol.SPACE:
+                    Advance(1);
                     SkipWhiteSpace();
                     continue;
                 case TomlCodes.Symbol.DOT:
@@ -423,6 +428,7 @@ internal ref struct CsTomlReader
             {
                 case TomlCodes.Symbol.TAB:
                 case TomlCodes.Symbol.SPACE:
+                    Advance(1);
                     SkipWhiteSpace();
                     continue;
                 case TomlCodes.Symbol.DOT:
