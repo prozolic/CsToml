@@ -40,7 +40,7 @@ public class ClassSerializationBenchmark
                 new () { Value = "Hammer3" }
             ]
         };
-        testTomlSerializedObjectInSnakeCase = new Benchmark.Model.TestTomlSerializedObjectInSnakeCase()
+        testTomlSerializedObjectInSnakeCase = new TestTomlSerializedObjectInSnakeCase()
         {
             Str = testTomlSerializedObject.Str,
             Long = testTomlSerializedObject.Long,
