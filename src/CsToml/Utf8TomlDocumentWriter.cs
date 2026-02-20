@@ -45,7 +45,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
     internal Utf8TomlDocumentWriter(ref TBufferWriter bufferWriter, bool valueOnly, CsTomlSerializerOptions? options)
     {
         writer = new Utf8Writer<TBufferWriter>(ref bufferWriter);
-        dottedKeys = valueOnly ? [] : new List<TomlDottedKey>();
+        dottedKeys = [];
         valueStates = [(TomlValueState.Default, -1)];
         this.valueOnly = valueOnly;
         this.options = options ?? CsTomlSerializerOptions.Default;
@@ -236,6 +236,8 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
         }
     }
 
+    private static readonly SearchValues<byte> ExponentialBytes = SearchValues.Create(".eE"u8);
+
     public void WriteDouble(double value)
     {
         switch(value)
@@ -261,8 +263,9 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
                 }
                 writer.Advance(bytesWritten);
 
-                // integer check
-                if (!writtenSpan.Slice(0, bytesWritten).ContainsAny(".eE"u8))
+                // If the formatted value has no decimal point or exponent (i.e., looks like an integer),
+                // append .0 so that it is represented as a valid TOML float rather than an integer.
+                if (!writtenSpan.Slice(0, bytesWritten).ContainsAny(ExponentialBytes))
                 {
                     var writtenSpanEx = writer.GetWrittenSpan(2);
                     writtenSpanEx[0] = TomlCodes.Symbol.DOT;
