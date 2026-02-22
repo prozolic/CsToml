@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-CsToml is a high-performance TOML parser and serializer library for .NET that prioritizes speed and minimal memory allocation. The project consists of multiple components:
+CsToml (v1.8.2) is a high-performance TOML parser and serializer library for .NET that prioritizes speed and minimal memory allocation. The project consists of multiple components:
 
 - **CsToml** - Core TOML parser/serializer library
 - **CsToml.Generator** - Roslyn source generator for automatic serialization code generation
@@ -65,8 +65,11 @@ dotnet publish --configuration Release
 ### Core Library Structure
 - **Values/** - TOML value type implementations (TomlString, TomlInteger, TomlArray, etc.)
 - **Formatter/** - Type formatters for serialization/deserialization of .NET types
+  - **Formatter/Resolver/** - Formatter resolver implementations (BuiltinFormatterResolver, TomlValueFormatterResolver, etc.)
 - **Utility/** - Low-level buffer management, UTF-8 processing, memory optimization
 - **Error/** - Exception handling and error reporting
+- **Debugger/** - Debug view implementations for IDE integration
+- **Extension/** - Internal extension methods (CollectionExtensions, DateOnlyExtensions, etc.)
 
 ### Performance Design Principles
 - Uses `ReadOnlySpan<byte>` and `ReadOnlySequence<byte>` instead of string processing
@@ -90,10 +93,11 @@ dotnet publish --configuration Release
 ## Testing Strategy
 
 ### Test Structure
-- **Unit tests** - Standard xUnit tests for functionality
+- **Unit tests** - xUnit v3 tests using Microsoft.Testing.Platform runner (`UseMicrosoftTestingPlatformRunner`)
 - **TOML compliance tests** - Uses official TOML v1.0.0 test suite from toml-lang/toml-test
 - **Performance tests** - BenchmarkDotNet comparison against Tommy, Tomlet, Tomlyn libraries
 - **AOT compatibility tests** - Validates Native AOT scenarios
+- **Assertion library** - Uses Shouldly for fluent assertions
 
 ### Test Data Location
 Official TOML test cases are located at `tests/CsToml.Tests/toml-test/` with both valid and invalid test scenarios.
@@ -113,7 +117,7 @@ Official TOML test cases are located at `tests/CsToml.Tests/toml-test/` with bot
 4. Debug generator using `sandbox/ConsoleApp` project as target
 5. **AOT Testing**: Use `sandbox/ConsoleNativeAOT` to test Native AOT compatibility
    - Build: `dotnet publish --configuration Release`
-   - Run: `./bin/Release/net8.0/linux-x64/publish/ConsoleNativeAOT`
+   - Run: `./bin/Release/net10.0/linux-x64/publish/ConsoleNativeAOT`
 
 ### Memory and Performance Considerations
 - All buffer operations should use `ArrayPool<byte>.Shared` when possible
@@ -132,6 +136,8 @@ Official TOML test cases are located at `tests/CsToml.Tests/toml-test/` with bot
 - `src/CsToml/CsTomlParser.cs` - Core parsing logic
 - `src/CsToml/CsTomlReader.cs` - Core TOML reader
 - `src/CsToml/TomlDocument.cs` - Document model for preserving TOML structure
+- `src/CsToml/Utf8TomlDocumentWriter.cs` - Document writer for TOML serialization output
+- `src/CsToml/CsTomlSerializerOptions.cs` - Serializer configuration options
 - `src/CsToml/Formatter/*Formatter.cs` - Built-in support type serialization behavior
 - `src/CsToml.Generator/Generator.cs` - Source generator implementation
 - `src/CsToml.Generator/TypeMeta.cs` - Type analysis and metadata for code generation
