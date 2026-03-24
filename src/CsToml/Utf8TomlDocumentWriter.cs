@@ -275,6 +275,19 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
         }
     }
 
+    public void WriteDecimal(decimal value)
+    {
+        var length = 64;
+        int bytesWritten;
+        var writtenSpan = writer.GetSpan(length);
+        while (!value.TryFormat(writtenSpan, out bytesWritten, default, CultureInfo.InvariantCulture))
+        {
+            length *= 2;
+            writtenSpan = writer.GetSpan(length);
+        }
+        writer.Advance(bytesWritten);
+    }
+
     public void WriteString(string? value)
     {
         if (string.IsNullOrEmpty(value))

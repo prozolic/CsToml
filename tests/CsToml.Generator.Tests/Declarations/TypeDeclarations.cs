@@ -191,6 +191,28 @@ internal partial class TypeInteger
 }
 
 [TomlSerializedObject]
+internal partial class TypeDecimal
+{
+    [TomlValueOnSerialized]
+    public decimal IntegerValue { get; set; }
+
+    [TomlValueOnSerialized]
+    public decimal FloatValue { get; set; }
+
+    [TomlValueOnSerialized]
+    public decimal NegativeValue { get; set; }
+
+    [TomlValueOnSerialized]
+    public decimal ZeroValue { get; set; }
+
+    [TomlValueOnSerialized]
+    public decimal? NullableIntegerValue { get; set; }
+
+    [TomlValueOnSerialized]
+    public decimal? NullableFloatValue { get; set; }
+}
+
+[TomlSerializedObject]
 internal partial class TypeBuiltin
 {
     [TomlValueOnSerialized]

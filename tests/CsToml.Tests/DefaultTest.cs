@@ -407,6 +407,62 @@ sf6 = -nan
         var document = CsTomlSerializer.Deserialize<TomlDocument>(@"flt1 = +1.0"u8);
         (document!.RootNode["flt1"].ValueType == TomlValueType.Float).ShouldBeTrue();
     }
+
+    [Fact]
+    public void MaxValue()
+    {
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(@"v = 1.7976931348623157e+308"u8);
+        document!.RootNode["v"].GetDouble().ShouldBe(double.MaxValue);
+    }
+
+    [Fact]
+    public void MinValue()
+    {
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(@"v = -1.7976931348623157e+308"u8);
+        document!.RootNode["v"].GetDouble().ShouldBe(double.MinValue);
+    }
+
+    [Fact]
+    public void Epsilon()
+    {
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(@"v = 5e-324"u8);
+        document!.RootNode["v"].GetDouble().ShouldBe(double.Epsilon);
+    }
+
+    [Fact]
+    public void VerySmallPositive()
+    {
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(@"v = 2.2250738585072014e-308"u8);
+        document!.RootNode["v"].GetDouble().ShouldBe(2.2250738585072014e-308);
+    }
+
+    [Fact]
+    public void VeryLargeExponent()
+    {
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(@"v = 1.0e+300"u8);
+        document!.RootNode["v"].GetDouble().ShouldBe(1.0e+300);
+    }
+
+    [Fact]
+    public void VerySmallExponent()
+    {
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(@"v = 1.0e-300"u8);
+        document!.RootNode["v"].GetDouble().ShouldBe(1.0e-300);
+    }
+
+    [Fact]
+    public void NegativeZero()
+    {
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(@"v = -0.0"u8);
+        document!.RootNode["v"].GetDouble().ShouldBe(-0.0d);
+    }
+
+    [Fact]
+    public void LargeExponentWithDecimal()
+    {
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(@"v = 1.23456789012345e+200"u8);
+        document!.RootNode["v"].GetDouble().ShouldBe(1.23456789012345e+200);
+    }
 }
 
 public class TomlBooleanTest
