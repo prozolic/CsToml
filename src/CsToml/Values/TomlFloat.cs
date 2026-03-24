@@ -60,7 +60,7 @@ internal sealed partial class TomlFloat(double value) : TomlValue
     {
         if (bytes.Length < 3) ExceptionHelper.ThrowIncorrectTomlFloatFormat();
 
-        if (Utf8Parser.TryParse(bytes, out double value, out int _))
+        if (Utf8Parser.TryParse(bytes, out double value, out int bytesConsumed, 'G') && bytesConsumed == bytes.Length)
         {
             return new TomlFloat(value);
         }
