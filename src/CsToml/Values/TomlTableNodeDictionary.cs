@@ -64,14 +64,14 @@ internal sealed class TomlTableNodeDictionary
 
         var index = bucket - 1;
         var collisionCount = 0;
-        while ((uint)index <= (uint)buckets.Length)
+        while ((uint)index <= (uint)entries.Length)
         {
             ref var e = ref entries[index];
             if (e.hashCode == hashCode && e.key.Equals(key))
                 return false;
 
             index = e.next;
-            if ((uint)buckets.Length < ++collisionCount)
+            if ((uint)entries.Length < ++collisionCount)
                 throw new Exception();
         }
 
@@ -94,21 +94,6 @@ internal sealed class TomlTableNodeDictionary
         return true;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetValueOrAdd(TomlDottedKey key, out TomlTableNode? existingValue, out TomlTableNode? addedValue)
-    {
-        var hashCode = key.GetHashCodeFast();
-        if (TryGetValueCore(key.Value, hashCode, out existingValue))
-        {
-            addedValue = null;
-            return true;
-        }
-
-        addedValue = new TomlTableNode() { IsGroupingProperty = true, Value = TomlValue.Empty };
-        TryAddCore(key, hashCode, addedValue);
-        return false;
-    }
-
     public AnalysisResults GetOrAddIfNotFound(TomlDottedKey key)
     {
         ref var buckets = ref this.buckets;
@@ -126,7 +111,7 @@ internal sealed class TomlTableNodeDictionary
         var index = bucket - 1;
         var collisionCount = 0;
 
-        while ((uint)index <= (uint)buckets.Length)
+        while ((uint)index <= (uint)entries.Length)
         {
             ref var e = ref entries[index];
             if (e.hashCode == hashCode && e.key.Equals(key))
@@ -135,7 +120,7 @@ internal sealed class TomlTableNodeDictionary
             }
 
             index = e.next;
-            if ((uint)buckets.Length < ++collisionCount)
+            if ((uint)entries.Length < ++collisionCount)
                 throw new Exception();
         }
 
@@ -186,7 +171,7 @@ internal sealed class TomlTableNodeDictionary
 
         do
         {
-            if ((uint)index > (uint)buckets.Length)
+            if ((uint)index > (uint)entries.Length)
             {
                 value = null;
                 return false;
@@ -223,7 +208,7 @@ internal sealed class TomlTableNodeDictionary
         this.entries.AsSpan().CopyTo(newEntriesSpan);
 
         this.buckets = new int[capacity];
-        for (int i = 0; i < count; i++)
+        for (int i = 0; i < newEntriesSpan.Length; i++)
         {
             if (newEntriesSpan[i].next >= -1)
             {
@@ -246,7 +231,7 @@ internal sealed class TomlTableNodeDictionary
 
     internal struct KeyValuePairEnumerator
     {
-        private readonly TomlTableNodeDictionary dictionary;
+        private readonly TomlTableNodeDictionary? dictionary;
         private int index;
         private KeyValuePair<TomlDottedKey, TomlTableNode> current;
 
@@ -254,7 +239,7 @@ internal sealed class TomlTableNodeDictionary
 
         public readonly KeyValuePairEnumerator GetEnumerator() => this;
 
-        internal KeyValuePairEnumerator(TomlTableNodeDictionary dict)
+        internal KeyValuePairEnumerator(TomlTableNodeDictionary? dict)
         {
             dictionary = dict;
             index = 0;
@@ -263,6 +248,13 @@ internal sealed class TomlTableNodeDictionary
 
         public bool MoveNext()
         {
+            if (dictionary == null)
+            {
+                index = -1;
+                current = default;
+                return false;
+            }
+
             while ((uint)index < (uint)dictionary.Count)
             {
                 ref var entry = ref dictionary.entries[index++];

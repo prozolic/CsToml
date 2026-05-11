@@ -1,13 +1,11 @@
 ﻿using CsToml.Error;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace CsToml.Utility;
 
-internal ref struct SpanWriter(Span<byte> buffer)
+internal ref struct SpanWriter(Span<byte> source)
 {
-    private readonly Span<byte> source = buffer;
-    private readonly ref byte refSource = ref MemoryMarshal.GetReference(buffer);
+    private readonly Span<byte> source = source;
     private int written = 0;
 
     public readonly int Written => written;
@@ -17,14 +15,13 @@ internal ref struct SpanWriter(Span<byte> buffer)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Write(byte ch)
     {
-        if (written >= source.Length)
+        if ((uint)written >= (uint)source.Length)
         {
             ExceptionHelper.ThrowOverflowDuringParsingOfNumericTypes();
             return;
         }
 
-        ref var v = ref Unsafe.Add(ref refSource, written++);
-        v = ch;
+        source[written++] = ch;
     }
 
 }
