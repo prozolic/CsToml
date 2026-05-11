@@ -64,7 +64,7 @@ internal sealed class TomlTableNodeDictionary
 
         var index = bucket - 1;
         var collisionCount = 0;
-        while ((uint)index <= (uint)entries.Length)
+        while ((uint)index < (uint)entries.Length)
         {
             ref var e = ref entries[index];
             if (e.hashCode == hashCode && e.key.Equals(key))
@@ -111,7 +111,7 @@ internal sealed class TomlTableNodeDictionary
         var index = bucket - 1;
         var collisionCount = 0;
 
-        while ((uint)index <= (uint)entries.Length)
+        while ((uint)index < (uint)entries.Length)
         {
             ref var e = ref entries[index];
             if (e.hashCode == hashCode && e.key.Equals(key))
