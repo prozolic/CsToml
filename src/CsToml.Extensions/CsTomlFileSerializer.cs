@@ -2,6 +2,7 @@
 using CsToml.Extensions.Utility;
 using Cysharp.Collections;
 using System.Buffers;
+using System.Runtime.CompilerServices;
 
 namespace CsToml.Extensions;
 
@@ -10,9 +11,11 @@ public partial class CsTomlFileSerializer
     private static readonly string TomlExtension = ".toml";
 
     public static T Deserialize<T>(string tomlFilePath, CsTomlSerializerOptions? options = null)
+        => Deserialize<T>(tomlFilePath, TomlFileExtensionPolicy.Strict, options);
+
+    public static T Deserialize<T>(string tomlFilePath, TomlFileExtensionPolicy extensionPolicy, CsTomlSerializerOptions? options = null)
     {
-        if (Path.GetExtension(tomlFilePath) != TomlExtension)
-            throw new FormatException($"TOML files should use the extension .toml");
+        ValidateExtension(tomlFilePath, extensionPolicy);
 
         using var handle = File.OpenHandle(tomlFilePath!, FileMode.Open, FileAccess.Read, options: FileOptions.SequentialScan);
         var length = RandomAccess.GetLength(handle);
@@ -54,10 +57,12 @@ public partial class CsTomlFileSerializer
         }
     }
 
-    public static async ValueTask<T> DeserializeAsync<T>(string tomlFilePath, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
+    public static ValueTask<T> DeserializeAsync<T>(string tomlFilePath, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
+        => DeserializeAsync<T>(tomlFilePath, TomlFileExtensionPolicy.Strict, options, configureAwait, cancellationToken);
+
+    public static async ValueTask<T> DeserializeAsync<T>(string tomlFilePath, TomlFileExtensionPolicy extensionPolicy, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
     {
-        if (Path.GetExtension(tomlFilePath) != TomlExtension)
-            throw new FormatException($"TOML files should use the extension .toml");
+        ValidateExtension(tomlFilePath, extensionPolicy);
 
         cancellationToken.ThrowIfCancellationRequested();
         using var handle = File.OpenHandle(tomlFilePath!, FileMode.Open, FileAccess.Read, options: FileOptions.SequentialScan | FileOptions.Asynchronous);
@@ -99,9 +104,11 @@ public partial class CsTomlFileSerializer
     }
 
     public static void Serialize<T>(string tomlFilePath, T value, CsTomlSerializerOptions? options = null)
+        => Serialize<T>(tomlFilePath, value, TomlFileExtensionPolicy.Strict, options);
+
+    public static void Serialize<T>(string tomlFilePath, T value, TomlFileExtensionPolicy extensionPolicy, CsTomlSerializerOptions? options = null)
     {
-        if (Path.GetExtension(tomlFilePath) != TomlExtension)
-            throw new FormatException($"TOML file should use the extension .toml");
+        ValidateExtension(tomlFilePath, extensionPolicy);
 
         var directory = new FileInfo(tomlFilePath).Directory;
         if (!directory!.Exists)
@@ -116,10 +123,12 @@ public partial class CsTomlFileSerializer
         bufferWriter.WriteTo(fileWriter.ByteWriter);
     }
 
-    public static async ValueTask SerializeAsync<T>(string tomlFilePath, T value, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
+    public static ValueTask SerializeAsync<T>(string tomlFilePath, T value, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
+        => SerializeAsync<T>(tomlFilePath, value, TomlFileExtensionPolicy.Strict, options, configureAwait, cancellationToken);
+
+    public static async ValueTask SerializeAsync<T>(string tomlFilePath, T value, TomlFileExtensionPolicy extensionPolicy, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
     {
-        if (Path.GetExtension(tomlFilePath) != TomlExtension)
-            throw new FormatException($"TOML file should use the extension .toml");
+        ValidateExtension(tomlFilePath, extensionPolicy);
 
         var directory = new FileInfo(tomlFilePath).Directory;
         if (!directory!.Exists)
@@ -136,6 +145,18 @@ public partial class CsTomlFileSerializer
         await bufferWriter.WriteToAsync(fileWriter.ByteWriter, configureAwait, cancellationToken);
     }
 
+    private static void ValidateExtension(string tomlFilePath, TomlFileExtensionPolicy extensionPolicy)
+    {
+        if (extensionPolicy == TomlFileExtensionPolicy.Strict && Path.GetExtension(tomlFilePath) != TomlExtension)
+        {
+            ThrowExtensionFormatException();
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void ThrowExtensionFormatException() 
+    {
+        throw new FormatException("TOML files should use the extension .toml");
+    }
+
 }
-
-
