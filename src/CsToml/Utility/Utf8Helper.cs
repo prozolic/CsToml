@@ -1,8 +1,8 @@
 ﻿using CsToml.Error;
 using System.Buffers;
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.Unicode;
 
 namespace CsToml.Utility;
@@ -281,7 +281,8 @@ internal static class Utf8Helper
     public static void FromUtf16(IBufferWriter<byte> writer, ReadOnlySpan<char> value)
     {
         // buffer size to 3 times worst-case (UTF16 -> UTF8)
-        var maxBufferSize = (value.Length + 1) * 3;
+        // var maxBufferSize = (value.Length + 1) * 3;
+        var maxBufferSize = Encoding.UTF8.GetMaxByteCount(value.Length);
 
         var status = Utf8.FromUtf16(value, writer.GetSpan(maxBufferSize),
             out int charsRead, out int bytesWritten, replaceInvalidSequences: false);
@@ -315,7 +316,7 @@ internal static class Utf8Helper
             return string.Empty;
         }
 
-        var maxBufferSize = utf8Bytes.Length * 2;
+        var maxBufferSize = utf8Bytes.Length;
         if (maxBufferSize <= 1024)
         {
             Span<char> bufferBytesSpan = stackalloc char[maxBufferSize];

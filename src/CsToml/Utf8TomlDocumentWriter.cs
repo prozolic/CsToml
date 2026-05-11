@@ -40,7 +40,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
     public readonly bool IsRoot => valueStates.Count == 1 && !valueOnly;
 
     internal Utf8TomlDocumentWriter(ref TBufferWriter bufferWriter, bool valueOnly = false) : this(ref bufferWriter, valueOnly, null)
-    {}
+    { }
 
     internal Utf8TomlDocumentWriter(ref TBufferWriter bufferWriter, bool valueOnly, CsTomlSerializerOptions? options)
     {
@@ -140,7 +140,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
 
     public void WriteInt64(long value)
     {
-        var length = TomlCodes.Number.DigitsDecimalUnroll4(value);
+        var length = TomlCodes.Number.CountDigitsForInt64(value);
         if (value < 0) length++;
 
         value.TryFormat(writer.GetWrittenSpan(length), out int bytesWritten, null, CultureInfo.InvariantCulture);
@@ -183,7 +183,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
         var writtenSpan = writer.GetWrittenSpan(digits);
         var index = digits - 1;
 
-        while (value > 0) 
+        while (value > 0)
         {
             var v = value & 7;
             writtenSpan[index--] = (byte)(TomlCodes.Number.Zero + (byte)v);
@@ -240,7 +240,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
 
     public void WriteDouble(double value)
     {
-        switch(value)
+        switch (value)
         {
             case double.NegativeInfinity:
                 WriteBytes("-inf"u8);
@@ -370,7 +370,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
             {
                 if (value.Microsecond == 0)
                 {
-                    var length = TomlCodes.Number.DigitsDecimalUnroll4(value.Millisecond);
+                    var length = TomlCodes.Number.CountDigitsForInt64(value.Millisecond);
                     switch (length)
                     {
                         case 1:
@@ -397,7 +397,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
                 }
                 else
                 {
-                    var length = TomlCodes.Number.DigitsDecimalUnroll4(value.Microsecond);
+                    var length = TomlCodes.Number.CountDigitsForInt64(value.Microsecond);
                     switch (length)
                     {
                         case 1:
@@ -434,7 +434,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
             {
                 if (value.Microsecond == 0)
                 {
-                    var length = TomlCodes.Number.DigitsDecimalUnroll4(value.Millisecond);
+                    var length = TomlCodes.Number.CountDigitsForInt64(value.Millisecond);
                     switch (length)
                     {
                         case 1:
@@ -461,7 +461,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
                 }
                 else
                 {
-                    var length = TomlCodes.Number.DigitsDecimalUnroll4(value.Microsecond);
+                    var length = TomlCodes.Number.CountDigitsForInt64(value.Microsecond);
                     switch (length)
                     {
                         case 1:
@@ -501,7 +501,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
         {
             if (value.Microsecond == 0)
             {
-                var length = TomlCodes.Number.DigitsDecimalUnroll4(value.Millisecond);
+                var length = TomlCodes.Number.CountDigitsForInt64(value.Millisecond);
                 switch (length)
                 {
                     case 1:
@@ -528,7 +528,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
             }
             else
             {
-                var length = TomlCodes.Number.DigitsDecimalUnroll4(value.Microsecond);
+                var length = TomlCodes.Number.CountDigitsForInt64(value.Microsecond);
                 switch (length)
                 {
                     case 1:
@@ -572,7 +572,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
         {
             if (value.Microsecond == 0)
             {
-                var length = TomlCodes.Number.DigitsDecimalUnroll4(value.Millisecond);
+                var length = TomlCodes.Number.CountDigitsForInt64(value.Millisecond);
                 switch (length)
                 {
                     case 1:
@@ -599,7 +599,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
             }
             else
             {
-                var length = TomlCodes.Number.DigitsDecimalUnroll4(value.Microsecond);
+                var length = TomlCodes.Number.CountDigitsForInt64(value.Microsecond);
                 switch (length)
                 {
                     case 1:
@@ -713,7 +713,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
                     fixed (byte* ptr = &destReference)
                     {
                         var writtenSpan = MemoryMarshal.CreateSpan(ref Unsafe.AsRef<byte>(ptr), bytesWritten);
-                        WriteKeyInternal(writtenSpan, TomlDottedKeyHelper.GetTomlKeyType( writtenSpan, options.Spec.SupportsEscapeSequenceE, options.Spec.SupportsEscapeSequenceX));
+                        WriteKeyInternal(writtenSpan, TomlDottedKeyHelper.GetTomlKeyType(writtenSpan, options.Spec.SupportsEscapeSequenceE, options.Spec.SupportsEscapeSequenceX));
                     }
                 }
             }

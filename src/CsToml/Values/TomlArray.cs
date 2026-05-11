@@ -26,7 +26,7 @@ internal sealed partial class TomlArray(int capacity) : TomlValue, IEnumerable<T
     public TomlValue this[int index] => values[index];
 
     public TomlArray() : this(4)
-    {}
+    { }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Span<TomlValue> GetListSpan(int count)
@@ -81,7 +81,7 @@ internal sealed partial class TomlArray(int capacity) : TomlValue, IEnumerable<T
             if (arraySpan[i].TryFormat(destination.Slice(written), out var charsWritten2, format, provider))
             {
                 written += charsWritten2;
-                
+
                 if (destination.Length - written >= 3)
                 {
                     destination[written++] = ',';
@@ -162,7 +162,7 @@ internal sealed partial class TomlArray(int capacity) : TomlValue, IEnumerable<T
         public bool MoveNext()
         {
             var array = tomlArraySpan;
-            if (array.Length <= index) return false;
+            if ((uint)index >= (uint)array.Length) return false;
 
             this.Current = array[index];
             index++;
@@ -187,7 +187,7 @@ internal sealed partial class TomlArray(int capacity) : TomlValue, IEnumerable<T
         public bool MoveNext()
         {
             var array = tomlArray;
-            if (array.Count <= index) return false;
+            if ((uint)index >= (uint)array.Count) return false;
 
             this.Current = array[index];
             index++;

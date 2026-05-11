@@ -2,6 +2,7 @@
 using CsToml.Error;
 using CsToml.Extension;
 using CsToml.Utility;
+using System.Buffers;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -58,28 +59,55 @@ internal static class TomlCodes
                 -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 0xe0 - 0xef
                 -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 0xf0 - 0xff
             ];
-            return hexTable[hexNumber];
+            return hexTable.At(hexNumber);
         }
 
-        internal static int DigitsDecimalUnroll4(long value)
+        private static readonly ulong[] zeroOrPowersOf10 =
+        [
+            0,
+            0,
+            10,
+            100,
+            1000,
+            10000,
+            100000,
+            1000000,
+            10000000,
+            100000000,
+            1000000000,
+            10000000000,
+            100000000000,
+            1000000000000,
+            10000000000000,
+            100000000000000,
+            1000000000000000,
+            10000000000000000,
+            100000000000000000,
+            1000000000000000000,
+            10000000000000000000
+        ];
+
+        // https://github.com/fmtlib/fmt/blob/662adf4f33346ba9aba8b072194e319869ede54a/include/fmt/format.h#L1124
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static int CountDigitsForInt64(long value)
         {
             // long.MinValue raises an OverflowException, so fixed support
             // https://learn.microsoft.com/en-us/dotnet/api/system.math.abs?view=net-8.0#system-math-abs(system-int64)
             if (value == long.MinValue)
                 return 19;
 
-            var number = 1;
-            value = Math.Abs(value);
+            ulong absValue = (ulong)(value < 0 ? -value : value);
 
-            for (; ; )
-            {
-                if (value < 10) return number;
-                if (value < 100) return number + 1;
-                if (value < 1000) return number + 2;
-                if (value < 10000) return number + 3;
-                value /= 10000;
-                number += 4;
-            }
+            ReadOnlySpan<byte> bsr2log10 =
+            [
+                 1,  1,  1,  2,  2,  2,  3,  3,  3,  4,  4,  4,  4,  5,  5,  5,
+                 6,  6,  6,  7,  7,  7,  7,  8,  8,  8,  9,  9,  9, 10, 10, 10,
+                10, 11, 11, 11, 12, 12, 12, 13, 13, 13, 13, 14, 14, 14, 15, 15,
+                15, 16, 16, 16, 16, 17, 17, 17, 18, 18, 18, 19, 19, 19, 19, 20
+            ];
+
+            int t = bsr2log10.At((int)ulong.Log2(absValue));
+            return (int)(t - (absValue < zeroOrPowersOf10.At(t) ? 1 : 0));
         }
     }
 
@@ -181,7 +209,7 @@ internal static class TomlCodes
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
         ];
-        return escapeTable[rawByte];
+        return escapeTable.At(rawByte);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -206,7 +234,7 @@ internal static class TomlCodes
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
         ];
-        return escapeSequenceTable[rawByte];
+        return escapeSequenceTable.At(rawByte);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -231,7 +259,7 @@ internal static class TomlCodes
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
         ];
-        return barekeyTable[rawByte];
+        return barekeyTable.At(rawByte);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -278,6 +306,10 @@ internal static class TomlCodes
     internal static bool IsRightBraces(byte rawByte)
         => rawByte == Symbol.RIGHTBRACES;
 
+    internal static ReadOnlySpan<byte> TabOrWhiteSpaceOrNewlineBytes => [Symbol.TAB, Symbol.SPACE, Symbol.LINEFEED, Symbol.CARRIAGE];
+
+    internal static ReadOnlySpan<byte> TabOrWhiteSpaceBytes => [Symbol.TAB, Symbol.SPACE];
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsTabOrWhiteSpace(byte rawByte)
         => IsTab(rawByte) || IsWhiteSpace(rawByte);
@@ -308,7 +340,7 @@ internal static class TomlCodes
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
         ];
-        return numberTable[rawByte];
+        return numberTable.At(rawByte);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -333,7 +365,7 @@ internal static class TomlCodes
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
         ];
-        return binaryTable[rawByte];
+        return binaryTable.At(rawByte);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -358,7 +390,7 @@ internal static class TomlCodes
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
         ];
-        return octalTable[rawByte];
+        return octalTable.At(rawByte);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -383,7 +415,7 @@ internal static class TomlCodes
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
         ];
-        return hexTable[rawByte];
+        return hexTable.At(rawByte);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -409,7 +441,7 @@ internal static class TomlCodes
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
         ];
-        return upperHexAlphabetTable[rawByte];
+        return upperHexAlphabetTable.At(rawByte);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -435,7 +467,7 @@ internal static class TomlCodes
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
         ];
-        return lowerHexAlphabetTable[rawByte];
+        return lowerHexAlphabetTable.At(rawByte);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -461,7 +493,7 @@ internal static class TomlCodes
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xe0 - 0xef
             false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 0xf0 - 0xff
         ];
-        return alphabetTable[rawByte];
+        return alphabetTable.At(rawByte);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

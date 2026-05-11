@@ -17,7 +17,7 @@ internal abstract partial class TomlInteger : TomlValue
 {
     public static TomlInteger Zero => Cache<TomlDefaultInteger>.Values[1];
 
-    public long Value { get; init; } 
+    public long Value { get; init; }
 
     public override bool HasValue => true;
 
@@ -128,44 +128,20 @@ internal abstract partial class TomlInteger : TomlValue
 
         private static long ParseBinaryValue(ReadOnlySpan<byte> bytes)
         {
-            var digits = bytes.Length;
-            if (digits > 64) ExceptionHelper.ThrowOverflowCount();
+            var length = bytes.Length;
+            if (length > 64) ExceptionHelper.ThrowOverflowCount();
 
-            long value = 0;
-            int digitsCount = 1;
-            long baseValue = 1;
-            while (true)
+            ulong result = 0;
+            // Scalar remainder: left-to-right shift, one bit per digit.
+            for (int i = 0; i < length; i++)
             {
-                value += ParseBinaryByte(bytes[bytes.Length - digitsCount]) * baseValue;
-                if (value < 0) ExceptionHelper.ThrowOverflowCount();
-                if (digits == digitsCount++) return value;
-                baseValue *= 2;
-
-                value += ParseBinaryByte(bytes[bytes.Length - digitsCount]) * baseValue;
-                if (value < 0) ExceptionHelper.ThrowOverflowCount();
-                if (digits == digitsCount++) return value;
-                baseValue *= 2;
-
-                value += ParseBinaryByte(bytes[bytes.Length - digitsCount]) * baseValue;
-                if (value < 0) ExceptionHelper.ThrowOverflowCount();
-                if (digits == digitsCount++) return value;
-                baseValue *= 2;
-
-                value += ParseBinaryByte(bytes[bytes.Length - digitsCount]) * baseValue;
-                if (value < 0) ExceptionHelper.ThrowOverflowCount();
-                if (digits == digitsCount++) return value;
-                baseValue *= 2;
+                var b = bytes[i];
+                if (!TomlCodes.IsBinary(b)) ExceptionHelper.ThrowNumericConversionFailed(b);
+                result = (result << 1) | (b & 1u);
             }
 
-            static long ParseBinaryByte(byte utf8Byte)
-            {
-                if (!TomlCodes.IsBinary(utf8Byte))
-                {
-                    ExceptionHelper.ThrowNumericConversionFailed(utf8Byte);
-                }
-                return TomlCodes.Number.ParseDecimal(utf8Byte);
-            }
-
+            if ((long)result < 0) ExceptionHelper.ThrowOverflowCount();
+            return (long)result;
         }
 
         internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
