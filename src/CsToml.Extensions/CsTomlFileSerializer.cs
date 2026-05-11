@@ -11,9 +11,9 @@ public partial class CsTomlFileSerializer
     private static readonly string TomlExtension = ".toml";
 
     public static T Deserialize<T>(string tomlFilePath, CsTomlSerializerOptions? options = null)
-        => Deserialize<T>(tomlFilePath, TomlFileExtensionPolicy.Strict, options);
+        => Deserialize<T>(tomlFilePath, options, TomlFileExtensionPolicy.Strict);
 
-    public static T Deserialize<T>(string tomlFilePath, TomlFileExtensionPolicy extensionPolicy, CsTomlSerializerOptions? options = null)
+    public static T Deserialize<T>(string tomlFilePath, CsTomlSerializerOptions? options, TomlFileExtensionPolicy extensionPolicy)
     {
         ValidateExtension(tomlFilePath, extensionPolicy);
 
@@ -58,9 +58,12 @@ public partial class CsTomlFileSerializer
     }
 
     public static ValueTask<T> DeserializeAsync<T>(string tomlFilePath, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
-        => DeserializeAsync<T>(tomlFilePath, TomlFileExtensionPolicy.Strict, options, configureAwait, cancellationToken);
+        => DeserializeAsyncCore<T>(tomlFilePath, options, TomlFileExtensionPolicy.Strict, configureAwait, cancellationToken);
 
-    public static async ValueTask<T> DeserializeAsync<T>(string tomlFilePath, TomlFileExtensionPolicy extensionPolicy, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
+    public static ValueTask<T> DeserializeAsync<T>(string tomlFilePath, CsTomlSerializerOptions? options, TomlFileExtensionPolicy extensionPolicy, bool configureAwait = false, CancellationToken cancellationToken = default)
+        => DeserializeAsyncCore<T>(tomlFilePath, options, extensionPolicy, configureAwait, cancellationToken);
+
+    private static async ValueTask<T> DeserializeAsyncCore<T>(string tomlFilePath, CsTomlSerializerOptions? options, TomlFileExtensionPolicy extensionPolicy, bool configureAwait, CancellationToken cancellationToken)
     {
         ValidateExtension(tomlFilePath, extensionPolicy);
 
@@ -104,9 +107,9 @@ public partial class CsTomlFileSerializer
     }
 
     public static void Serialize<T>(string tomlFilePath, T value, CsTomlSerializerOptions? options = null)
-        => Serialize<T>(tomlFilePath, value, TomlFileExtensionPolicy.Strict, options);
+        => Serialize<T>(tomlFilePath, value, options, TomlFileExtensionPolicy.Strict);
 
-    public static void Serialize<T>(string tomlFilePath, T value, TomlFileExtensionPolicy extensionPolicy, CsTomlSerializerOptions? options = null)
+    public static void Serialize<T>(string tomlFilePath, T value, CsTomlSerializerOptions? options, TomlFileExtensionPolicy extensionPolicy)
     {
         ValidateExtension(tomlFilePath, extensionPolicy);
 
@@ -124,9 +127,12 @@ public partial class CsTomlFileSerializer
     }
 
     public static ValueTask SerializeAsync<T>(string tomlFilePath, T value, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
-        => SerializeAsync<T>(tomlFilePath, value, TomlFileExtensionPolicy.Strict, options, configureAwait, cancellationToken);
+        => SerializeAsyncCore<T>(tomlFilePath, value, options, TomlFileExtensionPolicy.Strict, configureAwait, cancellationToken);
 
-    public static async ValueTask SerializeAsync<T>(string tomlFilePath, T value, TomlFileExtensionPolicy extensionPolicy, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
+    public static ValueTask SerializeAsync<T>(string tomlFilePath, T value, CsTomlSerializerOptions? options, TomlFileExtensionPolicy extensionPolicy, bool configureAwait = false, CancellationToken cancellationToken = default)
+        => SerializeAsyncCore<T>(tomlFilePath, value, options, extensionPolicy, configureAwait, cancellationToken);
+
+    private static async ValueTask SerializeAsyncCore<T>(string tomlFilePath, T value, CsTomlSerializerOptions? options, TomlFileExtensionPolicy extensionPolicy, bool configureAwait, CancellationToken cancellationToken)
     {
         ValidateExtension(tomlFilePath, extensionPolicy);
 
@@ -147,9 +153,20 @@ public partial class CsTomlFileSerializer
 
     private static void ValidateExtension(string tomlFilePath, TomlFileExtensionPolicy extensionPolicy)
     {
-        if (extensionPolicy == TomlFileExtensionPolicy.Strict && Path.GetExtension(tomlFilePath) != TomlExtension)
+        switch (extensionPolicy)
         {
-            ThrowExtensionFormatException();
+            case TomlFileExtensionPolicy.Strict:
+                if (!string.Equals(Path.GetExtension(tomlFilePath), TomlExtension, StringComparison.Ordinal))
+                {
+                    ThrowExtensionFormatException();
+                }
+                break;
+            case TomlFileExtensionPolicy.Relaxed:
+                // No validation needed for relaxed policy
+                break;
+            default:
+                ThrowExtensionOutOfRangeException(extensionPolicy);
+                break;
         }
     }
 
@@ -159,4 +176,9 @@ public partial class CsTomlFileSerializer
         throw new FormatException("TOML files should use the extension .toml");
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void ThrowExtensionOutOfRangeException(TomlFileExtensionPolicy extensionPolicy)
+    {
+        throw new ArgumentOutOfRangeException(nameof(extensionPolicy));
+    }
 }

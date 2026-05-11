@@ -37,7 +37,7 @@ public class CsTomlFileSerializerExtensionPolicyTest : IDisposable
     {
         var filePath = CreateTomlFile("test.toml");
 
-        var doc = CsTomlFileSerializer.Deserialize<TomlDocument>(filePath, TomlFileExtensionPolicy.Strict);
+        var doc = CsTomlFileSerializer.Deserialize<TomlDocument>(filePath, CsTomlSerializerOptions.Default, TomlFileExtensionPolicy.Strict);
 
         doc.ShouldNotBeNull();
     }
@@ -48,7 +48,7 @@ public class CsTomlFileSerializerExtensionPolicyTest : IDisposable
         var filePath = CreateTomlFile("test.conf");
 
         Should.Throw<FormatException>(() =>
-            CsTomlFileSerializer.Deserialize<TomlDocument>(filePath, TomlFileExtensionPolicy.Strict));
+            CsTomlFileSerializer.Deserialize<TomlDocument>(filePath, CsTomlSerializerOptions.Default, TomlFileExtensionPolicy.Strict));
     }
 
     [Fact]
@@ -56,7 +56,7 @@ public class CsTomlFileSerializerExtensionPolicyTest : IDisposable
     {
         var filePath = CreateTomlFile("test.toml");
 
-        var doc = CsTomlFileSerializer.Deserialize<TomlDocument>(filePath, TomlFileExtensionPolicy.Relaxed);
+        var doc = CsTomlFileSerializer.Deserialize<TomlDocument>(filePath, CsTomlSerializerOptions.Default, TomlFileExtensionPolicy.Relaxed);
 
         doc.ShouldNotBeNull();
     }
@@ -66,7 +66,7 @@ public class CsTomlFileSerializerExtensionPolicyTest : IDisposable
     {
         var filePath = CreateTomlFile("test.conf");
 
-        var doc = CsTomlFileSerializer.Deserialize<TomlDocument>(filePath, TomlFileExtensionPolicy.Relaxed);
+        var doc = CsTomlFileSerializer.Deserialize<TomlDocument>(filePath, CsTomlSerializerOptions.Default, TomlFileExtensionPolicy.Relaxed);
 
         doc.ShouldNotBeNull();
     }
@@ -95,7 +95,7 @@ public class CsTomlFileSerializerExtensionPolicyTest : IDisposable
     {
         var filePath = CreateTomlFile("test.toml");
 
-        var doc = await CsTomlFileSerializer.DeserializeAsync<TomlDocument>(filePath, TomlFileExtensionPolicy.Strict, cancellationToken: TestContext.Current.CancellationToken);
+        var doc = await CsTomlFileSerializer.DeserializeAsync<TomlDocument>(filePath, CsTomlSerializerOptions.Default, TomlFileExtensionPolicy.Strict, cancellationToken: TestContext.Current.CancellationToken);
 
         doc.ShouldNotBeNull();
     }
@@ -106,14 +106,14 @@ public class CsTomlFileSerializerExtensionPolicyTest : IDisposable
         var filePath = CreateTomlFile("test.conf");
 
         await Should.ThrowAsync<FormatException>(async () =>
-            await CsTomlFileSerializer.DeserializeAsync<TomlDocument>(filePath, TomlFileExtensionPolicy.Strict, cancellationToken: TestContext.Current.CancellationToken));
+            await CsTomlFileSerializer.DeserializeAsync<TomlDocument>(filePath, CsTomlSerializerOptions.Default, TomlFileExtensionPolicy.Strict, cancellationToken: TestContext.Current.CancellationToken));
     }
 
     [Fact]
     public async ValueTask DeserializeAsync_Relaxed_WithTomlExtension_Succeeds()
     {
         var filePath = CreateTomlFile("test.toml");
-        var doc = await CsTomlFileSerializer.DeserializeAsync<TomlDocument>(filePath, TomlFileExtensionPolicy.Relaxed, cancellationToken: TestContext.Current.CancellationToken);
+        var doc = await CsTomlFileSerializer.DeserializeAsync<TomlDocument>(filePath, CsTomlSerializerOptions.Default, TomlFileExtensionPolicy.Relaxed, cancellationToken: TestContext.Current.CancellationToken);
         doc.ShouldNotBeNull();
     }
 
@@ -121,7 +121,7 @@ public class CsTomlFileSerializerExtensionPolicyTest : IDisposable
     public async ValueTask DeserializeAsync_Relaxed_WithNonTomlExtension_Succeeds()
     {
         var filePath = CreateTomlFile("test.conf");
-        var doc = await CsTomlFileSerializer.DeserializeAsync<TomlDocument>(filePath, TomlFileExtensionPolicy.Relaxed, cancellationToken: TestContext.Current.CancellationToken);
+        var doc = await CsTomlFileSerializer.DeserializeAsync<TomlDocument>(filePath, CsTomlSerializerOptions.Default, TomlFileExtensionPolicy.Relaxed, cancellationToken: TestContext.Current.CancellationToken);
         doc.ShouldNotBeNull();
     }
 
@@ -149,7 +149,7 @@ public class CsTomlFileSerializerExtensionPolicyTest : IDisposable
         var doc = CsTomlSerializer.Deserialize<TomlDocument>("key = \"value\""u8);
 
         Should.NotThrow(() =>
-            CsTomlFileSerializer.Serialize(filePath, doc, TomlFileExtensionPolicy.Strict));
+            CsTomlFileSerializer.Serialize(filePath, doc, CsTomlSerializerOptions.Default, TomlFileExtensionPolicy.Strict));
 
         File.Exists(filePath).ShouldBeTrue();
     }
@@ -161,7 +161,7 @@ public class CsTomlFileSerializerExtensionPolicyTest : IDisposable
         var doc = CsTomlSerializer.Deserialize<TomlDocument>("key = \"value\""u8);
 
         Should.Throw<FormatException>(() =>
-            CsTomlFileSerializer.Serialize(filePath, doc, TomlFileExtensionPolicy.Strict));
+            CsTomlFileSerializer.Serialize(filePath, doc, CsTomlSerializerOptions.Default, TomlFileExtensionPolicy.Strict));
     }
 
     [Fact]
@@ -171,7 +171,7 @@ public class CsTomlFileSerializerExtensionPolicyTest : IDisposable
         var doc = CsTomlSerializer.Deserialize<TomlDocument>("key = \"value\""u8);
 
         Should.NotThrow(() =>
-            CsTomlFileSerializer.Serialize(filePath, doc, TomlFileExtensionPolicy.Relaxed));
+            CsTomlFileSerializer.Serialize(filePath, doc, CsTomlSerializerOptions.Default, TomlFileExtensionPolicy.Relaxed));
 
         File.Exists(filePath).ShouldBeTrue();
     }
@@ -183,7 +183,7 @@ public class CsTomlFileSerializerExtensionPolicyTest : IDisposable
         var doc = CsTomlSerializer.Deserialize<TomlDocument>("key = \"value\""u8);
 
         Should.NotThrow(() =>
-            CsTomlFileSerializer.Serialize(filePath, doc, TomlFileExtensionPolicy.Relaxed));
+            CsTomlFileSerializer.Serialize(filePath, doc, CsTomlSerializerOptions.Default, TomlFileExtensionPolicy.Relaxed));
 
         File.Exists(filePath).ShouldBeTrue();
     }
@@ -217,7 +217,7 @@ public class CsTomlFileSerializerExtensionPolicyTest : IDisposable
         var doc = CsTomlSerializer.Deserialize<TomlDocument>("key = \"value\""u8);
 
         await Should.NotThrowAsync(async () =>
-            await CsTomlFileSerializer.SerializeAsync(filePath, doc, TomlFileExtensionPolicy.Strict, cancellationToken: TestContext.Current.CancellationToken));
+            await CsTomlFileSerializer.SerializeAsync(filePath, doc, CsTomlSerializerOptions.Default, TomlFileExtensionPolicy.Strict, cancellationToken: TestContext.Current.CancellationToken));
 
         File.Exists(filePath).ShouldBeTrue();
     }
@@ -229,7 +229,7 @@ public class CsTomlFileSerializerExtensionPolicyTest : IDisposable
         var doc = CsTomlSerializer.Deserialize<TomlDocument>("key = \"value\""u8);
 
         await Should.ThrowAsync<FormatException>(async () =>
-            await CsTomlFileSerializer.SerializeAsync(filePath, doc, TomlFileExtensionPolicy.Strict, cancellationToken: TestContext.Current.CancellationToken));
+            await CsTomlFileSerializer.SerializeAsync(filePath, doc, CsTomlSerializerOptions.Default, TomlFileExtensionPolicy.Strict, cancellationToken: TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -239,7 +239,7 @@ public class CsTomlFileSerializerExtensionPolicyTest : IDisposable
         var doc = CsTomlSerializer.Deserialize<TomlDocument>("key = \"value\""u8);
 
         await Should.NotThrowAsync(async () =>
-            await CsTomlFileSerializer.SerializeAsync(filePath, doc, TomlFileExtensionPolicy.Relaxed, cancellationToken: TestContext.Current.CancellationToken));
+            await CsTomlFileSerializer.SerializeAsync(filePath, doc, CsTomlSerializerOptions.Default, TomlFileExtensionPolicy.Relaxed, cancellationToken: TestContext.Current.CancellationToken));
 
         File.Exists(filePath).ShouldBeTrue();
     }
@@ -251,7 +251,7 @@ public class CsTomlFileSerializerExtensionPolicyTest : IDisposable
         var doc = CsTomlSerializer.Deserialize<TomlDocument>("key = \"value\""u8);
 
         await Should.NotThrowAsync(async () =>
-            await CsTomlFileSerializer.SerializeAsync(filePath, doc, TomlFileExtensionPolicy.Relaxed, cancellationToken: TestContext.Current.CancellationToken));
+            await CsTomlFileSerializer.SerializeAsync(filePath, doc, CsTomlSerializerOptions.Default, TomlFileExtensionPolicy.Relaxed, cancellationToken: TestContext.Current.CancellationToken));
 
         File.Exists(filePath).ShouldBeTrue();
     }
@@ -287,7 +287,7 @@ public class CsTomlFileSerializerExtensionPolicyTest : IDisposable
     {
         var filePath = CreateTomlFile(fileName);
 
-        var doc = CsTomlFileSerializer.Deserialize<TomlDocument>(filePath, TomlFileExtensionPolicy.Relaxed);
+        var doc = CsTomlFileSerializer.Deserialize<TomlDocument>(filePath, CsTomlSerializerOptions.Default, TomlFileExtensionPolicy.Relaxed);
 
         doc.ShouldNotBeNull();
     }
@@ -303,9 +303,47 @@ public class CsTomlFileSerializerExtensionPolicyTest : IDisposable
         var doc = CsTomlSerializer.Deserialize<TomlDocument>("key = \"value\""u8);
 
         Should.NotThrow(() =>
-            CsTomlFileSerializer.Serialize(filePath, doc, TomlFileExtensionPolicy.Relaxed));
+            CsTomlFileSerializer.Serialize(filePath, doc, CsTomlSerializerOptions.Default, TomlFileExtensionPolicy.Relaxed));
 
         File.Exists(filePath).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Deserialize_UndefinedPolicy_ThrowsArgumentOutOfRangeException()
+    {
+        var filePath = CreateTomlFile("test.toml");
+
+        Should.Throw<ArgumentOutOfRangeException>(() =>
+            CsTomlFileSerializer.Deserialize<TomlDocument>(filePath, CsTomlSerializerOptions.Default, (TomlFileExtensionPolicy)99));
+    }
+
+    [Fact]
+    public async ValueTask DeserializeAsync_UndefinedPolicy_ThrowsArgumentOutOfRangeException()
+    {
+        var filePath = CreateTomlFile("test.toml");
+
+        await Should.ThrowAsync<ArgumentOutOfRangeException>(async () =>
+            await CsTomlFileSerializer.DeserializeAsync<TomlDocument>(filePath, CsTomlSerializerOptions.Default, (TomlFileExtensionPolicy)99, cancellationToken: TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public void Serialize_UndefinedPolicy_ThrowsArgumentOutOfRangeException()
+    {
+        var filePath = GetNonExistentPath("output.toml");
+        var doc = CsTomlSerializer.Deserialize<TomlDocument>("key = \"value\""u8);
+
+        Should.Throw<ArgumentOutOfRangeException>(() =>
+            CsTomlFileSerializer.Serialize(filePath, doc, CsTomlSerializerOptions.Default, (TomlFileExtensionPolicy)99));
+    }
+
+    [Fact]
+    public async ValueTask SerializeAsync_UndefinedPolicy_ThrowsArgumentOutOfRangeException()
+    {
+        var filePath = GetNonExistentPath("output.toml");
+        var doc = CsTomlSerializer.Deserialize<TomlDocument>("key = \"value\""u8);
+
+        await Should.ThrowAsync<ArgumentOutOfRangeException>(async () =>
+            await CsTomlFileSerializer.SerializeAsync(filePath, doc, CsTomlSerializerOptions.Default, (TomlFileExtensionPolicy)99, cancellationToken: TestContext.Current.CancellationToken));
     }
 
 }
