@@ -914,7 +914,7 @@ It may be used to add optional features in the future.
 T Deserialize<T>(ReadOnlySpan<byte> tomlText, CsTomlSerializerOptions? options = null)
 T Deserialize<T>(ReadOnlySequence<byte> tomlSequence, CsTomlSerializerOptions? options = null)
 T Deserialize<T>(Stream stream, CsTomlSerializerOptions? options = null)
-DeserializeAsync<T>(Stream stream, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
+ValueTask<T> DeserializeAsync<T>(Stream stream, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
 ```
 
 Asynchronous API is available as `CsTomlSerializer.DeserializeAsync`.
@@ -940,7 +940,7 @@ var dict2 = CsTomlSerializer.Deserialize<IDictionary<object, object>>(tomlText);
 ```
 
 If a syntax error is found during deserialization, an `CsTomlSerializeException` is thrown after deserialization.
-The contents of the thrown exception can be viewed at `CsTomlException.ParseExceptions`.
+The contents of the thrown exception can be viewed at `CsTomlSerializeException.ParseExceptions`.
 
 ```csharp
 var tomlText = @"
@@ -957,7 +957,7 @@ catch (CsTomlSerializeException ctse)
 {
     foreach (var cte in ctse.ParseExceptions!)
     {
-        // A syntax error (CsTomlException) was thrown during the parsing line 3.
+        // A syntax error (CsTomlException) was thrown while parsing line 3.
         var e = cte.InnerException;         // CsToml.Error.CsTomlException: Escape characters 13 were included.
         var lineNumber = cte.LineNumber;
     }
@@ -967,13 +967,13 @@ catch (CsTomlSerializeException ctse)
 Serialize API
 ---
 
-`Serialize` has three overloads, including synchronous and asynchronous APIs.
+`Serialize` has four overloads, including synchronous and asynchronous APIs.
 
 ```csharp
 ByteMemoryResult Serialize<T>(T target, CsTomlSerializerOptions? options = null)
 void Serialize<TBufferWriter, T>(ref TBufferWriter bufferWriter, T target, CsTomlSerializerOptions? options = null)
 void Serialize<T>(Stream stream, T value, CsTomlSerializerOptions? options = null)
-async ValueTask SerializeAsync<T>(Stream stream, T value, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
+ValueTask SerializeAsync<T>(Stream stream, T value, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
 ```
 
 `IBufferWriter<byte>` serializes directly into the buffer.
@@ -1634,6 +1634,30 @@ await CsTomlFileSerializer.SerializeAsync("test.toml", document);
 `CsTomlFileSerializer.Deserialize` and `CsTomlFileSerializer.DeserializeAsync` deserialize UTF8 strings in TOML files into `TomlDocument`.
 `CsTomlFileSerializer.Serialize` and `CsTomlFileSerializer.SerializeAsync` serialize the UTF8 string of `TomlDocument` to the TOML file.  
 
+By default, a `FormatException` will be thrown if the file extension is not `.toml`.
+If you want to relax the file extension restriction, please use the overload that accepts `TomlFileExtensionPolicy.Relaxed`.
+This overload will be available starting from v1.8.3. 
+
+```csharp
+public partial class CsTomlFileSerializer
+{
+    public static T Deserialize<T>(string tomlFilePath, CsTomlSerializerOptions? options = null);
+    public static T Deserialize<T>(string tomlFilePath, CsTomlSerializerOptions? options, TomlFileExtensionPolicy extensionPolicy);
+    public static ValueTask<T> DeserializeAsync<T>(string tomlFilePath, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default);
+    public static ValueTask<T> DeserializeAsync<T>(string tomlFilePath, CsTomlSerializerOptions? options, TomlFileExtensionPolicy extensionPolicy, bool configureAwait = false, CancellationToken cancellationToken = default);
+    public static void Serialize<T>(string tomlFilePath, T value, CsTomlSerializerOptions? options = null);
+    public static void Serialize<T>(string tomlFilePath, T value, CsTomlSerializerOptions? options, TomlFileExtensionPolicy extensionPolicy);
+    public static ValueTask SerializeAsync<T>(string tomlFilePath, T value, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default);
+    public static ValueTask SerializeAsync<T>(string tomlFilePath, T value, CsTomlSerializerOptions? options, TomlFileExtensionPolicy extensionPolicy, bool configureAwait = false, CancellationToken cancellationToken = default);
+}
+
+public enum TomlFileExtensionPolicy
+{
+    Strict = 0,
+    Relaxed = 1
+}
+```
+
 `CsToml.Extensions` uses [Cysharp/NativeMemoryArray](https://github.com/Cysharp/NativeMemoryArray) as a third party library.
 
 Microsoft.Extensions.Configuration extensions (`CsToml.Extensions.Configuration`)
@@ -1668,8 +1692,10 @@ public static IConfigurationBuilder AddTomlFile(this IConfigurationBuilder build
 public static IConfigurationBuilder AddTomlFile(this IConfigurationBuilder builder, string path, bool optional);
 public static IConfigurationBuilder AddTomlFile(this IConfigurationBuilder builder, string path, bool optional, bool reloadOnChange);
 public static IConfigurationBuilder AddTomlFile(this IConfigurationBuilder builder, Microsoft.Extensions.FileProviders.IFileProvider? provider, string path, bool optional, bool reloadOnChange);
+public static IConfigurationBuilder AddTomlFile(this IConfigurationBuilder builder, Microsoft.Extensions.FileProviders.IFileProvider? provider, string path, bool optional, bool reloadOnChange, CsTomlSerializerOptions? serializerOptions);
 public static IConfigurationBuilder AddTomlFile(this IConfigurationBuilder builder, Action<TomlFileConfigurationSource> configureSource);
 public static IConfigurationBuilder AddTomlStream(this IConfigurationBuilder builder, System.IO.Stream stream);
+public static IConfigurationBuilder AddTomlStream(this IConfigurationBuilder builder, System.IO.Stream stream, CsTomlSerializerOptions? serializerOptions);
 ```
 
 UnitTest
