@@ -1,6 +1,6 @@
-﻿
-using CsToml.Error;
+﻿using CsToml.Error;
 using CsToml.Utility;
+using System.Runtime.CompilerServices;
 
 namespace CsToml.Values;
 
@@ -41,7 +41,15 @@ internal static class TomlDottedKeyHelper
         var bufferWriter = RecycleArrayPoolBufferWriter<byte>.Rent();
         try
         {
-            var documentWriter = new Utf8TomlDocumentWriter<ArrayPoolBufferWriter<byte>>(ref bufferWriter);
+            InlineArray4<TomlDottedKey> initialKeys = default;
+            ref InlineArray4<TomlDottedKey> initialKeysRef = ref Unsafe.AsRef(in initialKeys);
+            TempList<TomlDottedKey> keyList = new(initialKeysRef);
+
+            InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStates = default;
+            ref InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStatesRef = ref Unsafe.AsRef(in initialStates);
+            TempList<(TomlValueState state, int dottedKeyIndex)> stateList = new(initialStatesRef);
+
+            var documentWriter = new Utf8TomlDocumentWriter<ArrayPoolBufferWriter<byte>>(ref bufferWriter, ref keyList, ref stateList, false, CsTomlSerializerOptions.Default);
             documentWriter.WriteKeyForPrimitive(value);
             return ParseKey(bufferWriter.WrittenSpan, supportsEscapeSequenceE, supportsEscapeSequenceX);
         }

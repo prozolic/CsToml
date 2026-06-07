@@ -24,8 +24,8 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
     where TBufferWriter : IBufferWriter<byte>
 {
     private Utf8Writer<TBufferWriter> writer;
-    private List<TomlDottedKey> dottedKeys;
-    private List<(TomlValueState state, int dottedKeyIndex)> valueStates;
+    private TempList<TomlDottedKey> dottedKeys;
+    private TempList<(TomlValueState state, int dottedKeyIndex)> valueStates;
     private readonly bool valueOnly;
     private readonly CsTomlSerializerOptions options;
 
@@ -39,14 +39,17 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
 
     public readonly bool IsRoot => valueStates.Count == 1 && !valueOnly;
 
-    internal Utf8TomlDocumentWriter(ref TBufferWriter bufferWriter, bool valueOnly = false) : this(ref bufferWriter, valueOnly, null)
-    { }
-
-    internal Utf8TomlDocumentWriter(ref TBufferWriter bufferWriter, bool valueOnly, CsTomlSerializerOptions? options)
+    internal Utf8TomlDocumentWriter(
+        ref TBufferWriter bufferWriter,
+        ref TempList<TomlDottedKey> dottedKeys,
+        ref TempList<(TomlValueState state, int dottedKeyIndex)> valueStates,
+        bool valueOnly,
+        CsTomlSerializerOptions? options)
     {
         writer = new Utf8Writer<TBufferWriter>(ref bufferWriter);
-        dottedKeys = [];
-        valueStates = [(TomlValueState.Default, -1)];
+        this.dottedKeys = dottedKeys;
+        this.valueStates = valueStates;
+        this.valueStates.Add((TomlValueState.Default, -1));
         this.valueOnly = valueOnly;
         this.options = options ?? CsTomlSerializerOptions.Default;
     }
@@ -74,21 +77,21 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly void PushKey(ReadOnlySpan<byte> key)
+    public void PushKey(ReadOnlySpan<byte> key)
     {
         dottedKeys.Add(TomlDottedKeyHelper.ParseKey(key, options.Spec.SupportsEscapeSequenceE, options.Spec.SupportsEscapeSequenceX));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal readonly void PushKeyForPrimitive<T>(T value)
+    internal void PushKeyForPrimitive<T>(T value)
     {
         dottedKeys.Add(TomlDottedKeyHelper.ParseKeyForPrimitive(value, options.Spec.SupportsEscapeSequenceE, options.Spec.SupportsEscapeSequenceX));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly void PopKey()
+    public void PopKey()
     {
-        dottedKeys.RemoveAt(dottedKeys.Count - 1);
+        dottedKeys.RemoveLast();
     }
 
     public void EndKeyValue(bool lastValue = false)
@@ -105,8 +108,13 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
                 default:
                     if (valueStates.Count > 1)
                     {
-                        if (valueStates.Any(v => v.state == TomlValueState.ArrayOfTable))
-                            return;
+                        foreach (var valueState in valueStates.Items)
+                        {
+                            if (valueState.state == TomlValueState.ArrayOfTable)
+                            {
+                                return;
+                            }
+                        }
                     }
                     WriteNewLine();
                     return;
@@ -115,15 +123,15 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly void BeginCurrentState(TomlValueState state)
+    public void BeginCurrentState(TomlValueState state)
     {
         valueStates.Add((state, dottedKeys.Count));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly void EndCurrentState()
+    public void EndCurrentState()
     {
-        valueStates.RemoveAt(valueStates.Count - 1);
+        valueStates.RemoveLast();
     }
 
     public void WriteBoolean(bool value)
@@ -672,7 +680,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
             if (valueStates.Count > 1)
             {
                 index = currentState.dottedKeyIndex;
-                var keySpan = CollectionsMarshal.AsSpan(dottedKeys);
+                var keySpan = dottedKeys.Items;
                 for (int i = index; i < keySpan.Length; i++)
                 {
                     keySpan[i].ToTomlString(ref this);
@@ -682,7 +690,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
             }
             else
             {
-                var keySpan = CollectionsMarshal.AsSpan(dottedKeys);
+                var keySpan = dottedKeys.Items;
                 for (int i = index; i < keySpan.Length; i++)
                 {
                     keySpan[i].ToTomlString(ref this);
@@ -943,7 +951,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
     public void WriteTableHeader(ReadOnlySpan<byte> key)
     {
         BeginTableHeader();
-        var keySpan = CollectionsMarshal.AsSpan(dottedKeys);
+        var keySpan = dottedKeys.Items;
         for (int i = 0; i < keySpan.Length; i++)
         {
             keySpan[i].ToTomlString(ref this);
@@ -958,7 +966,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
     internal void WriteTableHeaderForPrimitive<T>(T value)
     {
         BeginTableHeader();
-        var keySpan = CollectionsMarshal.AsSpan(dottedKeys);
+        var keySpan = dottedKeys.Items;
         for (int i = 0; i < keySpan.Length; i++)
         {
             keySpan[i].ToTomlString(ref this);
@@ -1008,7 +1016,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
     {
         if (this.CurrentState.state == TomlValueState.Array)
         {
-            valueStates.RemoveAt(valueStates.Count - 1);
+            valueStates.RemoveLast();
         }
         writer.Write(TomlCodes.Symbol.RIGHTSQUAREBRACKET);
     }

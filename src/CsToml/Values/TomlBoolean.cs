@@ -36,7 +36,7 @@ internal sealed partial class TomlBoolean : TomlValue
             return false;
         }
 
-        GetString().TryCopyTo(destination);
+        (Value ? bool.TrueString : bool.FalseString).AsSpan().TryCopyTo(destination);
         charsWritten = destinationSize;
         return true;
     }

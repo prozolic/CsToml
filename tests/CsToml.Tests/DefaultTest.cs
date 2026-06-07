@@ -1439,6 +1439,193 @@ animal = { type.name = ""pug"",}
 
         buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
+
+    [Fact]
+    public void DottedKeysWithSharedPrefixSerializeTest()
+    {
+        var toml = @"
+val = { a.x = 1, a.y = 2 }
+"u8;
+
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(toml);
+        using var serializeText = CsTomlSerializer.Serialize(document!);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine(@"val = { a.x = 1, a.y = 2 }");
+        writer.Flush();
+
+        buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
+    }
+
+    [Fact]
+    public void DeeplyNestedDottedKeysSerializeTest()
+    {
+        var toml = @"
+val = { a.b.c = 1 }
+"u8;
+
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(toml);
+        using var serializeText = CsTomlSerializer.Serialize(document!);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine(@"val = { a.b.c = 1 }");
+        writer.Flush();
+
+        buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
+    }
+
+    [Fact]
+    public void DeeplyNestedDottedKeysWithSharedPrefixSerializeTest()
+    {
+        var toml = @"
+val = { a.b.c = 1, a.d.e = 2 }
+"u8;
+
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(toml);
+        using var serializeText = CsTomlSerializer.Serialize(document!);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine(@"val = { a.b.c = 1, a.d.e = 2 }");
+        writer.Flush();
+
+        buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
+    }
+
+    [Fact]
+    public void MixedRegularAndDottedKeysSerializeTest()
+    {
+        var toml = @"
+val = { x = 1, y.z = 2 }
+"u8;
+
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(toml);
+        using var serializeText = CsTomlSerializer.Serialize(document!);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine(@"val = { x = 1, y.z = 2 }");
+        writer.Flush();
+
+        buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
+    }
+
+    [Fact]
+    public void DottedKeysExceedInitialCapacitySerializeTest()
+    {
+        var toml = @"
+val = { a.b.c.d.e = 1 }
+"u8;
+
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(toml);
+        using var serializeText = CsTomlSerializer.Serialize(document!);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine(@"val = { a.b.c.d.e = 1 }");
+        writer.Flush();
+
+        buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
+    }
+
+    [Fact]
+    public void MultipleIndependentDottedKeysSerializeTest()
+    {
+        var toml = @"
+val = { a.b = 1, c.d = 2 }
+"u8;
+
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(toml);
+        using var serializeText = CsTomlSerializer.Serialize(document!);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine(@"val = { a.b = 1, c.d = 2 }");
+        writer.Flush();
+
+        buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
+    }
+
+    [Fact]
+    public void DottedKeysResizeKeyStackSerializeTest()
+    {
+        var toml = @"
+val = { a.b.c.d.e.f = 1 }
+"u8;
+
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(toml);
+        using var serializeText = CsTomlSerializer.Serialize(document!);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine(@"val = { a.b.c.d.e.f = 1 }");
+        writer.Flush();
+
+        buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
+    }
+
+    [Fact]
+    public void DottedKeysResizeKeyStackWithSharedPrefixSerializeTest()
+    {
+        var toml = @"
+val = { a.b.c.d.e.f = 1, a.b.c.d.e.g = 2 }
+"u8;
+
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(toml);
+        using var serializeText = CsTomlSerializer.Serialize(document!);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine(@"val = { a.b.c.d.e.f = 1, a.b.c.d.e.g = 2 }");
+        writer.Flush();
+
+        buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
+    }
+
+    [Fact]
+    public void NestedInlineTableSerializeTest()
+    {
+        var toml = @"
+val = { a = { b = { c = 1 } } }
+"u8;
+
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(toml);
+        using var serializeText = CsTomlSerializer.Serialize(document!);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine(@"val = { a = { b = { c = 1 } } }");
+        writer.Flush();
+
+        buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
+    }
+
+    [Fact]
+    public void NestedInlineTableWithDottedKeysSerializeTest()
+    {
+        var toml = @"
+val = { a = { b.c = 1, d.e = 2 } }
+"u8;
+
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(toml);
+        using var serializeText = CsTomlSerializer.Serialize(document!);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine(@"val = { a = { b.c = 1, d.e = 2 } }");
+        writer.Flush();
+
+        buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
+    }
+
+    [Fact]
+    public void DottedKeysAtExactInitialCapacityWithSharedPrefixSerializeTest()
+    {
+        var toml = @"
+val = { a.b.c.d.e = 1, a.b.c.d.f = 2 }
+"u8;
+
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(toml);
+        using var serializeText = CsTomlSerializer.Serialize(document!);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine(@"val = { a.b.c.d.e = 1, a.b.c.d.f = 2 }");
+        writer.Flush();
+
+        buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
+    }
 }
 
 public class DeserializeValueTypeTest
