@@ -537,16 +537,10 @@ internal static class TomlCodes
             switch (ch)
             {
                 case TomlCodes.Symbol.DOUBLEQUOTED:
-                    sequenceReader.Advance(1);
-                    bufferWriter.Write(TomlCodes.Symbol.DOUBLEQUOTED);
-                    return EscapeSequenceResult.Success;
                 case TomlCodes.Symbol.SINGLEQUOTED:
-                    sequenceReader.Advance(1);
-                    bufferWriter.Write(TomlCodes.Symbol.SINGLEQUOTED);
-                    return EscapeSequenceResult.Success;
                 case TomlCodes.Symbol.BACKSLASH:
                     sequenceReader.Advance(1);
-                    bufferWriter.Write(TomlCodes.Symbol.BACKSLASH);
+                    bufferWriter.Write(ch);
                     return EscapeSequenceResult.Success;
                 case TomlCodes.Alphabet.b:
                     sequenceReader.Advance(1);

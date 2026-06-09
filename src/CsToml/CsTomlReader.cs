@@ -618,9 +618,9 @@ internal ref struct CsTomlReader
             case TomlCodes.Symbol.LEFTSQUAREBRACKET:
                 return ReadArray();
             case TomlCodes.Alphabet.f:
-                return ReadBool(false);
+                return ReadBool<FalseMarker>();
             case TomlCodes.Alphabet.t:
-                return ReadBool(true);
+                return ReadBool<TrueMarker>();
             case TomlCodes.Alphabet.i:
                 return ReadDoubleInf(false);
             case TomlCodes.Alphabet.n:
@@ -1595,9 +1595,10 @@ internal ref struct CsTomlReader
         return default;
     }
 
-    internal TomlBoolean ReadBool(bool predictedValue)
+    internal TomlBoolean ReadBool<TMarker>()
+        where TMarker : struct
     {
-        var length = predictedValue ? 4 : 5;
+        var length = typeof(TMarker) == typeof(TrueMarker) ? 4 : 5;
         TomlBoolean value = default!;
         if (sequenceReader.TryFullSpan(length, out var bytes))
         {
@@ -3066,5 +3067,8 @@ internal ref struct CsTomlReader
             break;
         }
     }
+
+    private struct TrueMarker { }
+    private struct FalseMarker { }
 }
 
