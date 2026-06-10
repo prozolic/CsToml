@@ -210,12 +210,9 @@ internal sealed class TomlTableNodeDictionary
         this.buckets = new int[capacity];
         for (int i = 0; i < newEntriesSpan.Length; i++)
         {
-            if (newEntriesSpan[i].next >= -1)
-            {
-                ref var bucket = ref GetBucket((uint)newEntriesSpan[i].hashCode);
-                newEntriesSpan[i].next = bucket - 1;
-                bucket = i + 1;
-            }
+            ref var bucket = ref GetBucket((uint)newEntriesSpan[i].hashCode);
+            newEntriesSpan[i].next = bucket - 1;
+            bucket = i + 1;
         }
 
         this.entries = newEntries;
@@ -255,14 +252,11 @@ internal sealed class TomlTableNodeDictionary
                 return false;
             }
 
-            while ((uint)index < (uint)dictionary.Count)
+            if ((uint)index < (uint)dictionary.Count)
             {
                 ref var entry = ref dictionary.entries[index++];
-                if (entry.next >= -1)
-                {
-                    current = new KeyValuePair<TomlDottedKey, TomlTableNode>(entry.key, entry.value);
-                    return true;
-                }
+                current = new KeyValuePair<TomlDottedKey, TomlTableNode>(entry.key, entry.value);
+                return true;
             }
 
             index = dictionary.Count + 1;

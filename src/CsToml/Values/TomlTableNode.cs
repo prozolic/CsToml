@@ -136,18 +136,9 @@ internal sealed class TomlTableNode
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal Span<TomlString> SetCommentCount(int commentCount)
     {
-        if (this.comments == null)
-        {
-            this.comments = new List<TomlString>(commentCount);
-            CollectionsMarshal.SetCount(this.comments, commentCount);
-            return CollectionsMarshal.AsSpan(this.comments).Slice(0, commentCount);
-        }
-        else
-        {
-            var currentCount = this.comments.Count;
-            CollectionsMarshal.SetCount(this.comments, this.comments.Count + commentCount);
-            return CollectionsMarshal.AsSpan(this.comments).Slice(currentCount, commentCount);
-        }
+        var count = (this.comments ??= new List<TomlString>(commentCount)).Count;
+        CollectionsMarshal.SetCount(this.comments, count + commentCount);
+        return CollectionsMarshal.AsSpan(this.comments).Slice(count, commentCount);
     }
 
     internal TomlTableNode GetOrAddArrayOfTableHeaderKeyNode(TomlDottedKey key, bool lastNode, out bool newNode)
@@ -337,6 +328,11 @@ internal sealed class TomlTableNode
             return true;
         }
 
+        if (!key.Contains(TomlCodes.Symbol.BACKSLASH))
+        {
+            return false;
+        }
+
         return TryGetChildNodeSlow(nodes, key, out childNode);
     }
 
@@ -405,10 +401,7 @@ internal sealed class TomlTableNode
                 }
                 else
                 {
-                    if (TryGetChildNode(key.Value, out var value))
-                    {
-                        dictionary.Add(key.Utf16String, value!.GetDictionary());
-                    }
+                    dictionary.Add(key.Utf16String, node.GetDictionary());
                 }
             }
 

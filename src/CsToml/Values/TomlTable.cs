@@ -1,9 +1,7 @@
-﻿using CsToml.Error;
-using CsToml.Utility;
+﻿using CsToml.Utility;
 using System.Buffers;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace CsToml.Values;
 

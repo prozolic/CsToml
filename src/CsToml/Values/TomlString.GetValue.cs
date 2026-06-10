@@ -1,6 +1,4 @@
 ﻿
-using System.Reflection;
-
 namespace CsToml.Values;
 
 internal partial class TomlString
