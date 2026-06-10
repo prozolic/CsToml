@@ -1,5 +1,4 @@
-﻿
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
 namespace CsToml.Extension;
 
@@ -10,4 +9,3 @@ internal static class DateOnlyExtensions
         => new(target, TimeOnly.MinValue, DateTimeKind.Local);
 
 }
-

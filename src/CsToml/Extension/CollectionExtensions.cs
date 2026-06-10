@@ -2,7 +2,6 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-
 namespace CsToml.Extension;
 
 internal static class CollectionExtensions

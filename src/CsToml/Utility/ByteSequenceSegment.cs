@@ -1,5 +1,4 @@
-﻿
-using System.Buffers;
+﻿using System.Buffers;
 
 namespace CsToml.Utility;
 

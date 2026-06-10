@@ -660,7 +660,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
     public void WriteKey(ReadOnlySpan<byte> key)
     {
         WriteDottedKeyPrefix();
-        WriteKeyInternal(key, TomlDottedKeyHelper.GetTomlKeyType(key, options.Spec.SupportsEscapeSequenceE, options.Spec.SupportsEscapeSequenceX));
+        WriteStringInternal(key, TomlDottedKeyHelper.GetTomlKeyType(key, options.Spec.SupportsEscapeSequenceE, options.Spec.SupportsEscapeSequenceX));
     }
 
     public void WrtieBareKey(ReadOnlySpan<byte> key)
@@ -688,7 +688,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
                     fixed (byte* ptr = &destReference)
                     {
                         var writtenSpan = MemoryMarshal.CreateSpan(ref Unsafe.AsRef<byte>(ptr), bytesWritten);
-                        WriteKeyInternal(writtenSpan, TomlDottedKeyHelper.GetTomlKeyType(writtenSpan, options.Spec.SupportsEscapeSequenceE, options.Spec.SupportsEscapeSequenceX));
+                        WriteStringInternal(writtenSpan, TomlDottedKeyHelper.GetTomlKeyType(writtenSpan, options.Spec.SupportsEscapeSequenceE, options.Spec.SupportsEscapeSequenceX));
                     }
                 }
             }
@@ -699,7 +699,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
             try
             {
                 Utf8Helper.FromUtf16(bufferWriter, keySpan);
-                WriteKeyInternal(bufferWriter.WrittenSpan, TomlDottedKeyHelper.GetTomlKeyType(bufferWriter.WrittenSpan, options.Spec.SupportsEscapeSequenceE, options.Spec.SupportsEscapeSequenceX));
+                WriteStringInternal(bufferWriter.WrittenSpan, TomlDottedKeyHelper.GetTomlKeyType(bufferWriter.WrittenSpan, options.Spec.SupportsEscapeSequenceE, options.Spec.SupportsEscapeSequenceX));
             }
             finally
             {
@@ -708,11 +708,6 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void WriteKeyInternal(ReadOnlySpan<byte> key, TomlStringType tomlStringType)
-    {
-        WriteStringInternal(key, tomlStringType);
-    }
 
     internal void WriteKeyForPrimitive<T>(T value)
     {
@@ -925,7 +920,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
             writer.Write(TomlCodes.Symbol.DOT);
         }
 
-        WriteKeyInternal(key, TomlDottedKeyHelper.GetTomlKeyType(key, options.Spec.SupportsEscapeSequenceE, options.Spec.SupportsEscapeSequenceX));
+        WriteStringInternal(key, TomlDottedKeyHelper.GetTomlKeyType(key, options.Spec.SupportsEscapeSequenceE, options.Spec.SupportsEscapeSequenceX));
 
         EndTableHeader();
     }

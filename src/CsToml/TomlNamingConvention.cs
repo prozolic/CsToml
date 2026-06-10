@@ -1,4 +1,4 @@
-namespace CsToml;
+﻿namespace CsToml;
 
 /// <summary>
 /// Defines the naming convention for TOML property names during serialization.
