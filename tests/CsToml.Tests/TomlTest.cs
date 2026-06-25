@@ -1,4 +1,4 @@
-using CsToml.Error;
+﻿using CsToml.Error;
 using CsToml.Extensions;
 using System.Reflection.Metadata;
 using System.Text.Json.Nodes;
@@ -100,6 +100,21 @@ public class TomlTest
         Should.Throw<CsTomlSerializeException>(() => {
             using var fs = new FileStream(tomlFile, FileMode.Open, FileAccess.Read);
             var document = CsTomlSerializer.Deserialize<TomlDocument>(fs);
+        }, $"TomlFile:{tomlFile}");
+    }
+
+    [Theory, MemberData(nameof(ValidTomlFileV100))]
+    public void EncoderTestV100(string tomlFile, string jsonFile)
+    {
+        Should.NotThrow(() =>
+        {
+            var documentA = CsTomlFileSerializer.Deserialize<TomlDocument>(tomlFile);
+            using var result = CsTomlSerializer.Serialize(documentA);
+            var documentB = CsTomlSerializer.Deserialize<TomlDocument>(result.ByteSpan);
+
+            var jsonNode = JsonNode.Parse(File.ReadAllText(jsonFile))!;
+            var actualJsonNode = documentB!.ToJsonObject();
+            JsonNodeExtensions.DeepEqualsForTomlFormat(jsonNode, actualJsonNode).ShouldBeTrue();
         }, $"TomlFile:{tomlFile}");
     }
 

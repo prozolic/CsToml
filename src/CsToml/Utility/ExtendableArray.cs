@@ -53,6 +53,10 @@ internal struct ExtendableArray<T>
         array = [];
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly Span<T> AsWritableSpan(int start, int length)
+        => array.AsSpan(start, length);
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     private void AddAndEnsureCapacity(T value)
     {

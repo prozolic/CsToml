@@ -1,5 +1,6 @@
 ﻿
 using CsToml.Error;
+using CsToml.Utility;
 using CsToml.Values;
 using Shouldly;
 using System.Text;
@@ -1236,6 +1237,71 @@ lt24 = 00:32.111111
         var document = CsTomlSerializer.Deserialize<TomlDocument>(@"lt1 = 07:32"u8, Options.TomlSpecVersion110);
         (document!.RootNode["lt1"].ValueType == TomlValueType.LocalTime).ShouldBeTrue();
         document!.RootNode["lt1"].GetTimeOnly().ShouldBe(new TimeOnly(7, 32, 0));
+    }
+}
+
+
+public class TomlArrayOfTableTest
+{
+
+    [Fact]
+    public void DeserializeAndSerialize()
+    {
+        var toml = @"
+[[table-1]]
+key1 = ""some string""
+key2 = 123
+
+[[table-1]]
+key1 = ""another string""
+key2 = 456
+
+[[table-2]]
+apple.color = ""red""
+apple.taste.sweet = true
+
+[[fruit.apple.texture]]
+smooth = true
+"u8;
+
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(toml);
+        using var serializeText = CsTomlSerializer.Serialize(document!);
+
+        var stream = new MemoryStream(toml.ToArray());
+        using ByteBufferSegmentWriter bufferWriter = new ByteBufferSegmentWriter();
+        while (true)
+        {
+            int length = stream.Read(bufferWriter.GetSpan(65536));
+            if (length == 0)
+            {
+                break;
+            }
+            bufferWriter.Advance(length);
+        }
+        var document2 = CsTomlSerializer.Deserialize<TomlDocument>(bufferWriter.CreateReadOnlySequence());
+        using var serializeText2 = CsTomlSerializer.Serialize(document2!);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("[[table-1]]");
+        writer.AppendLine(@"key1 = ""some string""");
+        writer.AppendLine(@"key2 = 123");
+        writer.AppendLine();
+        writer.AppendLine("[[table-1]]");
+        writer.AppendLine(@"key1 = ""another string""");
+        writer.AppendLine(@"key2 = 456");
+        writer.AppendLine();
+        writer.AppendLine("[[table-2]]");
+        writer.AppendLine(@"apple.color = ""red""");
+        writer.AppendLine(@"apple.taste.sweet = true");
+        writer.AppendLine();
+        writer.AppendLine("[fruit.apple]");
+        writer.AppendLine();
+        writer.AppendLine("[[fruit.apple.texture]]");
+        writer.AppendLine("smooth = true");
+        writer.Flush();
+
+        buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
+        buffer.ToArray().ShouldBe(serializeText2.ByteSpan.ToArray());
     }
 }
 

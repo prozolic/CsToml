@@ -184,7 +184,14 @@ internal sealed class TomlBasicString(string value) : TomlString(value), ITomlSt
                         writer.Write(TomlCodes.Alphabet.r);
                         continue;
                     default:
-                        writer.Write(ch);
+                        if (TomlCodes.IsEscape(ch))
+                        {
+                            WriteUnicodeEscape(ref writer, ch);
+                        }
+                        else
+                        {
+                            writer.Write(ch);
+                        }
                         continue;
                 }
 
@@ -307,7 +314,14 @@ internal sealed class TomlMultiLineBasicString(string value) : TomlString(value)
                         writer.Write(TomlCodes.Alphabet.r);
                         continue;
                     default:
-                        writer.Write(ch);
+                        if (TomlCodes.IsEscape(ch))
+                        {
+                            WriteUnicodeEscape(ref writer, ch);
+                        }
+                        else
+                        {
+                            writer.Write(ch);
+                        }
                         continue;
                 }
             }
@@ -458,7 +472,27 @@ internal sealed class TomlMultiLineLiteralString(string value) : TomlString(valu
 [DebuggerDisplay("{Utf16String}")]
 internal abstract partial class TomlString(string value) : TomlValue()
 {
-    protected static readonly SearchValues<byte> EscapedChars = SearchValues.Create("\"\\\b\t\n\f\r"u8);
+    private static ReadOnlySpan<byte> EscapedCharBytes =>
+    [
+        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+        0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
+        0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+        0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F,
+        0x22, 0x5C, 0x7F,
+    ];
+    protected static readonly SearchValues<byte> EscapedChars = SearchValues.Create(EscapedCharBytes);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected static void WriteUnicodeEscape<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, byte ch)
+        where TBufferWriter : IBufferWriter<byte>
+    {
+        writer.WriteBytes("\\u00"u8);
+        writer.Write((byte)ToHexChar((ch >> 4) & 0xF));
+        writer.Write((byte)ToHexChar(ch & 0xF));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static char ToHexChar(int nibble) => (char)(nibble < 10 ? '0' + nibble : 'a' + nibble - 10);
 
     protected readonly string value = value;
 
