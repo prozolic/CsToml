@@ -1,5 +1,7 @@
-﻿using CsToml.Values;
+﻿using CsToml.Utility;
+using CsToml.Values;
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json.Nodes;
 
@@ -140,7 +142,16 @@ internal static class TomlDocumentExtensions
     private static string ToTomlUtf16String(this TomlValue tomlValue)
     {
         var bufferWriter = new ArrayBufferWriter<byte>();
-        var writer = new Utf8TomlDocumentWriter<ArrayBufferWriter<byte>>(ref bufferWriter);
+
+        InlineArray4<TomlDottedKey> initialKeys = default;
+        ref InlineArray4<TomlDottedKey> initialKeysRef = ref Unsafe.AsRef(in initialKeys);
+        TempList<TomlDottedKey> keyList = new(initialKeysRef);
+
+        InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStates = default;
+        ref InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStatesRef = ref Unsafe.AsRef(in initialStates);
+        TempList<(TomlValueState state, int dottedKeyIndex)> stateList = new(initialStatesRef);
+
+        var writer = new Utf8TomlDocumentWriter<ArrayBufferWriter<byte>>(ref bufferWriter, ref keyList, ref stateList, false, CsTomlSerializerOptions.Default);
 
         if (tomlValue.Type == TomlValueType.Integer)
         {

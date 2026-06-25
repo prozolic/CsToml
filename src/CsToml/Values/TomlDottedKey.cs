@@ -142,7 +142,15 @@ internal static class TomlDottedKeyExtensions
         var bufferWriter = RecycleArrayPoolBufferWriter<byte>.Rent();
         try
         {
-            var writer = new Utf8TomlDocumentWriter<ArrayPoolBufferWriter<byte>>(ref bufferWriter);
+            InlineArray4<TomlDottedKey> initialKeys = default;
+            ref InlineArray4<TomlDottedKey> initialKeysRef = ref Unsafe.AsRef(in initialKeys);
+            TempList<TomlDottedKey> keyList = new(initialKeysRef);
+
+            InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStates = default;
+            ref InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStatesRef = ref Unsafe.AsRef(in initialStates);
+            TempList<(TomlValueState state, int dottedKeyIndex)> stateList = new(initialStatesRef);
+
+            var writer = new Utf8TomlDocumentWriter<ArrayPoolBufferWriter<byte>>(ref bufferWriter, ref keyList, ref stateList, false, CsTomlSerializerOptions.Default);
 
             for (int i = 0; i < key.Length; i++)
             {

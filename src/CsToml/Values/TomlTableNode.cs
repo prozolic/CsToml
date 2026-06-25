@@ -136,55 +136,153 @@ internal sealed class TomlTableNode
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal Span<TomlString> SetCommentCount(int commentCount)
     {
-        if (this.comments == null)
+        var count = (this.comments ??= new List<TomlString>(commentCount)).Count;
+        CollectionsMarshal.SetCount(this.comments, count + commentCount);
+        return CollectionsMarshal.AsSpan(this.comments).Slice(count, commentCount);
+    }
+
+    internal TomlTableNode GetOrAddArrayOfTableHeaderKeyNode(TomlDottedKey key, bool lastNode, out bool newNode)
+    {
+        newNode = false;
+
+        if (this!.TryGetOrAddChildNode(key, out var childNode) == NodeStatus.NewAdd)
         {
-            this.comments = new List<TomlString>(commentCount);
-            CollectionsMarshal.SetCount(this.comments, commentCount);
-            return CollectionsMarshal.AsSpan(this.comments).Slice(0, commentCount);
+            newNode = true;
+            childNode.IsArrayOfTablesHeader = true;
+            childNode.IsTableHeader = !lastNode;
+            return childNode;
+        }
+
+        if (childNode!.IsArrayOfTablesHeaderDefinitionPosition)
+        {
+            if (lastNode)
+            {
+                return childNode;
+            }
+            else
+            {
+                var tableHeaderArrayValue = (childNode!.Value as TomlArray)?.LastValue;
+                return (tableHeaderArrayValue as TomlTable)?.RootNode!;
+            }
+        }
+        if (childNode!.IsGroupingProperty)
+        {
+            return childNode;
+        }
+
+        ExceptionHelper.ThrowIncorrectTomlFormat();
+        return default;
+    }
+
+    internal TomlTableNode AddArrayOfTableHeaderKeyLastNode(TomlDottedKey key, out TomlTableNode commentNode)
+    {
+        var node = GetOrAddArrayOfTableHeaderKeyNode(key, true, out var newNode);
+
+        if (node!.IsTableHeader)
+        {
+            ExceptionHelper.ThrowTheArrayOfTablesIsDefinedAsTable(key.ToString());
+        }
+
+        if (newNode)
+        {
+            node.Value = new TomlArray();
+            node.IsArrayOfTablesHeader = true;
+            node.IsArrayOfTablesHeaderDefinitionPosition = true;
         }
         else
         {
-            var currentCount = this.comments.Count;
-            CollectionsMarshal.SetCount(this.comments, this.comments.Count + commentCount);
-            return CollectionsMarshal.AsSpan(this.comments).Slice(currentCount, commentCount);
+            if (!node!.IsArrayOfTablesHeaderDefinitionPosition)
+            {
+                ExceptionHelper.ThrowTheArrayOfTablesIsDefinedAsTable(key.ToString());
+            }
         }
+        var table = new TomlTable();
+        (node.Value as TomlArray)?.Add(table);
+        commentNode = node;
+        return table.RootNode;
     }
 
 
-    internal TomlTableNode AddKeyValue(ReadOnlySpan<TomlDottedKey> dotKeys, TomlValue value)
+    internal TomlTableNode GetOrAddTableHeaderKeyNode(TomlDottedKey key, out bool newNode)
     {
-        var currentNode = this;
-        var lastKey = dotKeys[^1];
-
-        for (var i = 0; i < dotKeys.Length - 1; i++)
+        if (this!.TryGetOrAddChildNode(key, out var childNode) == NodeStatus.NewAdd)
         {
-            var sectionKey = dotKeys[i];
-            if (currentNode.TryGetOrAddChildNode(sectionKey, out var childNode) == NodeStatus.NewAdd)
-            {
-                currentNode = childNode;
-                continue;
-            }
-            if (childNode.IsTableHeaderDefinitionPosition)
-            {
-                ExceptionHelper.ThrowTheKeyIsDefinedAsTable();
-            }
-            if (childNode.IsArrayOfTablesHeaderDefinitionPosition)
-            {
-                ExceptionHelper.ThrowTheKeyIsDefinedAsArrayOfTables();
-            }
-            if (childNode.IsGroupingProperty)
-            {
-                currentNode = childNode;
-                continue;
-            }
-
-            ExceptionHelper.ThrowNotTurnIntoTable(dotKeys.GetJoinName());
+            newNode = true;
+            childNode.IsTableHeader = true;
+            return childNode;
         }
 
-        var newNode = new TomlTableNode(value);
-        if (!currentNode.IsGroupingProperty || !(currentNode.nodes?.TryAdd(lastKey, newNode) ?? false))
+        newNode = false;
+        if (childNode!.IsArrayOfTablesHeaderDefinitionPosition)
         {
-            ExceptionHelper.ThrowKeyIsDefined(lastKey);
+            TomlValue tableHeaderArrayValue = (childNode!.Value as TomlArray)?.LastValue!;
+            return (tableHeaderArrayValue as TomlTable)!.RootNode;
+        }
+
+        if (childNode!.IsGroupingProperty)
+        {
+            return childNode;
+        }
+
+        // key is already defined.
+        ExceptionHelper.ThrowKeyIsDefined(key);
+        return default;
+
+    }
+
+    internal TomlTableNode AddTableHeaderKeyLastNode(TomlDottedKey key)
+    {
+        var node = GetOrAddTableHeaderKeyNode(key, out var newNode);
+
+        if (!newNode)
+        {
+            if (node!.IsTableHeaderDefinitionPosition)
+            {
+                ExceptionHelper.ThrowTableHeaderIsDefined(key.ToString());
+            }
+            if (node!.IsArrayOfTablesHeaderDefinitionPosition)
+            {
+                ExceptionHelper.ThrowTableHeaderIsDefinedAsArrayOfTables(key.ToString());
+            }
+            if (!node!.IsTableHeader)
+            {
+                ExceptionHelper.ThrowTableHeaderIsDefined(key.ToString());
+            }
+        }
+
+        node!.IsTableHeaderDefinitionPosition = true;
+        return node;
+    }
+
+    internal TomlTableNode GetOrAddKeyNode(TomlDottedKey key)
+    {
+        if (this.TryGetOrAddChildNode(key, out var childNode) == NodeStatus.NewAdd)
+        {
+            return childNode;
+        }
+        if (childNode.IsTableHeaderDefinitionPosition)
+        {
+            ExceptionHelper.ThrowTheKeyIsDefinedAsTable();
+        }
+        if (childNode.IsArrayOfTablesHeaderDefinitionPosition)
+        {
+            ExceptionHelper.ThrowTheKeyIsDefinedAsArrayOfTables();
+        }
+        if (childNode.IsGroupingProperty)
+        {
+            return childNode;
+        }
+
+        ExceptionHelper.ThrowKeyIsDefined(key);
+        return default;
+    }
+
+    internal TomlTableNode AddKeyValueNode(TomlDottedKey key, TomlValue value)
+    {
+        var newNode = new TomlTableNode(value);
+        if (!this.IsGroupingProperty || !(this.nodes?.TryAdd(key, newNode) ?? false))
+        {
+            ExceptionHelper.ThrowKeyIsDefined(key);
         }
 
         return newNode;
@@ -228,6 +326,11 @@ internal sealed class TomlTableNode
         if (nodes.TryGetValue(key, out childNode))
         {
             return true;
+        }
+
+        if (!key.Contains(TomlCodes.Symbol.BACKSLASH))
+        {
+            return false;
         }
 
         return TryGetChildNodeSlow(nodes, key, out childNode);
@@ -298,10 +401,7 @@ internal sealed class TomlTableNode
                 }
                 else
                 {
-                    if (TryGetChildNode(key.Value, out var value))
-                    {
-                        dictionary.Add(key.Utf16String, value!.GetDictionary());
-                    }
+                    dictionary.Add(key.Utf16String, node.GetDictionary());
                 }
             }
 

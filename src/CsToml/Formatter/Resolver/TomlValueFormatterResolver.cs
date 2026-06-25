@@ -1,5 +1,4 @@
-﻿
-using CsToml.Error;
+﻿using CsToml.Error;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
@@ -90,8 +89,8 @@ public sealed class TomlValueFormatterResolver : ITomlValueFormatterResolver
     {
         if (IsRegistered<T>()) return;
 
-        CacheCheck<T>.Registered = true;
         Cache<T>.Formatter = formatter;
+        CacheCheck<T>.Registered = true;
     }
 
     public static void Register<T>(TomlSerializedObjectFormatter<T> formatter)

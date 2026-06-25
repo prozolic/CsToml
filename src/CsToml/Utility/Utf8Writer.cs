@@ -1,5 +1,4 @@
-﻿
-using CsToml.Extension;
+﻿using CsToml.Extension;
 using System.Buffers;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;

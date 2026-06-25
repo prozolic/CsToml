@@ -50,64 +50,97 @@ public partial class TomlDocument : ITomlValueFormatter<TomlDocument>
         Span<TomlString> initialCommentsSpan = initialComments;
         var commentsBuilder = new InlineArrayBuilder<TomlString>(initialCommentsSpan);
 
-        List<CsTomlParseException>? exceptions = default;
+        List<CsTomlParseException>? exceptions = null;
         TomlTableNode currentNode = table.RootNode;
         TomlTableNode commentNode = table.RootNode;
 
         var parser = new CsTomlParser(ref reader, options);
 
-        try
+        while (parser.Read())
         {
-            while (parser.TryRead())
+            try
             {
-                try
+                switch (parser.CurrentState)
                 {
-                    switch (parser.CurrentState)
-                    {
-                        case ParserState.Comment:
-                            commentsBuilder.Add(parser.GetComment());
-                            continue;
+                    case ParserState.Comment:
+                        if (!parser.IsEndComment)
+                        {
+                            commentsBuilder.Add(parser.ReadComment());
+                        }
+                        else
+                        {
+                            // Currently, only validation is performed for end comments.
+                            parser.ReadEndComment();
+                        }
+                        continue;
 
-                        case ParserState.KeyValue:
-                            var node = currentNode!.AddKeyValue(parser.GetDottedKeySpan(), parser.GetValue()!);
-                            commentNode = node;
-                            break;
+                    case ParserState.KeyValue:
+                        var node = currentNode;
+                        var readResult = parser.reader.ReadKey(true, out var key);
+                        while (readResult == ReadKeyResult.FoundDot)
+                        {
+                            node = node.GetOrAddKeyNode(key!);
+                            readResult = parser.reader.ReadKey(false, out key);
+                        }
 
-                        case ParserState.TableHeader:
-                            currentNode = table.AddTableHeader(parser.GetDottedKeySpan());
-                            commentNode = currentNode;
-                            break;
+                        var value = parser.reader.ReadValue();
+                        node = node.AddKeyValueNode(key!, value);
+                        commentNode = node;
+                        break;
 
-                        case ParserState.ArrayOfTablesHeader:
-                            currentNode = table.AddArrayOfTablesHeader(parser.GetDottedKeySpan(), out commentNode);
-                            break;
+                    case ParserState.TableHeader:
+                        currentNode = table.RootNode;
+                        var readTableHeaderResult = parser.reader.ReadTableHeaderKey(true, out var tableHeaderKey);
+                        while (readTableHeaderResult == ReadKeyResult.FoundDot)
+                        {
+                            currentNode = currentNode.GetOrAddTableHeaderKeyNode(tableHeaderKey!, out bool newNode);
+                            readTableHeaderResult = parser.reader.ReadTableHeaderKey(false, out tableHeaderKey);
+                        }
 
-                        case ParserState.ThrowException:
-                            exceptions ??= new List<CsTomlParseException>();
-                            exceptions?.Add(parser.GetException()!);
-                            break;
+                        currentNode = currentNode.AddTableHeaderKeyLastNode(tableHeaderKey!);
+                        commentNode = currentNode;
+                        break;
 
-                        default:
-                            break;
-                    }
+                    case ParserState.ArrayOfTablesHeader:
+                        currentNode = table.RootNode;
+                        var readArrayOfTableHeaderResult = parser.reader.ReadArrayOfTableHeaderKey(true, out var arrayOfTableHeaderKey);
+                        while (readArrayOfTableHeaderResult == ReadKeyResult.FoundDot)
+                        {
+                            currentNode = currentNode.GetOrAddArrayOfTableHeaderKeyNode(arrayOfTableHeaderKey!, false, out bool newNode);
+                            readArrayOfTableHeaderResult = parser.reader.ReadArrayOfTableHeaderKey(false, out arrayOfTableHeaderKey);
+                        }
+                        currentNode = currentNode.AddArrayOfTableHeaderKeyLastNode(arrayOfTableHeaderKey!, out commentNode);
+                        break;
 
-                    if (commentsBuilder.Count > 0)
-                    {
-                        var commentsSpan = commentNode.SetCommentCount(commentsBuilder.Count);
-                        commentsBuilder.CopyToAndReturn(commentsSpan);   
-                    }
+                    case ParserState.ThrowException:
+                        exceptions ??= new List<CsTomlParseException>();
+                        exceptions?.Add(parser.GetException()!);
+                        break;
+
+                    default:
+                        break;
                 }
-                catch (CsTomlException cte)
+
+                if (commentsBuilder.Count > 0)
                 {
-                    exceptions ??= new List<CsTomlParseException>();
-                    exceptions?.Add(new CsTomlParseException(cte, parser.LineNumber));
+                    var commentsSpan = commentNode.SetCommentCount(commentsBuilder.Count);
+                    commentsBuilder.CopyToAndReturn(commentsSpan);
+                }
+
+                if (!parser.ReadEnd())
+                {
+                    break;
+                }
+                if (parser.CurrentState == ParserState.ThrowException)
+                {
+                    (exceptions ??= new()).Add(parser.GetException()!);
                 }
             }
-
-        }
-        finally
-        {
-            parser.Return();
+            catch (CsTomlException cte)
+            {
+                (exceptions ??= new()).Add(new CsTomlParseException(cte, parser.LineNumber));
+                parser.reader.SkipOneLine();
+            }
         }
 
         LineNumber = parser.LineNumber;

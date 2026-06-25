@@ -1,9 +1,7 @@
-﻿using CsToml.Error;
-using CsToml.Utility;
+﻿using CsToml.Utility;
 using System.Buffers;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace CsToml.Values;
 
@@ -22,140 +20,24 @@ internal sealed partial class TomlTable : TomlValue
 
     internal TomlTable() { }
 
-    internal TomlTableNode AddTableHeader(ReadOnlySpan<TomlDottedKey> dotKeys)
-    {
-        var node = RootNode;
-        var addedNewNode = false;
-        TomlTableNode? newNode;
-
-        for (var i = 0; i < dotKeys.Length; i++)
-        {
-            var sectionKey = dotKeys[i];
-            if (node!.TryGetOrAddChildNode(sectionKey, out var childNode) == NodeStatus.NewAdd)
-            {
-                addedNewNode = true;
-                node = childNode!;
-                node.IsTableHeader = true;
-                continue;
-            }
-
-            if (childNode!.IsArrayOfTablesHeaderDefinitionPosition)
-            {
-                var tableHeaderArrayValue = (childNode!.Value as TomlArray)?.LastValue;
-                node = (tableHeaderArrayValue as TomlTable)?.RootNode;
-                continue;
-            }
-
-            if (childNode!.IsGroupingProperty)
-            {
-                node = childNode;
-                continue;
-            }
-
-            // dotKeys[i] is already defined.
-            newNode = RootNode;
-            ExceptionHelper.ThrowKeyIsDefined(dotKeys[i]);
-        }
-
-        if (!addedNewNode)
-        {
-            if (node!.IsTableHeaderDefinitionPosition)
-            {
-                ExceptionHelper.ThrowTableHeaderIsDefined(dotKeys.GetJoinName());
-            }
-            if (node!.IsArrayOfTablesHeaderDefinitionPosition)
-            {
-                ExceptionHelper.ThrowTableHeaderIsDefinedAsArrayOfTables(dotKeys.GetJoinName());
-            }
-            if (!node!.IsTableHeader)
-            {
-                ExceptionHelper.ThrowTableHeaderIsDefined(dotKeys.GetJoinName());
-            }
-        }
-
-        node!.IsTableHeaderDefinitionPosition = true;
-        newNode = node;
-
-        return newNode;
-    }
-
-    internal TomlTableNode AddArrayOfTablesHeader(ReadOnlySpan<TomlDottedKey> dotKeys, out TomlTableNode commentNode)
-    {
-        var currentNode = RootNode;
-        var addedNewNode = false;
-
-        for (var i = 0; i < dotKeys.Length; i++)
-        {
-            var sectionKey = dotKeys[i];
-            if (currentNode!.TryGetOrAddChildNode(sectionKey, out var childNode) == NodeStatus.NewAdd)
-            {
-                addedNewNode = true;
-                currentNode = childNode!;
-                currentNode.IsArrayOfTablesHeader = true;
-                currentNode.IsTableHeader = i < dotKeys.Length - 1;
-                continue;
-            }
-
-            if (childNode!.IsArrayOfTablesHeaderDefinitionPosition)
-            {
-                if (i == dotKeys.Length - 1)
-                {
-                    currentNode = childNode;
-                    continue;
-                }
-                else
-                {
-                    var tableHeaderArrayValue = (childNode!.Value as TomlArray)?.LastValue;
-                    currentNode = (tableHeaderArrayValue as TomlTable)?.RootNode;
-                    continue;
-                }
-            }
-            if (childNode!.IsGroupingProperty)
-            {
-                currentNode = childNode;
-                continue;
-            }
-
-            Unsafe.SkipInit(out commentNode);
-            ExceptionHelper.ThrowIncorrectTomlFormat();
-        }
-
-        if (currentNode!.IsTableHeader)
-        {
-            ExceptionHelper.ThrowTheArrayOfTablesIsDefinedAsTable(dotKeys.GetJoinName());
-        }
-
-        if (addedNewNode)
-        {
-            currentNode.Value = new TomlArray();
-            currentNode.IsArrayOfTablesHeader = true;
-            currentNode.IsArrayOfTablesHeaderDefinitionPosition = true;
-        }
-        else
-        {
-            if (!currentNode!.IsArrayOfTablesHeaderDefinitionPosition)
-            {
-                ExceptionHelper.ThrowTheArrayOfTablesIsDefinedAsTable(dotKeys.GetJoinName());
-            }
-        }
-        var table = new TomlTable();
-        (currentNode.Value as TomlArray)?.Add(table);
-        commentNode = currentNode;
-        return table.RootNode;
-    }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal IDictionary<object, object> GetDictionary()
         => node.GetDictionary();
 
     internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
-        var keys = new List<TomlDottedKey>();
-        var tableNodes = new List<TomlDottedKey>();
-        ToTomlStringCore(ref writer, RootNode, keys, tableNodes);
+        InlineArray4<TomlDottedKey> initialKeys = default;
+        ref InlineArray4<TomlDottedKey> initialKeysRef = ref Unsafe.AsRef(in initialKeys);
+        TempList<TomlDottedKey> keyList = new(initialKeysRef);
+
+        InlineArray4<TomlDottedKey> initiaTableHeaderKeys = default;
+        ref InlineArray4<TomlDottedKey> initiaTableHeaderKeysRef = ref Unsafe.AsRef(in initiaTableHeaderKeys);
+        TempList<TomlDottedKey> tableHeaderKeyList = new(initiaTableHeaderKeysRef);
+
+        ToTomlStringCore(ref writer, RootNode, ref keyList, ref tableHeaderKeyList);
     }
 
-    private void ToTomlStringCore<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlTableNode parentNode, List<TomlDottedKey> keys, List<TomlDottedKey> tableHeaderKeys)
+    private void ToTomlStringCore<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlTableNode parentNode, ref TempList<TomlDottedKey> keyList, ref TempList<TomlDottedKey> tableHeaderKeyList)
         where TBufferWriter : IBufferWriter<byte>
     {
         if (parentNode.IsArrayOfTablesHeader)
@@ -173,7 +55,7 @@ internal sealed partial class TomlTable : TomlValue
                     WriteComments(ref writer, parentNode.CommentSpan);
                     skipNewLine = true;
                 }
-                var keysSpan = CollectionsMarshal.AsSpan(tableHeaderKeys);
+                var keysSpan = tableHeaderKeyList.Items;
                 foreach (var v in arrayValue)
                 {
                     if (writer.WrittenSize > 0 && !skipNewLine)
@@ -183,82 +65,191 @@ internal sealed partial class TomlTable : TomlValue
                     WriteArrayOfTablesHeader(ref writer, keysSpan);
                     if (v is TomlTable table)
                     {
-                        table.ToTomlStringCore(ref writer, table.RootNode, [], tableHeaderKeys);
+                        InlineArray4<TomlDottedKey> initialKeys = default;
+                        ref InlineArray4<TomlDottedKey> initialKeysRef = ref Unsafe.AsRef(in initialKeys);
+                        TempList<TomlDottedKey> keyList2 = new(initialKeysRef);
+                        table.ToTomlStringCore(ref writer, table.RootNode, ref keyList2, ref tableHeaderKeyList);
                     }
                     skipNewLine = false;
                 }
             }
         }
 
-        foreach (var (key, childNode) in parentNode.KeyValuePairs)
+        var hasArrayOfTables = false;
+        foreach (var pair in parentNode.KeyValuePairs)
         {
-            tableHeaderKeys.Add(key);
-            if (childNode.IsGroupingProperty)
+            if (pair.Value.IsArrayOfTablesHeader)
             {
-                if (!childNode.IsTableHeader && parentNode.IsTableHeader && keys.Count > 0)
+                hasArrayOfTables = true;
+                break;
+            }
+        }
+
+        var headerWritten = false;
+
+        if (hasArrayOfTables)
+        {
+            // If array of table exists in current node, we need to sort the key-value pairs to ensure that non-array-of-tables come before array-of-tables.
+            var orderedValues = new ExtendableArray<KeyValuePair<TomlDottedKey, TomlTableNode>>(parentNode.NodeCount);
+            var firstAoTIndex = -1;
+            foreach (var pair in parentNode.KeyValuePairs)
+            {
+                if (firstAoTIndex < 0 && pair.Value.IsArrayOfTablesHeader)
                 {
-                    var skipNewLine = false;
-                    if (parentNode.CommentCount > 0)
+                    firstAoTIndex = orderedValues.Count;
+                }
+                orderedValues.Add(pair);
+            }
+
+            if (firstAoTIndex >= 0)
+            {
+                var span = orderedValues.AsWritableSpan(firstAoTIndex, orderedValues.Count - firstAoTIndex);
+                var temp = ArrayPool<KeyValuePair<TomlDottedKey, TomlTableNode>>.Shared.Rent(span.Length);
+                try
+                {
+                    var writeIndex = 0;
+                    for (var i = 0; i < span.Length; i++)
                     {
-                        WriteComments(ref writer, parentNode.CommentSpan);
-                        skipNewLine = true;
+                        if (!span[i].Value.IsArrayOfTablesHeader)
+                        {
+                            temp[writeIndex++] = span[i];
+                        }
                     }
-                    if (writer.WrittenSize > 0 && !skipNewLine)
+                    for (var i = 0; i < span.Length; i++)
+                    {
+                        if (span[i].Value.IsArrayOfTablesHeader)
+                        {
+                            temp[writeIndex++] = span[i];
+                        }
+                    }
+                    temp.AsSpan(0, span.Length).CopyTo(span);
+                }
+                finally
+                {
+                    ArrayPool<KeyValuePair<TomlDottedKey, TomlTableNode>>.Shared.Return(temp, clearArray: true);
+                }
+            }
+
+            foreach (var (key, childNode) in orderedValues.AsSpan())
+            {
+                ProcessChildNode(ref writer, parentNode, key, childNode, ref keyList, ref tableHeaderKeyList, ref headerWritten);
+            }
+
+            orderedValues.Return();
+        }
+        else
+        {
+            foreach (var (key, childNode) in parentNode.KeyValuePairs)
+            {
+                ProcessChildNode(ref writer, parentNode, key, childNode, ref keyList, ref tableHeaderKeyList, ref headerWritten);
+            }
+        }
+
+        if (!headerWritten && parentNode.IsTableHeaderDefinitionPosition && keyList.Count > 0)
+        {
+            if (writer.WrittenSize > 0)
+            {
+                writer.WriteNewLine();
+            }
+            if (parentNode.CommentCount > 0)
+            {
+                WriteComments(ref writer, parentNode.CommentSpan);
+            }
+            WriteTableHeader(ref writer, tableHeaderKeyList.Items);
+        }
+
+    }
+
+    private void ProcessChildNode<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlTableNode parentNode, TomlDottedKey key, TomlTableNode childNode, ref TempList<TomlDottedKey> keyList, ref TempList<TomlDottedKey> tableHeaderKeyList, ref bool headerWritten)
+        where TBufferWriter : IBufferWriter<byte>
+    {
+        tableHeaderKeyList.Add(key);
+        if (childNode.IsGroupingProperty)
+        {
+            if (!childNode.IsTableHeader && parentNode.IsTableHeader && keyList.Count > 0)
+            {
+                var skipNewLine = false;
+                if (parentNode.CommentCount > 0)
+                {
+                    WriteComments(ref writer, parentNode.CommentSpan);
+                    skipNewLine = true;
+                }
+                if (writer.WrittenSize > 0 && !skipNewLine)
+                {
+                    writer.WriteNewLine();
+                }
+                var keysSpan = tableHeaderKeyList.Items.Slice(0, tableHeaderKeyList.Count - 1);
+                WriteTableHeader(ref writer, keysSpan);
+                keyList.Clear();
+                headerWritten = true;
+            }
+            var savedKeyCount = keyList.Count;
+            keyList.Add(key);
+            ToTomlStringCore(ref writer, childNode, ref keyList, ref tableHeaderKeyList);
+            keyList.TruncateTo(savedKeyCount);
+        }
+        else
+        {
+            tableHeaderKeyList.RemoveLast();
+            if (parentNode.IsTableHeader && keyList.Count > 0)
+            {
+                var skipNewLine = false;
+                if (parentNode.CommentCount > 0)
+                {
+                    if (writer.WrittenSize > 0)
                     {
                         writer.WriteNewLine();
                     }
-                    var keysSpan = CollectionsMarshal.AsSpan(keys);
-                    WriteTableHeader(ref writer, keysSpan);
-                    keys.Clear();
+                    WriteComments(ref writer, parentNode.CommentSpan);
+                    skipNewLine = true;
                 }
-                keys.Add(key);
-                ToTomlStringCore(ref writer, childNode, keys, tableHeaderKeys);
+                if (writer.WrittenSize > 0 && !skipNewLine)
+                {
+                    writer.WriteNewLine();
+                }
+                var keysSpan = tableHeaderKeyList.Items;
+                WriteTableHeader(ref writer, keysSpan);
+                keyList.Clear();
+                headerWritten = true;
+                WriteKeyValueAndNewLine(ref writer, key, childNode.Value!);
+            }
+            else if (parentNode.IsTableHeaderDefinitionPosition && !headerWritten)
+            {
+                if (writer.WrittenSize > 0)
+                {
+                    writer.WriteNewLine();
+                }
+                if (parentNode.CommentCount > 0)
+                {
+                    WriteComments(ref writer, parentNode.CommentSpan);
+                }
+                var keysSpan = tableHeaderKeyList.Items;
+                WriteTableHeader(ref writer, keysSpan);
+                headerWritten = true;
+                if (childNode.CommentCount > 0)
+                {
+                    WriteComments(ref writer, childNode.CommentSpan);
+                }
+                WriteKeyValueAndNewLine(ref writer, key, childNode.Value!);
             }
             else
             {
-                tableHeaderKeys.RemoveAt(tableHeaderKeys.Count - 1);
-                if (parentNode.IsTableHeader && keys.Count > 0)
+                if (childNode.CommentCount > 0)
                 {
-                    var skipNewLine = false;
-                    if (parentNode.CommentCount > 0)
-                    {
-                        if (writer.WrittenSize > 0)
-                        {
-                            writer.WriteNewLine();
-                        }
-                        WriteComments(ref writer, parentNode.CommentSpan);
-                        skipNewLine = true;
-                    }
-                    if (writer.WrittenSize > 0 && !skipNewLine)
-                    {
-                        writer.WriteNewLine();
-                    }
-                    var keysSpan = CollectionsMarshal.AsSpan(tableHeaderKeys);
-                    WriteTableHeader(ref writer, keysSpan);
-                    keys.Clear();
-                    WriteKeyValueAndNewLine(ref writer, key, childNode.Value!);
+                    WriteComments(ref writer, childNode.CommentSpan);
                 }
-                else
+                var keysSpan = keyList.Items;
+                if (keysSpan.Length > 0)
                 {
-                    if (childNode.CommentCount > 0)
+                    for (var i = 0; i < keysSpan.Length; i++)
                     {
-                        WriteComments(ref writer, childNode.CommentSpan);
+                        WriterKey(ref writer, keysSpan[i], true);
                     }
-                    var keysSpan = CollectionsMarshal.AsSpan(keys);
-                    if (keysSpan.Length > 0)
-                    {
-                        for (var i = 0; i < keysSpan.Length; i++)
-                        {
-                            WriterKey(ref writer, keysSpan[i], true);
-                        }
-                    }
-                    WriteKeyValueAndNewLine(ref writer, key, childNode.Value!);
                 }
+                WriteKeyValueAndNewLine(ref writer, key, childNode.Value!);
             }
-            tableHeaderKeys.Remove(key);
         }
-
-        keys.Clear(); // clear subkey
+        tableHeaderKeyList.RemoveLastIfFound(key);
     }
 
     private void WriterKey<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlDottedKey key, bool isGroupingProperty)
@@ -392,5 +383,4 @@ internal sealed partial class TomlTable : TomlValue
     }
 
     public override string ToString() => ToString(null, null);
-
 }

@@ -51,8 +51,8 @@ internal sealed class TomlSerializedObjectFormatterResolver : ITomlValueFormatte
     {
         if (CacheCheck<T>.Registered) return;
 
-        CacheCheck<T>.Registered = true;
         Cache<T>.Formatter = fomatter!;
+        CacheCheck<T>.Registered = true;
     }
 
     public void Register<T>(StructTomlSerializedObjectFormatter<T> fomatter)
@@ -60,7 +60,7 @@ internal sealed class TomlSerializedObjectFormatterResolver : ITomlValueFormatte
     {
         if (CacheCheck<T>.Registered) return;
 
-        CacheCheck<T>.Registered = true;
         Cache<T>.Formatter = fomatter;
+        CacheCheck<T>.Registered = true;
     }
 }

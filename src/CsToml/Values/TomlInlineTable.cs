@@ -32,15 +32,17 @@ internal sealed partial class TomlInlineTable : TomlValue
 
         if (RootNode.NodeCount > 0)
         {
-            var keys = new List<TomlDottedKey>(RootNode.NodeCount);
-            ToTomlStringCore(ref writer, RootNode, keys);
+            InlineArray4<TomlDottedKey> initialKeys = default;
+            ref InlineArray4<TomlDottedKey> initialKeysRef = ref Unsafe.AsRef(in initialKeys);
+            TempList<TomlDottedKey> keyStack = new(initialKeysRef);
+            ToTomlStringCore(ref writer, RootNode, ref keyStack);
         }
 
         writer.WriteSpace();
         writer.EndInlineTable();
     }
 
-    private void ToTomlStringCore<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlTableNode parentNode, List<TomlDottedKey> keys)
+    private void ToTomlStringCore<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlTableNode parentNode, scoped ref TempList<TomlDottedKey> keyList)
         where TBufferWriter : IBufferWriter<byte>
     {
         var count = 0;
@@ -49,8 +51,9 @@ internal sealed partial class TomlInlineTable : TomlValue
         {
             if (childNode.IsGroupingProperty)
             {
-                keys.Add(key);
-                ToTomlStringCore(ref writer, childNode, keys);
+                keyList.Add(key);
+                ToTomlStringCore(ref writer, childNode, ref keyList);
+                keyList.RemoveLast();
                 count++;
 
                 if (count != parentNode.NodeCount)
@@ -62,12 +65,12 @@ internal sealed partial class TomlInlineTable : TomlValue
             }
             else
             {
-                var keysSpan = CollectionsMarshal.AsSpan(keys);
-                if (keysSpan.Length > 0)
+                if (keyList.Count > 0)
                 {
-                    for (var i = 0; i < keysSpan.Length; i++)
+                    var keys = keyList.Items;
+                    for (var i = 0; i < keys.Length; i++)
                     {
-                        keysSpan[i].ToTomlString(ref writer);
+                        keys[i].ToTomlString(ref writer);
                         writer.Write(TomlCodes.Symbol.DOT);
                     }
                 }
@@ -83,8 +86,6 @@ internal sealed partial class TomlInlineTable : TomlValue
                 }
             }
         }
-
-        keys.Clear(); // clear subkey
     }
 
     public override bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
@@ -154,4 +155,3 @@ internal sealed partial class TomlInlineTable : TomlValue
 
     public override string ToString() => ToString(null, null);
 }
-

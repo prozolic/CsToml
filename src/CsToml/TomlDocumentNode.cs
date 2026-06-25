@@ -4,9 +4,7 @@ using CsToml.Formatter.Resolver;
 using CsToml.Utility;
 using CsToml.Values;
 using CsToml.Values.Internal;
-using System;
 using System.Buffers;
-using System.Collections;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -274,7 +272,7 @@ public struct TomlDocumentNode
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NodeEnumerator GetEnumerator() // GetEnumeratorメソッドは必須
+    public NodeEnumerator GetEnumerator()
         => new (this.Node, HasValue);
 
     [StructLayout(LayoutKind.Auto)]

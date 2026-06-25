@@ -5,6 +5,7 @@ using CsToml.Utility;
 using CsToml.Values;
 using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 namespace CsToml;
 
@@ -151,7 +152,15 @@ public static class CsTomlSerializer
         options ??= DefaultOptions;
         try
         {
-            var documentWriter = new Utf8TomlDocumentWriter<TBufferWriter>(ref bufferWriter);
+            InlineArray4<TomlDottedKey> initialKeys = default;
+            ref InlineArray4<TomlDottedKey> initialKeysRef = ref Unsafe.AsRef(in initialKeys);
+            TempList<TomlDottedKey> keyList = new(initialKeysRef);
+
+            InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStates = default;
+            ref InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStatesRef = ref Unsafe.AsRef(in initialStates);
+            TempList<(TomlValueState state, int dottedKeyIndex)> stateList = new(initialStatesRef);
+
+            var documentWriter = new Utf8TomlDocumentWriter<TBufferWriter>(ref bufferWriter, ref keyList, ref stateList, false, options);
             var formatter = GetFormatter<T>(null);
             using (formatter as IDisposable)
             {
@@ -206,7 +215,15 @@ public static class CsTomlSerializer
         options ??= DefaultOptions;
         try
         {
-            var documentWriter = new Utf8TomlDocumentWriter<TBufferWriter>(ref bufferWriter, true);
+            InlineArray4<TomlDottedKey> initialKeys = default;
+            ref InlineArray4<TomlDottedKey> initialKeysRef = ref Unsafe.AsRef(in initialKeys);
+            TempList<TomlDottedKey> keyList = new(initialKeysRef);
+
+            InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStates = default;
+            ref InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStatesRef = ref Unsafe.AsRef(in initialStates);
+            TempList<(TomlValueState state, int dottedKeyIndex)> stateList = new(initialStatesRef);
+
+            var documentWriter = new Utf8TomlDocumentWriter<TBufferWriter>(ref bufferWriter, ref keyList, ref stateList, true, options);
             var formatter = GetFormatter<T>(null);
             using (formatter as IDisposable)
             {

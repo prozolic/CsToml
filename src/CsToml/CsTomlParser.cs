@@ -23,57 +23,35 @@ internal enum ParserState : byte
 [StructLayout(LayoutKind.Auto)]
 internal ref struct CsTomlParser
 {
-    private CsTomlReader reader;
-    private TomlValue? comment;
-    private ExtendableArray<TomlDottedKey> dottedKeys;
-    private TomlValue? value;
+    internal CsTomlReader reader;
     private CsTomlParseException? exception;
     private bool endComment;
 
-    public readonly long LineNumber => reader.LineNumber;
+    public long LineNumber => reader.LineNumber;
 
-    public ParserState CurrentState 
+    public ParserState CurrentState
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private set; 
+        private set;
     }
 
+    public bool IsEndComment => endComment;
+
     [DebuggerStepThrough]
-    internal CsTomlParser(ref Utf8SequenceReader sequenceReader, CsTomlSerializerOptions options)
+    internal CsTomlParser(ref Utf8SequenceReader reader, CsTomlSerializerOptions options)
     {
-        reader = new CsTomlReader(ref sequenceReader, options.Spec);
-        dottedKeys = new ExtendableArray<TomlDottedKey>(16);
+        this.reader = new CsTomlReader(ref reader, options.Spec);
         CurrentState = ParserState.ParseStart;
     }
-
-    [DebuggerStepThrough]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Return()
-        => dottedKeys.Return();
 
     [DebuggerStepThrough]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly CsTomlParseException? GetException()
         => exception;
 
-    [DebuggerStepThrough]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly TomlString GetComment()
-        => Unsafe.As<TomlString>(comment!);
-
-    [DebuggerStepThrough]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal readonly ReadOnlySpan<TomlDottedKey> GetDottedKeySpan()
-        => dottedKeys.AsSpan();
-
-    [DebuggerStepThrough]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly TomlValue? GetValue()
-        => value;
-
-    public bool TryRead()
+    public bool Read()
     {
         if (!reader.Peek())
         {
@@ -92,17 +70,26 @@ internal ref struct CsTomlParser
                 switch (ch)
                 {
                     case TomlCodes.Symbol.NUMBERSIGN:
-                        ReadComment();
-                        break;
+                        CurrentState = ParserState.Comment;
+                        return true;
                     case TomlCodes.Symbol.LEFTSQUAREBRACKET: // table or array of tables
                         if (reader.TryPeek(1, out var c) && TomlCodes.IsLeftSquareBrackets(c))
-                            ReadArrayOfTablesHeader();
+                        {
+                            reader.Advance(2);
+                            CurrentState = ParserState.ArrayOfTablesHeader;
+                            return true;
+                        }
                         else
-                            ReadTableHeader();
-                        break;
+                        {
+                            reader.Advance(1);
+                            CurrentState = ParserState.TableHeader;
+                            return true;
+                        }
                     default:
-                        ReadKeyValue();
-                        break;
+                        {
+                            CurrentState = ParserState.KeyValue;
+                            return true;
+                        }
                 }
             }
             else
@@ -110,7 +97,22 @@ internal ref struct CsTomlParser
                 CurrentState = ParserState.ParseEnd;
                 return false;
             }
+        }
+        catch (CsTomlException ce)
+        {
+            CurrentState = ParserState.ThrowException;
+            exception = new CsTomlParseException(ce, LineNumber);
+            // Skip lines where an error is thrown.
+            reader.SkipOneLine();
+        }
 
+        return false;
+    }
+
+    public bool ReadEnd()
+    {
+        try
+        {
             reader.SkipWhiteSpace();
             if (reader.TryPeek(out var ch2))
             {
@@ -158,40 +160,20 @@ internal ref struct CsTomlParser
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void ReadComment()
+    internal TomlString ReadComment()
     {
         CurrentState = endComment ? ParserState.EndComment : ParserState.Comment;
-        comment = reader.ReadComment();
+        var comment = reader.ReadComment();
+        endComment = false;
+        return comment;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void ReadEndComment()
+    {
+        CurrentState = endComment ? ParserState.EndComment : ParserState.Comment;
+        reader.ReadEndComment();
         endComment = false;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void ReadKeyValue()
-    {
-        CurrentState = ParserState.KeyValue;
-        dottedKeys.Clear();
-        reader.ReadKey(ref dottedKeys);
-        reader.ReadEqual();
-        reader.SkipWhiteSpace();
-        value = reader.ReadValue();
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void ReadTableHeader()
-    {
-        CurrentState = ParserState.TableHeader;
-        dottedKeys.Clear();
-        reader.ReadTableHeader(ref dottedKeys);
-        value = default;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void ReadArrayOfTablesHeader()
-    {
-        CurrentState = ParserState.ArrayOfTablesHeader;
-        dottedKeys.Clear();
-        reader.ReadArrayOfTablesHeader(ref dottedKeys);
-        value = default;
-    }
 }
-
