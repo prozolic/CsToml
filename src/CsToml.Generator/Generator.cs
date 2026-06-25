@@ -421,7 +421,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
         var propertyName = tomlValueOnSerializedData.DefinedName;
         var accessName = tomlValueOnSerializedData.CanAliasName ? tomlValueOnSerializedData.AliasName : propertyName;
         var fullTypeName = tomlValueOnSerializedData.Symbol.Type.ToFullFormatString();
-        var writeKeyMethod = accessName is not null && TomlKeyTypeMatcher.IsMatchBarekey(accessName) ? "writer.WrtieBareKey" : "writer.WriteKey";
+        var writeKeyMethod = accessName is not null && TomlKeyTypeMatcher.IsMatchBarekey(accessName) ? "writer.WriteBareKey" : "writer.WriteKey";
 
         builder.AppendLine($$"""
         {{indent}}{{writeKeyMethod}}({{$"@\"{accessName}\"u8"}});
@@ -463,7 +463,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
         }
         else
         {
-            var writeKeyMethod = accessName is not null && TomlKeyTypeMatcher.IsMatchBarekey(accessName) ? "writer.WrtieBareKey" : "writer.WriteKey";
+            var writeKeyMethod = accessName is not null && TomlKeyTypeMatcher.IsMatchBarekey(accessName) ? "writer.WriteBareKey" : "writer.WriteKey";
             builder.AppendLine($$"""
         {{indent}}else
         {{indent}}{
@@ -489,7 +489,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
         var symbol = tomlValueOnSerializedData.Symbol;
         var fullTypeName = symbol.Type.ToFullFormatString();
 
-        var writeKeyMethod = accessName is not null && TomlKeyTypeMatcher.IsMatchBarekey(accessName) ? "writer.WrtieBareKey" : "writer.WriteKey";
+        var writeKeyMethod = accessName is not null && TomlKeyTypeMatcher.IsMatchBarekey(accessName) ? "writer.WriteBareKey" : "writer.WriteKey";
         var condition = tableStyleHeader ?
             "writer.State == TomlValueState.Default || writer.State == TomlValueState.Table" :
             "options.SerializeOptions.TableStyle == TomlTableStyle.Header && (writer.State == TomlValueState.Default || writer.State == TomlValueState.Table)";
@@ -527,7 +527,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
         var symbol = tomlValueOnSerializedData.Symbol;
         var fullTypeName = symbol.Type.ToFullFormatString();
 
-        var writeKeyMethod = accessName is not null && TomlKeyTypeMatcher.IsMatchBarekey(accessName) ? "writer.WrtieBareKey" : "writer.WriteKey";
+        var writeKeyMethod = accessName is not null && TomlKeyTypeMatcher.IsMatchBarekey(accessName) ? "writer.WriteBareKey" : "writer.WriteKey";
         var enableArrayOfTable = false;
         if (symbol.Type is IArrayTypeSymbol)
         {
@@ -591,7 +591,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
         var accessName = tomlValueOnSerializedData.CanAliasName ? tomlValueOnSerializedData.AliasName : propertyName;
         var symbol = tomlValueOnSerializedData.Symbol;
         var fullTypeName = symbol.Type.ToFullFormatString();
-        var writeKeyMethod = accessName is not null && TomlKeyTypeMatcher.IsMatchBarekey(accessName) ? "writer.WrtieBareKey" : "writer.WriteKey";
+        var writeKeyMethod = accessName is not null && TomlKeyTypeMatcher.IsMatchBarekey(accessName) ? "writer.WriteBareKey" : "writer.WriteKey";
 
         builder.AppendLine($$"""
         {{indent}}var __{{propertyName}}Formatter = options.Resolver.GetFormatter<{{fullTypeName}}>();
@@ -639,7 +639,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
         if (symbol.Type is not INamedTypeSymbol namedType) return;
 
         var namedTypeName = namedType.ToFullFormatString();
-        var writeKeyMethod = accessName is not null && TomlKeyTypeMatcher.IsMatchBarekey(accessName) ? "writer.WrtieBareKey" : "writer.WriteKey";
+        var writeKeyMethod = accessName is not null && TomlKeyTypeMatcher.IsMatchBarekey(accessName) ? "writer.WriteBareKey" : "writer.WriteKey";
 
         builder.AppendLine($$"""
         {{indent}}var __{{propertyName}}Formatter = options.Resolver.GetFormatter<{{namedTypeName}}>();
@@ -683,7 +683,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
         var propertyName = tomlValueOnSerializedData.DefinedName;
         var accessName = tomlValueOnSerializedData.CanAliasName ? tomlValueOnSerializedData.AliasName : propertyName;
         var fullTypeName = tomlValueOnSerializedData.Symbol.Type.ToFullFormatString();
-        var writeKeyMethod = accessName is not null && TomlKeyTypeMatcher.IsMatchBarekey(accessName) ? "writer.WrtieBareKey" : "writer.WriteKey";
+        var writeKeyMethod = accessName is not null && TomlKeyTypeMatcher.IsMatchBarekey(accessName) ? "writer.WriteBareKey" : "writer.WriteKey";
 
         builder.AppendLine($$"""
         {{indent}}{{writeKeyMethod}}({{$"@\"{accessName}\"u8"}});

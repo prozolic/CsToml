@@ -11,7 +11,7 @@ namespace CsToml.Utility;
 
 #if NET10_0_OR_GREATER
 // https://learn.microsoft.com/en-us/dotnet/api/system.runtime.compilerservices.inlinearray16-1?view=net-10.0
-// InlineArray4 and InlineArray16 is dened in the .NET 10.0, but not in the .NET 8.0 and 9.0.
+// InlineArray4 and InlineArray16 is defined in the .NET 10.0, but not in the .NET 8.0 and 9.0.
 #else
 [InlineArray(4)]
 internal struct InlineArray4<T>

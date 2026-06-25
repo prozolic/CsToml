@@ -663,7 +663,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
         WriteStringInternal(key, TomlDottedKeyHelper.GetTomlKeyType(key, options.Spec.SupportsEscapeSequenceE, options.Spec.SupportsEscapeSequenceX));
     }
 
-    public void WrtieBareKey(ReadOnlySpan<byte> key)
+    public void WriteBareKey(ReadOnlySpan<byte> key)
     {
         WriteDottedKeyPrefix();
         WriteBytes(key);

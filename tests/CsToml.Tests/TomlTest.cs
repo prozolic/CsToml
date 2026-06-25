@@ -118,6 +118,21 @@ public class TomlTest
         }, $"TomlFile:{tomlFile}");
     }
 
+    [Theory, MemberData(nameof(ValidTomlFileV110))]
+    public void EncoderTestV110(string tomlFile, string jsonFile)
+    {
+        Should.NotThrow(() =>
+        {
+            var documentA = CsTomlFileSerializer.Deserialize<TomlDocument>(tomlFile, Options.TomlSpecVersion110);
+            using var result = CsTomlSerializer.Serialize(documentA);
+            var documentB = CsTomlSerializer.Deserialize<TomlDocument>(result.ByteSpan, Options.TomlSpecVersion110);
+
+            var jsonNode = JsonNode.Parse(File.ReadAllText(jsonFile))!;
+            var actualJsonNode = documentB!.ToJsonObject();
+            JsonNodeExtensions.DeepEqualsForTomlFormat(jsonNode, actualJsonNode).ShouldBeTrue();
+        }, $"TomlFile:{tomlFile}");
+    }
+
     public static IEnumerable<object[]> ValidTomlFileV100()
     {
         var filesToml = Path.Combine(TomlTestDirectoryPath, TomlFilesVer100);

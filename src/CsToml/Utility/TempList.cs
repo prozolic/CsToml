@@ -1,4 +1,5 @@
-﻿
+﻿using System.Diagnostics;
+
 namespace CsToml.Utility;
 
 internal ref struct TempList<T>
@@ -39,7 +40,7 @@ internal ref struct TempList<T>
 
     public void RemoveLastIfFound(T key)
     {
-        if (count > 0 && (itemsSpan[count - 1]?.Equals(key) ?? false))
+        if (count > 0 && EqualityComparer<T>.Default.Equals(itemsSpan[count - 1], key))
         {
             count--;
         }
@@ -48,6 +49,11 @@ internal ref struct TempList<T>
     public void Clear()
     {
         count = 0;
+    }
+
+    public void TruncateTo(int newCount)
+    {
+        count = newCount;
     }
 
     private void EnsureCapacity()

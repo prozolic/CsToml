@@ -158,7 +158,6 @@ internal sealed partial class TomlTable : TomlValue
             WriteTableHeader(ref writer, tableHeaderKeyList.Items);
         }
 
-        keyList.Clear();
     }
 
     private void ProcessChildNode<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlTableNode parentNode, TomlDottedKey key, TomlTableNode childNode, ref TempList<TomlDottedKey> keyList, ref TempList<TomlDottedKey> tableHeaderKeyList, ref bool headerWritten)
@@ -184,8 +183,10 @@ internal sealed partial class TomlTable : TomlValue
                 keyList.Clear();
                 headerWritten = true;
             }
+            var savedKeyCount = keyList.Count;
             keyList.Add(key);
             ToTomlStringCore(ref writer, childNode, ref keyList, ref tableHeaderKeyList);
+            keyList.TruncateTo(savedKeyCount);
         }
         else
         {
