@@ -237,6 +237,10 @@ internal static class TomlCodes
         return escapeSequenceTable.At(rawByte);
     }
 
+    // Same set as the IsBareKey table; used for vectorized scans (IndexOfAnyExcept).
+    internal static readonly SearchValues<byte> BareKeyChars =
+        SearchValues.Create("-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz"u8);
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsBareKey(byte rawByte)
     {

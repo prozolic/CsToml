@@ -1259,39 +1259,38 @@ internal ref struct CsTomlReader
 
         while (this.Peek())
         {
-            for (var index = 0; index < unreadSpan.Length; index++)
+            // Vectorized scan
+            // the delimiters (TAB/SPACE/DOT/EQUAL/']') are never bare key characters,
+            // so the first non-bare-key byte is either a terminator or invalid.
+            var index = unreadSpan.IndexOfAnyExcept(TomlCodes.BareKeyChars);
+            if (index >= 0)
             {
-                var ch = unreadSpan[index];
+                var ch = unreadSpan.At(index);
                 switch (ch)
                 {
                     case TomlCodes.Symbol.TAB:
                     case TomlCodes.Symbol.SPACE:
                     case TomlCodes.Symbol.DOT:
                     case TomlCodes.Symbol.EQUAL:
-                        if (!fullSpan)
-                        {
-                            bufferWriter!.Write(unreadSpan.Slice(0, index));
-                        }
-                        Advance(index);
-                        goto BREAK;
+                        break;
                     case TomlCodes.Symbol.RIGHTSQUAREBRACKET:
                         if (isTableHeader)
                         {
-                            if (!fullSpan)
-                            {
-                                bufferWriter!.Write(unreadSpan.Slice(0, index));
-                            }
-                            Advance(index);
-                            goto BREAK;
+                            break;
                         }
                         ExceptionHelper.ThrowBareKeyContainsInvalid(ch);
                         break;
                     default:
-                        if (!TomlCodes.IsBareKey(ch))
-                            ExceptionHelper.ThrowBareKeyContainsInvalid(ch);
+                        ExceptionHelper.ThrowBareKeyContainsInvalid(ch);
                         break;
                 }
-                totalLength++;
+                if (!fullSpan)
+                {
+                    bufferWriter!.Write(unreadSpan.Slice(0, index));
+                }
+                totalLength = index;
+                Advance(index);
+                goto BREAK;
             }
             bufferWriter ??= RecycleArrayPoolBufferWriter<byte>.Rent();
             bufferWriter.Write(unreadSpan);
