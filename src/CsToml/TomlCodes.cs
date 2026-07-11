@@ -241,6 +241,32 @@ internal static class TomlCodes
     internal static readonly SearchValues<byte> BareKeyChars =
         SearchValues.Create("-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz"u8);
 
+    // U+0000-U+0008 + U+000A-U+001F + '"' + '\'; used for vectorized scans (IndexOfAny) of basic strings.
+    internal static readonly SearchValues<byte> BasicStringStopChars = CreateBasicStringStopChars();
+
+    private static SearchValues<byte> CreateBasicStringStopChars()
+    {
+        Span<byte> stops = stackalloc byte[34];
+
+        var index = 0;
+
+        // U+0000-U+0008
+        for (var b = 0x00; b <= 0x08; b++)
+        {
+            stops[index++] = (byte)b;
+        }
+        // U+000A-U+001F
+        for (var b = 0x0a; b <= 0x1f; b++)
+        {
+            stops[index++] = (byte)b;
+        }
+
+        stops[index++] = 0x7f;                  // DEL
+        stops[index++] = Symbol.DOUBLEQUOTED;   // "
+        stops[index++] = Symbol.BACKSLASH;      // \
+        return SearchValues.Create(stops);
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsBareKey(byte rawByte)
     {

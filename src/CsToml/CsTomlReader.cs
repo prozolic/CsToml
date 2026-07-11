@@ -820,6 +820,39 @@ internal ref struct CsTomlReader
     {
         Advance(1); // "
 
+        // Vectorized scan for the next control character / '"' / '\'.
+        // In the dominant case (closing quote in the current span, no escape sequence)
+        // the value is parsed directly from the slice without renting a buffer writer.
+        var unreadSpan = sequenceReader.UnreadSpan;
+        var index = unreadSpan.IndexOfAny(TomlCodes.BasicStringStopChars);
+        if (index >= 0)
+        {
+            var ch = unreadSpan.At(index);
+            if (TomlCodes.IsDoubleQuoted(ch))
+            {
+                var value = unreadSpan[..index];
+                if (Utf8Helper.ContainInvalidSequences(value))
+                    ExceptionHelper.ThrowInvalidCodePoints();
+
+                Advance(index + 1);
+                return T.Parse(value);
+            }
+            if (!TomlCodes.IsBackSlash(ch))
+            {
+                ExceptionHelper.ThrowEscapeCharactersIncluded(ch);
+            }
+        }
+
+        return ReadDoubleQuoteSingleLineStringSlow<T>(index);
+    }
+
+    private T ReadDoubleQuoteSingleLineStringSlow<T>(int index)
+        where T : TomlValue, ITomlStringParser<T>
+    {
+        // Escape sequence or segment boundary
+        // accumulate into a buffer writer, bulk-copying each clean run up to the next stop byte.
+        // index carries the scan result already computed for the current span by the fast path.
+
         var bufferWriter = RecycleArrayPoolBufferWriter<byte>.Rent();
         try
         {
@@ -828,36 +861,38 @@ internal ref struct CsTomlReader
 
             while (this.Peek())
             {
-                for (var index = 0; index < unreadSpan.Length; index++)
+                if (index < 0)
                 {
-                    var ch = unreadSpan[index];
-                    if (TomlCodes.IsEscape(ch))
-                    {
-                        ExceptionHelper.ThrowEscapeCharactersIncluded(ch);
-                    }
-                    else if (TomlCodes.IsDoubleQuoted(ch))
-                    {
-                        Advance(index + 1);
-                        closingQuotationMarks = true;
-                        goto BREAK;
-                    }
-                    else if (TomlCodes.IsBackSlash(ch))
-                    {
-                        Advance(index);
-                        ParseEscapeSequence(bufferWriter, multiLine: false);
-                        goto RESET;
-                    }
-                    bufferWriter.Write(ch);
-                }
-                Advance(unreadSpan.Length);
-                unreadSpan = sequenceReader.CurrentSpan;
-                continue;
+                    bufferWriter.Write(unreadSpan);
+                    Advance(unreadSpan.Length);
+                    unreadSpan = sequenceReader.CurrentSpan;
 
-            RESET:
+                    // Scan for the next control character.
+                    index = unreadSpan.IndexOfAny(TomlCodes.BasicStringStopChars);
+                    continue;
+                }
+
+                var ch = unreadSpan.At(index);
+                if (TomlCodes.IsDoubleQuoted(ch))
+                {
+                    bufferWriter.Write(unreadSpan[..index]);
+                    Advance(index + 1);
+                    closingQuotationMarks = true;
+                    break;
+                }
+                if (!TomlCodes.IsBackSlash(ch))
+                {
+                    ExceptionHelper.ThrowEscapeCharactersIncluded(ch);
+                }
+                bufferWriter.Write(unreadSpan[..index]);
+                Advance(index);
+                ParseEscapeSequence(bufferWriter, multiLine: false);
                 unreadSpan = sequenceReader.UnreadSpan;
+
+                // Scan for the next control character.
+                index = unreadSpan.IndexOfAny(TomlCodes.BasicStringStopChars);
             }
 
-        BREAK:
             if (!closingQuotationMarks)
                 ExceptionHelper.ThrowBasicStringsIsNotClosedWithClosingQuotationMarks();
 
@@ -1260,8 +1295,8 @@ internal ref struct CsTomlReader
         while (this.Peek())
         {
             // Vectorized scan
-            // TAB/SPACE/DOT/EQUAL are never bare key characters, so the first non-bare-key byte is either a terminator
-            // (or, for ']', a terminator only when parsing a table header) or invalid.
+            // TAB/SPACE/DOT/EQUAL are never bare key characters, so the first non-bare-key byte is either a terminator
+            // (or, for ']', a terminator only when parsing a table header) or invalid.
             var index = unreadSpan.IndexOfAnyExcept(TomlCodes.BareKeyChars);
             if (index >= 0)
             {
