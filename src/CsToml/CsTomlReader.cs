@@ -1260,8 +1260,8 @@ internal ref struct CsTomlReader
         while (this.Peek())
         {
             // Vectorized scan
-            // the delimiters (TAB/SPACE/DOT/EQUAL/']') are never bare key characters,
-            // so the first non-bare-key byte is either a terminator or invalid.
+            // TAB/SPACE/DOT/EQUAL are never bare key characters, so the first non-bare-key byte is either a terminator
+            // (or, for ']', a terminator only when parsing a table header) or invalid.
             var index = unreadSpan.IndexOfAnyExcept(TomlCodes.BareKeyChars);
             if (index >= 0)
             {
