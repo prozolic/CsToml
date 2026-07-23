@@ -134,6 +134,10 @@ internal sealed class TomlTableNode
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void ReserveNodeCapacity(int estimatedCount)
+        => nodes?.EnsureCapacity(estimatedCount);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal Span<TomlString> SetCommentCount(int commentCount)
     {
         var count = (this.comments ??= new List<TomlString>(commentCount)).Count;

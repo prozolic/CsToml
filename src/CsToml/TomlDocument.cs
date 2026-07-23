@@ -55,6 +55,7 @@ public partial class TomlDocument : ITomlValueFormatter<TomlDocument>
         TomlTableNode commentNode = table.RootNode;
 
         var parser = new CsTomlParser(ref reader, options);
+        currentNode.ReserveNodeCapacity(parser.reader.EstimateDirectKeyCount());
 
         while (parser.Read())
         {
@@ -98,6 +99,7 @@ public partial class TomlDocument : ITomlValueFormatter<TomlDocument>
                         }
 
                         currentNode = currentNode.AddTableHeaderKeyLastNode(tableHeaderKey!);
+                        currentNode.ReserveNodeCapacity(parser.reader.EstimateDirectKeyCount());
                         commentNode = currentNode;
                         break;
 
@@ -110,6 +112,7 @@ public partial class TomlDocument : ITomlValueFormatter<TomlDocument>
                             readArrayOfTableHeaderResult = parser.reader.ReadArrayOfTableHeaderKey(false, out arrayOfTableHeaderKey);
                         }
                         currentNode = currentNode.AddArrayOfTableHeaderKeyLastNode(arrayOfTableHeaderKey!, out commentNode);
+                        currentNode.ReserveNodeCapacity(parser.reader.EstimateDirectKeyCount());
                         break;
 
                     case ParserState.ThrowException:

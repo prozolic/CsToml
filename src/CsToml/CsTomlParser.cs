@@ -117,7 +117,7 @@ internal ref struct CsTomlParser
             if (reader.TryPeek(out var ch2))
             {
                 // skip newline
-                if (reader.TrySkipIfNewLine(ch2, true))
+                if (reader.TrySkipIfNewLine<CsTomlReader.ThrowControlCharacterMarker>(ch2))
                     return true;
 
                 if (CurrentState == ParserState.Comment)

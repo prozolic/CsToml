@@ -1,6 +1,4 @@
 ﻿
-using CsToml.Error;
-
 namespace CsToml.Values;
 
 internal partial class TomlTable 

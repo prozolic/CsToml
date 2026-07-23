@@ -32,6 +32,42 @@ internal ref struct CsTomlReader
         LineNumber = 1;
     }
 
+    // Scanning past this window is pointless: TomlTableNodeDictionary.MaxInitialCapacity (1103)
+    // keys at a realistic line length already fit in 32KB, so the estimate saturates anyway.
+    private const int EstimateScanWindow = 32 * 1024;
+
+    public readonly int EstimateDirectKeyCount()
+    {
+        // Estimates how many key/value pairs follow before the next table header by counting '='
+        // bytes up to the next "\n[" occurrence. Multi-line strings, comments, dotted keys and
+        // inline tables make this an upper-bound estimate, not an exact count; it only seeds the
+        // node dictionary capacity and never affects parsing semantics.
+        if (!sequenceReader.IsFullSpan)
+        {
+            return 0;
+        }
+
+        var span = sequenceReader.UnreadSpan;
+        if (span.Length == 0 || span[0] == TomlCodes.Symbol.LEFTSQUAREBRACKET)
+        {
+            return 0;
+        }
+        if (span.Length > EstimateScanWindow)
+        {
+            span = span.Slice(0, EstimateScanWindow);
+        }
+
+        ReadOnlySpan<byte> nextHeader = [TomlCodes.Symbol.LINEFEED, TomlCodes.Symbol.LEFTSQUAREBRACKET];
+        var end = span.IndexOf(nextHeader);
+        if (end >= 0)
+        {
+            span = span.Slice(0, end);
+        }
+
+        // SIMD-accelerated count of '=' bytes in the span.
+        return span.Count(TomlCodes.Symbol.EQUAL);
+    }
+
     public TomlString ReadComment()
     {
         Advance(1); // #
@@ -203,7 +239,7 @@ internal ref struct CsTomlReader
             // The first character of a bare key must be a letter, digit, or underscore (A-Za-z0-9_-).
             if (TomlCodes.IsBareKey(ch))
             {
-                key = ReadUnquotedString(false);
+                key = ReadUnquotedString<NotTableHeaderMarker>();
             }
             else if (TomlCodes.IsDoubleQuoted(ch))
             {
@@ -357,7 +393,7 @@ internal ref struct CsTomlReader
             // The first character of a bare key must be a letter, digit, or underscore (A-Za-z0-9_-).
             if (TomlCodes.IsBareKey(ch))
             {
-                key = ReadUnquotedString(true);
+                key = ReadUnquotedString<TableHeaderMarker>();
             }
             else if (TomlCodes.IsDoubleQuoted(ch))
             {
@@ -519,7 +555,7 @@ internal ref struct CsTomlReader
             // The first character of a bare key must be a letter, digit, or underscore (A-Za-z0-9_-).
             if (TomlCodes.IsBareKey(ch))
             {
-                key = ReadUnquotedString(true);
+                key = ReadUnquotedString<TableHeaderMarker>();
             }
             else if (TomlCodes.IsDoubleQuoted(ch))
             {
@@ -667,7 +703,7 @@ internal ref struct CsTomlReader
     {
         while (TryPeek(out var ch))
         {
-            if (TrySkipIfNewLine(ch, false))
+            if (TrySkipIfNewLine<NotThrowControlCharacterMarker>(ch))
                 break;
             Advance(1);
         }
@@ -701,7 +737,8 @@ internal ref struct CsTomlReader
         }
     }
 
-    public bool TrySkipIfNewLine(byte ch, bool throwControlCharacter)
+    public bool TrySkipIfNewLine<TThrowControlCharacterMarker>(byte ch)
+        where TThrowControlCharacterMarker : struct
     {
         if (TomlCodes.IsLf(ch))
         {
@@ -719,16 +756,20 @@ internal ref struct CsTomlReader
             }
             if (TomlCodes.IsEscape(linebreakCh))
             {
-                if (throwControlCharacter)
+                if (typeof(TThrowControlCharacterMarker) == typeof(ThrowControlCharacterMarker))
+                {
                     ExceptionHelper.ThrowEscapeCharactersIncluded(linebreakCh);
+                }
                 return false;
             }
         }
 
         if (TomlCodes.IsEscape(ch))
         {
-            if (throwControlCharacter)
+            if (typeof(TThrowControlCharacterMarker) == typeof(ThrowControlCharacterMarker))
+            {
                 ExceptionHelper.ThrowEscapeCharactersIncluded(ch);
+            }
         }
 
         return false;
@@ -1285,7 +1326,8 @@ internal ref struct CsTomlReader
         }
     }
 
-    internal TomlDottedKey ReadUnquotedString(bool isTableHeader = false)
+    internal TomlDottedKey ReadUnquotedString<TMarker>()
+        where TMarker : struct
     {
         var unreadSpan = sequenceReader.UnreadSpan;
         var fullSpan = true;
@@ -1300,24 +1342,20 @@ internal ref struct CsTomlReader
             var index = unreadSpan.IndexOfAnyExcept(TomlCodes.BareKeyChars);
             if (index >= 0)
             {
+                // If ch is less than 64 (ulong bit size), we can use a single immediate bitmask to classify it as a terminator or not.
+                // TAB(0x09)/SPACE(0x20)/DOT(0x2E)/EQUAL(0x3D) are all < 64 are all, it can be represented using terminatorBitMask.
+                // ']' (0x5D) is a terminator only for table headers.
+                const ulong terminatorBitMask =
+                    (1UL << TomlCodes.Symbol.TAB) | (1UL << TomlCodes.Symbol.SPACE) |
+                    (1UL << TomlCodes.Symbol.DOT) | (1UL << TomlCodes.Symbol.EQUAL);
+
                 var ch = unreadSpan.At(index);
-                switch (ch)
+                var isTerminator = ch < 64
+                    ? ((terminatorBitMask >> ch) & 1) != 0
+                    : typeof(TMarker) == typeof(TableHeaderMarker) && ch == TomlCodes.Symbol.RIGHTSQUAREBRACKET;
+                if (!isTerminator)
                 {
-                    case TomlCodes.Symbol.TAB:
-                    case TomlCodes.Symbol.SPACE:
-                    case TomlCodes.Symbol.DOT:
-                    case TomlCodes.Symbol.EQUAL:
-                        break;
-                    case TomlCodes.Symbol.RIGHTSQUAREBRACKET:
-                        if (isTableHeader)
-                        {
-                            break;
-                        }
-                        ExceptionHelper.ThrowBareKeyContainsInvalid(ch);
-                        break;
-                    default:
-                        ExceptionHelper.ThrowBareKeyContainsInvalid(ch);
-                        break;
+                    ExceptionHelper.ThrowBareKeyContainsInvalid(ch);
                 }
                 if (!fullSpan)
                 {
@@ -1423,6 +1461,11 @@ internal ref struct CsTomlReader
 
     internal TomlArray ReadArray()
     {
+        // Array-level specials: TAB, LF, CR, SPACE, '#', ',', '[', ']'. Any other byte starts a value.
+        // '['=0x5B and ']'=0x5D exceed a single ulong mask, hence two words selected by ch < 64.
+        const ulong ArraySpecialBitMask0 = (1UL << TomlCodes.Symbol.TAB) | (1UL << TomlCodes.Symbol.LINEFEED) | (1UL << TomlCodes.Symbol.CARRIAGE) | (1UL << TomlCodes.Symbol.SPACE) | (1UL << TomlCodes.Symbol.NUMBERSIGN) | (1UL << TomlCodes.Symbol.COMMA);
+        const ulong ArraySpecialBitMask1 = (1UL << (TomlCodes.Symbol.LEFTSQUAREBRACKET - 64)) | (1UL << (TomlCodes.Symbol.RIGHTSQUAREBRACKET - 64));
+
         Advance(1); // [
 
         var initialArray = default(InlineArray16<TomlValue>);
@@ -1432,21 +1475,34 @@ internal ref struct CsTomlReader
         var comma = true;
         var commaCount = 0;
         var closingBracket = false;
-        while (TryPeek(out var ch))
+        while (Peek())
         {
-            switch (ch)
+            // Scan the current segment with a local index so a run of delimiters costs a single
+            // Advance and the position stays in a register. Peek() == true guarantees a non-empty
+            // UnreadSpan (Advance rolls into the next segment when the current one is exhausted).
+            var unreadSpan = sequenceReader.UnreadSpan;
+            var index = 0;
+            while (index < unreadSpan.Length)
             {
-                case TomlCodes.Symbol.LEFTSQUAREBRACKET:
+                var ch = unreadSpan.At(index);
+                if (!IsArraySpecial(ch))
+                {
+                    Advance(index);
+                    if (!comma) ExceptionHelper.ThrowNotSeparatedByCommas();
                     comma = false;
-                    arrayBuilder.Add(ReadArray());
-                    break;
-                case TomlCodes.Symbol.TAB:
-                case TomlCodes.Symbol.SPACE:
-                    SkipWhiteSpace();
-                    break;
-                case TomlCodes.Symbol.COMMA:
+                    arrayBuilder.Add(ReadValue());
+                    goto RESCAN;
+                }
+                if (ch is TomlCodes.Symbol.SPACE or TomlCodes.Symbol.TAB)
+                {
+                    index++;
+                    continue;
+                }
+                if (ch == TomlCodes.Symbol.COMMA)
+                {
                     if (comma)
                     {
+                        Advance(index);
                         if (commaCount > 0)
                             ExceptionHelper.ThrowCommasAreUsedMoreThanOnce();
                         else
@@ -1454,38 +1510,56 @@ internal ref struct CsTomlReader
                     }
                     comma = true;
                     commaCount++;
-                    Advance(1);
-                    break;
-                case TomlCodes.Symbol.CARRIAGE:
-                    Advance(1);
-                    if (TryPeek(out var linebreakCh) && TomlCodes.IsLf(linebreakCh))
+                    index++;
+                    continue;
+                }
+                if (ch == TomlCodes.Symbol.RIGHTSQUAREBRACKET)
+                {
+                    closingBracket = true;
+                    Advance(index + 1);
+                    goto BREAK;
+                }
+                if (ch == TomlCodes.Symbol.LINEFEED)
+                {
+                    index++;
+                    if (index < unreadSpan.Length)
                     {
-                        Advance(1);
-                        IncreaseLineNumber();
+                        LineNumber++; // more bytes follow in this segment, so not EOF
                         continue;
                     }
-                    return ExceptionHelper.NotReturnThrow<TomlArray, byte>(ExceptionHelper.ThrowEscapeCharactersIncluded, ch);
-                case TomlCodes.Symbol.LINEFEED:
+                    Advance(index);
+                    IncreaseLineNumber();
+                    goto RESCAN;
+                }
+
+                // Rare specials ('[', '#', CR): sync the reader and use the reader-based logic.
+                Advance(index);
+                if (ch == TomlCodes.Symbol.LEFTSQUAREBRACKET)
+                {
+                    comma = false;
+                    arrayBuilder.Add(ReadArray());
+                    goto RESCAN;
+                }
+                if (ch == TomlCodes.Symbol.NUMBERSIGN)
+                {
+                    ReadComment();
+                    goto RESCAN;
+                }
+                // CR
+                Advance(1);
+                if (TryPeek(out var linebreakCh) && TomlCodes.IsLf(linebreakCh))
+                {
                     Advance(1);
                     IncreaseLineNumber();
-                    continue;
-                case TomlCodes.Symbol.RIGHTSQUAREBRACKET:
-                    closingBracket = true;
-                    Advance(1);
-                    goto BREAK;
-                case TomlCodes.Symbol.NUMBERSIGN:
-                    ReadComment();
-                    break;
-                default:
-                    if (!comma) ExceptionHelper.ThrowNotSeparatedByCommas();
-                    comma = false;
-                    arrayBuilder.Add(ReadValue());
-                    break;
+                    goto RESCAN;
+                }
+                return ExceptionHelper.NotReturnThrow<TomlArray, byte>(ExceptionHelper.ThrowEscapeCharactersIncluded, ch);
             }
-            continue;
-        BREAK:
-            break;
+            Advance(unreadSpan.Length);
+        RESCAN:
+            ;
         }
+    BREAK:
 
         if (!closingBracket)
             ExceptionHelper.ThrowTheArrayIsNotClosedWithClosingBrackets();
@@ -1498,6 +1572,12 @@ internal ref struct CsTomlReader
         }
 
         return array;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        bool IsArraySpecial(byte ch)
+        {
+            return ch < 128 && (((ch < 64 ? ArraySpecialBitMask0 : ArraySpecialBitMask1) >> ch) & 1) != 0;
+        }
     }
 
     private TomlInlineTable ReadInlineTable()
@@ -2887,10 +2967,10 @@ internal ref struct CsTomlReader
             ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
         if (!TomlCodes.IsNumber(bytes[11])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
         if (!TomlCodes.IsNumber(bytes[12])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!TomlCodes.IsColon (bytes[13])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!TomlCodes.IsColon(bytes[13])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
         if (!TomlCodes.IsNumber(bytes[14])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
         if (!TomlCodes.IsNumber(bytes[15])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
-        if (!TomlCodes.IsColon (bytes[16])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        if (!TomlCodes.IsColon(bytes[16])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
         if (!TomlCodes.IsNumber(bytes[17])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
         if (!TomlCodes.IsNumber(bytes[18])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
 
@@ -3102,7 +3182,12 @@ internal ref struct CsTomlReader
         }
     }
 
-    private struct TrueMarker { }
-    private struct FalseMarker { }
-}
+    internal struct TrueMarker { }
+    internal struct FalseMarker { }
 
+    private struct TableHeaderMarker { }
+    private struct NotTableHeaderMarker { }
+
+    internal struct ThrowControlCharacterMarker { }
+    internal struct NotThrowControlCharacterMarker { }
+}

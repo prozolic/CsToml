@@ -45,6 +45,33 @@ internal sealed class TomlTableNodeDictionary
         entries = [];
     }
 
+    // Largest initial capacity EnsureCapacity may allocate. Keeps a wildly overestimated
+    // hint (e.g. '=' bytes inside huge strings) from over-allocating; larger tables
+    // simply grow through Reserve as before.
+    private const int MaxInitialCapacity = 1103;
+
+    // Used when the estimate saturates MaxInitialCapacity: such a table will keep growing
+    // past the initial allocation, so it must start on the default Reserve chai.
+    // An off-chain start such as 1103 strands large tables on the 1103→2333→4861→10103 chain.
+    private const int SaturatedInitialCapacity = 919;
+
+    // Pre-sizes the backing arrays from an estimated entry count so that parsing can skip
+    // intermediate Reserve (rehash) steps. Applies only to a dictionary with no allocated
+    // buckets; estimates are best-effort and never affect correctness.
+    public void EnsureCapacity(int estimatedCount)
+    {
+        if (buckets.Length != 0 || estimatedCount <= 0)
+        {
+            return;
+        }
+
+        var capacity = estimatedCount <= MaxInitialCapacity
+            ? HashHelpers.GetPrime(estimatedCount)
+            : SaturatedInitialCapacity;
+        entries = new Entry[capacity];
+        buckets = new int[capacity];
+    }
+
     [DebuggerStepThrough]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryAdd(TomlDottedKey key, TomlTableNode value)
