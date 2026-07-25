@@ -2,6 +2,7 @@
 using Benchmark.Model;
 using CsToml;
 using System.Text;
+using System.Text.Json;
 using Tomlet;
 using Tomlyn;
 
@@ -13,6 +14,11 @@ public class ClassDeserializationBenchmark
     private static string tomlUtf16Text;
     private static string tomlUtf16TextInSnakeCase;
 #pragma warning restore CS8618
+
+    private readonly Tomlyn.TomlSerializerOptions tomlynOptions = new Tomlyn.TomlSerializerOptions
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+    };
 
     [GlobalSetup]
     public void GlobalSetup()
@@ -89,7 +95,14 @@ value =  ""Hammer3""
     [BenchmarkCategory("Benchmark"), Benchmark]
     public TestTomlSerializedObjectInSnakeCase Tomlyn_Deserialize()
     {
-        var obj = Toml.ToModel<TestTomlSerializedObjectInSnakeCase>(tomlUtf16TextInSnakeCase); // Tomlyn
+        var obj = TomlSerializer.Deserialize<TestTomlSerializedObjectInSnakeCase>(tomlUtf16TextInSnakeCase, tomlynOptions)!; // Tomlyn (reflection)
+        return obj;
+    }
+
+    [BenchmarkCategory("Benchmark"), Benchmark]
+    public TestTomlSerializedObjectInSnakeCase Tomlyn_Deserialize_SourceGenerator()
+    {
+        var obj = TomlSerializer.Deserialize(tomlUtf16TextInSnakeCase, TomlynContext.Default.TestTomlSerializedObjectInSnakeCase)!; // Tomlyn (source generator)
         return obj;
     }
 }

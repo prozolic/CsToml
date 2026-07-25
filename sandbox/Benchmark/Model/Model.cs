@@ -1,4 +1,6 @@
 ﻿using CsToml;
+using System.Text.Json.Serialization;
+using Tomlyn.Serialization;
 
 #pragma warning disable CS8618
 
@@ -79,6 +81,14 @@ public partial class TestTomlSerializedObjectInSnakeCase
 
     [TomlValueOnSerialized(AliasName = "array_of_table")]
     public List<Table2>? ArrayOfTable { get; set; }
+}
+
+// Tomlyn source generator (NativeAOT / trimming friendly).
+// Mirrors the reflection-based TomlSerializerOptions used in the benchmarks.
+[TomlSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.SnakeCaseLower)]
+[TomlSerializable(typeof(TestTomlSerializedObjectInSnakeCase))]
+internal partial class TomlynContext : TomlSerializerContext
+{
 }
 
 [TomlSerializedObject]

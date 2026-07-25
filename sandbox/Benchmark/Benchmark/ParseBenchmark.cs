@@ -2,7 +2,6 @@
 
 using BenchmarkDotNet.Attributes;
 using CsToml;
-using System.Reflection.Metadata;
 using System.Text;
 using Tommy;
 using Tomlyn;
@@ -15,18 +14,27 @@ public class DefaultParseBenchmark
 {
 #pragma warning disable CS8618
     private static string tomlUtf16Text;
+    private static byte[] tomlText;
 #pragma warning restore CS8618
 
     [GlobalSetup]
     public void GlobalSetup()
     {
         tomlUtf16Text = File.ReadAllText(Constants.TomlFilePath);
+        tomlText = Encoding.UTF8.GetBytes(tomlUtf16Text);
     }
 
     [BenchmarkCategory("Benchmark"), Benchmark]
-    public CsToml.TomlDocument CsToml_Parse()
+    public CsToml.TomlDocument CsToml_Parse_FromUTF16()
     {
         var document = CsTomlSerializer.Deserialize<TomlDocument>(Encoding.UTF8.GetBytes(tomlUtf16Text));
+        return document;
+    }
+
+    [BenchmarkCategory("Benchmark"), Benchmark]
+    public CsToml.TomlDocument CsToml_Parse_FromUTF8()
+    {
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
         return document;
     }
 
@@ -49,7 +57,7 @@ public class DefaultParseBenchmark
     [BenchmarkCategory("Benchmark"), Benchmark]
     public Tomlyn.Model.TomlTable Tomlyn_Parse()
     {
-        var table = Toml.ToModel(tomlUtf16Text);
+        var table = TomlSerializer.Deserialize<Tomlyn.Model.TomlTable>(tomlUtf16Text)!;
         return table;
     }
 }
@@ -100,7 +108,7 @@ public class BoolOnlyParseBenchmark
     [BenchmarkCategory("Benchmark"), Benchmark]
     public Tomlyn.Model.TomlTable Tomlyn()
     {
-        var table = Toml.ToModel(tomlUtf16Text);
+        var table = TomlSerializer.Deserialize<Tomlyn.Model.TomlTable>(tomlUtf16Text)!;
         return table;
     }
 }
@@ -151,7 +159,7 @@ public class StringOnlyParseBenchmark
     [BenchmarkCategory("Benchmark"), Benchmark]
     public Tomlyn.Model.TomlTable Tomlyn()
     {
-        var document = Toml.ToModel(tomlUtf16Text);
+        var document = TomlSerializer.Deserialize<Tomlyn.Model.TomlTable>(tomlUtf16Text)!;
         return document;
     }
 }
@@ -206,7 +214,7 @@ public class IntOnlyParseBenchmark
     [BenchmarkCategory("Benchmark"), Benchmark]
     public Tomlyn.Model.TomlTable Tomlyn()
     {
-        var table = Toml.ToModel(tomlUtf16Text);
+        var table = TomlSerializer.Deserialize<Tomlyn.Model.TomlTable>(tomlUtf16Text)!;
         return table;
     }
 }
@@ -260,7 +268,7 @@ public class FloatOnlyParseBenchmark
     [BenchmarkCategory("Benchmark"), Benchmark]
     public Tomlyn.Model.TomlTable Tomlyn()
     {
-        var table = Toml.ToModel(tomlUtf16Text);
+        var table = TomlSerializer.Deserialize<Tomlyn.Model.TomlTable>(tomlUtf16Text)!;
         return table;
     }
 }
@@ -314,7 +322,7 @@ public class OffsetDateTimeOnlyParseBenchmark
     [BenchmarkCategory("Benchmark"), Benchmark]
     public Tomlyn.Model.TomlTable Tomlyn()
     {
-        var table = Toml.ToModel(tomlUtf16Text);
+        var table = TomlSerializer.Deserialize<Tomlyn.Model.TomlTable>(tomlUtf16Text)!;
         return table;
     }
 }
@@ -365,7 +373,7 @@ public class LocalDateTimeOnlyParseBenchmark
     [BenchmarkCategory("Benchmark"), Benchmark]
     public Tomlyn.Model.TomlTable Tomlyn()
     {
-        var table = Toml.ToModel(tomlUtf16Text);
+        var table = TomlSerializer.Deserialize<Tomlyn.Model.TomlTable>(tomlUtf16Text)!;
         return table;
     }
 }
@@ -416,7 +424,7 @@ public class LocalDateOnlyParseBenchmark
     [BenchmarkCategory("Benchmark"), Benchmark]
     public Tomlyn.Model.TomlTable Tomlyn()
     {
-        var table = Toml.ToModel(tomlUtf16Text);
+        var table = TomlSerializer.Deserialize<Tomlyn.Model.TomlTable>(tomlUtf16Text)!;
         return table;
     }
 }
@@ -467,7 +475,7 @@ public class LocalTimeOnlyParseBenchmark
     [BenchmarkCategory("Benchmark"), Benchmark]
     public Tomlyn.Model.TomlTable Tomlyn()
     {
-        var table = Toml.ToModel(tomlUtf16Text);
+        var table = TomlSerializer.Deserialize<Tomlyn.Model.TomlTable>(tomlUtf16Text)!;
         return table;
     }
 }
@@ -521,7 +529,7 @@ public class ArrayOnlyParseBenchmark
     [BenchmarkCategory("Benchmark"), Benchmark]
     public Tomlyn.Model.TomlTable Tomlyn()
     {
-        var table = Toml.ToModel(tomlUtf16Text);
+        var table = TomlSerializer.Deserialize<Tomlyn.Model.TomlTable>(tomlUtf16Text)!;
         return table;
     }
 }
@@ -577,7 +585,7 @@ public class TableOnlyParseBenchmark
     [BenchmarkCategory("Benchmark"), Benchmark]
     public Tomlyn.Model.TomlTable Tomlyn()
     {
-        var table = Toml.ToModel(tomlUtf16Text);
+        var table = TomlSerializer.Deserialize<Tomlyn.Model.TomlTable>(tomlUtf16Text)!;
         return table;
     }
 }
@@ -630,7 +638,7 @@ public class InlineTableOnlyParseBenchmark
     [BenchmarkCategory("Benchmark"), Benchmark]
     public Tomlyn.Model.TomlTable Tomlyn()
     {
-        var table = Toml.ToModel(tomlUtf16Text);
+        var table = TomlSerializer.Deserialize<Tomlyn.Model.TomlTable>(tomlUtf16Text)!;
         return table;
     }
 }
@@ -682,7 +690,7 @@ public class ArrayOfTableOnlyParseBenchmark
     [BenchmarkCategory("Benchmark"), Benchmark]
     public Tomlyn.Model.TomlTable Tomlyn()
     {
-        var table = Toml.ToModel(tomlUtf16Text);
+        var table = TomlSerializer.Deserialize<Tomlyn.Model.TomlTable>(tomlUtf16Text)!;
         return table;
     }
 }
