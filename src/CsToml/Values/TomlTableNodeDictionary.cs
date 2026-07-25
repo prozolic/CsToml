@@ -175,18 +175,24 @@ internal sealed class TomlTableNodeDictionary
     [DebuggerStepThrough]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGetValue(TomlDottedKey key, out TomlTableNode? value)
-        => TryGetValueCore(key.Value, key.GetHashCodeFast(), out value);
+        => TryGetValueCore(key.Value, key.GetHashCodeFast(), out _, out value);
 
     [DebuggerStepThrough]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGetValue(ReadOnlySpan<byte> key, out TomlTableNode? value)
-        => TryGetValueCore(key, ByteArrayHash.ToInt32(key), out value);
+        => TryGetValueCore(key, ByteArrayHash.ToInt32(key), out _, out value);
 
-    private bool TryGetValueCore(ReadOnlySpan<byte> key, int hashCode, out TomlTableNode? value)
+    [DebuggerStepThrough]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool TryGetKey(ReadOnlySpan<byte> key, out TomlDottedKey? dottedKey)
+        => TryGetValueCore(key, ByteArrayHash.ToInt32(key), out dottedKey, out _);
+
+    private bool TryGetValueCore(ReadOnlySpan<byte> key, int hashCode, out TomlDottedKey? dottedKey, out TomlTableNode? value)
     {
         var buckets = this.buckets;
         if (buckets.Length == 0)
         {
+            dottedKey = null;
             value = null;
             return false;
         }
@@ -200,6 +206,7 @@ internal sealed class TomlTableNodeDictionary
         {
             if ((uint)index > (uint)entries.Length)
             {
+                dottedKey = null;
                 value = null;
                 return false;
             }
@@ -207,6 +214,7 @@ internal sealed class TomlTableNodeDictionary
             ref var e = ref entries[index];
             if (e.hashCode == hashCode && e.key.Equals(key))
             {
+                dottedKey = e.key;
                 value = e.value;
                 return true;
             }
@@ -215,6 +223,7 @@ internal sealed class TomlTableNodeDictionary
         }
         while (++conflictCount <= (uint)buckets.Length);
 
+        dottedKey = null;
         value = null;
         return false;
     }
