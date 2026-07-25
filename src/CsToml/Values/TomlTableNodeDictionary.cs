@@ -45,6 +45,33 @@ internal sealed class TomlTableNodeDictionary
         entries = [];
     }
 
+    // Largest initial capacity EnsureCapacity may allocate. Keeps a wildly overestimated
+    // hint (e.g. '=' bytes inside huge strings) from over-allocating; larger tables
+    // simply grow through Reserve as before.
+    private const int MaxInitialCapacity = 1103;
+
+    // Used when the estimate saturates MaxInitialCapacity: such a table will keep growing
+    // past the initial allocation, so it must start on the default Reserve chain.
+    // An off-chain start such as 1103 strands large tables on the 1103→2333→4861→10103 chain.
+    private const int SaturatedInitialCapacity = 919;
+
+    // Pre-sizes the backing arrays from an estimated entry count so that parsing can skip
+    // intermediate Reserve (rehash) steps. Applies only to a dictionary with no allocated
+    // buckets; estimates are best-effort and never affect correctness.
+    public void EnsureCapacity(int estimatedCount)
+    {
+        if (buckets.Length != 0 || estimatedCount <= 0)
+        {
+            return;
+        }
+
+        var capacity = estimatedCount <= MaxInitialCapacity
+            ? HashHelpers.GetPrime(estimatedCount)
+            : SaturatedInitialCapacity;
+        entries = new Entry[capacity];
+        buckets = new int[capacity];
+    }
+
     [DebuggerStepThrough]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryAdd(TomlDottedKey key, TomlTableNode value)
@@ -148,18 +175,24 @@ internal sealed class TomlTableNodeDictionary
     [DebuggerStepThrough]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGetValue(TomlDottedKey key, out TomlTableNode? value)
-        => TryGetValueCore(key.Value, key.GetHashCodeFast(), out value);
+        => TryGetValueCore(key.Value, key.GetHashCodeFast(), out _, out value);
 
     [DebuggerStepThrough]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGetValue(ReadOnlySpan<byte> key, out TomlTableNode? value)
-        => TryGetValueCore(key, ByteArrayHash.ToInt32(key), out value);
+        => TryGetValueCore(key, ByteArrayHash.ToInt32(key), out _, out value);
 
-    private bool TryGetValueCore(ReadOnlySpan<byte> key, int hashCode, out TomlTableNode? value)
+    [DebuggerStepThrough]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool TryGetKey(ReadOnlySpan<byte> key, out TomlDottedKey? dottedKey)
+        => TryGetValueCore(key, ByteArrayHash.ToInt32(key), out dottedKey, out _);
+
+    private bool TryGetValueCore(ReadOnlySpan<byte> key, int hashCode, out TomlDottedKey? dottedKey, out TomlTableNode? value)
     {
         var buckets = this.buckets;
         if (buckets.Length == 0)
         {
+            dottedKey = null;
             value = null;
             return false;
         }
@@ -173,6 +206,7 @@ internal sealed class TomlTableNodeDictionary
         {
             if ((uint)index > (uint)entries.Length)
             {
+                dottedKey = null;
                 value = null;
                 return false;
             }
@@ -180,6 +214,7 @@ internal sealed class TomlTableNodeDictionary
             ref var e = ref entries[index];
             if (e.hashCode == hashCode && e.key.Equals(key))
             {
+                dottedKey = e.key;
                 value = e.value;
                 return true;
             }
@@ -188,6 +223,7 @@ internal sealed class TomlTableNodeDictionary
         }
         while (++conflictCount <= (uint)buckets.Length);
 
+        dottedKey = null;
         value = null;
         return false;
     }

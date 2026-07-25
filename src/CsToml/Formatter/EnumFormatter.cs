@@ -1,5 +1,6 @@
 ﻿using CsToml.Error;
 using System.Buffers;
+using System.Collections.Frozen;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.Serialization;
@@ -9,32 +10,42 @@ namespace CsToml.Formatter;
 public sealed class EnumFormatter<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)] TEnum> : ITomlValueFormatter<TEnum>
     where TEnum : Enum
 {
-    private static readonly Dictionary<TEnum, string>? SerializedEnumTable;
-    private static readonly Dictionary<string, TEnum>? DeserializedEnumTable;
-    private static readonly Dictionary<TEnum, string>? SerializedEnumMemberTable;
-    private static readonly Dictionary<string, TEnum>? DeserializedEnumMemberTable;
+    private static readonly FrozenDictionary<TEnum, string>? SerializedEnumTable;
+    private static readonly FrozenDictionary<string, TEnum>? DeserializedEnumTable;
+    private static readonly FrozenDictionary<TEnum, string>? SerializedEnumMemberTable;
+    private static readonly FrozenDictionary<string, TEnum>? DeserializedEnumMemberTable;
 
     static EnumFormatter()
     {
-        SerializedEnumTable = new();
-        DeserializedEnumTable = new();
+        var enumFields = typeof(TEnum).GetFields();
+        var serializedEnumTable = new Dictionary<TEnum, string>(enumFields.Length);
+        var deserializedEnumTable = new Dictionary<string, TEnum>(enumFields.Length);
 
-        foreach(var e in typeof(TEnum).GetFields().Where(x => x.FieldType == typeof(TEnum)))
+        Dictionary<TEnum, string>? serializedEnumMemberTable = null;
+        Dictionary<string, TEnum>? deserializedEnumMemberTable = null;
+
+        foreach (var e in enumFields.AsSpan())
         {
-            var enumValue = (TEnum)e.GetValue(null)!;
-            var enumValueString = e.Name;
-
-            SerializedEnumTable.Add(enumValue, e.Name);
-            DeserializedEnumTable.Add(e.Name, enumValue);
-
-            if (e.GetCustomAttributes().OfType<EnumMemberAttribute>().FirstOrDefault() is { Value: { } enumMember })
+            if (e.FieldType == typeof(TEnum))
             {
-                SerializedEnumMemberTable ??= new();
-                DeserializedEnumMemberTable ??= new();
-                SerializedEnumMemberTable.Add(enumValue, enumMember);
-                DeserializedEnumMemberTable.Add(enumMember, enumValue);
+                var enumValue = (TEnum)e.GetValue(null)!;
+                var enumValueString = e.Name;
+
+                serializedEnumTable.Add(enumValue, e.Name);
+                deserializedEnumTable.Add(e.Name, enumValue);
+
+                if (e.GetCustomAttributes().OfType<EnumMemberAttribute>().FirstOrDefault() is { Value: { } enumMember })
+                {
+                    (serializedEnumMemberTable ??= new()).Add(enumValue, enumMember);
+                    (deserializedEnumMemberTable ??= new()).Add(enumMember, enumValue);
+                }
             }
         }
+
+        SerializedEnumTable = serializedEnumTable.ToFrozenDictionary();
+        DeserializedEnumTable = deserializedEnumTable.ToFrozenDictionary();
+        SerializedEnumMemberTable = serializedEnumMemberTable?.ToFrozenDictionary();
+        DeserializedEnumMemberTable = deserializedEnumMemberTable?.ToFrozenDictionary();
     }
 
     public TEnum Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)

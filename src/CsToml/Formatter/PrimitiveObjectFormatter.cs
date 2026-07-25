@@ -2,6 +2,7 @@
 using CsToml.Values;
 using System.Buffers;
 using System.Collections;
+using System.Collections.Frozen;
 using System.Runtime.CompilerServices;
 
 namespace CsToml.Formatter;
@@ -10,7 +11,7 @@ public sealed class PrimitiveObjectFormatter : ITomlValueFormatter<object>
 {
     public static readonly PrimitiveObjectFormatter Instance = new PrimitiveObjectFormatter();
 
-    private static readonly Dictionary<Type, int> TypeToJumpCode = new()
+    private static readonly FrozenDictionary<Type, int> TypeToJumpCode = new Dictionary<Type, int>()
     {
         { typeof(bool), 0 },
         { typeof(byte), 1 },
@@ -29,7 +30,7 @@ public sealed class PrimitiveObjectFormatter : ITomlValueFormatter<object>
         { typeof(DateTimeOffset), 14 },
         { typeof(DateOnly), 15 },
         { typeof(TimeOnly), 16 },
-    };
+    }.ToFrozenDictionary();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool TryGetJumpCode(Type type, out int jumpCode)

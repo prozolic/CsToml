@@ -134,11 +134,34 @@ internal sealed class TomlTableNode
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void ReserveNodeCapacity(int estimatedCount)
+        => nodes?.EnsureCapacity(estimatedCount);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal Span<TomlString> SetCommentCount(int commentCount)
     {
         var count = (this.comments ??= new List<TomlString>(commentCount)).Count;
         CollectionsMarshal.SetCount(this.comments, count + commentCount);
         return CollectionsMarshal.AsSpan(this.comments).Slice(count, commentCount);
+    }
+
+    internal bool TryGetKey(ReadOnlySpan<byte> key, out TomlDottedKey? dottedKey)
+    {
+        dottedKey = null;
+        return nodes?.TryGetKey(key, out dottedKey) ?? false;
+    }
+
+    internal TomlTableNode? TryGetMirrorChild(TomlDottedKey key)
+    {
+        if (nodes == null || !nodes.TryGetValue(key, out var child))
+        {
+            return null;
+        }
+        if (child!.IsArrayOfTablesHeaderDefinitionPosition)
+        {
+            return ((child.Value as TomlArray)?.LastValue as TomlTable)?.RootNode;
+        }
+        return child;
     }
 
     internal TomlTableNode GetOrAddArrayOfTableHeaderKeyNode(TomlDottedKey key, bool lastNode, out bool newNode)
@@ -174,7 +197,7 @@ internal sealed class TomlTableNode
         return default;
     }
 
-    internal TomlTableNode AddArrayOfTableHeaderKeyLastNode(TomlDottedKey key, out TomlTableNode commentNode)
+    internal TomlTableNode AddArrayOfTableHeaderKeyLastNode(TomlDottedKey key, out TomlTableNode commentNode, out TomlTableNode? previousTableRootNode)
     {
         var node = GetOrAddArrayOfTableHeaderKeyNode(key, true, out var newNode);
 
@@ -196,12 +219,13 @@ internal sealed class TomlTableNode
                 ExceptionHelper.ThrowTheArrayOfTablesIsDefinedAsTable(key.ToString());
             }
         }
+        var array = node.Value as TomlArray;
+        previousTableRootNode = (array?.LastValue as TomlTable)?.RootNode;
         var table = new TomlTable();
-        (node.Value as TomlArray)?.Add(table);
+        array?.Add(table);
         commentNode = node;
         return table.RootNode;
     }
-
 
     internal TomlTableNode GetOrAddTableHeaderKeyNode(TomlDottedKey key, out bool newNode)
     {
