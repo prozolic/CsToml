@@ -3,6 +3,7 @@ using Benchmark.Model;
 using CsToml;
 using System.Buffers;
 using System.Text;
+using System.Text.Json;
 using Tomlet;
 using Tomlyn;
 
@@ -14,6 +15,10 @@ public class ClassSerializationBenchmark
     private CsTomlSerializerOptions options = CsTomlSerializerOptions.Default with
     {
         SerializeOptions = new SerializeOptions { TableStyle = TomlTableStyle.Header }
+    };
+    private Tomlyn.TomlSerializerOptions tomlynOptions = new Tomlyn.TomlSerializerOptions
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
     };
     private TestTomlSerializedObject testTomlSerializedObject;
     private TestTomlSerializedObjectInSnakeCase testTomlSerializedObjectInSnakeCase;
@@ -80,7 +85,14 @@ public class ClassSerializationBenchmark
     [BenchmarkCategory("Benchmark"), Benchmark]
     public string Tomlyn_Serialize()
     {
-        var text = Toml.FromModel(testTomlSerializedObjectInSnakeCase); // Tomlyn
+        var text = TomlSerializer.Serialize(testTomlSerializedObjectInSnakeCase, tomlynOptions); // Tomlyn (reflection)
+        return text;
+    }
+
+    [BenchmarkCategory("Benchmark"), Benchmark]
+    public string Tomlyn_Serialize_SourceGenerator()
+    {
+        var text = TomlSerializer.Serialize(testTomlSerializedObjectInSnakeCase, TomlynContext.Default.TestTomlSerializedObjectInSnakeCase); // Tomlyn (source generator)
         return text;
     }
 }

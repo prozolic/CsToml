@@ -29,28 +29,28 @@ internal class BenchmarkConfig : ManualConfig
         AddLogger(ConsoleLogger.Default);
 
         // Add .NET 8.0
-        AddJob(Job.ShortRun
+        AddJob(Job.MediumRun
             .WithStrategy(RunStrategy.Throughput)
             .DontEnforcePowerPlan()
             .WithToolchain(CsProjCoreToolchain.NetCoreApp80)
             .WithId($"Benchmark{CsProjCoreToolchain.NetCoreApp80.Name}"));
 
         // Add .NET 9.0
-        AddJob(Job.ShortRun
+        AddJob(Job.MediumRun
             .WithStrategy(RunStrategy.Throughput)
             .DontEnforcePowerPlan()
             .WithToolchain(CsProjCoreToolchain.NetCoreApp90)
             .WithId($"Benchmark{CsProjCoreToolchain.NetCoreApp90.Name}"));
 
         // .NET 10.0 as default.
-        AddJob(Job.ShortRun
+        AddJob(Job.MediumRun
             .WithStrategy(RunStrategy.Throughput)
             .DontEnforcePowerPlan()
             .WithToolchain(CsProjCoreToolchain.NetCoreApp10_0)
             .WithId($"Benchmark{CsProjCoreToolchain.NetCoreApp10_0.Name}"));
 
         // NuGet version
-        AddJob(Job.ShortRun
+        AddJob(Job.MediumRun
             .WithStrategy(RunStrategy.Throughput)
             .DontEnforcePowerPlan()
             .WithToolchain(CsProjCoreToolchain.NetCoreApp10_0)

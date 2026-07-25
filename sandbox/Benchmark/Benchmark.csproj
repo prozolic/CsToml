@@ -28,16 +28,16 @@
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
     <PackageReference Include="Samboy063.Tomlet" Version="6.2.0" />
-    <PackageReference Include="Tomlyn" Version="0.19.0" />
+    <PackageReference Include="Tomlyn" Version="2.10.1" />
     <PackageReference Include="Tommy" Version="3.1.2" />
   </ItemGroup>
 
   <Choose>
     <When Condition="'$(Configuration)'=='NuGetCsToml'">
       <ItemGroup>
-        <PackageReference Include="CsToml" Version="1.8.1" />
-        <PackageReference Include="CsToml.Extensions" Version="1.8.1" />
-        <PackageReference Include="CsToml.Generator" Version="1.8.1">
+        <PackageReference Include="CsToml" Version="1.8.4" />
+        <PackageReference Include="CsToml.Extensions" Version="1.8.4" />
+        <PackageReference Include="CsToml.Generator" Version="1.8.4">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
