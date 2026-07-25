@@ -3,7 +3,7 @@ namespace CsToml.Values;
 
 internal ref struct TomlTableNodeHolder
 {
-    public TomlTableNode? node;
+    internal TomlTableNode? node;
 
     public T GetKey<T>(ReadOnlySpan<byte> key)
         where T : TomlValue, ITomlStringParser<T>

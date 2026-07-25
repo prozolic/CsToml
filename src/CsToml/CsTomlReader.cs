@@ -943,7 +943,6 @@ internal ref struct CsTomlReader
                 ExceptionHelper.ThrowInvalidCodePoints();
 
             return nodeHolder.GetKey<T>(bufferWriter.WrittenSpan);
-            //return T.Parse(bufferWriter.WrittenSpan);
         }
         finally
         {
@@ -1179,7 +1178,6 @@ internal ref struct CsTomlReader
         if (fullSpan)
         {
             return nodeHolder.GetKey<T>(unreadSpan[..totalLength]);
-            //return T.Parse(unreadSpan[..totalLength]);
         }
 
         try
@@ -1188,7 +1186,6 @@ internal ref struct CsTomlReader
                 ExceptionHelper.ThrowInvalidCodePoints();
 
             return nodeHolder.GetKey<T>(bufferWriter!.WrittenSpan);
-            //return T.Parse(bufferWriter!.WrittenSpan);
         }
         finally
         {
@@ -1382,12 +1379,10 @@ internal ref struct CsTomlReader
         if (fullSpan)
         {
             return nodeHolder.GetKey<TomlUnquotedDottedKey>(unreadSpan[..totalLength]);
-            //return new TomlUnquotedDottedKey(unreadSpan[..totalLength]);
         }
         try
         {
             return nodeHolder.GetKey<TomlUnquotedDottedKey>(bufferWriter!.WrittenSpan);
-            //return new TomlUnquotedDottedKey(bufferWriter!.WrittenSpan);
         }
         finally
         {

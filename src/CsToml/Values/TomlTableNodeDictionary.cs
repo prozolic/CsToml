@@ -51,7 +51,7 @@ internal sealed class TomlTableNodeDictionary
     private const int MaxInitialCapacity = 1103;
 
     // Used when the estimate saturates MaxInitialCapacity: such a table will keep growing
-    // past the initial allocation, so it must start on the default Reserve chai.
+    // past the initial allocation, so it must start on the default Reserve chain.
     // An off-chain start such as 1103 strands large tables on the 1103→2333→4861→10103 chain.
     private const int SaturatedInitialCapacity = 919;
 
