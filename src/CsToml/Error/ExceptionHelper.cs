@@ -668,4 +668,11 @@ internal static class ExceptionHelper
     {
         ThrowException($@"After the last key/value pair in an inline table, a trailing comma is not allowed.");
     }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    internal static void ThrowUninitializedKey()
+    {
+        ThrowException("The key is an uninitialized.");
+    }
 }
