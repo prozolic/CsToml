@@ -17,7 +17,7 @@ For more information about TOML, visit the official website at [https://toml.io/
 ![Serialize TestTomlSerializedObject (9 values with table and array of tables)](./img/benchmark_serialization.png)
 ![Deserialize TestTomlSerializedObject (9 values with table and array of tables)](./img/benchmark_deserialization.png)
 
-> This benchmark converts custom class to string and string to custom class. I used [Tomlet](https://github.com/SamboyCoding/Tomlet) and [Tomlyn](https://github.com/xoofx/Tomlyn) for comparison. `CsToml(v1.8.0)` includes additional `UTF8.GetBytes` calls. This benchmark code is [sandbox/Benchmark Deserialization](https://github.com/prozolic/CsToml/blob/main/sandbox/Benchmark/Benchmark/ClassDeserializationBenchmark.cs), [sandbox/Benchmark Serialization](https://github.com/prozolic/CsToml/blob/main/sandbox/Benchmark/Benchmark/ClassSerializationBenchmark.cs).
+> This benchmark converts custom class to string and string to custom class. I used [Tomlet](https://github.com/SamboyCoding/Tomlet) and [Tomlyn](https://github.com/xoofx/Tomlyn) for comparison. `CsToml(v1.8.5)` includes additional `UTF8.GetBytes` calls. This benchmark code is [sandbox/Benchmark Deserialization](https://github.com/prozolic/CsToml/blob/main/sandbox/Benchmark/Benchmark/ClassDeserializationBenchmark.cs), [sandbox/Benchmark Serialization](https://github.com/prozolic/CsToml/blob/main/sandbox/Benchmark/Benchmark/ClassSerializationBenchmark.cs).
 
 CsToml has the following features.
 
