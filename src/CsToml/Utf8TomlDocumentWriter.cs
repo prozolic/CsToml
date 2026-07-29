@@ -3,6 +3,7 @@ using CsToml.Formatter;
 using CsToml.Utility;
 using CsToml.Values;
 using System.Buffers;
+using System.Collections.Immutable;
 using System.Globalization;
 using System.Numerics;
 using System.Runtime.CompilerServices;
@@ -81,6 +82,24 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
     public void PushKey(ReadOnlySpan<byte> key)
     {
         dottedKeys.Add(TomlDottedKeyHelper.ParseKey(key, options.Spec.SupportsEscapeSequenceE, options.Spec.SupportsEscapeSequenceX));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void PushBareKey(ReadOnlySpan<byte> key, bool skipValidation = false)
+    {
+        dottedKeys.Add(TomlDottedKeyHelper.ParseBareKey(key, skipValidation));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void PushBareKey(ImmutableArray<byte> immutableKey, bool skipValidation = false)
+    {
+        var key = ImmutableCollectionsMarshal.AsArray(immutableKey);
+        if (key is null)
+        {
+            ExceptionHelper.ThrowUninitializedKey();
+        }
+
+        dottedKeys.Add(TomlDottedKeyHelper.ParseBareKey(key, skipValidation));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -333,6 +352,9 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
                 break;
             case TomlStringType.MultiLineLiteral:
                 TomlMultiLineLiteralString.ToTomlMultiLineLiteralString(ref this, value);
+                break;
+            default:
+                TomlLiteralString.ToTomlLiteralString(ref this, value);
                 break;
         }
     }
@@ -665,6 +687,14 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
 
     public void WriteBareKey(ReadOnlySpan<byte> key)
     {
+        WriteBareKey(key, false);
+    }
+
+    public void WriteBareKey(ReadOnlySpan<byte> key, bool skipValidation)
+    {
+        if (!skipValidation && Utf8Helper.ContainInvalidSequences(key))
+            ExceptionHelper.ThrowInvalidCodePoints();
+
         WriteDottedKeyPrefix();
         WriteBytes(key);
     }
@@ -846,11 +876,18 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
                     break;
                 case 12:
                     var strKey = refValue as string;
-                    TomlDottedKeyHelper.ParseKey(
-                        strKey.AsSpan(),
-                        options.Spec.SupportsEscapeSequenceE,
-                        options.Spec.SupportsEscapeSequenceX)
-                        .ToTomlString(ref this);
+
+                    var writer = RecycleArrayPoolBufferWriter<byte>.Rent();
+                    try
+                    {
+                        Utf8Helper.FromUtf16(writer, strKey);
+                        var keyType = TomlDottedKeyHelper.GetTomlKeyType(writer.WrittenSpan, options.Spec.SupportsEscapeSequenceE, options.Spec.SupportsEscapeSequenceX);
+                        WriteStringInternal(writer.WrittenSpan, keyType);
+                    }
+                    finally
+                    {
+                        RecycleArrayPoolBufferWriter<byte>.Return(writer);
+                    }
                     break;
                 case 13:
                     Write(TomlCodes.Symbol.DOUBLEQUOTED);
@@ -921,6 +958,24 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
         }
 
         WriteStringInternal(key, TomlDottedKeyHelper.GetTomlKeyType(key, options.Spec.SupportsEscapeSequenceE, options.Spec.SupportsEscapeSequenceX));
+
+        EndTableHeader();
+    }
+
+    public void WriteBareTableHeader(ReadOnlySpan<byte> key, bool skipValidation = false)
+    {
+        if (!skipValidation && Utf8Helper.ContainInvalidSequences(key))
+            ExceptionHelper.ThrowInvalidCodePoints();
+
+        BeginTableHeader();
+        var keySpan = dottedKeys.Items;
+        for (int i = 0; i < keySpan.Length; i++)
+        {
+            keySpan[i].ToTomlString(ref this);
+            writer.Write(TomlCodes.Symbol.DOT);
+        }
+
+        WriteStringInternal(key, TomlStringType.Unquoted);
 
         EndTableHeader();
     }
