@@ -85,13 +85,13 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void PushBareKey(ReadOnlySpan<byte> key)
+    public void PushBareKey(ReadOnlySpan<byte> key, bool skipValidation = false)
     {
-        dottedKeys.Add(TomlDottedKeyHelper.ParseBareKey(key));
+        dottedKeys.Add(TomlDottedKeyHelper.ParseBareKey(key, skipValidation));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void PushBareKey(ImmutableArray<byte> immutableKey)
+    public void PushBareKey(ImmutableArray<byte> immutableKey, bool skipValidation = false)
     {
         var key = ImmutableCollectionsMarshal.AsArray(immutableKey);
         if (key is null)
@@ -99,7 +99,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
             ExceptionHelper.ThrowUninitializedKey();
         }
 
-        dottedKeys.Add(TomlDottedKeyHelper.ParseBareKey(key));
+        dottedKeys.Add(TomlDottedKeyHelper.ParseBareKey(key, skipValidation));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -687,6 +687,14 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
 
     public void WriteBareKey(ReadOnlySpan<byte> key)
     {
+        WriteBareKey(key, false);
+    }
+
+    public void WriteBareKey(ReadOnlySpan<byte> key, bool skipValidation)
+    {
+        if (!skipValidation && Utf8Helper.ContainInvalidSequences(key))
+            ExceptionHelper.ThrowInvalidCodePoints();
+
         WriteDottedKeyPrefix();
         WriteBytes(key);
     }
@@ -954,8 +962,11 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
         EndTableHeader();
     }
 
-    public void WriteBareTableHeader(ReadOnlySpan<byte> key)
+    public void WriteBareTableHeader(ReadOnlySpan<byte> key, bool skipValidation = false)
     {
+        if (!skipValidation && Utf8Helper.ContainInvalidSequences(key))
+            ExceptionHelper.ThrowInvalidCodePoints();
+
         BeginTableHeader();
         var keySpan = dottedKeys.Items;
         for (int i = 0; i < keySpan.Length; i++)
@@ -963,9 +974,6 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
             keySpan[i].ToTomlString(ref this);
             writer.Write(TomlCodes.Symbol.DOT);
         }
-
-        if (Utf8Helper.ContainInvalidSequences(key))
-            ExceptionHelper.ThrowInvalidCodePoints();
 
         WriteStringInternal(key, TomlStringType.Unquoted);
 

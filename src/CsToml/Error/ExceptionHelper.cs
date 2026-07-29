@@ -673,6 +673,6 @@ internal static class ExceptionHelper
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal static void ThrowUninitializedKey()
     {
-        ThrowException("The key is an uninitialized.");
+        ThrowException("The key is uninitialized.");
     }
 }

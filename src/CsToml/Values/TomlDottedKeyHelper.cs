@@ -6,17 +6,17 @@ namespace CsToml.Values;
 
 internal static class TomlDottedKeyHelper
 {
-    public static TomlDottedKey ParseBareKey(ReadOnlySpan<byte> utf8String)
+    public static TomlDottedKey ParseBareKey(ReadOnlySpan<byte> utf8String, bool skipValidation)
     {
-        if (Utf8Helper.ContainInvalidSequences(utf8String))
+        if (!skipValidation && Utf8Helper.ContainInvalidSequences(utf8String))
             ExceptionHelper.ThrowInvalidCodePoints();
 
         return new TomlUnquotedDottedKey(utf8String);
     }
 
-    public static TomlDottedKey ParseBareKey(byte[] utf8String)
+    public static TomlDottedKey ParseBareKey(byte[] utf8String, bool skipValidation)
     {
-        if (Utf8Helper.ContainInvalidSequences(utf8String))
+        if (!skipValidation && Utf8Helper.ContainInvalidSequences(utf8String))
             ExceptionHelper.ThrowInvalidCodePoints();
 
         return new TomlUnquotedDottedKey(utf8String);
