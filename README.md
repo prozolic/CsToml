@@ -12,7 +12,7 @@ For more information about TOML, visit the official website at [https://toml.io/
 
 ![Parse Toml text](./img/benchmark_parse.png)
 
-> This benchmark parses a string (string) into a TOML object. I used [Tommy](https://github.com/dezhidki/Tommy), [Tomlet](https://github.com/SamboyCoding/Tomlet) and [Tomlyn](https://github.com/xoofx/Tomlyn) for comparison. `CsToml(v1.8.0)` includes additional `UTF8.GetBytes` calls. This benchmark code is [sandbox/Benchmark](https://github.com/prozolic/CsToml/blob/main/sandbox/Benchmark/Benchmark/ParseBenchmark.cs).
+> This benchmark parses a string (string) into a TOML object. I used [Tommy](https://github.com/dezhidki/Tommy), [Tomlet](https://github.com/SamboyCoding/Tomlet) and [Tomlyn](https://github.com/xoofx/Tomlyn) for comparison. `CsToml(v1.8.5)` includes additional `UTF8.GetBytes` calls. This benchmark code is [sandbox/Benchmark](https://github.com/prozolic/CsToml/blob/main/sandbox/Benchmark/Benchmark/ParseBenchmark.cs).
 
 ![Serialize TestTomlSerializedObject (9 values with table and array of tables)](./img/benchmark_serialization.png)
 ![Deserialize TestTomlSerializedObject (9 values with table and array of tables)](./img/benchmark_deserialization.png)
@@ -163,7 +163,6 @@ namespace ConsoleApp;
 
 partial class CsTomlClass : ITomlSerializedObject<CsTomlClass?>
 {
-
     static CsTomlClass? ITomlSerializedObject<CsTomlClass?>.Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
         if (!(rootNode.HasValue || rootNode.IsTableHeader)) return default;
@@ -205,44 +204,44 @@ partial class CsTomlClass : ITomlSerializedObject<CsTomlClass?>
         {
             if (target.Key != null || options.SerializeOptions.DefaultNullHandling == TomlNullHandling.Error)
             {
-                writer.WriteKey(@"Key"u8);
+                writer.WriteBareKey(@"Key"u8, skipValidation: true);
                 writer.WriteEqual();
                 options.Resolver.GetFormatter<string>()!.Serialize(ref writer, target.Key, options);
                 writer.EndKeyValue(lastValue_Key);
             }
             if (target.Number != null || options.SerializeOptions.DefaultNullHandling == TomlNullHandling.Error)
             {
-                writer.WriteKey(@"Number"u8);
+                writer.WriteBareKey(@"Number"u8, skipValidation: true);
                 writer.WriteEqual();
                 options.Resolver.GetFormatter<int?>()!.Serialize(ref writer, target.Number, options);
                 writer.EndKeyValue(lastValue_Number);
             }
             if (target.Value != null || options.SerializeOptions.DefaultNullHandling == TomlNullHandling.Error)
             {
-                writer.WriteKey(@"alias"u8);
+                writer.WriteBareKey(@"alias"u8, skipValidation: true);
                 writer.WriteEqual();
                 options.Resolver.GetFormatter<string>()!.Serialize(ref writer, target.Value, options);
                 writer.EndKeyValue(lastValue_Value);
             }
             if (target.Array != null || options.SerializeOptions.DefaultNullHandling == TomlNullHandling.Error)
             {
-                writer.WriteKey(@"Array"u8);
+                writer.WriteBareKey(@"Array"u8, skipValidation: true);
                 writer.WriteEqual();
                 options.Resolver.GetFormatter<int[]>()!.Serialize(ref writer, target.Array, options);
                 writer.EndKeyValue(lastValue_Array);
             }
             if (options.SerializeOptions.TableStyle == TomlTableStyle.Header && (writer.State == TomlValueState.Default || writer.State == TomlValueState.Table)){
-                writer.WriteTableHeader(@"Table"u8);
+                writer.WriteBareTableHeader(@"Table"u8, skipValidation: true);
                 writer.WriteNewLine();
                 writer.BeginCurrentState(TomlValueState.Table);
-                writer.PushKey(@"Table"u8);
+                writer.PushBareKey(CsTomlKeyCache.__generated__Table, skipValidation: true);
                 options.Resolver.GetFormatter<global::ConsoleApp.TableClass>()!.Serialize(ref writer, target.Table, options);
                 writer.PopKey();
                 writer.EndCurrentState();
             }
             else
             {
-                writer.WriteKey(@"Table"u8);
+                writer.WriteBareKey(@"Table"u8, skipValidation: true);
                 writer.WriteEqual();
                 writer.BeginCurrentState(TomlValueState.ArrayOfTable);
                 options.Resolver.GetFormatter<global::ConsoleApp.TableClass>()!.Serialize(ref writer, target.Table, options);
@@ -254,44 +253,44 @@ partial class CsTomlClass : ITomlSerializedObject<CsTomlClass?>
         {
             if (target.Key != null || options.SerializeOptions.DefaultNullHandling == TomlNullHandling.Error)
             {
-                writer.WriteKey(@"Key"u8);
+                writer.WriteBareKey(@"Key"u8, skipValidation: true);
                 writer.WriteEqual();
                 options.Resolver.GetFormatter<string>()!.Serialize(ref writer, target.Key, options);
                 writer.EndKeyValue(lastValue_Key);
             }
             if (target.Number != null || options.SerializeOptions.DefaultNullHandling == TomlNullHandling.Error)
             {
-                writer.WriteKey(@"Number"u8);
+                writer.WriteBareKey(@"Number"u8, skipValidation: true);
                 writer.WriteEqual();
                 options.Resolver.GetFormatter<int?>()!.Serialize(ref writer, target.Number, options);
                 writer.EndKeyValue(lastValue_Number);
             }
             if (target.Value != null || options.SerializeOptions.DefaultNullHandling == TomlNullHandling.Error)
             {
-                writer.WriteKey(@"alias"u8);
+                writer.WriteBareKey(@"alias"u8, skipValidation: true);
                 writer.WriteEqual();
                 options.Resolver.GetFormatter<string>()!.Serialize(ref writer, target.Value, options);
                 writer.EndKeyValue(lastValue_Value);
             }
             if (target.Array != null || options.SerializeOptions.DefaultNullHandling == TomlNullHandling.Error)
             {
-                writer.WriteKey(@"Array"u8);
+                writer.WriteBareKey(@"Array"u8, skipValidation: true);
                 writer.WriteEqual();
                 options.Resolver.GetFormatter<int[]>()!.Serialize(ref writer, target.Array, options);
                 writer.EndKeyValue(lastValue_Array);
             }
             if (options.SerializeOptions.TableStyle == TomlTableStyle.Header && (writer.State == TomlValueState.Default || writer.State == TomlValueState.Table)){
-                writer.WriteTableHeader(@"Table"u8);
+                writer.WriteBareTableHeader(@"Table"u8, skipValidation: true);
                 writer.WriteNewLine();
                 writer.BeginCurrentState(TomlValueState.Table);
-                writer.PushKey(@"Table"u8);
+                writer.PushBareKey(CsTomlKeyCache.__generated__Table, skipValidation: true);
                 options.Resolver.GetFormatter<global::ConsoleApp.TableClass>()!.Serialize(ref writer, target.Table, options);
                 writer.PopKey();
                 writer.EndCurrentState();
             }
             else
             {
-                writer.WriteKey(@"Table"u8);
+                writer.WriteBareKey(@"Table"u8, skipValidation: true);
                 writer.WriteEqual();
                 writer.BeginCurrentState(TomlValueState.ArrayOfTable);
                 options.Resolver.GetFormatter<global::ConsoleApp.TableClass>()!.Serialize(ref writer, target.Table, options);
@@ -315,6 +314,30 @@ partial class CsTomlClass : ITomlSerializedObject<CsTomlClass?>
         }
 
         // Register Formatter in advance.
+        if (!TomlValueFormatterResolver.IsRegistered<global::System.Collections.Generic.IEnumerable<char>>())
+        {
+            TomlValueFormatterResolver.Register(new IEnumerableFormatter<char>());
+        }
+        if (!TomlValueFormatterResolver.IsRegistered<global::System.Collections.Generic.IList<int>>())
+        {
+            TomlValueFormatterResolver.Register(new IListFormatter<int>());
+        }
+        if (!TomlValueFormatterResolver.IsRegistered<global::System.Collections.Generic.ICollection<int>>())
+        {
+            TomlValueFormatterResolver.Register(new ICollectionFormatter<int>());
+        }
+        if (!TomlValueFormatterResolver.IsRegistered<global::System.Collections.Generic.IEnumerable<int>>())
+        {
+            TomlValueFormatterResolver.Register(new IEnumerableFormatter<int>());
+        }
+        if (!TomlValueFormatterResolver.IsRegistered<global::System.Collections.Generic.IReadOnlyList<int>>())
+        {
+            TomlValueFormatterResolver.Register(new IReadOnlyListFormatter<int>());
+        }
+        if (!TomlValueFormatterResolver.IsRegistered<global::System.Collections.Generic.IReadOnlyCollection<int>>())
+        {
+            TomlValueFormatterResolver.Register(new IReadOnlyCollectionFormatter<int>());
+        }
         if (!TomlValueFormatterResolver.IsRegistered<global::ConsoleApp.TableClass>())
         {
             TomlValueFormatterResolver.Register<global::ConsoleApp.TableClass>();
@@ -349,7 +372,6 @@ namespace ConsoleApp;
 
 partial class TableClass : ITomlSerializedObject<TableClass?>
 {
-
     static TableClass? ITomlSerializedObject<TableClass?>.Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
         if (!(rootNode.HasValue || rootNode.IsTableHeader)) return default;
@@ -377,12 +399,12 @@ partial class TableClass : ITomlSerializedObject<TableClass?>
         writer.BeginScope();
         if (target.Key != null || options.SerializeOptions.DefaultNullHandling == TomlNullHandling.Error)
         {
-            writer.WriteKey(@"Key"u8);
+            writer.WriteBareKey(@"Key"u8, skipValidation: true);
             writer.WriteEqual();
             options.Resolver.GetFormatter<string>()!.Serialize(ref writer, target.Key, options);
             writer.EndKeyValue(lastValue_Key);
         }
-        writer.WriteKey(@"Number"u8);
+        writer.WriteBareKey(@"Number"u8, skipValidation: true);
         writer.WriteEqual();
         options.Resolver.GetFormatter<int>()!.Serialize(ref writer, target.Number, options);
         writer.EndKeyValue(lastValue_Number);
@@ -402,8 +424,34 @@ partial class TableClass : ITomlSerializedObject<TableClass?>
         }
 
         // Register Formatter in advance.
+        if (!TomlValueFormatterResolver.IsRegistered<global::System.Collections.Generic.IEnumerable<char>>())
+        {
+            TomlValueFormatterResolver.Register(new IEnumerableFormatter<char>());
+        }
 
     }
+}
+```
+
+</details>
+
+<details><summary>Generated Code(CsTomlKeyCache_generated.g.cs)</summary>
+
+```csharp
+// <auto-generated> This .cs file is generated by CsToml.Generator. </auto-generated>
+#nullable enable
+#pragma warning disable
+
+using System.ComponentModel;
+using System.Collections.Immutable;
+
+namespace CsToml;
+
+[EditorBrowsable(EditorBrowsableState.Never)]
+internal static class CsTomlKeyCache
+{
+    internal static readonly ImmutableArray<byte> __generated__Table = ImmutableArray.Create("Table"u8);
+
 }
 ```
 
@@ -428,11 +476,10 @@ var value = CsTomlSerializer.Deserialize<CsTomlClass>(tomlText);
 using var serializedText = CsTomlSerializer.Serialize(value);
 
 // Key = "value"
+// Number = 123
 // alias = "alias"
 // Array = [ 1, 2, 3 ]
-// Number = 123
-// Table.Key = "value"
-// Table.Number = 123
+// Table = {Key = "value", Number = 123}
 var serializedTomlText = Encoding.UTF8.GetString(serializedText.ByteSpan);
 ```
 
@@ -682,20 +729,19 @@ In the case of TomlTableStyle.Default, serialize as follows.
 
 ```toml
 Key = "value"
+Number = 123
 alias = "alias"
 Array = [ 1, 2, 3 ]
-Number = 123
-Table.Key = "kEY"
-Table.Number = 123
+Table = {Key = "kEY", Number = 123}
 ```
 
 In the case of TomlTableStyle.Header, serialize as follows.
 
 ```toml
 Key = "value"
+Number = 123
 alias = "alias"
 Array = [ 1, 2, 3 ]
-Number = 123
 [Table]
 Key = "kEY"
 Number = 123
