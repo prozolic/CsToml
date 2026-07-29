@@ -8,6 +8,9 @@ internal static class TomlDottedKeyHelper
 {
     public static TomlDottedKey ParseBareKey(ReadOnlySpan<byte> utf8String, bool skipValidation)
     {
+        if (utf8String.Length == 0)
+            ExceptionHelper.ThrowBareKeyIsEmpty();
+
         if (!skipValidation && Utf8Helper.ContainInvalidSequences(utf8String))
             ExceptionHelper.ThrowInvalidCodePoints();
 
@@ -16,6 +19,9 @@ internal static class TomlDottedKeyHelper
 
     public static TomlDottedKey ParseBareKey(byte[] utf8String, bool skipValidation)
     {
+        if (utf8String.Length == 0)
+            ExceptionHelper.ThrowBareKeyIsEmpty();
+
         if (!skipValidation && Utf8Helper.ContainInvalidSequences(utf8String))
             ExceptionHelper.ThrowInvalidCodePoints();
 
