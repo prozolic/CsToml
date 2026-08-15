@@ -49,12 +49,12 @@ internal sealed class DecimalFormatter : ITomlValueFormatter<decimal>
         }
 
         Span<byte> utf8 = stackalloc byte[32];
-        doubleValue.TryFormat(utf8, out var bytesWritten, default, CultureInfo.InvariantCulture);
-        if (Utf8Parser.TryParse(utf8.Slice(0, bytesWritten), out decimal value, out var bytesConsumed, 'G') && bytesConsumed == bytesWritten)
+        if (doubleValue.TryFormat(utf8, out var bytesWritten, "G", CultureInfo.InvariantCulture) &&
+            Utf8Parser.TryParse(utf8.Slice(0, bytesWritten), out decimal value, out var bytesConsumed, 'G') &&
+            bytesConsumed == bytesWritten)
         {
             return value;
         }
-
         return (decimal)doubleValue;
     }
 
