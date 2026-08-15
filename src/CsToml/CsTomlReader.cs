@@ -1845,6 +1845,7 @@ internal ref struct CsTomlReader
         }
         else
         {
+            Advance(1); // 0
             return TomlInteger.Zero;
         }
 
