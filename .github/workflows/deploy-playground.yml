@@ -1,4 +1,4 @@
-﻿# Deploys sandbox/CsToml.Playground to Cloudflare Workers (static assets).
+# Deploys sandbox/CsToml.Playground to Cloudflare Workers (static assets).
 
 name: Deploy Playground
 
@@ -6,8 +6,6 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - "src/CsToml/**"
-      - "src/CsToml.Extensions.Configuration/**"
       - "sandbox/CsToml.Playground/**"
       - ".github/workflows/deploy-playground.yml"
   workflow_dispatch:

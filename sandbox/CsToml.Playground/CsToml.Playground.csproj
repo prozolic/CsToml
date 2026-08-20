@@ -5,6 +5,11 @@
     <LangVersion>14.0</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Fingerprints blazor.webassembly.js / dotnet.js and emits the import map into index.html. -->
+    <OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
+    <!-- The Cloudflare publish output lives in dist/; without this its copied _content JS modules
+         are picked up as project content and fail the JS module check (BLAZOR106). -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);dist\**</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>
