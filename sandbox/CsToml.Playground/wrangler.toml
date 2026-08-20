@@ -1,0 +1,6 @@
+name = "cstoml-playground"
+compatibility_date = "2026-08-15"
+
+[assets]
+directory = "./dist/wwwroot"
+not_found_handling = "single-page-application"

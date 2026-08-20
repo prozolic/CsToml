@@ -9,12 +9,14 @@
     <File Path="src/Directory.Build.props" />
     <File Path="src/NuGet.props" />
     <File Path=".github/workflows/build.yml" />
+    <File Path=".github/workflows/deploy-playground.yml" />
     <File Path=".github/workflows/nuget-pack-push.yml" />
   </Folder>
   <Folder Name="/sandbox/">
     <Project Path="sandbox/Benchmark/Benchmark.csproj" />
     <Project Path="sandbox/ConsoleApp/ConsoleApp.csproj" />
     <Project Path="sandbox/ConsoleNativeAOT/ConsoleNativeAOT.csproj" />
+    <Project Path="sandbox/CsToml.Playground/CsToml.Playground.csproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/CsToml.Extensions.Configuration/CsToml.Extensions.Configuration.csproj" />
