@@ -46,7 +46,7 @@ public partial class Index : IDisposable
     private string libraryVersion = "";
     private string jsonOutput = "";
     private string tomlOutput = "";
-    private double lastParseMicrosecond;
+    private double lastParseMilliseconds;
     private CancellationTokenSource? debounceCts;
     private readonly List<(long Line, string Message)> problems = [];
 
@@ -181,7 +181,7 @@ public partial class Index : IDisposable
         try
         {
             var document = CsTomlSerializer.Deserialize<TomlDocument>(Encoding.UTF8.GetBytes(utf16Value), options);
-            lastParseMicrosecond = TimeProvider.System.GetElapsedTime(start).TotalMilliseconds;
+            lastParseMilliseconds = TimeProvider.System.GetElapsedTime(start).TotalMilliseconds;
 
             isValid = true;
             problems.Clear();
@@ -192,7 +192,7 @@ public partial class Index : IDisposable
         }
         catch (CsTomlSerializeException ctse)
         {
-            lastParseMicrosecond = TimeProvider.System.GetElapsedTime(start).TotalMilliseconds;
+            lastParseMilliseconds = TimeProvider.System.GetElapsedTime(start).TotalMilliseconds;
 
             isValid = false;
             problems.Clear();
@@ -212,7 +212,7 @@ public partial class Index : IDisposable
         }
         catch (Exception e)
         {
-            lastParseMicrosecond = TimeProvider.System.GetElapsedTime(start).TotalMilliseconds;
+            lastParseMilliseconds = TimeProvider.System.GetElapsedTime(start).TotalMilliseconds;
 
             isValid = false;
             problems.Clear();
