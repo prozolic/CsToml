@@ -1,0 +1,162 @@
+﻿@page "/"
+@inject IJSRuntime JS
+
+<PageTitle>CsToml Playground</PageTitle>
+
+<div class="playground pg-view-@mobileView @(isDarkMode ? "pg-dark" : null)">
+
+    <header class="pg-header">
+        <div class="pg-brand">
+            <img class="pg-logo" src="favicon.svg" alt="CsToml logo" />
+            <span class="pg-title">CsToml Playground</span>
+            <span class="pg-version">@libraryVersion</span>
+        </div>
+        <div class="pg-header-actions">
+            <span class="pg-status @(isValid ? "pg-status-valid" : "pg-status-invalid")" role="status" aria-live="polite">
+                <span class="pg-status-dot" aria-hidden="true"></span>
+                @(isValid ? "Valid" : $"{problems.Count} error{(problems.Count > 1 ? "s" : "")}")
+            </span>
+            <FluentButton Appearance="ButtonAppearance.Subtle"
+                          Title="Toggle light / dark theme"
+                          OnClick="ToggleThemeAsync"
+                          IconStart="@((Icon)(isDarkMode ? new Icons.Regular.Size20.WeatherSunny() : new Icons.Regular.Size20.WeatherMoon()))" />
+            @if (!string.IsNullOrEmpty(githubUrl))
+            {
+                <a class="pg-github" href="@githubUrl" target="_blank" rel="noopener" title="CsToml on GitHub" aria-label="CsToml on GitHub">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M12.5.75C6.146.75 1 5.896 1 12.25c0 5.089 3.292 9.387 7.863 10.91.575.101.79-.244.79-.546 0-.273-.014-1.178-.014-2.142-2.889.532-3.636-.704-3.866-1.35-.13-.331-.69-1.352-1.18-1.625-.402-.216-.977-.748-.014-.762.906-.014 1.553.834 1.769 1.179 1.035 1.74 2.688 1.25 3.349.948.1-.747.402-1.25.733-1.538-2.559-.287-5.232-1.279-5.232-5.678 0-1.25.445-2.285 1.178-3.09-.115-.288-.517-1.467.115-3.048 0 0 .963-.302 3.163 1.179.92-.259 1.897-.388 2.875-.388.977 0 1.955.13 2.875.388 2.2-1.495 3.162-1.179 3.162-1.179.633 1.581.23 2.76.115 3.048.733.805 1.179 1.825 1.179 3.09 0 4.413-2.688 5.39-5.247 5.678.417.36.776 1.05.776 2.128 0 1.538-.014 2.774-.014 3.162 0 .302.216.662.79.547C20.709 21.637 24 17.324 24 12.25 24 5.896 18.854.75 12.5.75Z"></path></svg>
+                </a>
+            }
+        </div>
+    </header>
+
+    <div class="pg-toolbar">
+        <span class="pg-pane-title">Examples</span>
+        <FluentSelect TOption="string" TValue="string" Value="@selectedSample" ValueChanged="OnSampleChangedAsync" AriaLabel="Load a sample" Class="pg-sample-select" Style="min-width: 220px;">
+            @foreach (var sample in TomlSamples.All)
+            {
+                <FluentOptionString Value="@sample.Key" Text="@sample.DisplayName" />
+            }
+        </FluentSelect>
+        <div class="pg-view-switcher" role="tablist" aria-label="Switch pane">
+            <button type="button" role="tab" class="pg-view-tab @(mobileView == "code" ? "active" : "")" aria-selected="@(mobileView == "code")" @onclick="@(() => SetMobileView("code"))">Code</button>
+            <button type="button" role="tab" class="pg-view-tab @(mobileView == "output" ? "active" : "")" aria-selected="@(mobileView == "output")" @onclick="@(() => SetMobileView("output"))">
+                Output
+                @if (!isValid)
+                {
+                    <span class="pg-view-tab-badge">@problems.Count</span>
+                }
+            </button>
+            <button type="button" role="tab" class="pg-view-tab @(mobileView == "options" ? "active" : "")" aria-selected="@(mobileView == "options")" @onclick="@(() => SetMobileView("options"))">Options</button>
+        </div>
+    </div>
+
+    <div class="pg-body">
+        <FluentMultiSplitter Orientation="Orientation.Horizontal" BarSize="6px" Width="100%" Height="100%">
+            <FluentMultiSplitterPane Size="20%" Min="200px">
+                <section class="pg-pane pg-pane-options" aria-label="Options">
+                    <div class="pg-tabbar">
+                        <span class="pg-pane-title">Options</span>
+                    </div>
+                    <div class="pg-tabpanel pg-options">
+                        <div class="opt-group">
+                            <div class="opt-label">TOML specification</div>
+                            <FluentSelect TOption="string" TValue="string" Value="@selectedSpec" ValueChanged="OnSpecChangedAsync" AriaLabel="TOML specification" Style="width: 100%;">
+                                <FluentOptionString Value="1.0.0" Text="TOML v1.0.0 ( Default )" />
+                                <FluentOptionString Value="1.1.0" Text="TOML v1.1.0" />
+                            </FluentSelect>
+                            <div class="opt-help">Selecting v1.1.0 presets the feature toggles below; v1.0.0 clears them.</div>
+                        </div>
+
+                        <div class="opt-group">
+                            <div class="opt-label">TOML v1.1.0 features</div>
+                            <div class="opt-checkboxes">
+                                <FluentCheckbox @bind-Value="allowUnicodeInBareKeys" @bind-Value:after="RevalidateAsync" Label="Unicode in bare keys (unofficial)" />
+                                <FluentCheckbox @bind-Value="allowNewlinesInInlineTables" @bind-Value:after="RevalidateAsync" Label="Newlines in inline tables" />
+                                <FluentCheckbox @bind-Value="allowTrailingCommaInInlineTables" @bind-Value:after="RevalidateAsync" Label="Trailing comma in inline tables" />
+                                <FluentCheckbox @bind-Value="allowSecondsOmissionInTime" @bind-Value:after="RevalidateAsync" Label="Seconds omission in time" />
+                                <FluentCheckbox @bind-Value="supportsEscapeSequenceE" @bind-Value:after="RevalidateAsync" Label="\e escape sequence" />
+                                <FluentCheckbox @bind-Value="supportsEscapeSequenceX" @bind-Value:after="RevalidateAsync" Label="\x hexadecimal escape" />
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </FluentMultiSplitterPane>
+            <FluentMultiSplitterPane Size="40%" Min="280px">
+                <section class="pg-pane pg-pane-code" aria-label="TOML input">
+                    <div class="pg-tabbar">
+                        <span class="pg-pane-title">Code</span>
+                        <div class="pg-tab-spacer"></div>
+                        <FluentButton Appearance="ButtonAppearance.Subtle" Title="Open a .toml / .txt file (max 1MB)" OnClick="OpenFilePickerAsync"
+                                      IconStart="@(new Icons.Regular.Size16.FolderOpen())">
+                            Open
+                        </FluentButton>
+                        <FluentButton Appearance="ButtonAppearance.Subtle" Title="Clear the editor" OnClick="ClearEditorAsync"
+                                      IconStart="@(new Icons.Regular.Size16.Delete())">
+                            Clear
+                        </FluentButton>
+                        <FluentButton Appearance="ButtonAppearance.Primary" Title="Validate now" OnClick="ValidateNowAsync">
+                            Validate
+                        </FluentButton>
+                    </div>
+
+                    <InputFile id="pg-file-input" style="display: none;" accept=".toml,.txt" OnChange="OnFileSelectedAsync" />
+
+                    @if (!string.IsNullOrEmpty(fileUploadError))
+                    {
+                        <div class="pg-file-error" role="alert">
+                            <span aria-hidden="true">⚠</span>
+                            <span>@fileUploadError</span>
+                        </div>
+                    }
+
+                    <div class="pg-tabpanel pg-editor-host">
+                        <StandaloneCodeEditor @ref="editor"
+                                              Id="cstoml-editor"
+                                              ConstructionOptions="EditorConstructionOptions"
+                                              OnDidInit="OnEditorInitAsync"
+                                              OnDidChangeModelContent="OnContentChanged" />
+                    </div>
+                </section>
+            </FluentMultiSplitterPane>
+            <FluentMultiSplitterPane Size="40%" Min="240px">
+                <section class="pg-pane pg-pane-output" aria-label="Parse result">
+                    <div class="pg-tabbar" role="tablist">
+                        <button type="button" role="tab" class="pg-tab @(outputTab == "json" ? "active" : "")" @onclick="@(() => SwitchOutputTabAsync("json"))">JSON</button>
+                        <button type="button" role="tab" class="pg-tab @(outputTab == "toml" ? "active" : "")" @onclick="@(() => SwitchOutputTabAsync("toml"))">TOML (round-trip)</button>
+                        <div class="pg-tab-spacer"></div>
+                        <FluentButton Appearance="ButtonAppearance.Subtle" Title="Copy output to clipboard" Disabled="@(!isValid)" OnClick="CopyOutputAsync"
+                                      IconStart="@((Icon)(copied ? new Icons.Regular.Size16.Checkmark() : new Icons.Regular.Size16.Copy()))">
+                            @(copied ? "Copied" : "Copy")
+                        </FluentButton>
+                    </div>
+
+                    <div class="pg-tabpanel pg-editor-host" hidden="@(!isValid)">
+                        <StandaloneCodeEditor @ref="outputEditor"
+                                              Id="cstoml-output"
+                                              ConstructionOptions="OutputEditorConstructionOptions"
+                                              OnDidInit="OnOutputEditorInitAsync" />
+                    </div>
+
+                    <div class="pg-tabpanel pg-problems" hidden="@isValid">
+                        <div class="pg-problems-title">
+                            @problems.Count problem@(problems.Count > 1 ? "s" : "") found
+                        </div>
+                        <div class="pg-problems-list">
+                            @foreach (var problem in problems)
+                            {
+                                <button type="button" class="pg-problem" @onclick="@(() => GoToLineAsync(problem.Line))">
+                                    <span class="pg-problem-line">@(problem.Line > 0 ? $"Line {problem.Line}" : "Input")</span>
+                                    <span class="pg-problem-message">@problem.Message</span>
+                                </button>
+                            }
+                        </div>
+                    </div>
+
+                    <footer class="pg-statusbar">
+                        <span>Parse: @lastParseMilliseconds.ToString("0.00") ms</span>
+                    </footer>
+                </section>
+            </FluentMultiSplitterPane>
+        </FluentMultiSplitter>
+    </div>
+</div>

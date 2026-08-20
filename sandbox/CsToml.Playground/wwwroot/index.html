@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CsToml Playground</title>
+    <base href="/" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="stylesheet" href="_content/Microsoft.FluentUI.AspNetCore.Components/css/default-fuib.css" />
+    <link rel="stylesheet" href="CsToml.Playground.styles.css" />
+    <link rel="stylesheet" href="css/app.css" />
+    <script type="importmap"></script>
+</head>
+
+<body>
+    <div id="app">
+        <div class="loading-container">
+            <div class="loading-card">
+                <svg class="loading-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="56" height="56" aria-hidden="true">
+                    <rect rx="7" width="32" height="32" fill="#000000" />
+                    <text x="16" y="19.5" font-family="'Segoe UI', sans-serif" font-size="8.5" font-weight="700" fill="#c8c8c8" text-anchor="middle" dominant-baseline="middle">CsToml</text>
+                </svg>
+                <h1 class="loading-title">CsToml Playground</h1>
+                <p class="loading-subtitle">TOML parser &amp; serializer for .NET</p>
+                <div class="loading-dots" aria-hidden="true">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+                <div class="loading-status">Loading .NET runtime...</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="." class="reload">Reload</a>
+        <span class="dismiss">🗙</span>
+    </div>
+
+    <script src="_content/BlazorMonaco/jsInterop.js"></script>
+    <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/loader.js"></script>
+    <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js"></script>
+    <script src="js/toml-monarch.js"></script>
+    <script src="js/playground.js"></script>
+    <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
+</body>
+
+</html>

@@ -1,0 +1,636 @@
+﻿
+html, body {
+    height: 100%;
+    margin: 0;
+    font-family: 'Segoe UI Variable', 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif;
+    overflow: hidden;
+}
+
+#app {
+    height: 100%;
+}
+
+/* App shell + theme variables 
+   The playground owns its shell colors (independent from the Fluent design tokens)
+   so that light / dark switching is deterministic. Fluent components follow
+   FluentDesignTheme on their own.
+*/
+
+.playground {
+    --pg-bg: #ffffff;
+    --pg-surface: #f7f7f9;
+    --pg-text: #1a1a1a;
+    --pg-text-muted: #666a73;
+    --pg-border: #e3e4e8;
+    --pg-accent: #512BD4;
+    --pg-hover: rgba(0, 0, 0, 0.05);
+    --pg-error: #c42b1c;
+    --pg-error-bg: rgba(196, 43, 28, 0.12);
+    --pg-ok: #107c10;
+    --pg-ok-bg: rgba(16, 124, 16, 0.12);
+
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    height: 100dvh;
+    background: var(--pg-bg);
+    color: var(--pg-text);
+}
+
+.playground.pg-dark {
+    --pg-bg: #1e1e1e;
+    --pg-surface: #252528;
+    --pg-text: #e8e8ea;
+    --pg-text-muted: #9d9da6;
+    --pg-border: #3a3a40;
+    --pg-accent: #a58af8;
+    --pg-hover: rgba(255, 255, 255, 0.07);
+    --pg-error: #f48771;
+    --pg-error-bg: rgba(244, 135, 113, 0.14);
+    --pg-ok: #6ccb5f;
+    --pg-ok-bg: rgba(108, 203, 95, 0.14);
+}
+
+/* Header */
+
+.pg-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 14px;
+    background: var(--pg-surface);
+    border-bottom: 1px solid var(--pg-border);
+}
+
+.pg-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.pg-logo {
+    width: 28px;
+    height: 28px;
+    display: block;
+}
+
+.pg-title {
+    font-size: 17px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.pg-title-accent {
+    color: var(--pg-accent);
+}
+
+.pg-version {
+    font-size: 12px;
+    padding: 1px 8px;
+    border-radius: 10px;
+    background: var(--pg-hover);
+    color: var(--pg-text-muted);
+    white-space: nowrap;
+}
+
+.pg-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Toolbar row (between header and body) */
+
+.pg-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 6px 14px;
+    background: var(--pg-surface);
+    border-bottom: 1px solid var(--pg-border);
+}
+
+.pg-github {
+    display: flex;
+    align-items: center;
+    color: var(--pg-text);
+}
+
+.pg-github:hover {
+    color: var(--pg-accent);
+}
+
+/* Validation status badge */
+
+.pg-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 3px 12px;
+    border-radius: 12px;
+    white-space: nowrap;
+}
+
+.pg-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.pg-status-valid {
+    background: var(--pg-ok-bg);
+    color: var(--pg-ok);
+}
+
+.pg-status-valid .pg-status-dot {
+    background: var(--pg-ok);
+}
+
+.pg-status-invalid {
+    background: var(--pg-error-bg);
+    color: var(--pg-error);
+}
+
+.pg-status-invalid .pg-status-dot {
+    background: var(--pg-error);
+}
+
+/* Body/panes */
+
+.pg-body {
+    min-height: 0;
+    height: 100%;
+}
+
+.pg-body .fluent-multi-splitter {
+    height: 100%;
+}
+
+.pg-pane {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    background: var(--pg-bg);
+}
+
+.pg-tabbar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 44px;
+    box-sizing: border-box;
+    padding: 4px 8px;
+    margin-bottom: 6px;
+    background: var(--pg-surface);
+    border-bottom: 1px solid var(--pg-border);
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+}
+
+.pg-tabbar > * {
+    flex: 0 0 auto;
+}
+
+.pg-tabbar > .pg-tab-spacer {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+.pg-tab {
+    appearance: none;
+    border: none;
+    background: transparent;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--pg-text-muted);
+    padding: 6px 12px;
+    border-radius: 4px;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+}
+
+.pg-tab:hover {
+    color: var(--pg-text);
+    background: var(--pg-hover);
+}
+
+.pg-tab.active {
+    color: var(--pg-accent);
+    border-bottom-color: var(--pg-accent);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.pg-tab-spacer {
+    flex: 1;
+}
+
+.pg-pane-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--pg-text-muted);
+    padding: 6px 8px;
+    white-space: nowrap;
+}
+
+.pg-tabpanel {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+}
+
+.pg-tabpanel[hidden] {
+    display: none !important;
+}
+
+/* Monaco hosts */
+
+.pg-editor-host {
+    overflow: hidden;
+}
+
+.pg-editor-host .monaco-editor-container {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* Error decorations (used by DeltaDecorations) */
+.cstoml-error-line {
+    background: rgba(196, 43, 28, 0.14);
+}
+
+.pg-dark .cstoml-error-line {
+    background: rgba(244, 135, 113, 0.18);
+}
+
+.cstoml-error-glyph {
+    background: radial-gradient(circle at 50% 50%, #c42b1c 5px, transparent 6px);
+}
+
+.pg-dark .cstoml-error-glyph {
+    background: radial-gradient(circle at 50% 50%, #f48771 5px, transparent 6px);
+}
+
+/* Options panel */
+
+.pg-options {
+    padding: 18px 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.opt-group[hidden] {
+    display: none !important;
+}
+
+.opt-label {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.opt-help {
+    font-size: 12px;
+    color: var(--pg-text-muted);
+    margin-top: 6px;
+}
+
+.opt-checkboxes {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* File upload error */
+
+.pg-file-error {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    font-size: 13px;
+    background: var(--pg-error-bg);
+    color: var(--pg-error);
+    border-bottom: 1px solid var(--pg-border);
+}
+
+/* Problems panel */
+
+.pg-problems {
+    overflow-y: auto;
+    padding: 14px 16px;
+}
+
+.pg-problems-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--pg-error);
+    margin-bottom: 10px;
+}
+
+.pg-problems-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.pg-problem {
+    appearance: none;
+    border: 1px solid var(--pg-border);
+    border-left: 3px solid var(--pg-error);
+    background: var(--pg-surface);
+    border-radius: 4px;
+    font: inherit;
+    text-align: left;
+    padding: 8px 10px;
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    cursor: pointer;
+    color: var(--pg-text);
+}
+
+.pg-problem:hover {
+    background: var(--pg-hover);
+}
+
+.pg-problem-line {
+    flex-shrink: 0;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--pg-error);
+    min-width: 56px;
+}
+
+.pg-problem-message {
+    font-size: 13px;
+    font-family: Consolas, 'Cascadia Code', monospace;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* Status bar */
+
+.pg-statusbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 14px;
+    font-size: 12px;
+    color: var(--pg-text-muted);
+    background: var(--pg-surface);
+    border-top: 1px solid var(--pg-border);
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+/* Loading screen */
+
+.loading-container {
+    height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #0a0a0c 0%, #16161a 55%, #26262e 100%);
+}
+
+.loading-card {
+    background: rgba(255, 255, 255, 0.96);
+    border-radius: 14px;
+    padding: 44px 56px;
+    text-align: center;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.30);
+}
+
+.loading-logo {
+    display: block;
+    margin: 0 auto 14px;
+}
+
+.loading-title {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
+.loading-subtitle {
+    margin: 6px 0 18px;
+    font-size: 14px;
+    color: #555555;
+}
+
+.loading-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.loading-dots .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #512BD4;
+    animation: pg-bounce 1.2s infinite ease-in-out;
+}
+
+.loading-dots .dot:nth-child(2) {
+    animation-delay: 0.15s;
+}
+
+.loading-dots .dot:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+@keyframes pg-bounce {
+    0%, 80%, 100% {
+        transform: scale(0.6);
+        opacity: 0.5;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.loading-status {
+    font-size: 12px;
+    color: #777777;
+}
+
+/* Blazor error UI */
+
+#blazor-error-ui {
+    background: lightyellow;
+    color: #1a1a1a;
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+}
+
+/* Responsive layout
+   Desktop (> 768px) keeps the three-pane splitter (pane minimums total 732px).
+   At <= 768px the splitter collapses to a single full-height pane and the
+   pg-view-switcher segmented tabs in the toolbar pick the visible pane via a
+   pg-view-* class on .playground. Panes are hidden with CSS only, so the
+   Monaco editors keep their state and AutomaticLayout re-measures them when
+   they reappear. */
+
+.pg-view-switcher {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .pg-body .fluent-multi-splitter {
+        display: flex !important;
+        flex-direction: column;
+    }
+
+    .pg-body .fluent-multi-splitter-bar {
+        display: none !important;
+    }
+
+    .pg-body .fluent-multi-splitter-pane {
+        flex: 1 1 auto !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        min-height: 0;
+    }
+
+    .pg-view-code .fluent-multi-splitter-pane:not(:has(> .pg-pane-code)),
+    .pg-view-output .fluent-multi-splitter-pane:not(:has(> .pg-pane-output)),
+    .pg-view-options .fluent-multi-splitter-pane:not(:has(> .pg-pane-options)) {
+        display: none !important;
+    }
+
+    .pg-toolbar {
+        flex-wrap: wrap;
+    }
+
+    .pg-toolbar .pg-sample-select {
+        flex: 1 1 auto;
+        min-width: 0 !important;
+        max-width: 100%;
+    }
+
+    .pg-view-switcher {
+        display: flex;
+        flex: 1 1 100%;
+        gap: 4px;
+        padding: 3px;
+        background: var(--pg-hover);
+        border-radius: 8px;
+    }
+
+    .pg-view-tab {
+        appearance: none;
+        border: none;
+        background: transparent;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--pg-text-muted);
+        flex: 1;
+        min-height: 38px;
+        padding: 4px 0;
+        border-radius: 6px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    }
+
+    .pg-view-tab.active {
+        background: var(--pg-bg);
+        color: var(--pg-accent);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+    }
+
+    .pg-view-tab-badge {
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 1;
+        padding: 2px 6px;
+        border-radius: 8px;
+        background: var(--pg-error-bg);
+        color: var(--pg-error);
+    }
+
+    .pg-options {
+        padding: 14px 16px;
+        gap: 18px;
+    }
+
+    /* Larger touch targets for the output JSON/TOML tabs */
+    .pg-tab {
+        padding: 8px 12px;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    }
+}
+
+/* Small phones: tighter chrome, drop decorative labels */
+@media (max-width: 560px) {
+    .pg-header,
+    .pg-toolbar,
+    .pg-statusbar {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .pg-version {
+        display: none;
+    }
+
+    .pg-title {
+        font-size: 15px;
+    }
+
+    .pg-toolbar .pg-pane-title {
+        display: none;
+    }
+
+    .loading-card {
+        margin: 0 16px;
+        padding: 32px 24px;
+    }
+
+    .loading-title {
+        font-size: 20px;
+    }
+}

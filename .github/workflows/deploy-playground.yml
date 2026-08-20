@@ -1,0 +1,37 @@
+# Deploys sandbox/CsToml.Playground to Cloudflare Workers (static assets).
+
+name: Deploy Playground
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "sandbox/CsToml.Playground/**"
+      - ".github/workflows/deploy-playground.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-playground
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Setup .NET
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5.4.0
+        with:
+          global-json-file: sandbox/CsToml.Playground/global.json
+      - name: Publish
+        working-directory: sandbox/CsToml.Playground
+        run: dotnet publish -c Release -o dist -p:CompressionEnabled=false
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3.15.0
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: sandbox/CsToml.Playground

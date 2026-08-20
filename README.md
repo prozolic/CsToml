@@ -7,8 +7,9 @@
 [![CsToml.Extensions.Configuration](https://img.shields.io/nuget/v/CsToml.Extensions.Configuration?label=nuget%20CsToml.Extensions.Configuration)](https://www.nuget.org/packages/CsToml.Extensions.Configuration)
 [![CsToml.Generator](https://img.shields.io/nuget/v/CsToml.Generator?label=nuget%20CsToml.Generator)](https://www.nuget.org/packages/CsToml.Generator/)
 
-CsToml is a fast, low memory allocation TOML Parser/Serializer for .NET.  
-For more information about TOML, visit the official website at [https://toml.io/en/](https://toml.io/en/)
+CsToml is a fast, low memory allocation TOML Parser/Serializer for .NET.
+You can try it [Playground](https://cstoml-playground.prozolic.workers.dev/).  
+For more information about TOML, visit the official website at [https://toml.io/en/](https://toml.io/en/)  
 
 ![Parse Toml text](./img/benchmark_parse.png)
 

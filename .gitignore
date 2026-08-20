@@ -582,3 +582,10 @@ FodyWeavers.xsd
 # Additional files built by Visual Studio
 
 # End of httpswww.toptal.comdevelopersgitignoreapicsharp,visualstudio
+
+# Cloudflare deployment output (CsToml.Playground)
+sandbox/CsToml.Playground/dist/
+
+# Wrangler local state (account cache, temp build output)
+.wrangler/
+
