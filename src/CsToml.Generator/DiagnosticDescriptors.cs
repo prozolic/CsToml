@@ -87,6 +87,62 @@ internal static class DiagnosticDescriptors
         category: Category,
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor UnionRequiresTomlUnionAttribute = new(
+        id: "CsTomlError011",
+        title: "Union types used by CsToml must be annotated with TomlUnionAttribute<T>",
+        messageFormat: "The union type '{1}' reachable from property '{0}' requires TomlUnionAttribute<T>",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor UnionPinnedTypeIsNotCase = new(
+        id: "CsTomlError012",
+        title: "The type argument of TomlUnionAttribute<T> must be a case type of the union",
+        messageFormat: "The type '{1}' is not a case type of union '{0}'",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor TomlUnionAttributeOnNonUnion = new(
+        id: "CsTomlError013",
+        title: "TomlUnionAttribute<T> must be applied to a union type",
+        messageFormat: "TomlUnionAttribute<T> is applied to '{0}', which is not a union type",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor UnionCannotBeTomlSerializedObject = new(
+        id: "CsTomlError014",
+        title: "TomlSerializedObjectAttribute must not be applied to a union type",
+        messageFormat: "TomlSerializedObjectAttribute must not be applied to the union type '{0}'. Use TomlUnionAttribute<T> instead.",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor GenericUnionCannotBePinnedAtTypeLevel = new(
+        id: "CsTomlError015",
+        title: "TomlUnionAttribute<T> must not be applied to a generic union type declaration",
+        messageFormat: "TomlUnionAttribute<T> must not be applied to the generic union type '{0}'. Apply it to a member of the closed union type instead.",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor TomlUnionAttributeOnWrappedUnionMember = new(
+        id: "CsTomlError017",
+        title: "Member-level TomlUnionAttribute<T> only applies to a property whose type is the union itself",
+        messageFormat: "TomlUnionAttribute<T> on property '{0}' cannot pin the union '{1}' wrapped in '{2}'. Apply TomlUnionAttribute<T> to the union type instead.",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor UnionPinnedCaseCannotBeSerialized = new(
+        id: "CsTomlError016",
+        title: "The pinned union case type cannot be serialized by CsToml",
+        messageFormat: "The pinned case type '{1}' of union '{0}' cannot be serialized by CsToml",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
 }
 
 

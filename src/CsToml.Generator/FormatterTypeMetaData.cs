@@ -311,6 +311,12 @@ internal static class FormatterTypeMetaData
             case TypeKind.Enum:
                 return TomlSerializationKind.Enum;
             case TypeKind.Class:
+                // Union check must run before the IsTomlSerializedObject/collection checks; falling
+                // through to the Class kind would emit broken TOML for union-typed members.
+                if (UnionSymbolAnalyzer.IsUnionWithCases(type))
+                {
+                    return TomlSerializationKind.Union;
+                }
                 if (type.IsTomlSerializedObject())
                 {
                     return TomlSerializationKind.TomlSerializedObject;
@@ -343,9 +349,21 @@ internal static class FormatterTypeMetaData
                 }
                 return TomlSerializationKind.Interface;
             case TypeKind.Struct:
+                if (UnionSymbolAnalyzer.IsUnionWithCases(type))
+                {
+                    return TomlSerializationKind.Union;
+                }
                 if (type.IsTomlSerializedObject())
                 {
                     return TomlSerializationKind.TomlSerializedObject;
+                }
+
+                // Nullable<TUnion> rides the same emission/registration path as other Nullable<T>
+                // special cases (ArrayOfTable state + NullableFormatter<TUnion> registration).
+                if (TryGetNullableParameterType(type, out var nullableUnionType) &&
+                    UnionSymbolAnalyzer.IsUnionWithCases(nullableUnionType!))
+                {
+                    return TomlSerializationKind.TomlSerializedObjectCollection;
                 }
 
                 // For a Nullable<T> Collection/Dictionary like ImmutableArray<T>?
