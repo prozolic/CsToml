@@ -12,6 +12,7 @@ internal sealed class TypeMeta
     private INamedTypeSymbol symbol;
     private TypeDeclarationSyntax syntax;
     private readonly List<UnionDiagnosticInfo> unionDiagnostics = new();
+    private bool hasUnionErrorReportedElsewhere;
     public ImmutableArray<TomlValueOnSerializedData> OrderedMembers { get; }
     public ImmutableArray<(ITypeSymbol, TomlSerializationKind)> DefinedTypes { get; }
     public string NameSpace { get; }
@@ -122,9 +123,17 @@ internal sealed class TypeMeta
             var typeLevelPinnedCase = UnionSymbolAnalyzer.GetTypeLevelPinnedCase(unionSymbol);
             if (typeLevelPinnedCase != null)
             {
-                if (UnionMetaFactory.TryCreate(unionSymbol, typeLevelPinnedCase, isTypeLevel: true, location, unionDiagnostics, out var typeMeta))
+                // Unions declared in this compilation get their CsTomlError012/016 from the [TomlUnion<T>]
+                // pipeline (once, at the union); only unions from referenced assemblies are reported here.
+                var declaredInSource = unionSymbol.DeclaringSyntaxReferences.Length > 0;
+                var sink = declaredInSource ? new List<UnionDiagnosticInfo>() : unionDiagnostics;
+                if (UnionMetaFactory.TryCreate(unionSymbol, typeLevelPinnedCase, isTypeLevel: true, location, sink, out var typeMeta))
                 {
                     unionMetaMap[$"{typeMeta!.FormatterNamespace}.{typeMeta.FormatterClassName}"] = typeMeta;
+                }
+                else if (declaredInSource)
+                {
+                    hasUnionErrorReportedElsewhere = true;
                 }
                 continue;
             }
@@ -289,6 +298,10 @@ internal sealed class TypeMeta
                     unionDiagnostic.Descriptor,
                     unionDiagnostic.Location,
                     unionDiagnostic.Args));
+            error = true;
+        }
+        if (hasUnionErrorReportedElsewhere)
+        {
             error = true;
         }
 
