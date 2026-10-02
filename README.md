@@ -689,6 +689,84 @@ internal partial class Constructor3
 }
 ```
 
+### Union types (.NET 11 / C# 15)
+
+> [!NOTE]
+> This will be available starting from v1.9.0.
+
+`CsToml.Generator` supports .NET 11/C# 15 union types: `union` declarations, custom union types marked with `[System.Runtime.CompilerServices.Union]` (including the `TryGetValue`/`HasValue` pattern), and union member provider types (a nested `IUnionMembers` interface with static `Create` methods that the union implements).
+
+A union is always deserialized/serialized as one designated case type `T`, declared with `[TomlUnion<T>]`.  
+The TOML output is the plain `T` value with no trace of the union, so a union pinned to a POCO looks exactly like that POCO, and a union pinned to `long` looks like an integer. Instead of making the union type `partial`, the generator emits a dedicated `ITomlValueFormatter<TUnion>` class named `CsToml.Generated.{namespace}.{TypeName}Formatter`, so the union type itself is left untouched.
+
+```csharp
+[TomlUnion<long>]
+public union IntOrText(long, string);
+
+[TomlSerializedObject]
+public partial class Setting
+{
+    [TomlValueOnSerialized]
+    public IntOrText Num { get; set; }
+}
+
+var setting = new Setting() { Num = 123L };
+using var bytes = CsTomlSerializer.Serialize(setting);
+// Num = 123
+```
+
+`[TomlUnion<T>]` can be applied in two places.
+
+* On the union type: every usage of the union (e.g. members, collections, `Nullable<T>`) uses `T`. This is required for unions that appear anywhere other than as a direct `[TomlValueOnSerialized]` property.
+* On a `[TomlValueOnSerialized]` property whose type is the union: only that member uses `T`, overriding a type-level attribute if present. This is also the only way to pin a union defined in another assembly, a generic union, or a union nested in a generic type (a type-level attribute on such a declaration is reported as `CsTomlError015`). Because the member-level attribute does not reach a wrapped union, these unions cannot be used inside `List<U>`, `U[]` or `U?`.
+
+A union reachable from a `[TomlValueOnSerialized]` member without any `[TomlUnion<T>]` is reported as `CsTomlError011`; `T` must be one of the union's case types (`CsTomlError012`). A member-level attribute on a property whose type merely wraps a union (`List<U>`, `U[]`, `U?`) is reported as `CsTomlError017`; use the type-level attribute for those.
+
+* A union used as a `[TomlValueOnSerialized]` member requires nothing: the parent type's generated registration also registers the union formatter and the formatters of the pinned case (this pre-registration is the only resolution path for enum/collection case types on Native AOT).
+* To serialize a union directly, call the generated `XxxFormatter.Register()` once at startup. Registration is first-come-first-served: registering your own `ITomlValueFormatter<TUnion>` earlier silently wins.
+
+```csharp
+[TomlUnion<long>]
+public union StandaloneIntOrText(long, string);
+
+CsToml.Generated.StandaloneIntOrTextFormatter.Register(); // once at startup
+using var bytes = CsTomlSerializer.SerializeValueType(new StandaloneIntOrText(42L)); // 42
+```
+
+Serialization semantics:
+
+* If the union holds a case other than `T` (or no value at all), serialization throws `CsTomlException`.
+* Deserializing a missing key returns `default` (a valueless union, or `null` for class unions).
+* `TryGetValue(out T)` is preferred over the boxed `Value` property when the union declares it.
+
+#### Unions from other libraries
+
+You can also use a union that comes from another library, even if that library does not know about CsToml.
+You cannot add `[TomlUnion<T>]` to a type you do not own, so put it on your property instead.
+The union must be the type of the property itself.
+
+```csharp
+// Lib.dll (no CsToml reference):
+//   public union LibIntOrText(long, string);
+
+[TomlSerializedObject]
+public partial class Setting
+{
+    [TomlValueOnSerialized]
+    [TomlUnion<long>]
+    public LibIntOrText Number { get; set; }   // written as an integer
+
+    [TomlValueOnSerialized]
+    [TomlUnion<string>]
+    public LibIntOrText Text { get; set; }     // written as a string
+}
+```
+
+This does not work when the union is inside another type, like `List<LibIntOrText>`, `LibIntOrText[]` or `LibIntOrText?`.
+In that case the generator reports `CsTomlError017`, because `[TomlUnion<T>]` on the property cannot reach the union inside.
+For your own union types, put `[TomlUnion<T>]` on the union type. For a union from another library, write an `ITomlValueFormatter<LibIntOrText>` by hand and register it with `TomlValueFormatterResolver.Register`. See [Customize Formatter](#customize-formatter).
+
+Also, if `T` is a normal class from that library (not a `[TomlSerializedObject]` type), CsToml needs a formatter for `T` too.
 
 ### CsTomlSerializerOptions
 

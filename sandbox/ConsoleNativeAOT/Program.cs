@@ -254,6 +254,12 @@ var typeLinqInterfaceSerialized = CsTomlSerializer.Deserialize<TypeLinqInterface
 
 Console.WriteLine(Encoding.UTF8.GetString(bytesForTypeLinqInterface.ByteSpan));
 
+var unionAotSample = new UnionAotSample() { First = new ColorOrName(Color.Green), Second = new ColorOrName(Color.Blue) };
+using var bytesForUnionAotSample = CsTomlSerializer.Serialize(unionAotSample);
+var unionAotSampleDeserialized = CsTomlSerializer.Deserialize<UnionAotSample>(bytesForUnionAotSample.ByteSpan);
+Console.WriteLine(Encoding.UTF8.GetString(bytesForUnionAotSample.ByteSpan));
+Console.WriteLine($"Union roundtrip: First = {unionAotSampleDeserialized!.First.Value}, Second = {unionAotSampleDeserialized.Second.Value}");
+
 Console.WriteLine("END!");
 
 #pragma warning disable CS8618

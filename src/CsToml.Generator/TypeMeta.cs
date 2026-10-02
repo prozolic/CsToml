@@ -1,8 +1,8 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using CsToml.Generator.Internal;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace CsToml.Generator;
@@ -11,6 +11,8 @@ internal sealed class TypeMeta
 {
     private INamedTypeSymbol symbol;
     private TypeDeclarationSyntax syntax;
+    private readonly List<UnionDiagnosticInfo> unionDiagnostics = new();
+    private bool hasUnionErrorReportedElsewhere;
     public ImmutableArray<TomlValueOnSerializedData> OrderedMembers { get; }
     public ImmutableArray<(ITypeSymbol, TomlSerializationKind)> DefinedTypes { get; }
     public string NameSpace { get; }
@@ -21,12 +23,15 @@ internal sealed class TypeMeta
     public string GenericTypeParameterName { get; }
     public TomlNamingConvention NamingConvention { get; }
     public bool IsReferenceType => !symbol.IsValueType;
+    public bool IsUnion { get; }
+    public EquatableArray<UnionMeta> UnionMetas { get; }
     public HashSet<TomlSerializationKind> TomlSerializationKindLookup { get; }
 
     public TypeMeta(INamedTypeSymbol symbol, TypeDeclarationSyntax syntax)
     {
         this.symbol = symbol;
         this.syntax = syntax;
+        IsUnion = UnionSymbolAnalyzer.IsUnionType(symbol);
 
         TypeName = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
         FullTypeName = symbol.ToFullFormatString();
@@ -55,16 +60,111 @@ internal sealed class TypeMeta
             TomlSerializationKind.TomlSerializedObject
         ]);
 
+        // A single closure walk per member: the per-member set feeds DefinedTypes and, in the same pass,
+        // records the first member that reaches each union (for diagnostic locations), so no second
+        // walk is needed when the union descriptors are built.
         var typesymbols = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
+        var unionOrigins = new Dictionary<INamedTypeSymbol, TomlValueOnSerializedData>(SymbolEqualityComparer.Default);
         foreach (var member in OrderedMembers)
         {
-            SearchTypeSymbol(typesymbols, member.Symbol.Type);
+            var reachable = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
+            SymbolUtility.SearchReachableTypes(reachable, member.Symbol.Type);
+
+            HashSet<ITypeSymbol>? pinnedCaseReachable = null;
+            if (member.MemberPinnedCaseType != null)
+            {
+                pinnedCaseReachable = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
+                SymbolUtility.SearchReachableTypes(pinnedCaseReachable, member.MemberPinnedCaseType);
+                reachable.UnionWith(pinnedCaseReachable);
+            }
+            typesymbols.UnionWith(reachable);
+            foreach (var type in reachable)
+            {
+                if (type is not INamedTypeSymbol unionSymbol || unionOrigins.ContainsKey(unionSymbol) ||
+                    !UnionSymbolAnalyzer.IsUnionWithCases(unionSymbol))
+                {
+                    continue;
+                }
+                // A member that pins its own union type directly is not an unpinned origin for it
+                // (an invalid pin is already CsTomlError012); a later member reaching the union through
+                // a wrapper claims the diagnostic instead.
+                if ((member.MemberPinnedUnionSymbol != null || member.PinnedCaseInvalid) &&
+                    SymbolEqualityComparer.Default.Equals(unionSymbol, member.Symbol.Type) &&
+                    !(pinnedCaseReachable?.Contains(unionSymbol) ?? false))
+                {
+                    continue;
+                }
+                unionOrigins[unionSymbol] = member;
+            }
         }
         DefinedTypes = typesymbols.Select(t => (t, FormatterTypeMetaData.GetTomlSerializationKind(t))).ToImmutableArray();
+
+        UnionMetas = CollectUnionMetas(unionOrigins);
+    }
+
+    private EquatableArray<UnionMeta> CollectUnionMetas(Dictionary<INamedTypeSymbol, TomlValueOnSerializedData> unionOrigins)
+    {
+        var unionMetaMap = new Dictionary<string, UnionMeta>(StringComparer.Ordinal);
+
+        foreach (var member in OrderedMembers)
+        {
+            if (member.MemberPinnedUnionSymbol != null && member.MemberPinnedCaseType != null &&
+                UnionMetaFactory.TryCreate(member.MemberPinnedUnionSymbol, member.MemberPinnedCaseType, isTypeLevel: false, GetPropertyLocation(member.Symbol, syntax), unionDiagnostics, out var memberMeta))
+            {
+                unionMetaMap[memberMeta!.IdentityKey] = memberMeta;
+            }
+        }
+
+        // Every reachable union must be pinned at type level; each union is analyzed once and any
+        // diagnostic is attributed to the first member that reaches it.
+        foreach (var pair in unionOrigins)
+        {
+            var unionSymbol = pair.Key;
+            var member = pair.Value;
+            var location = GetPropertyLocation(member.Symbol, syntax);
+
+            var typeLevelPinnedCase = UnionSymbolAnalyzer.GetTypeLevelPinnedCase(unionSymbol);
+            if (typeLevelPinnedCase != null)
+            {
+                // Unions declared in this compilation get their CsTomlError012/016 from the [TomlUnion<T>]
+                // pipeline (once, at the union); only unions from referenced assemblies are reported here.
+                var declaredInSource = unionSymbol.DeclaringSyntaxReferences.Length > 0;
+                var sink = declaredInSource ? new List<UnionDiagnosticInfo>() : unionDiagnostics;
+                if (UnionMetaFactory.TryCreate(unionSymbol, typeLevelPinnedCase, isTypeLevel: true, location, sink, out var typeMeta))
+                {
+                    unionMetaMap[typeMeta!.IdentityKey] = typeMeta;
+                }
+                else if (declaredInSource)
+                {
+                    hasUnionErrorReportedElsewhere = true;
+                }
+                continue;
+            }
+
+            unionDiagnostics.Add(new UnionDiagnosticInfo(
+                DiagnosticDescriptors.UnionRequiresTomlUnionAttribute,
+                location,
+                [member.Symbol.Name, unionSymbol.ToDisplayString()]));
+        }
+
+        if (unionMetaMap.Count == 0)
+            return EquatableArray<UnionMeta>.Empty;
+
+        return new EquatableArray<UnionMeta>(
+            unionMetaMap.OrderBy(kv => kv.Key, StringComparer.Ordinal).Select(kv => kv.Value).ToImmutableArray());
     }
 
     public bool Validate(SourceProductionContext context)
     {
+        if (IsUnion)
+        {
+            context.ReportDiagnostic(
+                Diagnostic.Create(
+                    DiagnosticDescriptors.UnionCannotBeTomlSerializedObject,
+                    syntax.Identifier.GetLocation(),
+                    symbol!.Name));
+            return false;
+        }
         if (!syntax.IsPartial())
         {
             context.ReportDiagnostic(
@@ -159,6 +259,49 @@ internal sealed class TypeMeta
                         symbol!.Name));
                 error = true;
             }
+
+            if (member.PinnedCaseInvalid)
+            {
+                context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        DiagnosticDescriptors.UnionPinnedTypeIsNotCase,
+                        GetPropertyLocation(property, syntax),
+                        property.Type.ToDisplayString(),
+                        member.MemberPinnedTypeDisplayName));
+                error = true;
+            }
+
+            if (member.WrappedUnionType != null)
+            {
+                context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        DiagnosticDescriptors.TomlUnionAttributeOnWrappedUnionMember,
+                        GetPropertyLocation(property, syntax),
+                        property.Name,
+                        member.WrappedUnionType.ToDisplayString(),
+                        property.Type.ToDisplayString()));
+                error = true;
+            }
+
+            if (member.HasTomlUnionAttributeOnNonUnion)
+            {
+                context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        DiagnosticDescriptors.TomlUnionAttributeOnNonUnion,
+                        GetPropertyLocation(property, syntax),
+                        property.Type.ToDisplayString()));
+                error = true;
+            }
+        }
+
+        foreach (var unionDiagnostic in unionDiagnostics)
+        {
+            context.ReportDiagnostic(unionDiagnostic.ToDiagnostic());
+            error = true;
+        }
+        if (hasUnionErrorReportedElsewhere)
+        {
+            error = true;
         }
 
         return !error;
@@ -197,37 +340,6 @@ internal sealed class TypeMeta
         return propertySymbol.Locations.FirstOrDefault() ?? syntax.Identifier.GetLocation();
     }
 
-    private void SearchTypeSymbol(HashSet<ITypeSymbol> typesymbols, ITypeSymbol rootTypeSymbol)
-    {
-        typesymbols.Add(rootTypeSymbol);
-        if (rootTypeSymbol is IArrayTypeSymbol arrayTypeSymbol)
-        {
-            var elementType = arrayTypeSymbol.ElementType;
-            SearchTypeSymbol(typesymbols, elementType);
-        }
-        else if (rootTypeSymbol is INamedTypeSymbol namedSymbol)
-        {
-            if (namedSymbol.IsGenericType)
-            {
-                foreach (var typeParameter in namedSymbol.TypeArguments)
-                {
-                    SearchTypeSymbol(typesymbols, typeParameter);
-                }
-            }
-            foreach (var propetryParameter in namedSymbol.GetPublicProperties().FilterTomlValueOnSerializedMembers(TomlNamingConvention.None))
-            {
-                SearchTypeSymbol(typesymbols, propetryParameter.Symbol.Type);
-            }
-        }
-
-        foreach (var i in rootTypeSymbol.AllInterfaces.Where(i => i is { DeclaredAccessibility: Accessibility.Public, IsGenericType: true }))
-        {
-            if (!typesymbols.Contains(i) && FormatterTypeMetaData.ContainsCollectionInterfaceType(i))
-            {
-                SearchTypeSymbol(typesymbols, i);
-            }
-        }
-    }
 }
 
 internal sealed class ConstructorMeta
@@ -383,4 +495,18 @@ internal struct TomlValueOnSerializedData
     public TomlNullHandling NullHandling { get; init; }
 
     public bool IsNullable { get; init; }
+
+    public string? FormatterAccess { get; init; }
+
+    public INamedTypeSymbol? MemberPinnedUnionSymbol { get; init; }
+
+    public ITypeSymbol? MemberPinnedCaseType { get; init; }
+
+    public string? MemberPinnedTypeDisplayName { get; init; }
+
+    public bool PinnedCaseInvalid { get; init; }
+
+    public bool HasTomlUnionAttributeOnNonUnion { get; init; }
+
+    public ITypeSymbol? WrappedUnionType { get; init; }
 }

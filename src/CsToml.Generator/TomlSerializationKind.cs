@@ -20,6 +20,9 @@ internal enum TomlSerializationKind
     TypeParameter,
     NullableStructWithTypeParameter,
     Dictionary,
+
+    // Union or IUnionMembers
+    Union,
     TomlSerializedObject,
     TomlSerializedObjectArrayForHeaderStyle,
     TomlSerializedObjectCollectionForHeaderStyle,
