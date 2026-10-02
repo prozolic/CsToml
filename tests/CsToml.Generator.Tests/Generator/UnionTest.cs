@@ -243,6 +243,81 @@ public class UnionTest
     }
 
     [Fact]
+    public void RoundTripUnionNestedInGenericType()
+    {
+        // The formatter for GenericOuter<T>.Inner must declare T itself (review finding: containing type parameters).
+        var target = new NestedInGenericUnionHolder()
+        {
+            Number = new GenericOuter<long>.Inner(7L),
+            Text = new GenericOuter<long>.Inner("seven"),
+        };
+        using var bytes = CsTomlSerializer.Serialize(target);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Number = 7");
+        writer.AppendLine("Text = \"seven\"");
+        writer.Flush();
+        bytes.ByteSpan.ToArray().ShouldBe(buffer.ToArray());
+
+        var deserialized = CsTomlSerializer.Deserialize<NestedInGenericUnionHolder>(bytes.ByteSpan);
+        deserialized!.Number.Value.ShouldBe(7L);
+        deserialized.Text.Value.ShouldBe("seven");
+    }
+
+    [Fact]
+    public void RoundTripUnionWithCollidingSanitizedCaseNames()
+    {
+        // Coll_Case and Coll.Case sanitize to the same identifier; both pinned formatters must still compile.
+        var target = new CollisionUnionHolder()
+        {
+            First = new CollisionUnion(new Coll_Case() { Id = 1 }),
+            Second = new CollisionUnion(new Coll.Case() { Name = "two" }),
+        };
+        using var bytes = CsTomlSerializer.Serialize(target);
+
+        var deserialized = CsTomlSerializer.Deserialize<CollisionUnionHolder>(bytes.ByteSpan);
+        ((Coll_Case)deserialized!.First.Value!).Id.ShouldBe(1L);
+        ((Coll.Case)deserialized.Second.Value!).Name.ShouldBe("two");
+    }
+
+    [Fact]
+    public void RoundTripUnionWithDeclaredButUnimplementedProvider()
+    {
+        // The nested IUnionMembers is not implemented, so the generator must use the constructors and TryGetValue.
+        var target = new DeclaredOnlyProviderUnionHolder() { Value = new DeclaredOnlyProviderUnion(42L) };
+        using var bytes = CsTomlSerializer.Serialize(target);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value = 42");
+        writer.Flush();
+        bytes.ByteSpan.ToArray().ShouldBe(buffer.ToArray());
+
+        var deserialized = CsTomlSerializer.Deserialize<DeclaredOnlyProviderUnionHolder>(bytes.ByteSpan);
+        deserialized!.Value.TryGetValue(out long number).ShouldBeTrue();
+        number.ShouldBe(42L);
+    }
+
+    [Fact]
+    public void GenericUnionClosedOverObjectKeepsPinnedCase()
+    {
+        // ObjectBox<object>: the T case becomes object and must not be mistaken for a storage constructor,
+        // otherwise the string pin silently resolves to the T case.
+        var target = new ObjectBoxHolder() { Text = new ObjectBox<object>("x") };
+        using var bytes = CsTomlSerializer.Serialize(target);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Text = \"x\"");
+        writer.Flush();
+        bytes.ByteSpan.ToArray().ShouldBe(buffer.ToArray());
+
+        var deserialized = CsTomlSerializer.Deserialize<ObjectBoxHolder>(bytes.ByteSpan);
+        deserialized!.Text.Value.ShouldBe("x");
+
+        var mismatch = new ObjectBoxHolder() { Text = new ObjectBox<object>((object)5) };
+        Should.Throw<CsTomlException>(() => CsTomlSerializer.Serialize(mismatch));
+    }
+
+    [Fact]
     public void RoundTripUnionCollections()
     {
         var target = new UnionCollectionsHolder()

@@ -69,6 +69,14 @@ internal sealed class TypeMeta
         {
             var reachable = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
             SymbolUtility.SearchReachableTypes(reachable, member.Symbol.Type);
+
+            HashSet<ITypeSymbol>? pinnedCaseReachable = null;
+            if (member.MemberPinnedCaseType != null)
+            {
+                pinnedCaseReachable = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
+                SymbolUtility.SearchReachableTypes(pinnedCaseReachable, member.MemberPinnedCaseType);
+                reachable.UnionWith(pinnedCaseReachable);
+            }
             typesymbols.UnionWith(reachable);
             foreach (var type in reachable)
             {
@@ -81,17 +89,12 @@ internal sealed class TypeMeta
                 // (an invalid pin is already CsTomlError012); a later member reaching the union through
                 // a wrapper claims the diagnostic instead.
                 if ((member.MemberPinnedUnionSymbol != null || member.PinnedCaseInvalid) &&
-                    SymbolEqualityComparer.Default.Equals(unionSymbol, member.Symbol.Type))
+                    SymbolEqualityComparer.Default.Equals(unionSymbol, member.Symbol.Type) &&
+                    !(pinnedCaseReachable?.Contains(unionSymbol) ?? false))
                 {
                     continue;
                 }
                 unionOrigins[unionSymbol] = member;
-            }
-
-            if (member.MemberPinnedCaseType != null)
-            {
-                // The member-level formatter (de)serializes the pinned case through the resolver.
-                SymbolUtility.SearchReachableTypes(typesymbols, member.MemberPinnedCaseType);
             }
         }
         DefinedTypes = typesymbols.Select(t => (t, FormatterTypeMetaData.GetTomlSerializationKind(t))).ToImmutableArray();
@@ -108,7 +111,7 @@ internal sealed class TypeMeta
             if (member.MemberPinnedUnionSymbol != null && member.MemberPinnedCaseType != null &&
                 UnionMetaFactory.TryCreate(member.MemberPinnedUnionSymbol, member.MemberPinnedCaseType, isTypeLevel: false, GetPropertyLocation(member.Symbol, syntax), unionDiagnostics, out var memberMeta))
             {
-                unionMetaMap[$"{memberMeta!.FormatterNamespace}.{memberMeta.FormatterClassName}"] = memberMeta;
+                unionMetaMap[memberMeta!.IdentityKey] = memberMeta;
             }
         }
 
@@ -129,7 +132,7 @@ internal sealed class TypeMeta
                 var sink = declaredInSource ? new List<UnionDiagnosticInfo>() : unionDiagnostics;
                 if (UnionMetaFactory.TryCreate(unionSymbol, typeLevelPinnedCase, isTypeLevel: true, location, sink, out var typeMeta))
                 {
-                    unionMetaMap[$"{typeMeta!.FormatterNamespace}.{typeMeta.FormatterClassName}"] = typeMeta;
+                    unionMetaMap[typeMeta!.IdentityKey] = typeMeta;
                 }
                 else if (declaredInSource)
                 {
@@ -293,11 +296,7 @@ internal sealed class TypeMeta
 
         foreach (var unionDiagnostic in unionDiagnostics)
         {
-            context.ReportDiagnostic(
-                Diagnostic.Create(
-                    unionDiagnostic.Descriptor,
-                    unionDiagnostic.Location,
-                    unionDiagnostic.Args));
+            context.ReportDiagnostic(unionDiagnostic.ToDiagnostic());
             error = true;
         }
         if (hasUnionErrorReportedElsewhere)

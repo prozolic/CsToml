@@ -122,8 +122,8 @@ internal static class DiagnosticDescriptors
 
     public static readonly DiagnosticDescriptor GenericUnionCannotBePinnedAtTypeLevel = new(
         id: "CsTomlError015",
-        title: "TomlUnionAttribute<T> must not be applied to a generic union type declaration",
-        messageFormat: "TomlUnionAttribute<T> must not be applied to the generic union type '{0}'. Apply it to a member of the closed union type instead.",
+        title: "TomlUnionAttribute<T> must not be applied to a union type declaration that is generic or nested in a generic type",
+        messageFormat: "TomlUnionAttribute<T> must not be applied to the union type '{0}' because it is generic or nested in a generic type. Apply it to a property whose type is the closed union instead.",
         category: Category,
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -140,6 +140,22 @@ internal static class DiagnosticDescriptors
         id: "CsTomlError016",
         title: "The pinned union case type cannot be serialized by CsToml",
         messageFormat: "The pinned case type '{1}' of union '{0}' cannot be serialized by CsToml",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor UnionFormatterNameCollision = new(
+        id: "CsTomlError018",
+        title: "Generated union formatter names collide",
+        messageFormat: "The union formatters generated for '{0}' and '{1}' would both be named '{2}'. Rename one of the union types or its containing type.",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor UnionTypeParameterNameShadowed = new(
+        id: "CsTomlError019",
+        title: "Union type parameter must not reuse the name of a containing type's type parameter",
+        messageFormat: "The union '{0}' reuses a type parameter name of its containing type, so a formatter cannot be generated for it. Rename the type parameter.",
         category: Category,
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);

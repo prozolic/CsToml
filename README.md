@@ -694,7 +694,7 @@ internal partial class Constructor3
 > [!NOTE]
 > This will be available starting from v1.9.0.
 
-`CsToml.Generator` supports .NET 11/C# 15 union types: `union` declarations, custom union types marked with `[System.Runtime.CompilerServices.Union]` (including the `TryGetValue`/`HasValue` pattern), and union member provider types (a nested `IUnionMembers` interface with static `Create` methods).
+`CsToml.Generator` supports .NET 11/C# 15 union types: `union` declarations, custom union types marked with `[System.Runtime.CompilerServices.Union]` (including the `TryGetValue`/`HasValue` pattern), and union member provider types (a nested `IUnionMembers` interface with static `Create` methods that the union implements).
 
 A union is always deserialized/serialized as one designated case type `T`, declared with `[TomlUnion<T>]`.  
 The TOML output is the plain `T` value with no trace of the union, so a union pinned to a POCO looks exactly like that POCO, and a union pinned to `long` looks like an integer. Instead of making the union type `partial`, the generator emits a dedicated `ITomlValueFormatter<TUnion>` class named `CsToml.Generated.{namespace}.{TypeName}Formatter`, so the union type itself is left untouched.
@@ -718,7 +718,7 @@ using var bytes = CsTomlSerializer.Serialize(setting);
 `[TomlUnion<T>]` can be applied in two places.
 
 * On the union type: every usage of the union (e.g. members, collections, `Nullable<T>`) uses `T`. This is required for unions that appear anywhere other than as a direct `[TomlValueOnSerialized]` property.
-* On a `[TomlValueOnSerialized]` property whose type is the union: only that member uses `T`, overriding a type-level attribute if present. This is also the only way to pin a union defined in another assembly or a generic union (a type-level attribute on a generic union declaration is reported as `CsTomlError015`).
+* On a `[TomlValueOnSerialized]` property whose type is the union: only that member uses `T`, overriding a type-level attribute if present. This is also the only way to pin a union defined in another assembly, a generic union, or a union nested in a generic type (a type-level attribute on such a declaration is reported as `CsTomlError015`). Because the member-level attribute does not reach a wrapped union, these unions cannot be used inside `List<U>`, `U[]` or `U?`.
 
 A union reachable from a `[TomlValueOnSerialized]` member without any `[TomlUnion<T>]` is reported as `CsTomlError011`; `T` must be one of the union's case types (`CsTomlError012`). A member-level attribute on a property whose type merely wraps a union (`List<U>`, `U[]`, `U?`) is reported as `CsTomlError017`; use the type-level attribute for those.
 

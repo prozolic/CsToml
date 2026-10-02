@@ -42,6 +42,10 @@ internal sealed record UnionMeta
     public UnionCaseMeta Case { get; init; } = new();
 
     public string DependencyRegistrationCode { get; init; } = "";
+
+    public string IdentityKey => $"{FormatterNamespace}.{FormatterClassName}|{FullTypeName}|{Case.PatternTypeName}";
+
+    public UnionLocationInfo? DeclarationLocation { get; init; }
 }
 
 internal sealed record UnionCaseMeta

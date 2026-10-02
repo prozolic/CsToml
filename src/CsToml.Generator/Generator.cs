@@ -89,18 +89,17 @@ internal sealed class TomlUnionAttribute<T> : Attribute
 
         context.RegisterSourceOutput(source, EmitForTomlSerializedObject);
 
-        // Union formatter generation
         var tomlUnionSource = context.SyntaxProvider.ForAttributeWithMetadataName(
             "CsToml.TomlUnionAttribute`1", // [TomlUnionAttribute<T>]
             static (node, token) => IsTomlUnionAttributeTargetNode(node),
-            static (context, token) => new TomlUnionAttributeTarget(
+            static (context, token) => AnalyzeTomlUnionAttributeTarget(
                 (INamedTypeSymbol)context.TargetSymbol,
                 (TypeDeclarationSyntax)context.TargetNode));
 
         context.RegisterSourceOutput(tomlUnionSource, ReportForTomlUnionAttribute);
 
         var memberUnionMetas = source.Select(static (source, token) => source.Item1.UnionMetas);
-        var attributeUnionMetas = tomlUnionSource.Select(static (target, token) => CreateUnionMetaArray(target));
+        var attributeUnionMetas = tomlUnionSource.Select(static (target, token) => target.Metas);
 
         var allUnionMetas = memberUnionMetas.Collect()
             .Combine(attributeUnionMetas.Collect())
@@ -952,81 +951,56 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
 
     private void ReportForTomlUnionAttribute(SourceProductionContext context, TomlUnionAttributeTarget target)
     {
-        var symbol = target.Symbol;
-        var location = target.Syntax.Identifier.GetLocation();
-
-        if (!UnionSymbolAnalyzer.IsUnionWithCases(symbol))
+        foreach (var diagnostic in target.Diagnostics)
         {
-            context.ReportDiagnostic(
-                Diagnostic.Create(
-                    DiagnosticDescriptors.TomlUnionAttributeOnNonUnion,
-                    location,
-                    symbol.Name));
-            return;
-        }
-
-        if (symbol.TypeParameters.Length > 0)
-        {
-            context.ReportDiagnostic(
-                Diagnostic.Create(
-                    DiagnosticDescriptors.GenericUnionCannotBePinnedAtTypeLevel,
-                    location,
-                    symbol.Name));
-            return;
-        }
-
-        var pinnedCaseType = UnionSymbolAnalyzer.GetTypeLevelPinnedCase(symbol);
-        if (pinnedCaseType == null)
-            return;
-
-        var diagnostics = new List<UnionDiagnosticInfo>();
-        UnionMetaFactory.TryCreate(symbol, pinnedCaseType, isTypeLevel: true, location, diagnostics, out _);
-        foreach (var diagnostic in diagnostics)
-        {
-            context.ReportDiagnostic(Diagnostic.Create(diagnostic.Descriptor, diagnostic.Location, diagnostic.Args));
+            context.ReportDiagnostic(diagnostic.ToDiagnostic());
         }
     }
 
-    private static EquatableArray<UnionMeta> CreateUnionMetaArray(TomlUnionAttributeTarget target)
+    private static TomlUnionAttributeTarget AnalyzeTomlUnionAttributeTarget(INamedTypeSymbol symbol, TypeDeclarationSyntax syntax)
     {
-        var symbol = target.Symbol;
-        if (!UnionSymbolAnalyzer.IsUnionWithCases(symbol) || symbol.TypeParameters.Length > 0)
-            return EquatableArray<UnionMeta>.Empty;
+        var location = syntax.Identifier.GetLocation();
+
+        if (!UnionSymbolAnalyzer.IsUnionWithCases(symbol))
+        {
+            return TomlUnionAttributeTarget.FromDiagnostic(DiagnosticDescriptors.TomlUnionAttributeOnNonUnion, location, symbol.Name);
+        }
+
+        if (UnionSymbolAnalyzer.IsGenericUnion(symbol))
+        {
+            return TomlUnionAttributeTarget.FromDiagnostic(DiagnosticDescriptors.GenericUnionCannotBePinnedAtTypeLevel, location, symbol.Name);
+        }
 
         var pinnedCaseType = UnionSymbolAnalyzer.GetTypeLevelPinnedCase(symbol);
         if (pinnedCaseType == null)
-            return EquatableArray<UnionMeta>.Empty;
+            return TomlUnionAttributeTarget.Empty;
 
         var diagnostics = new List<UnionDiagnosticInfo>();
-        if (!UnionMetaFactory.TryCreate(symbol, pinnedCaseType, isTypeLevel: true, target.Syntax.Identifier.GetLocation(), diagnostics, out var meta))
-            return EquatableArray<UnionMeta>.Empty;
+        if (UnionMetaFactory.TryCreate(symbol, pinnedCaseType, isTypeLevel: true, location, diagnostics, out var meta))
+        {
+            return new TomlUnionAttributeTarget(
+                new EquatableArray<UnionMeta>(ImmutableArray.Create(meta!)),
+                EquatableArray<UnionDiagnosticInfo>.Empty);
+        }
 
-        return new EquatableArray<UnionMeta>(ImmutableArray.Create(meta!));
+        return new TomlUnionAttributeTarget(
+            EquatableArray<UnionMeta>.Empty,
+            new EquatableArray<UnionDiagnosticInfo>(diagnostics.ToImmutableArray()));
     }
 
     private static EquatableArray<UnionMeta> CombineUnionMetas(ImmutableArray<EquatableArray<UnionMeta>> memberMetas, ImmutableArray<EquatableArray<UnionMeta>> attributeMetas)
     {
         // The same formatter analyzed from several sites yields an identical descriptor; first wins.
+        // The key includes the union and its pinned case, so distinct formatters that merely share a
+        // class name both survive and are reported by EmitForUnionFormatters instead of being dropped.
         var map = new Dictionary<string, UnionMeta>(StringComparer.Ordinal);
-        foreach (var metas in memberMetas)
+        foreach (var metas in memberMetas.Concat(attributeMetas))
         {
             foreach (var meta in metas)
             {
-                var key = $"{meta.FormatterNamespace}.{meta.FormatterClassName}";
-                if (!map.ContainsKey(key))
+                if (!map.ContainsKey(meta.IdentityKey))
                 {
-                    map[key] = meta;
-                }
-            }
-        }
-        foreach (var metas in attributeMetas)
-        {
-            foreach (var meta in metas)
-            {
-                var key = $"{meta.FormatterNamespace}.{meta.FormatterClassName}";
-                if (!map.ContainsKey(key))
-                {
-                    map[key] = meta;
+                    map[meta.IdentityKey] = meta;
                 }
             }
         }
@@ -1064,8 +1038,25 @@ using CsToml.Formatter.Resolver;
 using System.Buffers;
 """);
 
+        var emittedClassNames = new Dictionary<string, UnionMeta>(StringComparer.Ordinal);
         foreach (var meta in metas)
         {
+            // Classes collide by name and arity; the type parameter names themselves are irrelevant.
+            var arity = meta.TypeParameterList.Length == 0 ? 0 : meta.TypeParameterList.Count(static c => c == ',') + 1;
+            var qualifiedClassName = $"{meta.FormatterNamespace}.{meta.FormatterClassName}`{arity}";
+            if (emittedClassNames.TryGetValue(qualifiedClassName, out var existing))
+            {
+                context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        DiagnosticDescriptors.UnionFormatterNameCollision,
+                        meta.DeclarationLocation?.ToLocation() ?? Location.None,
+                        meta.FullTypeName.Replace("global::", ""),
+                        existing.FullTypeName.Replace("global::", ""),
+                        meta.FormatterClassName));
+                continue;
+            }
+            emittedClassNames.Add(qualifiedClassName, meta);
+
             builder.AppendLine($"namespace {meta.FormatterNamespace}");
             builder.AppendLine("{");
             AppendUnionFormatterClass(builder, meta);
@@ -1213,4 +1204,12 @@ using System.Buffers;
             : $"new {meta.FullTypeName}({valueExpression})";
 }
 
-internal sealed record TomlUnionAttributeTarget(INamedTypeSymbol Symbol, TypeDeclarationSyntax Syntax);
+internal sealed record TomlUnionAttributeTarget(EquatableArray<UnionMeta> Metas, EquatableArray<UnionDiagnosticInfo> Diagnostics)
+{
+    public static readonly TomlUnionAttributeTarget Empty = new(EquatableArray<UnionMeta>.Empty, EquatableArray<UnionDiagnosticInfo>.Empty);
+
+    public static TomlUnionAttributeTarget FromDiagnostic(DiagnosticDescriptor descriptor, Location location, params object?[] args)
+        => new(
+            EquatableArray<UnionMeta>.Empty,
+            new EquatableArray<UnionDiagnosticInfo>(ImmutableArray.Create(new UnionDiagnosticInfo(descriptor, location, args))));
+}

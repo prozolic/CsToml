@@ -70,6 +70,17 @@ internal static class UnionMetaFactory
             return false;
         }
 
+        var typeParameters = UnionSymbolAnalyzer.GetAllTypeParameters(original);
+        if (typeParameters.Select(t => t.Name).Distinct(StringComparer.Ordinal).Count() != typeParameters.Length)
+        {
+            diagnostics.Add(new UnionDiagnosticInfo(
+                DiagnosticDescriptors.UnionTypeParameterNameShadowed,
+                location,
+                [displayName]));
+            meta = null;
+            return false;
+        }
+
         meta = new UnionMeta
         {
             FullTypeName = original.ToFullFormatString(),
@@ -77,11 +88,12 @@ internal static class UnionMetaFactory
             FormatterNamespace = UnionSymbolAnalyzer.GetFormatterNamespace(original),
             FormatterClassName = isTypeLevel
                 ? UnionSymbolAnalyzer.GetFormatterClassName(original)
-                : UnionSymbolAnalyzer.GetPinnedFormatterClassName(original, openCaseType),
-            TypeParameterList = original.TypeParameters.Length > 0
-                ? $"<{string.Join(", ", original.TypeParameters.Select(t => t.Name))}>"
+                : UnionSymbolAnalyzer.GetPinnedFormatterClassName(original, openCaseType, caseIndex),
+            // Includes the containing types' parameters: FullTypeName expands to e.g. Outer<T>.Inner.
+            TypeParameterList = typeParameters.Length > 0
+                ? $"<{string.Join(", ", typeParameters.Select(t => t.Name))}>"
                 : "",
-            TypeParameterConstraints = BuildConstraintClauses(original.TypeParameters),
+            TypeParameterConstraints = BuildConstraintClauses(typeParameters),
             IsValueType = original.IsValueType,
             HasHasValue = hasHasValue,
             ValueAccess = valueAccess,
@@ -94,6 +106,7 @@ internal static class UnionMetaFactory
                 TryGetValueOutTypeName = tryGetValueOutTypeName,
             },
             DependencyRegistrationCode = isTypeLevel ? BuildDependencyRegistrationCode(original, pinnedCaseType) : "",
+            DeclarationLocation = UnionLocationInfo.From(original.Locations.FirstOrDefault()),
         };
         return true;
     }
