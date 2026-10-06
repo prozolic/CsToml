@@ -289,6 +289,48 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
         writer.Advance(bytesWritten);
     }
 
+#if NET11_0_OR_GREATER
+    internal void WriteDecimalFloatingPoint<T>(T value)
+        where T : IDecimalFloatingPointIeee754<T>
+    {
+        if (!T.IsFinite(value))
+        {
+            if (T.IsNaN(value))
+            {
+                WriteBytes("nan"u8);
+            }
+            else
+            {
+                WriteBytes(T.IsNegative(value) ? "-inf"u8 : "inf"u8);
+            }
+            return;
+        }
+
+        var length = 64;
+        int bytesWritten;
+        var writtenSpan = writer.GetSpan(length);
+        while (!value.TryFormat(writtenSpan, out bytesWritten, default, CultureInfo.InvariantCulture))
+        {
+            length *= 2;
+            writtenSpan = writer.GetSpan(length);
+        }
+
+        // Digits only is a TOML integer, which must fit in Int64. Decimal128 can exceed it (up to 34 digits),
+        // so such a value is written as a float.
+        writer.Advance(bytesWritten);
+
+        var written = writtenSpan.Slice(0, bytesWritten);
+        if (bytesWritten > 18 &&
+            !written.ContainsAny(ExponentialBytes) &&
+            !long.TryParse(written, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out _))
+        {
+            var writtenSpanEx = writer.GetWrittenSpan(2);
+            writtenSpanEx[0] = TomlCodes.Symbol.DOT;
+            writtenSpanEx[1] = TomlCodes.Number.Zero;
+        }
+    }
+#endif
+
     public void WriteString(string? value)
     {
         if (string.IsNullOrEmpty(value))

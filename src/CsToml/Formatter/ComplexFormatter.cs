@@ -84,3 +84,53 @@ internal sealed class NullableComplexFormatter : ITomlValueFormatter<Complex?>
     }
 
 }
+
+#if NET11_0_OR_GREATER
+
+internal sealed class ComplexFormatter<T> : ITomlValueFormatter<Complex<T>>
+    where T : IFloatingPointIeee754<T>, IMinMaxValue<T>
+{
+    public Complex<T> Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
+    {
+        if (!rootNode.HasValue)
+        {
+            return default!;
+        }
+
+        if (rootNode.CanGetValue(TomlValueFeature.Array) && rootNode.Value is TomlArray tomlArray)
+        {
+            if (tomlArray.Count != 2)
+            {
+                ExceptionHelper.ThrowDeserializationFailed(typeof(Complex<T>));
+                return default!;
+            }
+
+            var formatter = options.Resolver.GetFormatter<T>()!;
+            var realNode = rootNode[0];
+            var real = formatter.Deserialize(ref realNode, options);
+            var imaginaryNode = rootNode[1];
+            var imaginary = formatter.Deserialize(ref imaginaryNode, options);
+
+            return new Complex<T>(real, imaginary);
+        }
+
+        ExceptionHelper.ThrowDeserializationFailed(typeof(Complex<T>));
+        return default!;
+    }
+
+    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Complex<T> target, CsTomlSerializerOptions options)
+        where TBufferWriter : IBufferWriter<byte>
+    {
+        var formatter = options.Resolver.GetFormatter<T>()!;
+
+        writer.BeginArray();
+        formatter.Serialize(ref writer, target.Real, options);
+        writer.Write(TomlCodes.Symbol.COMMA);
+        writer.WriteSpace();
+        formatter.Serialize(ref writer, target.Imaginary, options);
+        writer.WriteSpace();
+        writer.EndArray();
+    }
+}
+
+#endif

@@ -206,6 +206,30 @@ internal sealed class BuiltinFormatterResolver : ITomlValueFormatterResolver
         BuiltinFormatterCache<Type?>.Formatter = TypeFormatter.Instance;
         BuiltinFormatterCache<Complex>.Formatter = ComplexFormatter.Instance;
         BuiltinFormatterCache<Complex?>.Formatter = NullableComplexFormatter.Instance;
+#if NET11_0_OR_GREATER
+        BuiltinFormatterCache<BFloat16>.Formatter = BFloat16Formatter.Instance;
+        BuiltinFormatterCache<BFloat16?>.Formatter = NullableBFloat16Formatter.Instance;
+        BuiltinFormatterCache<Decimal32>.Formatter = Decimal32Formatter.Instance;
+        BuiltinFormatterCache<Decimal32?>.Formatter = NullableDecimal32Formatter.Instance;
+        BuiltinFormatterCache<Decimal64>.Formatter = Decimal64Formatter.Instance;
+        BuiltinFormatterCache<Decimal64?>.Formatter = NullableDecimal64Formatter.Instance;
+        BuiltinFormatterCache<Decimal128>.Formatter = Decimal128Formatter.Instance;
+        BuiltinFormatterCache<Decimal128?>.Formatter = NullableDecimal128Formatter.Instance;
+        BuiltinFormatterCache<Complex<float>>.Formatter = new ComplexFormatter<float>();
+        BuiltinFormatterCache<Complex<float>?>.Formatter = new NullableFormatter<Complex<float>>();
+        BuiltinFormatterCache<Complex<double>>.Formatter = new ComplexFormatter<double>();
+        BuiltinFormatterCache<Complex<double>?>.Formatter = new NullableFormatter<Complex<double>>();
+        BuiltinFormatterCache<Complex<Half>>.Formatter = new ComplexFormatter<Half>();
+        BuiltinFormatterCache<Complex<Half>?>.Formatter = new NullableFormatter<Complex<Half>>();
+        BuiltinFormatterCache<Complex<BFloat16>>.Formatter = new ComplexFormatter<BFloat16>();
+        BuiltinFormatterCache<Complex<BFloat16>?>.Formatter = new NullableFormatter<Complex<BFloat16>>();
+        BuiltinFormatterCache<Complex<Decimal32>>.Formatter = new ComplexFormatter<Decimal32>();
+        BuiltinFormatterCache<Complex<Decimal32>?>.Formatter = new NullableFormatter<Complex<Decimal32>>();
+        BuiltinFormatterCache<Complex<Decimal64>>.Formatter = new ComplexFormatter<Decimal64>();
+        BuiltinFormatterCache<Complex<Decimal64>?>.Formatter = new NullableFormatter<Complex<Decimal64>>();
+        BuiltinFormatterCache<Complex<Decimal128>>.Formatter = new ComplexFormatter<Decimal128>();
+        BuiltinFormatterCache<Complex<Decimal128>?>.Formatter = new NullableFormatter<Complex<Decimal128>>();
+#endif
 
         BuiltinFormatterCache<bool[]?>.Formatter = new ArrayFormatter<bool>();
         BuiltinFormatterCache<byte[]?>.Formatter = new ArrayFormatter<byte>();
@@ -307,6 +331,30 @@ internal sealed class BuiltinFormatterResolver : ITomlValueFormatterResolver
         CacheCheck<StringBuilder?>.Registered = true;
         CacheCheck<BitArray?>.Registered = true;
         CacheCheck<Type?>.Registered = true;
+#if NET11_0_OR_GREATER
+        CacheCheck<BFloat16>.Registered = true;
+        CacheCheck<BFloat16?>.Registered = true;
+        CacheCheck<Decimal32>.Registered = true;
+        CacheCheck<Decimal32?>.Registered = true;
+        CacheCheck<Decimal64>.Registered = true;
+        CacheCheck<Decimal64?>.Registered = true;
+        CacheCheck<Decimal128>.Registered = true;
+        CacheCheck<Decimal128?>.Registered = true;
+        CacheCheck<Complex<float>>.Registered = true;
+        CacheCheck<Complex<float>?>.Registered = true;
+        CacheCheck<Complex<double>>.Registered = true;
+        CacheCheck<Complex<double>?>.Registered = true;
+        CacheCheck<Complex<Half>>.Registered = true;
+        CacheCheck<Complex<Half>?>.Registered = true;
+        CacheCheck<Complex<BFloat16>>.Registered = true;
+        CacheCheck<Complex<BFloat16>?>.Registered = true;
+        CacheCheck<Complex<Decimal32>>.Registered = true;
+        CacheCheck<Complex<Decimal32>?>.Registered = true;
+        CacheCheck<Complex<Decimal64>>.Registered = true;
+        CacheCheck<Complex<Decimal64>?>.Registered = true;
+        CacheCheck<Complex<Decimal128>>.Registered = true;
+        CacheCheck<Complex<Decimal128>?>.Registered = true;
+#endif
 
         CacheCheck<bool[]?>.Registered = true;
         CacheCheck<byte[]?>.Registered = true;
