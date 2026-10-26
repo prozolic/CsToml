@@ -8,13 +8,6 @@ using System.Runtime.InteropServices;
 
 namespace CsToml.Values;
 
-internal enum NodeStatus : byte
-{
-    Empty,
-    NewAdd,
-    Existed,
-}
-
 [DebuggerTypeProxy(typeof(TomlTableNodeDebugView))]
 [DebuggerDisplay("{DebuggerValue}")]
 internal sealed class TomlTableNode
@@ -166,11 +159,17 @@ internal sealed class TomlTableNode
 
     internal TomlTableNode GetOrAddArrayOfTableHeaderKeyNode(TomlDottedKey key, bool lastNode, out bool newNode)
     {
-        newNode = false;
-
-        if (this!.TryGetOrAddChildNode(key, out var childNode) == NodeStatus.NewAdd)
+        var nodes = this.nodes;
+        if (nodes == null)
         {
-            newNode = true;
+            // a value node cannot have children (the Empty node used to fail the checks below the same way)
+            newNode = false;
+            ExceptionHelper.ThrowIncorrectTomlFormat();
+        }
+
+        var childNode = nodes.GetOrAdd(key, out newNode);
+        if (newNode)
+        {
             childNode.IsArrayOfTablesHeader = true;
             childNode.IsTableHeader = !lastNode;
             return childNode;
@@ -229,14 +228,20 @@ internal sealed class TomlTableNode
 
     internal TomlTableNode GetOrAddTableHeaderKeyNode(TomlDottedKey key, out bool newNode)
     {
-        if (this!.TryGetOrAddChildNode(key, out var childNode) == NodeStatus.NewAdd)
+        var nodes = this.nodes;
+        if (nodes == null)
         {
-            newNode = true;
+            newNode = false;
+            ExceptionHelper.ThrowKeyIsDefined(key);
+        }
+
+        var childNode = nodes.GetOrAdd(key, out newNode);
+        if (newNode)
+        {
             childNode.IsTableHeader = true;
             return childNode;
         }
 
-        newNode = false;
         if (childNode!.IsArrayOfTablesHeaderDefinitionPosition)
         {
             TomlValue tableHeaderArrayValue = (childNode!.Value as TomlArray)?.LastValue!;
@@ -280,19 +285,23 @@ internal sealed class TomlTableNode
 
     internal TomlTableNode GetOrAddKeyNode(TomlDottedKey key)
     {
-        if (this.TryGetOrAddChildNode(key, out var childNode) == NodeStatus.NewAdd)
+        var nodes = this.nodes;
+        if (nodes == null)
         {
-            return childNode;
+            ExceptionHelper.ThrowKeyIsDefined(key);
         }
-        if (childNode.IsTableHeaderDefinitionPosition)
+
+        var childNode = nodes.GetOrAdd(key);
+        var type = childNode.nodeType;
+        if ((type & (TomlTableNodeType.TableHeaderDefinitionPosition | TomlTableNodeType.ArrayOfTablesHeaderDefinitionPosition)) != 0)
         {
-            ExceptionHelper.ThrowTheKeyIsDefinedAsTable();
-        }
-        if (childNode.IsArrayOfTablesHeaderDefinitionPosition)
-        {
+            if ((type & TomlTableNodeType.TableHeaderDefinitionPosition) != 0)
+            {
+                ExceptionHelper.ThrowTheKeyIsDefinedAsTable();
+            }
             ExceptionHelper.ThrowTheKeyIsDefinedAsArrayOfTables();
         }
-        if (childNode.IsGroupingProperty)
+        if ((type & TomlTableNodeType.GroupingProperty) != 0)
         {
             return childNode;
         }
@@ -310,27 +319,6 @@ internal sealed class TomlTableNode
         }
 
         return newNode;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal NodeStatus TryGetOrAddChildNode(TomlDottedKey key, out TomlTableNode getOrAddChildNode)
-    {
-        if (nodes == null)
-        {
-            getOrAddChildNode = Empty;
-            return NodeStatus.Empty;
-        }
-
-        var result = nodes.GetOrAddIfNotFound(key);
-        if (result.IsExistingValueFound)
-        {
-            getOrAddChildNode = result.ExistingValue!;
-            return NodeStatus.Existed;
-        }
-
-
-        getOrAddChildNode = result.AddedValue!;
-        return NodeStatus.NewAdd;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

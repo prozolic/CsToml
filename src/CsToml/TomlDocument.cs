@@ -54,8 +54,6 @@ public partial class TomlDocument : ITomlValueFormatter<TomlDocument>
         TomlTableNode currentNode = table.RootNode;
         TomlTableNode commentNode = table.RootNode;
 
-        TomlTableNodeHolder nodeHolder = default;
-
         // Key-reuse sources: keys repeat because same-schema tables repeat, so the
         // previously completed sibling table (mirror) already holds identical key instances.
         TomlTableNode? tableKeyMirror = null;
@@ -86,13 +84,13 @@ public partial class TomlDocument : ITomlValueFormatter<TomlDocument>
 
                     case ParserState.KeyValue:
                         var node = currentNode;
-                        nodeHolder.node = tableKeyMirror;
-                        var readResult = parser.reader.ReadKey(true, nodeHolder, out var key);
+                        var keyMirror = tableKeyMirror;
+                        var readResult = parser.reader.ReadKey(true, keyMirror, out var key);
                         while (readResult == ReadKeyResult.FoundDot)
                         {
                             node = node.GetOrAddKeyNode(key!);
-                            nodeHolder.node = nodeHolder.node?.TryGetMirrorChild(key!);
-                            readResult = parser.reader.ReadKey(false, nodeHolder, out key);
+                            keyMirror = keyMirror?.TryGetMirrorChild(key!);
+                            readResult = parser.reader.ReadKey(false, keyMirror, out key);
                         }
 
                         var value = parser.reader.ReadValue();
@@ -102,36 +100,33 @@ public partial class TomlDocument : ITomlValueFormatter<TomlDocument>
 
                     case ParserState.TableHeader:
                         currentNode = table.RootNode;
-                        nodeHolder.node = currentNode;
-                        var readTableHeaderResult = parser.reader.ReadTableHeaderKey(true, nodeHolder, out var tableHeaderKey);
+                        var readTableHeaderResult = parser.reader.ReadTableHeaderKey(true, currentNode, out var tableHeaderKey);
                         var tableMirror = default(TomlTableNode);
                         while (readTableHeaderResult == ReadKeyResult.FoundDot)
                         {
                             currentNode = currentNode.GetOrAddTableHeaderKeyNode(tableHeaderKey!, out bool newNode);
                             tableMirror = currentNode == aotCurrentElementRoot ? aotPreviousElementRoot : tableMirror?.TryGetMirrorChild(tableHeaderKey!);
-                            nodeHolder.node = currentNode;
-                            readTableHeaderResult = parser.reader.ReadTableHeaderKey(false, nodeHolder, out tableHeaderKey);
+                            readTableHeaderResult = parser.reader.ReadTableHeaderKey(false, currentNode, out tableHeaderKey);
                         }
 
                         currentNode = currentNode.AddTableHeaderKeyLastNode(tableHeaderKey!);
-                        currentNode.ReserveNodeCapacity(parser.reader.EstimateDirectKeyCount());
-                        tableKeyMirror = tableMirror?.TryGetMirrorChild(tableHeaderKey!) ?? previousTableNode;
+                        var structuralMirror = tableMirror?.TryGetMirrorChild(tableHeaderKey!);
+                        currentNode.ReserveNodeCapacity(structuralMirror is { NodeCount: > 0 } ? structuralMirror.NodeCount : parser.reader.EstimateDirectKeyCount());
+                        tableKeyMirror = structuralMirror ?? previousTableNode;
                         previousTableNode = currentNode;
                         commentNode = currentNode;
                         break;
 
                     case ParserState.ArrayOfTablesHeader:
                         currentNode = table.RootNode;
-                        nodeHolder.node = currentNode;
-                        var readArrayOfTableHeaderResult = parser.reader.ReadArrayOfTableHeaderKey(true, nodeHolder, out var arrayOfTableHeaderKey);
+                        var readArrayOfTableHeaderResult = parser.reader.ReadArrayOfTableHeaderKey(true, currentNode, out var arrayOfTableHeaderKey);
                         while (readArrayOfTableHeaderResult == ReadKeyResult.FoundDot)
                         {
                             currentNode = currentNode.GetOrAddArrayOfTableHeaderKeyNode(arrayOfTableHeaderKey!, false, out bool newNode);
-                            nodeHolder.node = currentNode;
-                            readArrayOfTableHeaderResult = parser.reader.ReadArrayOfTableHeaderKey(false, nodeHolder, out arrayOfTableHeaderKey);
+                            readArrayOfTableHeaderResult = parser.reader.ReadArrayOfTableHeaderKey(false, currentNode, out arrayOfTableHeaderKey);
                         }
                         currentNode = currentNode.AddArrayOfTableHeaderKeyLastNode(arrayOfTableHeaderKey!, out commentNode, out aotPreviousElementRoot);
-                        currentNode.ReserveNodeCapacity(parser.reader.EstimateDirectKeyCount());
+                        currentNode.ReserveNodeCapacity(aotPreviousElementRoot is { NodeCount: > 0 } ? aotPreviousElementRoot.NodeCount : parser.reader.EstimateDirectKeyCount());
                         aotCurrentElementRoot = currentNode;
                         tableKeyMirror = aotPreviousElementRoot;
                         previousTableNode = currentNode;

@@ -1,25 +1,24 @@
 ﻿
 namespace CsToml.Values;
 
-internal ref struct TomlTableNodeHolder
+internal static class TomlTableNodeHolder
 {
-    internal TomlTableNode? node;
-
-    public T GetKey<T>(ReadOnlySpan<byte> key)
-        where T : TomlValue, ITomlStringParser<T>
+    extension(TomlTableNode? node)
     {
-        if (node == null)
+        public T GetKey<T>(ReadOnlySpan<byte> key)
+            where T : TomlValue, ITomlStringParser<T>
         {
+            if (node == null)
+            {
+                return T.Parse(key);
+            }
+
+            if (node.TryGetKey(key, out var dottedKey) && dottedKey is T typedDottedKey)
+            {
+                return typedDottedKey!;
+            }
+
             return T.Parse(key);
         }
-
-        // Use TomlDottedKey from TomlTableNode if the key is already parsed and stored in the node.
-        if (node.TryGetKey(key, out var dottedKey) && dottedKey is T typedDottedKey)
-        {
-            return typedDottedKey!;
-        }
-
-        return T.Parse(key);
     }
-
 }

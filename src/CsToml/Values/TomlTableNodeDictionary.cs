@@ -1,5 +1,6 @@
 ﻿using CsToml.Utility;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 // -----------------------------------------------------------------------------------------------------------------------------
@@ -22,15 +23,6 @@ namespace CsToml.Values.Internal;
 [DebuggerDisplay("Count = {Count}")]
 internal sealed class TomlTableNodeDictionary
 {
-    public readonly ref struct AnalysisResults(TomlTableNode? existingValue, TomlTableNode? addedValue, bool isExistingValueFound)
-    {
-        public TomlTableNode? ExistingValue => existingValue;
-
-        public TomlTableNode? AddedValue => addedValue;
-
-        public bool IsExistingValueFound => isExistingValueFound;
-    }
-
     private int[] buckets;
     private Entry[] entries;
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -121,11 +113,77 @@ internal sealed class TomlTableNodeDictionary
         return true;
     }
 
-    public AnalysisResults GetOrAddIfNotFound(TomlDottedKey key)
+    public TomlTableNode GetOrAdd(TomlDottedKey key)
     {
-        ref var buckets = ref this.buckets;
-        ref var entries = ref this.entries;
+        var hashCode = key.GetHashCodeFast();
+        ref var entry = ref FindEntry(key, hashCode);
+        if (!Unsafe.IsNullRef(ref entry))
+        {
+            return entry.value;
+        }
 
+        return AddNew(key, hashCode);
+    }
+
+    public TomlTableNode GetOrAdd(TomlDottedKey key, out bool added)
+    {
+        var hashCode = key.GetHashCodeFast();
+        ref var entry = ref FindEntry(key, hashCode);
+        if (!Unsafe.IsNullRef(ref entry))
+        {
+            added = false;
+            return entry.value;
+        }
+
+        added = true;
+        return AddNew(key, hashCode);
+    }
+
+    public bool TryGetValue(TomlDottedKey key, out TomlTableNode? value)
+    {
+        ref var entry = ref FindEntry(key, key.GetHashCodeFast());
+        if (Unsafe.IsNullRef(ref entry))
+        {
+            value = null;
+            return false;
+        }
+
+        value = entry.value;
+        return true;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private ref Entry FindEntry(TomlDottedKey key, int hashCode)
+    {
+        var buckets = this.buckets;
+        if (buckets.Length == 0)
+        {
+            return ref Unsafe.NullRef<Entry>();
+        }
+
+        var entries = this.entries;
+        var index = buckets[(uint)hashCode % (uint)buckets.Length] - 1;
+        var collisionCount = 0;
+        while ((uint)index < (uint)entries.Length)
+        {
+            ref var entry = ref entries[index];
+            if (entry.hashCode == hashCode && (ReferenceEquals(entry.key, key) || entry.key.Equals(key)))
+            {
+                return ref entry;
+            }
+
+            index = entry.next;
+            if ((uint)entries.Length < (uint)++collisionCount)
+            {
+                ThrowConcurrentOperation();
+            }
+        }
+
+        return ref Unsafe.NullRef<Entry>();
+    }
+
+    private TomlTableNode AddNew(TomlDottedKey key, int hashCode)
+    {
         if (buckets.Length == 0)
         {
             var capacity = HashHelpers.Primes[0];
@@ -133,49 +191,30 @@ internal sealed class TomlTableNodeDictionary
             buckets = new int[capacity];
         }
 
-        var hashCode = key.GetHashCodeFast();
-        ref var bucket = ref GetBucket((uint)hashCode);
-        var index = bucket - 1;
-        var collisionCount = 0;
-
-        while ((uint)index < (uint)entries.Length)
-        {
-            ref var e = ref entries[index];
-            if (e.hashCode == hashCode && e.key.Equals(key))
-            {
-                return new AnalysisResults(e.value, null, true);
-            }
-
-            index = e.next;
-            if ((uint)entries.Length < ++collisionCount)
-                throw new Exception();
-        }
-
         var currentCount = count;
         if (currentCount == entries.Length)
         {
             Reserve(HashHelpers.ExpandPrime(currentCount));
-            bucket = ref GetBucket((uint)hashCode);
         }
-        index = currentCount;
-        count++;
+        count = currentCount + 1;
 
         var addedValue = new TomlTableNode() { IsGroupingProperty = true, Value = TomlValue.Empty };
 
-        ref Entry entry = ref entries[index];
+        ref var bucket = ref GetBucket((uint)hashCode);
+        ref var entry = ref entries[currentCount];
         entry.hashCode = hashCode;
         entry.next = bucket - 1;
         entry.key = key;
         entry.value = addedValue;
-        bucket = index + 1;
+        bucket = currentCount + 1;
 
-        return new AnalysisResults(null, addedValue, false);
+        return addedValue;
     }
 
-    [DebuggerStepThrough]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetValue(TomlDottedKey key, out TomlTableNode? value)
-        => TryGetValueCore(key.Value, key.GetHashCodeFast(), out _, out value);
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void ThrowConcurrentOperation()
+        => throw new Exception();
 
     [DebuggerStepThrough]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -232,7 +271,7 @@ internal sealed class TomlTableNodeDictionary
     private ref int GetBucket(uint hashCode)
     {
         var buckets = this.buckets!;
-        return ref buckets[(uint)hashCode % buckets.Length];
+        return ref buckets[hashCode % (uint)buckets.Length];
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
