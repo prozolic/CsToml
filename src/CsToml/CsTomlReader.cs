@@ -149,19 +149,19 @@ internal ref struct CsTomlReader
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal ReadKeyResult ReadKey(bool first, TomlTableNodeHolder nodeHolder, out TomlDottedKey? key)
+    internal ReadKeyResult ReadKey(bool first, TomlTableNode? mirrorNode, out TomlDottedKey? key)
     {
         if (spec.AllowUnicodeInBareKeys)
         {
-            return ReadKeyToAllowUnicode(first, nodeHolder, out key);
+            return ReadKeyToAllowUnicode(first, mirrorNode, out key);
         }
         else
         {
-            return ReadKeyToDisallowUnicode(first, nodeHolder, out key);
+            return ReadKeyToDisallowUnicode(first, mirrorNode, out key);
         }
     }
 
-    internal ReadKeyResult ReadKeyToAllowUnicode(bool first, TomlTableNodeHolder nodeHolder, out TomlDottedKey? key)
+    internal ReadKeyResult ReadKeyToAllowUnicode(bool first, TomlTableNode? mirrorNode, out TomlDottedKey? key)
     {
         key = null;
 
@@ -171,11 +171,11 @@ internal ref struct CsTomlReader
         {
             if (TomlCodes.IsDoubleQuoted(ch))
             {
-                key = ReadDoubleQuoteSingleLineString<TomlBasicDottedKey>(nodeHolder);
+                key = ReadDoubleQuoteSingleLineString<TomlBasicDottedKey>(mirrorNode);
             }
             else if (TomlCodes.IsSingleQuoted(ch))
             {
-                key = ReadSingleQuoteSingleLineString<TomlLiteralDottedKey>(nodeHolder);
+                key = ReadSingleQuoteSingleLineString<TomlLiteralDottedKey>(mirrorNode);
             }
             else
             {
@@ -228,7 +228,7 @@ internal ref struct CsTomlReader
         return ReadKeyResult.Failed;
     }
 
-    internal ReadKeyResult ReadKeyToDisallowUnicode(bool first, TomlTableNodeHolder nodeHolder, out TomlDottedKey? key)
+    internal ReadKeyResult ReadKeyToDisallowUnicode(bool first, TomlTableNode? mirrorNode, out TomlDottedKey? key)
     {
         key = null;
 
@@ -239,15 +239,15 @@ internal ref struct CsTomlReader
             // The first character of a bare key must be a letter, digit, or underscore (A-Za-z0-9_-).
             if (TomlCodes.IsBareKey(ch))
             {
-                key = ReadUnquotedString<NotTableHeaderMarker>(nodeHolder);
+                key = ReadUnquotedString<NotTableHeaderMarker>(mirrorNode);
             }
             else if (TomlCodes.IsDoubleQuoted(ch))
             {
-                key = ReadDoubleQuoteSingleLineString<TomlBasicDottedKey>(nodeHolder);
+                key = ReadDoubleQuoteSingleLineString<TomlBasicDottedKey>(mirrorNode);
             }
             else if (TomlCodes.IsSingleQuoted(ch))
             {
-                key = ReadSingleQuoteSingleLineString<TomlLiteralDottedKey>(nodeHolder);
+                key = ReadSingleQuoteSingleLineString<TomlLiteralDottedKey>(mirrorNode);
             }
             else
             {
@@ -303,19 +303,19 @@ internal ref struct CsTomlReader
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal ReadKeyResult ReadTableHeaderKey(bool first, TomlTableNodeHolder nodeHolder, out TomlDottedKey? key)
+    internal ReadKeyResult ReadTableHeaderKey(bool first, TomlTableNode? mirrorNode, out TomlDottedKey? key)
     {
         if (spec.AllowUnicodeInBareKeys)
         {
-            return ReadTableHeaderKeyToAllowUnicode(first, nodeHolder, out key);
+            return ReadTableHeaderKeyToAllowUnicode(first, mirrorNode, out key);
         }
         else
         {
-            return ReadTableHeaderKeyToDisallowUnicode(first, nodeHolder, out key);
+            return ReadTableHeaderKeyToDisallowUnicode(first, mirrorNode, out key);
         }
     }
 
-    internal ReadKeyResult ReadTableHeaderKeyToAllowUnicode(bool first, TomlTableNodeHolder nodeHolder, out TomlDottedKey? key)
+    internal ReadKeyResult ReadTableHeaderKeyToAllowUnicode(bool first, TomlTableNode? mirrorNode, out TomlDottedKey? key)
     {
         key = null;
 
@@ -325,11 +325,11 @@ internal ref struct CsTomlReader
         {
             if (TomlCodes.IsDoubleQuoted(ch))
             {
-                key = ReadDoubleQuoteSingleLineString<TomlBasicDottedKey>(nodeHolder);
+                key = ReadDoubleQuoteSingleLineString<TomlBasicDottedKey>(mirrorNode);
             }
             else if (TomlCodes.IsSingleQuoted(ch))
             {
-                key = ReadSingleQuoteSingleLineString<TomlLiteralDottedKey>(nodeHolder);
+                key = ReadSingleQuoteSingleLineString<TomlLiteralDottedKey>(mirrorNode);
             }
             else
             {
@@ -382,7 +382,7 @@ internal ref struct CsTomlReader
         return ReadKeyResult.Failed;
     }
 
-    internal ReadKeyResult ReadTableHeaderKeyToDisallowUnicode(bool first, TomlTableNodeHolder nodeHolder, out TomlDottedKey? key)
+    internal ReadKeyResult ReadTableHeaderKeyToDisallowUnicode(bool first, TomlTableNode? mirrorNode, out TomlDottedKey? key)
     {
         key = null;
 
@@ -393,15 +393,15 @@ internal ref struct CsTomlReader
             // The first character of a bare key must be a letter, digit, or underscore (A-Za-z0-9_-).
             if (TomlCodes.IsBareKey(ch))
             {
-                key = ReadUnquotedString<TableHeaderMarker>(nodeHolder);
+                key = ReadUnquotedString<TableHeaderMarker>(mirrorNode);
             }
             else if (TomlCodes.IsDoubleQuoted(ch))
             {
-                key = ReadDoubleQuoteSingleLineString<TomlBasicDottedKey>(nodeHolder);
+                key = ReadDoubleQuoteSingleLineString<TomlBasicDottedKey>(mirrorNode);
             }
             else if (TomlCodes.IsSingleQuoted(ch))
             {
-                key = ReadSingleQuoteSingleLineString<TomlLiteralDottedKey>(nodeHolder);
+                key = ReadSingleQuoteSingleLineString<TomlLiteralDottedKey>(mirrorNode);
             }
             else
             {
@@ -456,19 +456,19 @@ internal ref struct CsTomlReader
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal ReadKeyResult ReadArrayOfTableHeaderKey(bool first, TomlTableNodeHolder nodeHolder, out TomlDottedKey? key)
+    internal ReadKeyResult ReadArrayOfTableHeaderKey(bool first, TomlTableNode? mirrorNode, out TomlDottedKey? key)
     {
         if (spec.AllowUnicodeInBareKeys)
         {
-            return ReadArrayOfTableHeaderKeyToAllowUnicode(first, nodeHolder, out key);
+            return ReadArrayOfTableHeaderKeyToAllowUnicode(first, mirrorNode, out key);
         }
         else
         {
-            return ReadArrayOfTableKeyToDisallowUnicode(first, nodeHolder, out key);
+            return ReadArrayOfTableKeyToDisallowUnicode(first, mirrorNode, out key);
         }
     }
 
-    internal ReadKeyResult ReadArrayOfTableHeaderKeyToAllowUnicode(bool first, TomlTableNodeHolder nodeHolder, out TomlDottedKey? key)
+    internal ReadKeyResult ReadArrayOfTableHeaderKeyToAllowUnicode(bool first, TomlTableNode? mirrorNode, out TomlDottedKey? key)
     {
         key = null;
 
@@ -478,11 +478,11 @@ internal ref struct CsTomlReader
         {
             if (TomlCodes.IsDoubleQuoted(ch))
             {
-                key = ReadDoubleQuoteSingleLineString<TomlBasicDottedKey>(nodeHolder);
+                key = ReadDoubleQuoteSingleLineString<TomlBasicDottedKey>(mirrorNode);
             }
             else if (TomlCodes.IsSingleQuoted(ch))
             {
-                key = ReadSingleQuoteSingleLineString<TomlLiteralDottedKey>(nodeHolder);
+                key = ReadSingleQuoteSingleLineString<TomlLiteralDottedKey>(mirrorNode);
             }
             else
             {
@@ -544,7 +544,7 @@ internal ref struct CsTomlReader
         return ReadKeyResult.Failed;
     }
 
-    internal ReadKeyResult ReadArrayOfTableKeyToDisallowUnicode(bool first, TomlTableNodeHolder nodeHolder, out TomlDottedKey? key)
+    internal ReadKeyResult ReadArrayOfTableKeyToDisallowUnicode(bool first, TomlTableNode? mirrorNode, out TomlDottedKey? key)
     {
         key = null;
 
@@ -555,15 +555,15 @@ internal ref struct CsTomlReader
             // The first character of a bare key must be a letter, digit, or underscore (A-Za-z0-9_-).
             if (TomlCodes.IsBareKey(ch))
             {
-                key = ReadUnquotedString<TableHeaderMarker>(nodeHolder);
+                key = ReadUnquotedString<TableHeaderMarker>(mirrorNode);
             }
             else if (TomlCodes.IsDoubleQuoted(ch))
             {
-                key = ReadDoubleQuoteSingleLineString<TomlBasicDottedKey>(nodeHolder);
+                key = ReadDoubleQuoteSingleLineString<TomlBasicDottedKey>(mirrorNode);
             }
             else if (TomlCodes.IsSingleQuoted(ch))
             {
-                key = ReadSingleQuoteSingleLineString<TomlLiteralDottedKey>(nodeHolder);
+                key = ReadSingleQuoteSingleLineString<TomlLiteralDottedKey>(mirrorNode);
             }
             else
             {
@@ -837,7 +837,7 @@ internal ref struct CsTomlReader
         {
             case 1:
             case 2:
-                return ReadDoubleQuoteSingleLineString<TomlBasicString>(default);
+                return ReadDoubleQuoteSingleLineString<TomlBasicString>(null);
             case 3:
             case 4:
             case 5:
@@ -856,7 +856,7 @@ internal ref struct CsTomlReader
         return ExceptionHelper.NotReturnThrow<TomlString>(ExceptionHelper.ThrowThreeOrMoreQuotationMarks);
     }
 
-    internal T ReadDoubleQuoteSingleLineString<T>(TomlTableNodeHolder nodeHolder)
+    internal T ReadDoubleQuoteSingleLineString<T>(TomlTableNode? mirrorNode)
         where T : TomlValue, ITomlStringParser<T>
     {
         Advance(1); // "
@@ -877,7 +877,7 @@ internal ref struct CsTomlReader
 
                 Advance(index + 1);
 
-                return nodeHolder.GetKey<T>(value);
+                return mirrorNode.GetKey<T>(value);
                 //return T.Parse(value);
             }
             if (!TomlCodes.IsBackSlash(ch))
@@ -886,10 +886,10 @@ internal ref struct CsTomlReader
             }
         }
 
-        return ReadDoubleQuoteSingleLineStringSlow<T>(index, nodeHolder);
+        return ReadDoubleQuoteSingleLineStringSlow<T>(index, mirrorNode);
     }
 
-    private T ReadDoubleQuoteSingleLineStringSlow<T>(int index, TomlTableNodeHolder nodeHolder)
+    private T ReadDoubleQuoteSingleLineStringSlow<T>(int index, TomlTableNode? mirrorNode)
         where T : TomlValue, ITomlStringParser<T>
     {
         // Escape sequence or segment boundary
@@ -942,7 +942,7 @@ internal ref struct CsTomlReader
             if (Utf8Helper.ContainInvalidSequences(bufferWriter.WrittenSpan))
                 ExceptionHelper.ThrowInvalidCodePoints();
 
-            return nodeHolder.GetKey<T>(bufferWriter.WrittenSpan);
+            return mirrorNode.GetKey<T>(bufferWriter.WrittenSpan);
         }
         finally
         {
@@ -1113,7 +1113,7 @@ internal ref struct CsTomlReader
         {
             case 1:
             case 2:
-                return ReadSingleQuoteSingleLineString<TomlLiteralString>(default);
+                return ReadSingleQuoteSingleLineString<TomlLiteralString>(null);
             case 3:
             case 4:
             case 5:
@@ -1132,7 +1132,7 @@ internal ref struct CsTomlReader
         return ExceptionHelper.NotReturnThrow<TomlString>(ExceptionHelper.ThrowConsecutiveSingleQuotationMarksOf3);
     }
 
-    internal T ReadSingleQuoteSingleLineString<T>(TomlTableNodeHolder nodeHolder)
+    internal T ReadSingleQuoteSingleLineString<T>(TomlTableNode? mirrorNode)
         where T : TomlValue, ITomlStringParser<T>
     {
         Advance(1); // '
@@ -1177,7 +1177,7 @@ internal ref struct CsTomlReader
 
         if (fullSpan)
         {
-            return nodeHolder.GetKey<T>(unreadSpan[..totalLength]);
+            return mirrorNode.GetKey<T>(unreadSpan[..totalLength]);
         }
 
         try
@@ -1185,7 +1185,7 @@ internal ref struct CsTomlReader
             if (Utf8Helper.ContainInvalidSequences(bufferWriter!.WrittenSpan))
                 ExceptionHelper.ThrowInvalidCodePoints();
 
-            return nodeHolder.GetKey<T>(bufferWriter!.WrittenSpan);
+            return mirrorNode.GetKey<T>(bufferWriter!.WrittenSpan);
         }
         finally
         {
@@ -1329,7 +1329,7 @@ internal ref struct CsTomlReader
         }
     }
 
-    internal TomlDottedKey ReadUnquotedString<TMarker>(TomlTableNodeHolder nodeHolder)
+    internal TomlDottedKey ReadUnquotedString<TMarker>(TomlTableNode? mirrorNode)
         where TMarker : struct
     {
         var unreadSpan = sequenceReader.UnreadSpan;
@@ -1378,11 +1378,11 @@ internal ref struct CsTomlReader
     BREAK:
         if (fullSpan)
         {
-            return nodeHolder.GetKey<TomlUnquotedDottedKey>(unreadSpan[..totalLength]);
+            return mirrorNode.GetKey<TomlUnquotedDottedKey>(unreadSpan[..totalLength]);
         }
         try
         {
-            return nodeHolder.GetKey<TomlUnquotedDottedKey>(bufferWriter!.WrittenSpan);
+            return mirrorNode.GetKey<TomlUnquotedDottedKey>(bufferWriter!.WrittenSpan);
         }
         finally
         {
@@ -1624,11 +1624,11 @@ internal ref struct CsTomlReader
                 }
             }
 
-            var readResult = ReadKey(true, default, out var key);
+            var readResult = ReadKey(true, null, out var key);
             while (readResult == ReadKeyResult.FoundDot)
             {
                 node = node.GetOrAddKeyNode(key!);
-                readResult = ReadKey(false, default, out key);
+                readResult = ReadKey(false, null, out key);
 
                 while (TryPeek(out var numberSignCh) && numberSignCh == TomlCodes.Symbol.NUMBERSIGN)
                 {
