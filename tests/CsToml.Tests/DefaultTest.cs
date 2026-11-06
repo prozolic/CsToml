@@ -3,6 +3,7 @@ using CsToml.Error;
 using CsToml.Utility;
 using CsToml.Values;
 using Shouldly;
+using System.Collections.Immutable;
 using System.Text;
 using Utf8StringInterpolation;
 
@@ -1748,6 +1749,61 @@ public class SerializeValueTypeTest
 
         using var serializedTomlValue6 = CsTomlSerializer.SerializeValueType(new Tuple<string, string, string>("red", "yellow", "green"));
         serializedTomlValue6.ByteSpan.ToArray().ShouldBe("[ \"red\", \"yellow\", \"green\" ]"u8.ToArray());
+    }
+
+    [Fact]
+    public void CovariantArrayAsInterface()
+    {
+        object[] array = new string[] { "red", "yellow", "green" };
+        var expected = "[ \"red\", \"yellow\", \"green\" ]"u8.ToArray();
+
+        using var serializedTomlValue1 = CsTomlSerializer.SerializeValueType<IEnumerable<object>>(array);
+        serializedTomlValue1.ByteSpan.ToArray().ShouldBe(expected);
+
+        using var serializedTomlValue2 = CsTomlSerializer.SerializeValueType<ICollection<object>>(array);
+        serializedTomlValue2.ByteSpan.ToArray().ShouldBe(expected);
+
+        using var serializedTomlValue3 = CsTomlSerializer.SerializeValueType<IList<object>>(array);
+        serializedTomlValue3.ByteSpan.ToArray().ShouldBe(expected);
+
+        using var serializedTomlValue4 = CsTomlSerializer.SerializeValueType<IReadOnlyCollection<object>>(array);
+        serializedTomlValue4.ByteSpan.ToArray().ShouldBe(expected);
+
+        using var serializedTomlValue5 = CsTomlSerializer.SerializeValueType<IReadOnlyList<object>>(array);
+        serializedTomlValue5.ByteSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void MemoryAndReadOnlyMemory()
+    {
+        using var serializedTomlValue1 = CsTomlSerializer.SerializeValueType(new int[] { 1, 2, 3 }.AsMemory());
+        serializedTomlValue1.ByteSpan.ToArray().ShouldBe("[ 1, 2, 3 ]"u8.ToArray());
+
+        using var serializedTomlValue2 = CsTomlSerializer.SerializeValueType(new int[] { 1, 2, 3, 4, 5 }.AsMemory(1, 3));
+        serializedTomlValue2.ByteSpan.ToArray().ShouldBe("[ 2, 3, 4 ]"u8.ToArray());
+
+        using var serializedTomlValue3 = CsTomlSerializer.SerializeValueType<ReadOnlyMemory<string>>(new[] { "red", "yellow", "green" });
+        serializedTomlValue3.ByteSpan.ToArray().ShouldBe("[ \"red\", \"yellow\", \"green\" ]"u8.ToArray());
+
+        using var serializedTomlValue4 = CsTomlSerializer.SerializeValueType(Memory<int>.Empty);
+        serializedTomlValue4.ByteSpan.ToArray().ShouldBe("[ ]"u8.ToArray());
+    }
+
+    [Fact]
+    public void CovariantArray()
+    {
+        string[] source = ["red", "yellow", "green"];
+        var expected = "[ \"red\", \"yellow\", \"green\" ]"u8.ToArray();
+
+        using var serializedTomlValue1 = CsTomlSerializer.SerializeValueType<object[]>(source);
+        serializedTomlValue1.ByteSpan.ToArray().ShouldBe(expected);
+
+        var immutableArray = ImmutableArray<object>.CastUp(ImmutableArray.Create(source));
+        using var serializedTomlValue2 = CsTomlSerializer.SerializeValueType(immutableArray);
+        serializedTomlValue2.ByteSpan.ToArray().ShouldBe(expected);
+
+        using var serializedTomlValue3 = CsTomlSerializer.SerializeValueType<IImmutableList<object>>(immutableArray);
+        serializedTomlValue3.ByteSpan.ToArray().ShouldBe(expected);
     }
 }
 

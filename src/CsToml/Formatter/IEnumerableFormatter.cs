@@ -1,4 +1,5 @@
 ﻿
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace CsToml.Formatter;
@@ -22,49 +23,49 @@ public sealed class IEnumerableFormatter<T> : CollectionBaseFormatter<IEnumerabl
 
     protected override void SerializeCollection<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, IEnumerable<T> target, CsTomlSerializerOptions options)
     {
-        if (target is T[])
+        if (target.GetType() == typeof(T[]))
         {
-            ArraySerializer<T>.Serialize(ref writer, new CollectionContent(target), options);
+            ArraySerializer<T>.Serialize(ref writer, Unsafe.As<T[]>(target), options);
         }
         else if (target is List<T>)
         {
-            ListSerializer<T>.Serialize(ref writer, new CollectionContent(target), options);
+            ListSerializer<T>.Serialize(ref writer, Unsafe.As<List<T>>(target), options);
         }
         else if (target is IList<T>)
         {
-            IListSerializer<T>.Serialize(ref writer, new CollectionContent(target), options);
+            IListSerializer<T>.Serialize(ref writer, Unsafe.As<IList<T>>(target), options);
         }
         else if (target is IReadOnlyList<T>)
         {
-            IReadOnlyListSerializer<T>.Serialize(ref writer, new CollectionContent(target), options);
+            IReadOnlyListSerializer<T>.Serialize(ref writer, Unsafe.As<IReadOnlyList<T>>(target), options);
         }
         else
         {
-            IEnumerableSerializer<T>.Serialize(ref writer, new CollectionContent(target), options);
+            IEnumerableSerializer<T>.Serialize(ref writer, target, options);
         }
     }
 
     protected override bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, IEnumerable<T> target, CsTomlSerializerOptions options)
     {
-        if (target is T[])
+        if (target.GetType() == typeof(T[]))
         {
-            return ArraySerializer<T>.TrySerializeTomlArrayHeaderStyle(ref writer, header, new CollectionContent(target), options);
+            return ArraySerializer<T>.TrySerializeTomlArrayHeaderStyle(ref writer, header, Unsafe.As<T[]>(target), options);
         }
         else if (target is List<T>)
         {
-            return ListSerializer<T>.TrySerializeTomlArrayHeaderStyle(ref writer, header, new CollectionContent(target), options);
+            return ListSerializer<T>.TrySerializeTomlArrayHeaderStyle(ref writer, header, Unsafe.As<List<T>>(target), options);
         }
         else if (target is IList<T>)
         {
-            return IListSerializer<T>.TrySerializeTomlArrayHeaderStyle(ref writer, header, new CollectionContent(target), options);
+            return IListSerializer<T>.TrySerializeTomlArrayHeaderStyle(ref writer, header, Unsafe.As<IList<T>>(target), options);
         }
         else if (target is IReadOnlyList<T>)
         {
-            return IReadOnlyListSerializer<T>.TrySerializeTomlArrayHeaderStyle(ref writer, header, new CollectionContent(target), options);
+            return IReadOnlyListSerializer<T>.TrySerializeTomlArrayHeaderStyle(ref writer, header, Unsafe.As<IReadOnlyList<T>>(target), options);
         }
         else
         {
-            return IEnumerableSerializer<T>.TrySerializeTomlArrayHeaderStyle(ref writer, header, new CollectionContent(target), options);
+            return IEnumerableSerializer<T>.TrySerializeTomlArrayHeaderStyle(ref writer, header, target, options);
         }
     }
 }

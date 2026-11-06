@@ -919,6 +919,36 @@ public partial class TypeMemory
     public Memory<byte> Memory { get; set; }
 }
 
+[TomlSerializedObject]
+internal partial class TypeNestedArrayItem
+{
+    [TomlValueOnSerialized]
+    public string Name { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class TypeNestedArrayChild
+{
+    [TomlValueOnSerialized]
+    public TypeNestedArrayItem[] Items { get; set; }
+
+    [TomlValueOnSerialized]
+    public Memory<TypeNestedArrayItem> MemoryItems { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class TypeNestedArray
+{
+    [TomlValueOnSerialized]
+    public TypeNestedArrayItem[] Items { get; set; }
+
+    [TomlValueOnSerialized]
+    public Memory<TypeNestedArrayItem> MemoryItems { get; set; }
+
+    [TomlValueOnSerialized]
+    public TypeNestedArrayChild Child { get; set; }
+}
+
 public enum Color
 {
     Red,
