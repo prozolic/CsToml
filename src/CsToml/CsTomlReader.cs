@@ -1464,11 +1464,6 @@ internal ref struct CsTomlReader
 
     internal TomlArray ReadArray()
     {
-        // Array-level specials: TAB, LF, CR, SPACE, '#', ',', '[', ']'. Any other byte starts a value.
-        // '['=0x5B and ']'=0x5D exceed a single ulong mask, hence two words selected by ch < 64.
-        const ulong ArraySpecialBitMask0 = (1UL << TomlCodes.Symbol.TAB) | (1UL << TomlCodes.Symbol.LINEFEED) | (1UL << TomlCodes.Symbol.CARRIAGE) | (1UL << TomlCodes.Symbol.SPACE) | (1UL << TomlCodes.Symbol.NUMBERSIGN) | (1UL << TomlCodes.Symbol.COMMA);
-        const ulong ArraySpecialBitMask1 = (1UL << (TomlCodes.Symbol.LEFTSQUAREBRACKET - 64)) | (1UL << (TomlCodes.Symbol.RIGHTSQUAREBRACKET - 64));
-
         Advance(1); // [
 
         var initialArray = default(InlineArray16<TomlValue>);
@@ -1579,6 +1574,11 @@ internal ref struct CsTomlReader
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         bool IsArraySpecial(byte ch)
         {
+            // Array-level specials: TAB, LF, CR, SPACE, '#', ',', '[', ']'. Any other byte starts a value.
+            // '['=0x5B and ']'=0x5D exceed a single ulong mask, hence two words selected by ch < 64.
+            const ulong ArraySpecialBitMask0 = (1UL << TomlCodes.Symbol.TAB) | (1UL << TomlCodes.Symbol.LINEFEED) | (1UL << TomlCodes.Symbol.CARRIAGE) | (1UL << TomlCodes.Symbol.SPACE) | (1UL << TomlCodes.Symbol.NUMBERSIGN) | (1UL << TomlCodes.Symbol.COMMA);
+            const ulong ArraySpecialBitMask1 = (1UL << (TomlCodes.Symbol.LEFTSQUAREBRACKET - 64)) | (1UL << (TomlCodes.Symbol.RIGHTSQUAREBRACKET - 64));
+
             return ch < 128 && (((ch < 64 ? ArraySpecialBitMask0 : ArraySpecialBitMask1) >> ch) & 1) != 0;
         }
     }
@@ -1716,6 +1716,7 @@ internal ref struct CsTomlReader
         where TMarker : struct
     {
         var length = typeof(TMarker) == typeof(TrueMarker) ? 4 : 5;
+
         TomlBoolean value = default!;
         if (sequenceReader.TryFullSpan(length, out var bytes))
         {
