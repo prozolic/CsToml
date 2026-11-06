@@ -3,37 +3,51 @@ using CsToml.Utility;
 using System.Collections;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace CsToml.Values;
 
 [DebuggerTypeProxy(typeof(TomlArrayDebugView))]
 [DebuggerDisplay("Array[{Count}]")]
-internal sealed partial class TomlArray(int capacity) : TomlValue, IEnumerable<TomlValue>
+internal partial class TomlArray : TomlValue, IEnumerable<TomlValue>
 {
-    private readonly List<TomlValue> values = new(capacity);
+    private TomlValue[] values;
+    private int count;
 
-    public int Count => values.Count;
-
-    public IEnumerable<TomlValue> Values => values;
+    public int Count => count;
 
     public override bool HasValue => true;
 
     public override TomlValueType Type => TomlValueType.Array;
 
-    public TomlValue LastValue => Count > 0 ? values[Count - 1] : Empty;
+    public TomlValue LastValue => count > 0 ? values[count - 1] : Empty;
 
-    public TomlValue this[int index] => values[index];
+    public TomlValue this[int index]
+    {
+        get
+        {
+            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)count, nameof(index));
+            return values[index];
+        }
+    }
+
+    public TomlArray(int capacity)
+    {
+        values = capacity > 0 ? new TomlValue[capacity] : [];
+    }
 
     public TomlArray() : this(4)
     { }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Span<TomlValue> GetListSpan(int count)
+    public ReadOnlySpan<TomlValue> AsSpan()
+        => values.AsSpan(0, count);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Span<TomlValue> SetCount(int count)
     {
-        CollectionsMarshal.SetCount(values, count);
-        var arraySpan = CollectionsMarshal.AsSpan(values);
-        return arraySpan;
+        var span = values.AsSpan(0, count);
+        this.count = count;
+        return span;
     }
 
     internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
@@ -75,7 +89,7 @@ internal sealed partial class TomlArray(int capacity) : TomlValue, IEnumerable<T
         }
         destination[written++] = '[';
 
-        var arraySpan = CollectionsMarshal.AsSpan(values);
+        var arraySpan = AsSpan();
         for (int i = 0; i < arraySpan.Length - 1; i++)
         {
             if (arraySpan[i].TryFormat(destination.Slice(written), out var charsWritten2, format, provider))
@@ -138,9 +152,14 @@ internal sealed partial class TomlArray(int capacity) : TomlValue, IEnumerable<T
 
     public override string ToString() => ToString(null, null);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Add(TomlValue tomlValue)
-        => values.Add(tomlValue);
+    protected void AddCore(TomlValue tomlValue)
+    {
+        if (count == values.Length)
+        {
+            Array.Resize(ref values, count == 0 ? 4 : count * 2);
+        }
+        values[count++] = tomlValue;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Enumerator GetEnumerator()
@@ -154,7 +173,7 @@ internal sealed partial class TomlArray(int capacity) : TomlValue, IEnumerable<T
 
     public ref struct Enumerator(TomlArray array)
     {
-        private readonly Span<TomlValue> tomlArraySpan = CollectionsMarshal.AsSpan(array.values);
+        private readonly ReadOnlySpan<TomlValue> tomlArraySpan = array.AsSpan();
         private int index = 0;
 
         public TomlValue? Current { get; private set; }

@@ -1,19 +1,19 @@
 ﻿
 namespace CsToml.Values;
 
-internal static class TomlTableNodeHolder
+internal static class TomlTableHolder
 {
-    extension(TomlTableNode? node)
+    extension(TomlTable? table)
     {
         public T GetKey<T>(ReadOnlySpan<byte> key)
             where T : TomlValue, ITomlStringParser<T>
         {
-            if (node == null)
+            if (table == null)
             {
                 return T.Parse(key);
             }
 
-            if (node.TryGetKey(key, out var dottedKey) && dottedKey is T typedDottedKey)
+            if (table.TryGetKey(key, out var dottedKey) && dottedKey is T typedDottedKey)
             {
                 return typedDottedKey!;
             }

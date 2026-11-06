@@ -2066,4 +2066,153 @@ int = 123
 
         expected.ShouldBe(actual);
     }
+
+    [Fact]
+    public void FirstKeyAfterTableHeader()
+    {
+        var tomlText = @"
+# comment a
+[a]
+# comment x
+x = 1
+# comment y
+y = 2
+"u8;
+
+        var actual = DeserializeAndSerialize(tomlText);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine(@"# comment a");
+        writer.AppendLine(@"[a]");
+        writer.AppendLine(@"# comment x");
+        writer.AppendLine(@"x = 1");
+        writer.AppendLine(@"# comment y");
+        writer.AppendLine(@"y = 2");
+        writer.Flush();
+
+        var expected = Encoding.UTF8.GetString(buffer.ToArray()).Replace("\r\n", "\n");
+        actual.ShouldBe(expected);
+    }
+
+    [Fact]
+    public void FirstKeyAfterTableHeaderWithoutTableComment()
+    {
+        var tomlText = @"
+[a]
+# comment x
+x = 1
+"u8;
+
+        var actual = DeserializeAndSerialize(tomlText);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine(@"[a]");
+        writer.AppendLine(@"# comment x");
+        writer.AppendLine(@"x = 1");
+        writer.Flush();
+
+        var expected = Encoding.UTF8.GetString(buffer.ToArray()).Replace("\r\n", "\n");
+        actual.ShouldBe(expected);
+    }
+
+    [Fact]
+    public void FirstKeyAfterNestedTableHeader()
+    {
+        var tomlText = @"
+[a.b]
+# comment x
+# comment x2
+x = 1
+y = 2
+"u8;
+
+        var actual = DeserializeAndSerialize(tomlText);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine(@"[a.b]");
+        writer.AppendLine(@"# comment x");
+        writer.AppendLine(@"# comment x2");
+        writer.AppendLine(@"x = 1");
+        writer.AppendLine(@"y = 2");
+        writer.Flush();
+
+        var expected = Encoding.UTF8.GetString(buffer.ToArray()).Replace("\r\n", "\n");
+        actual.ShouldBe(expected);
+    }
+
+    [Fact]
+    public void FirstKeyAfterTableHeaderInArrayOfTables()
+    {
+        var tomlText = @"
+[[t]]
+n = 1
+[t.sub]
+# comment z
+z = 1
+"u8;
+
+        var actual = DeserializeAndSerialize(tomlText);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine(@"[[t]]");
+        writer.AppendLine(@"n = 1");
+        writer.AppendLine();
+        writer.AppendLine(@"[t.sub]");
+        writer.AppendLine(@"# comment z");
+        writer.AppendLine(@"z = 1");
+        writer.Flush();
+
+        var expected = Encoding.UTF8.GetString(buffer.ToArray()).Replace("\r\n", "\n");
+        actual.ShouldBe(expected);
+    }
+
+    [Fact]
+    public void FirstKeyOfEachTable()
+    {
+        var tomlText = @"
+# comment top
+top = 1
+
+# comment a
+[a]
+# comment x
+x = 1
+
+# comment b
+[b]
+# comment y
+y = ""value""
+# comment z
+z.w = true
+"u8;
+
+        var actual = DeserializeAndSerialize(tomlText);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine(@"# comment top");
+        writer.AppendLine(@"top = 1");
+        writer.AppendLine();
+        writer.AppendLine(@"# comment a");
+        writer.AppendLine(@"[a]");
+        writer.AppendLine(@"# comment x");
+        writer.AppendLine(@"x = 1");
+        writer.AppendLine();
+        writer.AppendLine(@"# comment b");
+        writer.AppendLine(@"[b]");
+        writer.AppendLine(@"# comment y");
+        writer.AppendLine(@"y = ""value""");
+        writer.AppendLine(@"# comment z");
+        writer.AppendLine(@"z.w = true");
+        writer.Flush();
+
+        var expected = Encoding.UTF8.GetString(buffer.ToArray()).Replace("\r\n", "\n");
+        actual.ShouldBe(expected);
+    }
+
+    private static string DeserializeAndSerialize(ReadOnlySpan<byte> tomlText)
+    {
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
+        using var serializeText = CsTomlSerializer.Serialize(document!);
+        return Encoding.UTF8.GetString(serializeText.ByteSpan).Replace("\r\n", "\n");
+    }
 }

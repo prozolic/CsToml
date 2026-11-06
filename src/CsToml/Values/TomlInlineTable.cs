@@ -6,57 +6,57 @@ using System.Runtime.InteropServices;
 
 namespace CsToml.Values;
 
-[DebuggerDisplay("Inline Table = {RootNode.NodeCount}")]
+[DebuggerDisplay("Inline Table = {Table.Count}")]
 internal sealed partial class TomlInlineTable : TomlValue
 {
     public new static readonly TomlInlineTable Empty = new();
 
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-    private readonly TomlTableNode node = new() { IsGroupingProperty = true, Value = TomlValue.Empty };
+    private readonly TomlTable table = new();
 
     public override bool HasValue => true;
 
     public override TomlValueType Type => TomlValueType.InlineTable;
 
     [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-    internal TomlTableNode RootNode => node;
+    internal TomlTable Table => table;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal IDictionary<object, object> GetDictionary()
-        => node.GetDictionary();
+        => table.GetDictionary();
 
     internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
     {
         writer.BeginInlineTable();
         writer.WriteSpace();
 
-        if (RootNode.NodeCount > 0)
+        if (table.Count > 0)
         {
             InlineArray4<TomlDottedKey> initialKeys = default;
             ref InlineArray4<TomlDottedKey> initialKeysRef = ref Unsafe.AsRef(in initialKeys);
             TempList<TomlDottedKey> keyStack = new(initialKeysRef);
-            ToTomlStringCore(ref writer, RootNode, ref keyStack);
+            ToTomlStringCore(ref writer, table, ref keyStack);
         }
 
         writer.WriteSpace();
         writer.EndInlineTable();
     }
 
-    private void ToTomlStringCore<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlTableNode parentNode, scoped ref TempList<TomlDottedKey> keyList)
+    private void ToTomlStringCore<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlTable parentTable, scoped ref TempList<TomlDottedKey> keyList)
         where TBufferWriter : IBufferWriter<byte>
     {
         var count = 0;
 
-        foreach (var (key, childNode) in parentNode.KeyValuePairs)
+        foreach (var (key, value) in parentTable.KeyValuePairs)
         {
-            if (childNode.IsGroupingProperty)
+            if (value is TomlTable childTable)
             {
                 keyList.Add(key);
-                ToTomlStringCore(ref writer, childNode, ref keyList);
+                ToTomlStringCore(ref writer, childTable, ref keyList);
                 keyList.RemoveLast();
                 count++;
 
-                if (count != parentNode.NodeCount)
+                if (count != parentTable.Count)
                 {
                     writer.Write(TomlCodes.Symbol.COMMA);
                     writer.WriteSpace();
@@ -76,10 +76,10 @@ internal sealed partial class TomlInlineTable : TomlValue
                 }
                 key.ToTomlString(ref writer);
                 writer.WriteEqual();
-                childNode.Value!.ToTomlString(ref writer);
+                value.ToTomlString(ref writer);
                 count++;
 
-                if (count != parentNode.NodeCount)
+                if (count != parentTable.Count)
                 {
                     writer.Write(TomlCodes.Symbol.COMMA);
                     writer.WriteSpace();
@@ -90,7 +90,7 @@ internal sealed partial class TomlInlineTable : TomlValue
 
     public override bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
     {
-        var tableFormat = $"TOML Inline Table[{RootNode.NodeCount}]";
+        var tableFormat = $"TOML Inline Table[{table.Count}]";
         if (tableFormat.TryCopyTo(destination))
         {
             charsWritten = tableFormat.Length;
@@ -135,7 +135,7 @@ internal sealed partial class TomlInlineTable : TomlValue
         }
         var written = 18;
 
-        if (!RootNode.NodeCount.TryFormat(utf8Destination.Slice(written), out var byteWritten2, format, provider))
+        if (!table.Count.TryFormat(utf8Destination.Slice(written), out var byteWritten2, format, provider))
         {
             bytesWritten = 0;
             return false;

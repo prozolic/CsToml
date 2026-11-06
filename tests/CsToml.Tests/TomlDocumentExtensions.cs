@@ -12,9 +12,7 @@ internal static class TomlDocumentExtensions
     public static JsonNode ToJsonObject(this TomlDocument document)
     {
         var jsonObj = new JsonObject();
-        var rootTomlNode = document.RootNode.Node;
-
-        foreach (var pair in rootTomlNode.KeyValuePairs)
+        foreach (var pair in document.RootNode.Table!.KeyValuePairs)
         {
             AddChildNode(jsonObj, pair.Value, pair.Key.Utf16String);
         }
@@ -22,7 +20,7 @@ internal static class TomlDocumentExtensions
         return jsonObj;
     }
 
-    private static void AddChildNode<TJsonNode>(TJsonNode jsonObj, TomlTableNode tomlNode, string? key)
+    private static void AddChildNode<TJsonNode>(TJsonNode jsonObj, TomlValue tomlValue, string? key)
         where TJsonNode : JsonNode
     {
         static void Add(JsonNode node, string? key, JsonNode value)
@@ -44,26 +42,18 @@ internal static class TomlDocumentExtensions
             }
         }
 
-        var tomlValue = tomlNode.Value;
-        if (tomlValue?.HasValue ?? false)
-        {
-            AddChildTomlValue(jsonObj, tomlValue, key);
-        }
-        else
+        if (tomlValue is TomlTable table)
         {
             var childJsonObj = new JsonObject();
             Add(jsonObj, key!, childJsonObj);
-            foreach (var pair in tomlNode.KeyValuePairs)
+            foreach (var pair in table.KeyValuePairs)
             {
                 AddChildNode(childJsonObj, pair.Value, pair.Key.Utf16String);
             }
             return;
         }
 
-        foreach (var pair in tomlNode.KeyValuePairs)
-        {
-            AddChildNode(jsonObj, pair.Value, pair.Key.Utf16String);
-        }
+        AddChildTomlValue(jsonObj, tomlValue, key);
     }
 
     private static void AddChildTomlValue<TJsonNode>(TJsonNode jsonObj, TomlValue tomlValue, string? key)
@@ -123,7 +113,7 @@ internal static class TomlDocumentExtensions
             case TomlTable tableValue: // Array of Tables
                 var childTableJsonObj = new JsonObject();
                 Add(jsonObj, key, childTableJsonObj);
-                foreach (var pair in tableValue.RootNode.KeyValuePairs)
+                foreach (var pair in tableValue.KeyValuePairs)
                 {
                     AddChildNode(childTableJsonObj, pair.Value, pair.Key.Utf16String);
                 }
@@ -131,7 +121,7 @@ internal static class TomlDocumentExtensions
             case TomlInlineTable tomlInlineTable:
                 var childinlineTableJsonObj = new JsonObject();
                 Add(jsonObj, key, childinlineTableJsonObj);
-                foreach (var pair in tomlInlineTable.RootNode.KeyValuePairs)
+                foreach (var pair in tomlInlineTable.Table.KeyValuePairs)
                 {
                     AddChildNode(childinlineTableJsonObj, pair.Value, pair.Key.Utf16String);
                 }

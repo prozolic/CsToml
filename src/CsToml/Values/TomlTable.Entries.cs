@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 // -----------------------------------------------------------------------------------------------------------------------------
-// The original code for CsTomlTableNodeDictionary is from dotnet/runtime(MIT license), Please check the original license.
+// The original code for the hash table part of TomlTable is from dotnet/runtime(MIT license), Please check the original license.
 //
 // Original source: https://github.com/dotnet/runtime
 // Licensed to the .NET Foundation under one or more agreements.
@@ -18,24 +18,17 @@ using System.Runtime.CompilerServices;
 // https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/System/Collections/HashHelpers.cs
 // -----------------------------------------------------------------------------------------------------------------------------
 
-namespace CsToml.Values.Internal;
+namespace CsToml.Values;
 
-[DebuggerDisplay("Count = {Count}")]
-internal sealed class TomlTableNodeDictionary
+internal sealed partial class TomlTable
 {
-    private int[] buckets;
-    private Entry[] entries;
-    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private int[] buckets = [];
+    private Entry[] entries = [];
     private int count;
 
-    public int Count => count;
+    internal int Count => count;
 
-    [DebuggerStepThrough]
-    public TomlTableNodeDictionary()
-    {
-        buckets = [];
-        entries = [];
-    }
+    internal KeyValuePairEnumerator KeyValuePairs => new(this);
 
     // Largest initial capacity EnsureCapacity may allocate. Keeps a wildly overestimated
     // hint (e.g. '=' bytes inside huge strings) from over-allocating; larger tables
@@ -47,10 +40,7 @@ internal sealed class TomlTableNodeDictionary
     // An off-chain start such as 1103 strands large tables on the 1103→2333→4861→10103 chain.
     private const int SaturatedInitialCapacity = 919;
 
-    // Pre-sizes the backing arrays from an estimated entry count so that parsing can skip
-    // intermediate Reserve (rehash) steps. Applies only to a dictionary with no allocated
-    // buckets; estimates are best-effort and never affect correctness.
-    public void EnsureCapacity(int estimatedCount)
+    internal void EnsureCapacity(int estimatedCount)
     {
         if (buckets.Length != 0 || estimatedCount <= 0)
         {
@@ -64,34 +54,31 @@ internal sealed class TomlTableNodeDictionary
         buckets = new int[capacity];
     }
 
-    [DebuggerStepThrough]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryAdd(TomlDottedKey key, TomlTableNode value)
-        => TryAddCore(key, key.GetHashCodeFast(), value);
-
-    private bool TryAddCore(TomlDottedKey key, int keyHashCode, TomlTableNode value)
+    private int TryAdd(TomlDottedKey key, int hashCode, TomlValue value)
     {
         if (buckets.Length == 0)
         {
             var capacity = HashHelpers.Primes[0];
-            entries = new Entry[capacity];
-            buckets = new int[capacity];
+            this.entries = new Entry[capacity];
+            this.buckets = new int[capacity];
         }
 
-        var hashCode = keyHashCode;
+        // The chain loops index a local copy of entries under (uint)index < (uint)entries.Length,
+        // which lets the JIT drop the bounds check: https://github.com/dotnet/runtime/pull/125893
+        var entries = this.entries;
         ref var bucket = ref GetBucket((uint)hashCode);
 
         var index = bucket - 1;
-        var collisionCount = 0;
+        uint collisionCount = 0;
         while ((uint)index < (uint)entries.Length)
         {
             ref var e = ref entries[index];
             if (e.hashCode == hashCode && e.key.Equals(key))
-                return false;
+                return -1;
 
             index = e.next;
             if ((uint)entries.Length < ++collisionCount)
-                throw new Exception();
+                ThrowConcurrentOperation();
         }
 
         var currentCount = count;
@@ -99,57 +86,18 @@ internal sealed class TomlTableNodeDictionary
         {
             Reserve(HashHelpers.ExpandPrime(currentCount));
             bucket = ref GetBucket((uint)hashCode);
+            entries = this.entries;
         }
-        index = currentCount;
-        count++;
+        count = currentCount + 1;
 
-        ref Entry entry = ref entries[index];
+        ref Entry entry = ref entries[currentCount];
         entry.hashCode = hashCode;
         entry.next = bucket - 1;
         entry.key = key;
         entry.value = value;
-        bucket = index + 1;
+        bucket = currentCount + 1;
 
-        return true;
-    }
-
-    public TomlTableNode GetOrAdd(TomlDottedKey key)
-    {
-        var hashCode = key.GetHashCodeFast();
-        ref var entry = ref FindEntry(key, hashCode);
-        if (!Unsafe.IsNullRef(ref entry))
-        {
-            return entry.value;
-        }
-
-        return AddNew(key, hashCode);
-    }
-
-    public TomlTableNode GetOrAdd(TomlDottedKey key, out bool added)
-    {
-        var hashCode = key.GetHashCodeFast();
-        ref var entry = ref FindEntry(key, hashCode);
-        if (!Unsafe.IsNullRef(ref entry))
-        {
-            added = false;
-            return entry.value;
-        }
-
-        added = true;
-        return AddNew(key, hashCode);
-    }
-
-    public bool TryGetValue(TomlDottedKey key, out TomlTableNode? value)
-    {
-        ref var entry = ref FindEntry(key, key.GetHashCodeFast());
-        if (Unsafe.IsNullRef(ref entry))
-        {
-            value = null;
-            return false;
-        }
-
-        value = entry.value;
-        return true;
+        return currentCount;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -182,7 +130,8 @@ internal sealed class TomlTableNodeDictionary
         return ref Unsafe.NullRef<Entry>();
     }
 
-    private TomlTableNode AddNew(TomlDottedKey key, int hashCode)
+    // The caller must have checked with FindEntry that the key does not exist.
+    private void AddNew(TomlDottedKey key, int hashCode, TomlValue value)
     {
         if (buckets.Length == 0)
         {
@@ -198,17 +147,13 @@ internal sealed class TomlTableNodeDictionary
         }
         count = currentCount + 1;
 
-        var addedValue = new TomlTableNode() { IsGroupingProperty = true, Value = TomlValue.Empty };
-
         ref var bucket = ref GetBucket((uint)hashCode);
         ref var entry = ref entries[currentCount];
         entry.hashCode = hashCode;
         entry.next = bucket - 1;
         entry.key = key;
-        entry.value = addedValue;
+        entry.value = value;
         bucket = currentCount + 1;
-
-        return addedValue;
     }
 
     [DoesNotReturn]
@@ -216,51 +161,32 @@ internal sealed class TomlTableNodeDictionary
     private static void ThrowConcurrentOperation()
         => throw new Exception();
 
-    [DebuggerStepThrough]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetValue(ReadOnlySpan<byte> key, out TomlTableNode? value)
-        => TryGetValueCore(key, ByteArrayHash.ToInt32(key), out _, out value);
-
-    [DebuggerStepThrough]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetKey(ReadOnlySpan<byte> key, out TomlDottedKey? dottedKey)
-        => TryGetValueCore(key, ByteArrayHash.ToInt32(key), out dottedKey, out _);
-
-    private bool TryGetValueCore(ReadOnlySpan<byte> key, int hashCode, out TomlDottedKey? dottedKey, out TomlTableNode? value)
+    private bool TryGetValueCore(ReadOnlySpan<byte> key, int hashCode, out TomlDottedKey? dottedKey, out TomlValue? value)
     {
         var buckets = this.buckets;
-        if (buckets.Length == 0)
+        if (buckets.Length != 0)
         {
-            dottedKey = null;
-            value = null;
-            return false;
-        }
-
-        ref var bucket = ref GetBucket((uint)hashCode);
-        var index = bucket - 1;
-        var conflictCount = 0;
-        var entries = this.entries;
-
-        do
-        {
-            if ((uint)index > (uint)entries.Length)
+            // https://github.com/dotnet/runtime/pull/125893
+            var entries = this.entries;
+            var index = buckets[(uint)hashCode % (uint)buckets.Length] - 1;
+            uint collisionCount = 0;
+            while ((uint)index < (uint)entries.Length)
             {
-                dottedKey = null;
-                value = null;
-                return false;
-            }
+                ref var e = ref entries[index];
+                if (e.hashCode == hashCode && e.key.Equals(key))
+                {
+                    dottedKey = e.key;
+                    value = e.value;
+                    return true;
+                }
 
-            ref var e = ref entries[index];
-            if (e.hashCode == hashCode && e.key.Equals(key))
-            {
-                dottedKey = e.key;
-                value = e.value;
-                return true;
+                index = e.next;
+                if ((uint)entries.Length < ++collisionCount)
+                {
+                    break;
+                }
             }
-
-            index = e.next;
         }
-        while (++conflictCount <= (uint)buckets.Length);
 
         dottedKey = null;
         value = null;
@@ -277,6 +203,9 @@ internal sealed class TomlTableNodeDictionary
     [MethodImpl(MethodImplOptions.NoInlining)]
     private void Reserve(int capacity)
     {
+        // https://github.com/dotnet/runtime/pull/132098
+        Debug.Assert(HashHelpers.IsPrime(capacity));
+
         int count = this.count;
         Entry[] newEntries = new Entry[capacity];
         Span<Entry> newEntriesSpan = newEntries.AsSpan(0, count);
@@ -298,43 +227,43 @@ internal sealed class TomlTableNodeDictionary
         public int hashCode;
         public int next;
         public TomlDottedKey key;
-        public TomlTableNode value;
+        public TomlValue value;
     }
 
     internal struct KeyValuePairEnumerator
     {
-        private readonly TomlTableNodeDictionary? dictionary;
+        private readonly TomlTable? table;
         private int index;
-        private KeyValuePair<TomlDottedKey, TomlTableNode> current;
+        private KeyValuePair<TomlDottedKey, TomlValue> current;
 
-        public readonly KeyValuePair<TomlDottedKey, TomlTableNode> Current => current;
+        public readonly KeyValuePair<TomlDottedKey, TomlValue> Current => current;
 
         public readonly KeyValuePairEnumerator GetEnumerator() => this;
 
-        internal KeyValuePairEnumerator(TomlTableNodeDictionary? dict)
+        internal KeyValuePairEnumerator(TomlTable? table)
         {
-            dictionary = dict;
+            this.table = table;
             index = 0;
             current = default;
         }
 
         public bool MoveNext()
         {
-            if (dictionary == null)
+            if (table == null)
             {
                 index = -1;
                 current = default;
                 return false;
             }
 
-            if ((uint)index < (uint)dictionary.Count)
+            if ((uint)index < (uint)table.count)
             {
-                ref var entry = ref dictionary.entries[index++];
-                current = new KeyValuePair<TomlDottedKey, TomlTableNode>(entry.key, entry.value);
+                ref var entry = ref table.entries[index++];
+                current = new KeyValuePair<TomlDottedKey, TomlValue>(entry.key, entry.value);
                 return true;
             }
 
-            index = dictionary.Count + 1;
+            index = table.count + 1;
             current = default;
             return false;
         }
@@ -349,6 +278,7 @@ internal sealed class TomlTableNodeDictionary
         public const int MaxPrimeArrayLength = 0x7FFFFFC3;
 
         public const int HashPrime = 101;
+        private const int MinPrime = 3;
 
         // Table of prime numbers to use as hash table sizes.
         // A typical resize algorithm would pick the smallest prime number in this array
@@ -372,36 +302,100 @@ internal sealed class TomlTableNodeDictionary
             1674319, 2009191, 2411033, 2893249, 3471899, 4166287, 4999559, 5999471, 7199369
         ];
 
+        // IsPrime, GetPrime and GetPrimeAtLeastCore follow the prime search of
+        // https://github.com/dotnet/runtime/pull/132098
         public static bool IsPrime(int candidate)
         {
-            if ((candidate & 1) != 0)
+            // This only tests hash table capacities, whose minimum is MinPrime, so 2 is intentionally excluded.
+            Debug.Assert(candidate >= MinPrime);
+
+            if ((candidate & 1) == 0 || (uint)candidate % MinPrime == 0)
             {
-                int limit = (int)Math.Sqrt(candidate);
-                for (int divisor = 3; divisor <= limit; divisor += 2)
-                {
-                    if ((candidate % divisor) == 0)
-                        return false;
-                }
-                return true;
+                return candidate == MinPrime;
             }
-            return candidate == 2;
+
+            return HasNoPrimeDivisors(candidate, (int)Math.Sqrt(candidate));
+        }
+
+        private static bool HasNoPrimeDivisors(int candidate, int limit)
+        {
+            // Every prime greater than 3 is 6k - 1 or 6k + 1, so test both candidates in each group.
+            for (int divisor = 5; divisor <= limit; divisor += 6)
+            {
+                if (candidate % divisor == 0 || candidate % (divisor + 2) == 0)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         public static int GetPrime(int min)
         {
-            foreach (int prime in Primes)
+            if (min <= MinPrime)
             {
-                if (prime >= min)
-                    return prime;
+                return MinPrime;
             }
 
-            // Outside of our predefined table. Compute the hard way.
-            for (int i = (min | 1); i < int.MaxValue; i += 2)
+            // A short linear scan is faster for the common small capacities.
+            const int LinearSearchCount = 16;
+
+            ReadOnlySpan<int> primes = Primes;
+            if (min <= primes[LinearSearchCount - 1])
             {
-                if (IsPrime(i) && ((i - 1) % HashPrime != 0))
-                    return i;
+                for (int i = 1; i < LinearSearchCount; i++)
+                {
+                    if (primes[i] >= min)
+                    {
+                        return primes[i];
+                    }
+                }
             }
-            return min;
+            else
+            {
+                int index = primes.Slice(LinearSearchCount).BinarySearch(min);
+                index = index < 0 ? ~index : index;
+                index += LinearSearchCount;
+                if ((uint)index < (uint)primes.Length)
+                {
+                    return primes[index];
+                }
+            }
+
+            return GetPrimeAtLeastCore(min);
+        }
+
+        private static int GetPrimeAtLeastCore(int min)
+        {
+            Debug.Assert(min > MinPrime);
+
+            int candidate = min | 1;
+            uint remainder = (uint)candidate % 6;
+            if (remainder == 3)
+            {
+                candidate += 2;
+            }
+
+            int increment = remainder == 1 ? 4 : 2;
+            int limit = (int)Math.Sqrt(candidate);
+            long nextLimitSquared = (long)(limit + 1) * (limit + 1);
+            while (true)
+            {
+                while (nextLimitSquared <= candidate)
+                {
+                    limit++;
+                    nextLimitSquared = (long)(limit + 1) * (limit + 1);
+                }
+
+                if ((uint)(candidate - 1) % HashPrime != 0 && HasNoPrimeDivisors(candidate, limit))
+                {
+                    return candidate;
+                }
+
+                candidate += increment;
+                increment = 6 - increment;
+            }
         }
 
         public static int ExpandPrime(int oldSize)

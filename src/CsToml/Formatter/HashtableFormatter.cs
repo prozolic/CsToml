@@ -15,12 +15,12 @@ internal sealed class HashtableFormatter : ITomlValueFormatter<Hashtable>
         {
             if (rootNode.Value is TomlTable table)
             {
-                var tableDocumentNode = new TomlDocumentNode(table.RootNode);
+                var tableDocumentNode = new TomlDocumentNode(table);
                 return options.Resolver.GetFormatter<Hashtable>()!.Deserialize(ref tableDocumentNode, options);
             }
             else if (rootNode.Value is TomlInlineTable inlineTable)
             {
-                var tableDocumentNode = new TomlDocumentNode(inlineTable.RootNode);
+                var tableDocumentNode = new TomlDocumentNode(inlineTable.Table);
                 return options.Resolver.GetFormatter<Hashtable>()!.Deserialize(ref tableDocumentNode, options);
             }
             return new Hashtable();
@@ -30,27 +30,13 @@ internal sealed class HashtableFormatter : ITomlValueFormatter<Hashtable>
             var dictionary = new Hashtable(rootNode.NodeCount);
             var formatter = options.Resolver.GetFormatter<object>();
 
-            foreach ((var key, var node) in rootNode.Node.KeyValuePairs)
+            foreach ((var key, var value) in rootNode.Table!.KeyValuePairs)
             {
-                if (node.Value!.HasValue)
-                {
-                    var keyNode = new TomlDocumentNode(key);
-                    var valueNode = new TomlDocumentNode(node);
-                    dictionary.Add(
-                        formatter!.Deserialize(ref keyNode, options),
-                        formatter!.Deserialize(ref valueNode, options));
-                }
-                else
-                {
-                    if (rootNode.Node.TryGetChildNode(key.Value, out var childNode))
-                    {
-                        var keyNode = new TomlDocumentNode(key);
-                        var valueNode = new TomlDocumentNode(childNode!);
-                        dictionary.Add(
-                            formatter!.Deserialize(ref keyNode, options),
-                            formatter!.Deserialize(ref valueNode, options));
-                    }
-                }
+                var keyNode = new TomlDocumentNode(key);
+                var valueNode = TomlDocumentNode.FromChild(value);
+                dictionary.Add(
+                    formatter!.Deserialize(ref keyNode, options),
+                    formatter!.Deserialize(ref valueNode, options));
             }
             return dictionary;
         }

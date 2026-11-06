@@ -15,12 +15,12 @@ public abstract class DictionaryBaseFormatter<TKey, TValue, TDictionary, TMediat
         {
             if (rootNode.Value is TomlTable table)
             {
-                var tableDocumentNode = new TomlDocumentNode(table.RootNode);
+                var tableDocumentNode = new TomlDocumentNode(table);
                 return options.Resolver.GetFormatter<TDictionary>()!.Deserialize(ref tableDocumentNode, options);
             }
             else if (rootNode.Value is TomlInlineTable inlineTable)
             {
-                var tableDocumentNode = new TomlDocumentNode(inlineTable.RootNode);
+                var tableDocumentNode = new TomlDocumentNode(inlineTable.Table);
                 return options.Resolver.GetFormatter<TDictionary>()!.Deserialize(ref tableDocumentNode, options);
             }
             return Complete(CreateMediator(0));
@@ -30,26 +30,21 @@ public abstract class DictionaryBaseFormatter<TKey, TValue, TDictionary, TMediat
             var dictionary = CreateMediator(rootNode.NodeCount);
             var keyFormatter = options.Resolver.GetFormatter<TKey>();
 
-            foreach ((var key, var node) in rootNode.Node.KeyValuePairs)
+            foreach ((var key, var value) in rootNode.Table!.KeyValuePairs)
             {
-                if (node.Value!.HasValue)
+                var keyNode = new TomlDocumentNode(key);
+                var valueNode = TomlDocumentNode.FromChild(value);
+                if (value is TomlTable)
                 {
-                    var keyNode = new TomlDocumentNode(key);
-                    var valueNode = new TomlDocumentNode(node);
                     AddValue(dictionary,
                         keyFormatter!.Deserialize(ref keyNode, options),
-                        options.Resolver.GetFormatter<TValue>()!.Deserialize(ref valueNode, options));
+                        (TValue)options.Resolver.GetFormatter<IDictionary<TKey, TValue>>()!.Deserialize(ref valueNode, options));
                 }
                 else
                 {
-                    if (rootNode.Node.TryGetChildNode(key.Value, out var childNode))
-                    {
-                        var keyNode = new TomlDocumentNode(key);
-                        var valueNode = new TomlDocumentNode(childNode!);
-                        AddValue(dictionary,
-                            keyFormatter!.Deserialize(ref keyNode, options),
-                            (TValue)options.Resolver.GetFormatter<IDictionary<TKey, TValue>>()!.Deserialize(ref valueNode, options));
-                    }
+                    AddValue(dictionary,
+                        keyFormatter!.Deserialize(ref keyNode, options),
+                        options.Resolver.GetFormatter<TValue>()!.Deserialize(ref valueNode, options));
                 }
             }
 
