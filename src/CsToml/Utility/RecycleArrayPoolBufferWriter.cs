@@ -10,10 +10,25 @@ namespace CsToml.Utility;
 internal static class RecycleArrayPoolBufferWriter<T>
     where T : unmanaged
 {
+    [ThreadStatic]
+    private static ArrayPoolBufferWriter<T>? threadWriter;
     private static readonly ConcurrentQueue<ArrayPoolBufferWriter<T>> writerQueue = new();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ArrayPoolBufferWriter<T> Rent(int initialCapacity = 1024)
+    {
+        var buffer = threadWriter;
+        if (buffer != null)
+        {
+            threadWriter = null;
+            buffer.ReserveDangerous(initialCapacity);
+            return buffer;
+        }
+        return RentSlow(initialCapacity);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static ArrayPoolBufferWriter<T> RentSlow(int initialCapacity)
     {
         if (writerQueue.TryDequeue(out var buffer))
         {
@@ -27,6 +42,11 @@ internal static class RecycleArrayPoolBufferWriter<T>
     public static void Return(ArrayPoolBufferWriter<T> buffer)
     {
         buffer.Return();
+        if (threadWriter == null)
+        {
+            threadWriter = buffer;
+            return;
+        }
         writerQueue.Enqueue(buffer);
     }
 }
