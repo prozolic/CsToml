@@ -87,7 +87,7 @@ An unresolved `T` throws `ThrowNotRegisteredInResolver<T>`. Adding built-in supp
 - `Deserialize<T>` / `Serialize<T>` — a whole TOML document.
 - `DeserializeValueType<T>` / `SerializeValueType<T>` — a bare TOML *value*, no document/table structure. The write side is the same writer with a flag flipped in its constructor.
 
-`Deserialize<TomlDocument>` short-circuits: `TomlDocument` implements `ITomlValueFormatter<TomlDocument>` and simply returns itself, so no formatter lookup happens.
+`Deserialize<TomlDocument>` short-circuits: `CsTomlSerializer` checks `typeof(T) == typeof(TomlDocument)` and returns the parsed document directly, and `Serialize<TomlDocument>` calls `ToTomlString` directly, so no formatter lookup happens and `TomlDocument` has no formatter of its own.
 
 ### Writer
 

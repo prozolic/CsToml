@@ -1,5 +1,4 @@
 ﻿using CsToml.Error;
-using CsToml.Formatter;
 using CsToml.Utility;
 using CsToml.Values;
 using System.Buffers;
@@ -9,7 +8,7 @@ using System.Runtime.CompilerServices; // InlineArray16<T>
 namespace CsToml;
 
 [DebuggerDisplay("Toml Document = {table.Count}")]
-public partial class TomlDocument : ITomlValueFormatter<TomlDocument>
+public partial class TomlDocument
 {
     private readonly TomlTable table;
 
@@ -22,16 +21,6 @@ public partial class TomlDocument : ITomlValueFormatter<TomlDocument>
     {
         table = new();
         LineNumber = 0;
-    }
-
-    TomlDocument ITomlValueFormatter<TomlDocument>.Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
-    {
-        return this;
-    }
-
-    void ITomlValueFormatter<TomlDocument>.Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlDocument target, CsTomlSerializerOptions options)
-    {
-        target!.ToTomlString(ref writer);
     }
 
     public IDictionary<TKey, TValue> ToDictionary<TKey, TValue>() where TKey : notnull
@@ -188,20 +177,5 @@ public partial class TomlDocument : ITomlValueFormatter<TomlDocument>
                 "Exceptions were thrown while parsing TOML. See the 'ParseExceptions' property for details about any errors.",
                 exceptions);
         }
-    }
-}
-
-internal sealed class TempTomlDocumentFormatter : ITomlValueFormatter<TomlDocument>
-{
-    public static readonly TempTomlDocumentFormatter Instance = new();
-
-    TomlDocument ITomlValueFormatter<TomlDocument>.Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
-    {
-        throw new NotSupportedException();
-    }
-
-    void ITomlValueFormatter<TomlDocument>.Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlDocument target, CsTomlSerializerOptions options)
-    {
-        target!.ToTomlString(ref writer);
     }
 }
