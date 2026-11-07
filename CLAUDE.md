@@ -76,9 +76,8 @@ Two things to know before editing the reader:
 
 `ITomlValueFormatter<T>` is the one (de)serialization abstraction. `TomlValueFormatterResolver.Instance` resolves through a static generic `Cache<T>` — a per-`T` static constructor, so lookups after the first are a field read, not a dictionary probe. Resolution order:
 
-1. `PrimitiveObjectFormatterResolver` — only when `T == object`
-2. `BuiltinFormatterResolver` — the ~95 formatters in `src/CsToml/Formatter/`. Concrete types are registered directly; open generics (`List<>`, `ImmutableDictionary<,>`, `ValueTuple<...>`, …) go through a `Type → Type` table plus `MakeGenericType`, with enums and arrays handled by dedicated paths.
-3. `TomlSerializedObjectFormatterResolver` — types registered by generated code
+1. `BuiltinFormatterResolver` — the ~95 formatters in `src/CsToml/Formatter/`. Concrete types (including `object` → `PrimitiveObjectFormatter`) are registered in its static constructor; open generics (`List<>`, `ImmutableDictionary<,>`, `ValueTuple<...>`, …) go through a `Type → Type` table plus `MakeGenericType`, with enums and arrays handled by dedicated paths.
+2. `TomlSerializedObjectFormatterResolver` — types registered by generated code
 
 An unresolved `T` throws `ThrowNotRegisteredInResolver<T>`. Adding built-in support for a new .NET type means a new `XxxFormatter.cs` **plus** its entry in `BuiltinFormatterResolver`.
 

@@ -269,6 +269,7 @@ internal sealed class BuiltinFormatterResolver : ITomlValueFormatterResolver
         BuiltinFormatterCache<List<char>?>.Formatter = new ListFormatter<char>();
         BuiltinFormatterCache<List<string>?>.Formatter = new ListFormatter<string>();
 
+        BuiltinFormatterCache<object>.Formatter = PrimitiveObjectFormatter.Instance;
         BuiltinFormatterCache<Hashtable>.Formatter = HashtableFormatter.Instance;
         BuiltinFormatterCache<ArrayList?>.Formatter = ArrayListFormatter.Instance;
 
@@ -394,6 +395,7 @@ internal sealed class BuiltinFormatterResolver : ITomlValueFormatterResolver
         CacheCheck<List<char>?>.Registered = true;
         CacheCheck<List<string>?>.Registered = true;
 
+        CacheCheck<object>.Registered = true;
         CacheCheck<Hashtable>.Registered = true;
         CacheCheck<ArrayList?>.Registered = true;
 

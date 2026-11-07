@@ -26,30 +26,22 @@ public sealed class TomlValueFormatterResolver : ITomlValueFormatterResolver
         {
             if (CacheCheck<T>.Registered) return;
 
-            if (typeof(T) == typeof(object))
+            var formatter = BuiltinFormatterResolver.Instance.GetFormatter<T>();
+            if (formatter != null)
             {
-                Formatter = PrimitiveObjectFormatterResolver.Instance.GetFormatter<T>();
+                Formatter = formatter;
                 CacheCheck<T>.Registered = true;
                 return;
             }
-            else
-            {
-                var formatter = BuiltinFormatterResolver.Instance.GetFormatter<T>();
-                if (formatter != null)
-                {
-                    Formatter = formatter;
-                    CacheCheck<T>.Registered = true;
-                    return;
-                }
 
-                var serializedObjectformatter = TomlSerializedObjectFormatterResolver.Instance.GetFormatter<T>();
-                if (serializedObjectformatter != null)
-                {
-                    Formatter = serializedObjectformatter;
-                    CacheCheck<T>.Registered = true;
-                    return;
-                }
+            var serializedObjectformatter = TomlSerializedObjectFormatterResolver.Instance.GetFormatter<T>();
+            if (serializedObjectformatter != null)
+            {
+                Formatter = serializedObjectformatter;
+                CacheCheck<T>.Registered = true;
+                return;
             }
+
             Formatter = null;
         }
     }
