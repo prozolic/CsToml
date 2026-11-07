@@ -1,66 +1,27 @@
 ﻿using CsToml.Error;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 
 namespace CsToml.Formatter.Resolver;
 
-internal sealed class TomlSerializedObjectFormatterResolver : ITomlValueFormatterResolver
+internal static class TomlSerializedObjectFormatterResolver
 {
-    public static readonly TomlSerializedObjectFormatterResolver Instance = new ();
-
-    private sealed class CacheCheck<T>
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2090",
+        Justification = "If T implements CsToml.ITomlSerializedObjectRegister.Register, it is executable.")]
+    public static bool TryRegister<T>()
     {
-        public static bool Registered;
-    }
-
-    private sealed class Cache<T>
-    {
-        public static ITomlValueFormatter<T>? Formatter;
-
-        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2090",
-            Justification = "If T implements CsToml.ITomlSerializedObjectRegister.Register, it is executable.")]
-        static Cache()
+        if (!typeof(ITomlSerializedObjectRegister).IsAssignableFrom(typeof(T)))
         {
-            if (CacheCheck<T>.Registered) return;
-
-            if (typeof(ITomlSerializedObjectRegister).IsAssignableFrom(typeof(T)))
-            {
-                var m = typeof(T).GetMethod("CsToml.ITomlSerializedObjectRegister.Register",
-                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-                if (m == null)
-                {
-                    ExceptionHelper.ThrowException($"{typeof(T).FullName} implements ITomlSerializedObjectRegister, but Register is not found.");
-                }
-                m.Invoke(null, null);
-            }
+            return false;
         }
-    }
 
-    public ITomlValueFormatter<T>? GetFormatter<T>()
-    {
-        return Cache<T>.Formatter;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsRegistered<T>()
-        => CacheCheck<T>.Registered;
-
-    public void Register<T>(TomlSerializedObjectFormatter<T> fomatter)
-        where T : class, ITomlSerializedObject<T?>
-    {
-        if (CacheCheck<T>.Registered) return;
-
-        Cache<T>.Formatter = fomatter!;
-        CacheCheck<T>.Registered = true;
-    }
-
-    public void Register<T>(StructTomlSerializedObjectFormatter<T> fomatter)
-        where T : struct, ITomlSerializedObject<T>
-    {
-        if (CacheCheck<T>.Registered) return;
-
-        Cache<T>.Formatter = fomatter;
-        CacheCheck<T>.Registered = true;
+        var m = typeof(T).GetMethod("CsToml.ITomlSerializedObjectRegister.Register",
+            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+        if (m == null)
+        {
+            ExceptionHelper.ThrowException($"{typeof(T).FullName} implements ITomlSerializedObjectRegister, but Register is not found.");
+        }
+        m.Invoke(null, null);
+        return true;
     }
 }

@@ -74,12 +74,12 @@ Two things to know before editing the reader:
 
 ### Formatter resolution
 
-`ITomlValueFormatter<T>` is the one (de)serialization abstraction. `TomlValueFormatterResolver.Instance` resolves through a static generic `Cache<T>` — a per-`T` static constructor, so lookups after the first are a field read, not a dictionary probe. Resolution order:
+`ITomlValueFormatter<T>` is the one (de)serialization abstraction. `TomlValueFormatterResolver.Instance.GetFormatter<T>()` reads one per-`T` static slot (`Cache<T>.Formatter`, a class with no static constructor, so there is no init check) and drops into `GetFormatterSlow` only when it is null. The lookup itself runs once per `T` in the `Resolved<T>` static constructor and is published with `Interlocked.CompareExchange`; the slot doubles as the "registered" flag, so `Register<T>` is first-wins and never replaces a built-in formatter. Resolution order:
 
 1. `BuiltinFormatterResolver` — the ~95 formatters in `src/CsToml/Formatter/`. Concrete types (including `object` → `PrimitiveObjectFormatter`) are registered in its static constructor; open generics (`List<>`, `ImmutableDictionary<,>`, `ValueTuple<...>`, …) go through a `Type → Type` table plus `MakeGenericType`, with enums and arrays handled by dedicated paths.
-2. `TomlSerializedObjectFormatterResolver` — types registered by generated code
+2. `TomlSerializedObjectFormatterResolver.TryRegister<T>` — invokes the generated `ITomlSerializedObjectRegister.Register()` by reflection. That code publishes into `Cache<T>` from inside the running `Resolved<T>` constructor (same-thread re-entrancy: `Register<T, TFormatter>()` sees the empty slot and fills it), which is why the lookup and the slot are two classes.
 
-An unresolved `T` throws `ThrowNotRegisteredInResolver<T>`. Adding built-in support for a new .NET type means a new `XxxFormatter.cs` **plus** its entry in `BuiltinFormatterResolver`.
+Generated `Register()` bodies call `Register<T, TFormatter>()`, which constructs `TFormatter` only while the slot is empty, and `Register<T>()` for nested `[TomlSerializedObject]` types, which skips `T.Register()` once `T` is registered — so re-running a `Register()` allocates nothing and type cycles terminate. `IsRegistered<T>` may run the lookup but never throws. An unresolved `T` throws `ThrowNotRegisteredInResolver<T>`. Adding built-in support for a new .NET type means a new `XxxFormatter.cs` **plus** its entry in `BuiltinFormatterResolver`.
 
 ### Two API layers
 

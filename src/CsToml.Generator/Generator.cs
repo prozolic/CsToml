@@ -193,6 +193,7 @@ internal static class CsTomlKeyCache
 #pragma warning disable CS8604 // Possible null reference argument for parameter.
 #pragma warning disable CS8619 // Possible null reference assignment fix.
 #pragma warning disable CS8620 // Argument cannot be used for parameter due to differences in the nullability of reference types.
+#pragma warning disable CS8631 // The type cannot be used as type parameter in the generic type or method. Nullability of type argument doesn't match constraint type.
 
 using CsToml;
 using CsToml.Error;
@@ -912,10 +913,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
         if (typeMeta.IsReferenceType)
         {
             var code = $$"""
-        if (!TomlValueFormatterResolver.IsRegistered<{{typeMeta.TypeName}}>())
-        {
-            TomlValueFormatterResolver.Register(new TomlSerializedObjectFormatter<{{typeMeta.TypeName}}>());
-        }
+        TomlValueFormatterResolver.Register<{{typeMeta.GenericTypeParameterName}}, TomlSerializedObjectFormatter<{{typeMeta.TypeName}}>>();
 
         // Register Formatter in advance.
 {{builder}}
@@ -925,10 +923,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
         else
         {
             var code = $$"""
-        if (!TomlValueFormatterResolver.IsRegistered<{{typeMeta.TypeName}}>())
-        {
-            TomlValueFormatterResolver.Register(new StructTomlSerializedObjectFormatter<{{typeMeta.TypeName}}>());
-        }
+        TomlValueFormatterResolver.Register<{{typeMeta.TypeName}}, StructTomlSerializedObjectFormatter<{{typeMeta.TypeName}}>>();
 
         // Register Formatter in advance.
 {{builder}}
