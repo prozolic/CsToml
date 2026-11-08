@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Benchmark;
 
-// Dotted-key descent (TomlTableNode.GetOrAddKeyNode: for `a.b.c = 1` it is called for `a` and `b`),
+// Dotted-key descent (TomlTable.GetOrAddKeyTable: for `a.b.c = 1` it is called for `a` and `b`),
 // driven through the public API only so the NuGetCsToml job (CsToml 1.8.4) can run the same code.
 //   Hit:        one table, KeyCount lines "database.connection.<leaf> = <i>"; `database` and `connection`
 //               are found on every line after the first, with a fresh key instance per line (byte compare).

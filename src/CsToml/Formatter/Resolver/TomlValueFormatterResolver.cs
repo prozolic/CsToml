@@ -13,101 +13,140 @@ public sealed class TomlValueFormatterResolver : ITomlValueFormatterResolver
 {
     public static readonly TomlValueFormatterResolver Instance = new ();
 
-    private sealed class CacheCheck<T>
-    {
-        public static bool Registered;
-    }
-
-    private sealed class Cache<T>
+    private static class Cache<T>
     {
         public static ITomlValueFormatter<T>? Formatter;
+    }
 
-        static Cache()
+    private static class Resolved<T>
+    {
+        public static readonly ITomlValueFormatter<T>? Formatter;
+
+        static Resolved()
         {
-            if (CacheCheck<T>.Registered) return;
-
-            if (typeof(T) == typeof(object))
+            var formatter = BuiltinFormatterResolver.Instance.GetFormatter<T>();
+            if (formatter == null && TomlSerializedObjectFormatterResolver.TryRegister<T>())
             {
-                Formatter = PrimitiveObjectFormatterResolver.Instance.GetFormatter<T>();
-                CacheCheck<T>.Registered = true;
-                return;
+                formatter = Cache<T>.Formatter;
             }
-            else
-            {
-                var formatter = BuiltinFormatterResolver.Instance.GetFormatter<T>();
-                if (formatter != null)
-                {
-                    Formatter = formatter;
-                    CacheCheck<T>.Registered = true;
-                    return;
-                }
-
-                var serializedObjectformatter = TomlSerializedObjectFormatterResolver.Instance.GetFormatter<T>();
-                if (serializedObjectformatter != null)
-                {
-                    Formatter = serializedObjectformatter;
-                    CacheCheck<T>.Registered = true;
-                    return;
-                }
-            }
-            Formatter = null;
+            Formatter = formatter;
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ITomlValueFormatter<T>? GetFormatter<T>()
     {
+        // Check Cache first to avoid the overhead of exception handling in Resolved<T> static constructor.
+        var formatter = Cache<T>.Formatter;
+        if (formatter != null)
+        {
+            return formatter;
+        }
+        return GetFormatterSlow<T>();
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static ITomlValueFormatter<T> GetFormatterSlow<T>()
+    {
+        ITomlValueFormatter<T>? resolved;
         try
         {
-            var formatter = Cache<T>.Formatter;
-            if (formatter != null)
-            {
-                return formatter;
-            }
+            resolved = Resolved<T>.Formatter;
         }
         catch (TypeInitializationException e)
         {
             ExceptionHelper.ThrowException(e.ToString(), e);
-            return default;
+            return default!;
         }
 
-        ExceptionHelper.ThrowNotRegisteredInResolver<T>();
-        return default;
+        var formatter = CompareExchangeFormatter(resolved);
+        if (formatter == null)
+        {
+            ExceptionHelper.ThrowNotRegisteredInResolver<T>();
+        }
+        return formatter;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static ITomlValueFormatter<T>? CompareExchangeFormatter<T>(ITomlValueFormatter<T>? resolved)
+    {
+        if (resolved != null)
+        {
+            Interlocked.CompareExchange(ref Cache<T>.Formatter, resolved, null);
+        }
+        return Cache<T>.Formatter;
+    }
+
     public static bool IsRegistered<T>()
     {
-        // If the static constructor in BuiltinFormatterResolver is not called, call it here.
-        if (BuiltinFormatterResolver.Instance.IsRegistered<T>()) return true;
-        if (TomlSerializedObjectFormatterResolver.Instance.IsRegistered<T>()) return true;
+        if (Cache<T>.Formatter != null)
+        {
+            return true;
+        }
 
-        return CacheCheck<T>.Registered;
+        ITomlValueFormatter<T>? resolved;
+        try
+        {
+            resolved = Resolved<T>.Formatter;
+        }
+        catch (TypeInitializationException)
+        {
+            return Cache<T>.Formatter != null;
+        }
+        return CompareExchangeFormatter(resolved) != null;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Register<T>(ITomlValueFormatter<T> formatter)
     {
-        if (IsRegistered<T>()) return;
+        // Built-in formatters cannot be replaced.
+        // otherwise the first registration wins.
+        if (Cache<T>.Formatter != null)
+        {
+            return;
+        }
 
-        Cache<T>.Formatter = formatter;
-        CacheCheck<T>.Registered = true;
+        var builtin = BuiltinFormatterResolver.Instance.GetFormatter<T>();
+        Interlocked.CompareExchange(ref Cache<T>.Formatter, builtin ?? formatter, null);
     }
 
-    public static void Register<T>(TomlSerializedObjectFormatter<T> formatter)
-        where T : class, ITomlSerializedObject<T?>
+    public static void Register<T, TFormatter>()
+        where TFormatter : class, ITomlValueFormatter<T>, new()
     {
-        TomlSerializedObjectFormatterResolver.Instance.Register(formatter);
-    }
+        // TFormatter is only instantiated while T has no formatter yet,
+        // so generated Register() bodies can call this unconditionally.
+        if (Cache<T>.Formatter != null)
+        {
+            return;
+        }
 
-    public static void Register<T>(StructTomlSerializedObjectFormatter<T> formatter)
-        where T : struct, ITomlSerializedObject<T>
-    {
-        TomlSerializedObjectFormatterResolver.Instance.Register(formatter);
+        var builtin = BuiltinFormatterResolver.Instance.GetFormatter<T>();
+        Interlocked.CompareExchange(ref Cache<T>.Formatter, builtin ?? new TFormatter(), null);
     }
 
     public static void Register<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>()
         where T : ITomlSerializedObjectRegister
     {
-        T.Register();
+        if (Cache<T>.Formatter == null)
+        {
+            T.Register();
+        }
+    }
+
+    private static class Registering<T>
+    {
+        [ThreadStatic]
+        public static bool InProgress;
+    }
+
+    public static bool BeginRegistration<T>()
+    {
+        // Generated Register() bodies start here and publish T last, after the formatters of its members.
+        // False once T is registered, or while this thread is already inside T.Register() (type cycles).
+        if (Cache<T>.Formatter != null || Registering<T>.InProgress)
+        {
+            return false;
+        }
+
+        Registering<T>.InProgress = true;
+        return true;
     }
 }

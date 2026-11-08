@@ -25,11 +25,11 @@ public sealed class IImmutableListFormatter<T> : CollectionBaseFormatter<IImmuta
         if (target is ImmutableArray<T> immArrayTarget)
         {
             var array = ImmutableCollectionsMarshal.AsArray(immArrayTarget);
-            ArraySerializer<T>.Serialize(ref writer, new CollectionContent(array!), options);
+            ArraySerializer<T>.Serialize(ref writer, array!, options);
         }
         else
         {
-            IReadOnlyListSerializer<T>.Serialize(ref writer, new CollectionContent(target), options);
+            IReadOnlyListSerializer<T>.Serialize(ref writer, target, options);
         }
     }
 
@@ -38,11 +38,11 @@ public sealed class IImmutableListFormatter<T> : CollectionBaseFormatter<IImmuta
         if (target is ImmutableArray<T> immArrayTarget)
         {
             var array = ImmutableCollectionsMarshal.AsArray(immArrayTarget);
-            return ArraySerializer<T>.TrySerializeTomlArrayHeaderStyle(ref writer, header, new CollectionContent(array!), options);
+            return ArraySerializer<T>.TrySerializeTomlArrayHeaderStyle(ref writer, header, array!, options);
         }
         else
         {
-            return IReadOnlyListSerializer<T>.TrySerializeTomlArrayHeaderStyle(ref writer, header, new CollectionContent(target), options);
+            return IReadOnlyListSerializer<T>.TrySerializeTomlArrayHeaderStyle(ref writer, header, target, options);
         }
     }
 }

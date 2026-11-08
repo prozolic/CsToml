@@ -13,15 +13,6 @@ public static class CsTomlSerializer
 {
     private static readonly CsTomlSerializerOptions DefaultOptions = CsTomlSerializerOptions.Default with { SerializeOptions = new() };
 
-    private static ITomlValueFormatter<T> GetFormatter<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(TomlDocument? tomlDocument)
-    {
-        if (typeof(T) == typeof(TomlDocument))
-        {
-            return (tomlDocument as ITomlValueFormatter<T>) ?? (TempTomlDocumentFormatter.Instance as ITomlValueFormatter<T>)!;
-        }
-        return TomlValueFormatterResolver.Instance.GetFormatter<T>()!;
-    }
-
     public static T Deserialize<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(ReadOnlySpan<byte> tomlText, CsTomlSerializerOptions? options = null)
     {
         options ??= DefaultOptions;
@@ -29,11 +20,15 @@ public static class CsTomlSerializer
         var document = new TomlDocument();
         var reader = new Utf8SequenceReader(tomlText, true);
         document.Parse(ref reader, options);
+        if (typeof(T) == typeof(TomlDocument))
+        {
+            return Unsafe.As<TomlDocument, T>(ref document);
+        }
 
         try
         {
             var rootNode = document.RootNode;
-            var formatter = GetFormatter<T>(document);
+            var formatter = TomlValueFormatterResolver.Instance.GetFormatter<T>()!;
             using (formatter as IDisposable)
             {
                 return formatter.Deserialize(ref rootNode, options);
@@ -52,11 +47,15 @@ public static class CsTomlSerializer
         var document = new TomlDocument();
         var reader = new Utf8SequenceReader(tomlSequence, true);
         document.Parse(ref reader, options);
+        if (typeof(T) == typeof(TomlDocument))
+        {
+            return Unsafe.As<TomlDocument, T>(ref document);
+        }
 
         try
         {
             var rootNode = document.RootNode;
-            var formatter = GetFormatter<T>(document);
+            var formatter = TomlValueFormatterResolver.Instance.GetFormatter<T>()!;
             using (formatter as IDisposable)
             {
                 return formatter.Deserialize(ref rootNode, options);
@@ -161,7 +160,13 @@ public static class CsTomlSerializer
             TempList<(TomlValueState state, int dottedKeyIndex)> stateList = new(initialStatesRef);
 
             var documentWriter = new Utf8TomlDocumentWriter<TBufferWriter>(ref bufferWriter, ref keyList, ref stateList, false, options);
-            var formatter = GetFormatter<T>(null);
+            if (typeof(T) == typeof(TomlDocument))
+            {
+                Unsafe.As<T, TomlDocument>(ref target).ToTomlString(ref documentWriter);
+                return;
+            }
+
+            var formatter = TomlValueFormatterResolver.Instance.GetFormatter<T>()!;
             using (formatter as IDisposable)
             {
                 formatter.Serialize(ref documentWriter, target, options);
@@ -224,7 +229,13 @@ public static class CsTomlSerializer
             TempList<(TomlValueState state, int dottedKeyIndex)> stateList = new(initialStatesRef);
 
             var documentWriter = new Utf8TomlDocumentWriter<TBufferWriter>(ref bufferWriter, ref keyList, ref stateList, true, options);
-            var formatter = GetFormatter<T>(null);
+            if (typeof(T) == typeof(TomlDocument))
+            {
+                Unsafe.As<T, TomlDocument>(ref target).ToTomlString(ref documentWriter);
+                return;
+            }
+
+            var formatter = TomlValueFormatterResolver.Instance.GetFormatter<T>()!;
             using (formatter as IDisposable)
             {
                 formatter.Serialize(ref documentWriter, target, options);

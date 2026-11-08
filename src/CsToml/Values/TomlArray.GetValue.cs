@@ -5,13 +5,15 @@ using System.Collections.ObjectModel;
 
 namespace CsToml.Values;
 
-internal partial class TomlArray 
+internal partial class TomlArray
 {
     public override bool CanGetValue(TomlValueFeature feature)
         => ((TomlValueFeature.String | TomlValueFeature.Array | TomlValueFeature.Object) & feature) == feature;
 
     public override ReadOnlyCollection<TomlValue> GetArray()
-        => values.AsReadOnly();
+        => count == values.Length
+            ? new ReadOnlyCollection<TomlValue>(values)
+            : new ReadOnlyCollection<TomlValue>(new ArraySegment<TomlValue>(values, 0, count));
 
     public override TomlValue GetArrayValue(int index)
     {
@@ -23,7 +25,7 @@ internal partial class TomlArray
     }
 
     public override ImmutableArray<TomlValue> GetImmutableArray()
-        => values.ToImmutableArray();
+        => ImmutableArray.Create(values, 0, count);
 
     public override string GetString()
         => ToString();

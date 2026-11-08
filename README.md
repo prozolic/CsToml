@@ -154,6 +154,7 @@ See [Built-in support type](#built-in-support-type) for more information on avai
 #pragma warning disable CS8604 // Possible null reference argument for parameter.
 #pragma warning disable CS8619 // Possible null reference assignment fix.
 #pragma warning disable CS8620 // Argument cannot be used for parameter due to differences in the nullability of reference types.
+#pragma warning disable CS8631 // The type cannot be used as type parameter in the generic type or method. Nullability of type argument doesn't match constraint type.
 
 using CsToml;
 using CsToml.Error;
@@ -309,41 +310,17 @@ partial class CsTomlClass : ITomlSerializedObject<CsTomlClass?>
 
     static void ITomlSerializedObjectRegister.Register()
     {
-        if (!TomlValueFormatterResolver.IsRegistered<CsTomlClass>())
-        {
-            TomlValueFormatterResolver.Register(new TomlSerializedObjectFormatter<CsTomlClass>());
-        }
+        if (!TomlValueFormatterResolver.BeginRegistration<CsTomlClass>()) return;
 
-        // Register Formatter in advance.
-        if (!TomlValueFormatterResolver.IsRegistered<global::System.Collections.Generic.IEnumerable<char>>())
-        {
-            TomlValueFormatterResolver.Register(new IEnumerableFormatter<char>());
-        }
-        if (!TomlValueFormatterResolver.IsRegistered<global::System.Collections.Generic.IList<int>>())
-        {
-            TomlValueFormatterResolver.Register(new IListFormatter<int>());
-        }
-        if (!TomlValueFormatterResolver.IsRegistered<global::System.Collections.Generic.ICollection<int>>())
-        {
-            TomlValueFormatterResolver.Register(new ICollectionFormatter<int>());
-        }
-        if (!TomlValueFormatterResolver.IsRegistered<global::System.Collections.Generic.IEnumerable<int>>())
-        {
-            TomlValueFormatterResolver.Register(new IEnumerableFormatter<int>());
-        }
-        if (!TomlValueFormatterResolver.IsRegistered<global::System.Collections.Generic.IReadOnlyList<int>>())
-        {
-            TomlValueFormatterResolver.Register(new IReadOnlyListFormatter<int>());
-        }
-        if (!TomlValueFormatterResolver.IsRegistered<global::System.Collections.Generic.IReadOnlyCollection<int>>())
-        {
-            TomlValueFormatterResolver.Register(new IReadOnlyCollectionFormatter<int>());
-        }
-        if (!TomlValueFormatterResolver.IsRegistered<global::ConsoleApp.TableClass>())
-        {
-            TomlValueFormatterResolver.Register<global::ConsoleApp.TableClass>();
-        }
-
+        // Register the member formatters first; CsTomlClass itself is published last.
+        TomlValueFormatterResolver.Register<global::System.Collections.Generic.IEnumerable<char>, IEnumerableFormatter<char>>();
+        TomlValueFormatterResolver.Register<global::System.Collections.Generic.IList<int>, IListFormatter<int>>();
+        TomlValueFormatterResolver.Register<global::System.Collections.Generic.ICollection<int>, ICollectionFormatter<int>>();
+        TomlValueFormatterResolver.Register<global::System.Collections.Generic.IEnumerable<int>, IEnumerableFormatter<int>>();
+        TomlValueFormatterResolver.Register<global::System.Collections.Generic.IReadOnlyList<int>, IReadOnlyListFormatter<int>>();
+        TomlValueFormatterResolver.Register<global::System.Collections.Generic.IReadOnlyCollection<int>, IReadOnlyCollectionFormatter<int>>();
+        TomlValueFormatterResolver.Register<global::ConsoleApp.TableClass>();
+        TomlValueFormatterResolver.Register<CsTomlClass?, TomlSerializedObjectFormatter<CsTomlClass>>();
     }
 }
 ```
@@ -363,6 +340,7 @@ partial class CsTomlClass : ITomlSerializedObject<CsTomlClass?>
 #pragma warning disable CS8604 // Possible null reference argument for parameter.
 #pragma warning disable CS8619 // Possible null reference assignment fix.
 #pragma warning disable CS8620 // Argument cannot be used for parameter due to differences in the nullability of reference types.
+#pragma warning disable CS8631 // The type cannot be used as type parameter in the generic type or method. Nullability of type argument doesn't match constraint type.
 
 using CsToml;
 using CsToml.Error;
@@ -419,17 +397,11 @@ partial class TableClass : ITomlSerializedObject<TableClass?>
 
     static void ITomlSerializedObjectRegister.Register()
     {
-        if (!TomlValueFormatterResolver.IsRegistered<TableClass>())
-        {
-            TomlValueFormatterResolver.Register(new TomlSerializedObjectFormatter<TableClass>());
-        }
+        if (!TomlValueFormatterResolver.BeginRegistration<TableClass>()) return;
 
-        // Register Formatter in advance.
-        if (!TomlValueFormatterResolver.IsRegistered<global::System.Collections.Generic.IEnumerable<char>>())
-        {
-            TomlValueFormatterResolver.Register(new IEnumerableFormatter<char>());
-        }
-
+        // Register the member formatters first; TableClass itself is published last.
+        TomlValueFormatterResolver.Register<global::System.Collections.Generic.IEnumerable<char>, IEnumerableFormatter<char>>();
+        TomlValueFormatterResolver.Register<TableClass?, TomlSerializedObjectFormatter<TableClass>>();
     }
 }
 ```

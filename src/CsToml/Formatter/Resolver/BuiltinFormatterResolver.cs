@@ -93,11 +93,6 @@ internal sealed class BuiltinFormatterResolver : ITomlValueFormatterResolver
 #endif
     };
 
-    private sealed class CacheCheck<T>
-    {
-        public static bool Registered;
-    }
-
     private sealed class BuiltinFormatterCache<T>
     {
         public static ITomlValueFormatter<T>? Formatter;
@@ -111,38 +106,21 @@ internal sealed class BuiltinFormatterResolver : ITomlValueFormatterResolver
             Justification = "GeneratedFormatterCache is best effort when it comes to available information.")]
         static GeneratedFormatterCache()
         {
-            if (CacheCheck<T>.Registered) return;
-
             if (typeof(T).IsEnum)
             {
-                var formatter = GetEnumFormatter<T>() as ITomlValueFormatter<T>;
-                if (formatter != null)
-                {
-                    Formatter = formatter;
-                    CacheCheck<T>.Registered = true;
-                }
+                Formatter = GetEnumFormatter<T>() as ITomlValueFormatter<T>;
                 return;
             }
 
             if (typeof(T).IsArray)
             {
-                var formatter = GetArrayFormatter<T>() as ITomlValueFormatter<T>;
-                if (formatter != null)
-                {
-                    Formatter = formatter;
-                    CacheCheck<T>.Registered = true;
-                }
+                Formatter = GetArrayFormatter<T>() as ITomlValueFormatter<T>;
                 return;
             }
 
             if (typeof(T).IsGenericType)
             {
-                var formatter = GetGenericTypeFormatter<T>() as ITomlValueFormatter<T>;
-                if (formatter != null)
-                {
-                    Formatter = formatter;
-                    CacheCheck<T>.Registered = true;
-                }
+                Formatter = GetGenericTypeFormatter<T>() as ITomlValueFormatter<T>;
                 return;
             }
         }
@@ -269,6 +247,7 @@ internal sealed class BuiltinFormatterResolver : ITomlValueFormatterResolver
         BuiltinFormatterCache<List<char>?>.Formatter = new ListFormatter<char>();
         BuiltinFormatterCache<List<string>?>.Formatter = new ListFormatter<string>();
 
+        BuiltinFormatterCache<object>.Formatter = PrimitiveObjectFormatter.Instance;
         BuiltinFormatterCache<Hashtable>.Formatter = HashtableFormatter.Instance;
         BuiltinFormatterCache<ArrayList?>.Formatter = ArrayListFormatter.Instance;
 
@@ -276,131 +255,6 @@ internal sealed class BuiltinFormatterResolver : ITomlValueFormatterResolver
         BuiltinFormatterCache<Dictionary<object, object?>>.Formatter = new DictionaryFormatter<object, object?>();
         BuiltinFormatterCache<IDictionary<string, object?>>.Formatter = new IDictionaryFormatter<string, object?>();
         BuiltinFormatterCache<IDictionary<object, object?>>.Formatter = new IDictionaryFormatter<object, object?>();
-
-        CacheCheck<bool>.Registered = true;
-        CacheCheck<bool?>.Registered = true;
-        CacheCheck<byte>.Registered = true;
-        CacheCheck<byte?>.Registered = true;
-        CacheCheck<sbyte>.Registered = true;
-        CacheCheck<sbyte?>.Registered = true;
-        CacheCheck<char>.Registered = true;
-        CacheCheck<char?>.Registered = true;
-        CacheCheck<float>.Registered = true;
-        CacheCheck<float?>.Registered = true;
-        CacheCheck<double>.Registered = true;
-        CacheCheck<double?>.Registered = true;
-        CacheCheck<short>.Registered = true;
-        CacheCheck<short?>.Registered = true;
-        CacheCheck<ushort>.Registered = true;
-        CacheCheck<ushort?>.Registered = true;
-        CacheCheck<int>.Registered = true;
-        CacheCheck<int?>.Registered = true;
-        CacheCheck<uint>.Registered = true;
-        CacheCheck<uint?>.Registered = true;
-        CacheCheck<long>.Registered = true;
-        CacheCheck<long?>.Registered = true;
-        CacheCheck<ulong>.Registered = true;
-        CacheCheck<ulong?>.Registered = true;
-
-        CacheCheck<DateTimeOffset>.Registered = true;
-        CacheCheck<DateTimeOffset?>.Registered = true;
-        CacheCheck<DateTime>.Registered = true;
-        CacheCheck<DateTime?>.Registered = true;
-        CacheCheck<DateOnly>.Registered = true;
-        CacheCheck<DateOnly?>.Registered = true;
-        CacheCheck<TimeOnly>.Registered = true;
-        CacheCheck<TimeOnly?>.Registered = true;
-        CacheCheck<string?>.Registered = true;
-        CacheCheck<decimal>.Registered = true;
-        CacheCheck<decimal?>.Registered = true;
-        CacheCheck<Half>.Registered = true;
-        CacheCheck<Half?>.Registered = true;
-        CacheCheck<Int128>.Registered = true;
-        CacheCheck<Int128?>.Registered = true;
-        CacheCheck<UInt128>.Registered = true;
-        CacheCheck<UInt128?>.Registered = true;
-        CacheCheck<BigInteger>.Registered = true;
-        CacheCheck<BigInteger?>.Registered = true;
-        CacheCheck<TimeSpan>.Registered = true;
-        CacheCheck<TimeSpan?>.Registered = true;
-
-        CacheCheck<Uri?>.Registered = true;
-        CacheCheck<Guid>.Registered = true;
-        CacheCheck<Guid?>.Registered = true;
-        CacheCheck<Version?>.Registered = true;
-        CacheCheck<StringBuilder?>.Registered = true;
-        CacheCheck<BitArray?>.Registered = true;
-        CacheCheck<Type?>.Registered = true;
-#if NET11_0_OR_GREATER
-        CacheCheck<BFloat16>.Registered = true;
-        CacheCheck<BFloat16?>.Registered = true;
-        CacheCheck<Decimal32>.Registered = true;
-        CacheCheck<Decimal32?>.Registered = true;
-        CacheCheck<Decimal64>.Registered = true;
-        CacheCheck<Decimal64?>.Registered = true;
-        CacheCheck<Decimal128>.Registered = true;
-        CacheCheck<Decimal128?>.Registered = true;
-        CacheCheck<Complex<float>>.Registered = true;
-        CacheCheck<Complex<float>?>.Registered = true;
-        CacheCheck<Complex<double>>.Registered = true;
-        CacheCheck<Complex<double>?>.Registered = true;
-        CacheCheck<Complex<Half>>.Registered = true;
-        CacheCheck<Complex<Half>?>.Registered = true;
-        CacheCheck<Complex<BFloat16>>.Registered = true;
-        CacheCheck<Complex<BFloat16>?>.Registered = true;
-        CacheCheck<Complex<Decimal32>>.Registered = true;
-        CacheCheck<Complex<Decimal32>?>.Registered = true;
-        CacheCheck<Complex<Decimal64>>.Registered = true;
-        CacheCheck<Complex<Decimal64>?>.Registered = true;
-        CacheCheck<Complex<Decimal128>>.Registered = true;
-        CacheCheck<Complex<Decimal128>?>.Registered = true;
-#endif
-
-        CacheCheck<bool[]?>.Registered = true;
-        CacheCheck<byte[]?>.Registered = true;
-        CacheCheck<sbyte[]?>.Registered = true;
-        CacheCheck<short[]?>.Registered = true;
-        CacheCheck<ushort[]?>.Registered = true;
-        CacheCheck<int[]?>.Registered = true;
-        CacheCheck<uint[]?>.Registered = true;
-        CacheCheck<long[]?>.Registered = true;
-        CacheCheck<ulong[]?>.Registered = true;
-        CacheCheck<float[]?>.Registered = true;
-        CacheCheck<double[]?>.Registered = true;
-        CacheCheck<decimal[]?>.Registered = true;
-        CacheCheck<DateTimeOffset[]?>.Registered = true;
-        CacheCheck<DateTime[]?>.Registered = true;
-        CacheCheck<DateOnly[]?>.Registered = true;
-        CacheCheck<TimeOnly[]?>.Registered = true;
-        CacheCheck<char[]?>.Registered = true;
-        CacheCheck<string[]?>.Registered = true;
-
-        CacheCheck<List<bool>?>.Registered = true;
-        CacheCheck<List<byte>?>.Registered = true;
-        CacheCheck<List<sbyte>?>.Registered = true;
-        CacheCheck<List<short>?>.Registered = true;
-        CacheCheck<List<ushort>?>.Registered = true;
-        CacheCheck<List<int>?>.Registered = true;
-        CacheCheck<List<uint>?>.Registered = true;
-        CacheCheck<List<long>?>.Registered = true;
-        CacheCheck<List<ulong>?>.Registered = true;
-        CacheCheck<List<float>?>.Registered = true;
-        CacheCheck<List<double>?>.Registered = true;
-        CacheCheck<List<decimal>?>.Registered = true;
-        CacheCheck<List<DateTimeOffset>?>.Registered = true;
-        CacheCheck<List<DateTime>?>.Registered = true;
-        CacheCheck<List<DateOnly>?>.Registered = true;
-        CacheCheck<List<TimeOnly>?>.Registered = true;
-        CacheCheck<List<char>?>.Registered = true;
-        CacheCheck<List<string>?>.Registered = true;
-
-        CacheCheck<Hashtable>.Registered = true;
-        CacheCheck<ArrayList?>.Registered = true;
-
-        CacheCheck<Dictionary<string, object?>>.Registered = true;
-        CacheCheck<Dictionary<object, object?>>.Registered = true;
-        CacheCheck<IDictionary<string, object?>>.Registered = true;
-        CacheCheck<IDictionary<object, object?>>.Registered = true;
     }
 
     [UnconditionalSuppressMessage("AotAnalysis", "IL3050",
@@ -462,8 +316,4 @@ internal sealed class BuiltinFormatterResolver : ITomlValueFormatterResolver
 
         return null;
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsRegistered<T>()
-        => CacheCheck<T>.Registered;
 }

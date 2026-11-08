@@ -43,7 +43,7 @@ public sealed class ImmutableArrayFormatter<T> : ITomlValueFormatter<ImmutableAr
         }
 
         var array = ImmutableCollectionsMarshal.AsArray(target);
-        ArraySerializer<T>.Serialize(ref writer, new CollectionContent(array!), options);
+        ArraySerializer<T>.Serialize(ref writer, array!, options);
     }
 
     public bool TrySerialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, ImmutableArray<T> target, CsTomlSerializerOptions options) where TBufferWriter : IBufferWriter<byte>
@@ -55,6 +55,6 @@ public sealed class ImmutableArrayFormatter<T> : ITomlValueFormatter<ImmutableAr
         }
 
         var array = ImmutableCollectionsMarshal.AsArray(target);
-        return ArraySerializer<T>.TrySerializeTomlArrayHeaderStyle(ref writer, header, new CollectionContent(array!), options); ;
+        return ArraySerializer<T>.TrySerializeTomlArrayHeaderStyle(ref writer, header, array!, options); ;
     }
 }

@@ -1,5 +1,4 @@
 ﻿using CsToml.Error;
-using CsToml.Formatter;
 using CsToml.Utility;
 using CsToml.Values;
 using System.Buffers;
@@ -8,13 +7,13 @@ using System.Runtime.CompilerServices; // InlineArray16<T>
 
 namespace CsToml;
 
-[DebuggerDisplay("Toml Document = {table.RootNode.NodeCount}")]
-public partial class TomlDocument : ITomlValueFormatter<TomlDocument>
+[DebuggerDisplay("Toml Document = {table.Count}")]
+public partial class TomlDocument
 {
     private readonly TomlTable table;
 
     public TomlDocumentNode RootNode
-        => new(table.RootNode, true);
+        => new(table, true);
 
     public long LineNumber { get; internal set; }
 
@@ -22,16 +21,6 @@ public partial class TomlDocument : ITomlValueFormatter<TomlDocument>
     {
         table = new();
         LineNumber = 0;
-    }
-
-    TomlDocument ITomlValueFormatter<TomlDocument>.Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
-    {
-        return this;
-    }
-
-    void ITomlValueFormatter<TomlDocument>.Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlDocument target, CsTomlSerializerOptions options)
-    {
-        target!.ToTomlString(ref writer);
     }
 
     public IDictionary<TKey, TValue> ToDictionary<TKey, TValue>() where TKey : notnull
@@ -51,18 +40,22 @@ public partial class TomlDocument : ITomlValueFormatter<TomlDocument>
         var commentsBuilder = new InlineArrayBuilder<TomlString>(initialCommentsSpan);
 
         List<CsTomlParseException>? exceptions = null;
-        TomlTableNode currentNode = table.RootNode;
-        TomlTableNode commentNode = table.RootNode;
+        TomlTable currentTable = table;
+
+        // Comments are attached to the table / array of tables in commentOwner,
+        // or to its key/value at commentEntryIndex when the index is not negative.
+        TomlValue commentOwner = table;
+        var commentEntryIndex = -1;
 
         // Key-reuse sources: keys repeat because same-schema tables repeat, so the
         // previously completed sibling table (mirror) already holds identical key instances.
-        TomlTableNode? tableKeyMirror = null;
-        TomlTableNode? previousTableNode = null;
-        TomlTableNode? aotPreviousElementRoot = null;
-        TomlTableNode? aotCurrentElementRoot = null;
+        TomlTable? tableKeyMirror = null;
+        TomlTable? previousTable = null;
+        TomlTable? aotPreviousElement = null;
+        TomlTable? aotCurrentElement = null;
 
         var parser = new CsTomlParser(ref reader, options);
-        currentNode.ReserveNodeCapacity(parser.reader.EstimateDirectKeyCount());
+        currentTable.EnsureCapacity(parser.reader.EstimateDirectKeyCount());
 
         while (parser.Read())
         {
@@ -83,53 +76,57 @@ public partial class TomlDocument : ITomlValueFormatter<TomlDocument>
                         continue;
 
                     case ParserState.KeyValue:
-                        var node = currentNode;
+                        var keyValueTable = currentTable;
                         var keyMirror = tableKeyMirror;
                         var readResult = parser.reader.ReadKey(true, keyMirror, out var key);
                         while (readResult == ReadKeyResult.FoundDot)
                         {
-                            node = node.GetOrAddKeyNode(key!);
+                            keyValueTable = keyValueTable.GetOrAddKeyTable(key!);
                             keyMirror = keyMirror?.TryGetMirrorChild(key!);
                             readResult = parser.reader.ReadKey(false, keyMirror, out key);
                         }
 
                         var value = parser.reader.ReadValue();
-                        node = node.AddKeyValueNode(key!, value);
-                        commentNode = node;
+                        var entryIndex = keyValueTable.AddKeyValue(key!, value);
+                        commentOwner = keyValueTable;
+                        commentEntryIndex = entryIndex;
                         break;
 
                     case ParserState.TableHeader:
-                        currentNode = table.RootNode;
-                        var readTableHeaderResult = parser.reader.ReadTableHeaderKey(true, currentNode, out var tableHeaderKey);
-                        var tableMirror = default(TomlTableNode);
+                        currentTable = table;
+                        var readTableHeaderResult = parser.reader.ReadTableHeaderKey(true, currentTable, out var tableHeaderKey);
+                        var tableMirror = default(TomlTable);
                         while (readTableHeaderResult == ReadKeyResult.FoundDot)
                         {
-                            currentNode = currentNode.GetOrAddTableHeaderKeyNode(tableHeaderKey!, out bool newNode);
-                            tableMirror = currentNode == aotCurrentElementRoot ? aotPreviousElementRoot : tableMirror?.TryGetMirrorChild(tableHeaderKey!);
-                            readTableHeaderResult = parser.reader.ReadTableHeaderKey(false, currentNode, out tableHeaderKey);
+                            currentTable = currentTable.GetOrAddTableHeaderKeyTable(tableHeaderKey!, out _);
+                            tableMirror = currentTable == aotCurrentElement ? aotPreviousElement : tableMirror?.TryGetMirrorChild(tableHeaderKey!);
+                            readTableHeaderResult = parser.reader.ReadTableHeaderKey(false, currentTable, out tableHeaderKey);
                         }
 
-                        currentNode = currentNode.AddTableHeaderKeyLastNode(tableHeaderKey!);
+                        currentTable = currentTable.AddTableHeaderKeyLastTable(tableHeaderKey!);
                         var structuralMirror = tableMirror?.TryGetMirrorChild(tableHeaderKey!);
-                        currentNode.ReserveNodeCapacity(structuralMirror is { NodeCount: > 0 } ? structuralMirror.NodeCount : parser.reader.EstimateDirectKeyCount());
-                        tableKeyMirror = structuralMirror ?? previousTableNode;
-                        previousTableNode = currentNode;
-                        commentNode = currentNode;
+                        currentTable.EnsureCapacity(structuralMirror is { Count: > 0 } ? structuralMirror.Count : parser.reader.EstimateDirectKeyCount());
+                        tableKeyMirror = structuralMirror ?? previousTable;
+                        previousTable = currentTable;
+                        commentOwner = currentTable;
+                        commentEntryIndex = -1;
                         break;
 
                     case ParserState.ArrayOfTablesHeader:
-                        currentNode = table.RootNode;
-                        var readArrayOfTableHeaderResult = parser.reader.ReadArrayOfTableHeaderKey(true, currentNode, out var arrayOfTableHeaderKey);
+                        currentTable = table;
+                        var readArrayOfTableHeaderResult = parser.reader.ReadArrayOfTableHeaderKey(true, currentTable, out var arrayOfTableHeaderKey);
                         while (readArrayOfTableHeaderResult == ReadKeyResult.FoundDot)
                         {
-                            currentNode = currentNode.GetOrAddArrayOfTableHeaderKeyNode(arrayOfTableHeaderKey!, false, out bool newNode);
-                            readArrayOfTableHeaderResult = parser.reader.ReadArrayOfTableHeaderKey(false, currentNode, out arrayOfTableHeaderKey);
+                            currentTable = currentTable.GetOrAddArrayOfTableHeaderKeyTable(arrayOfTableHeaderKey!);
+                            readArrayOfTableHeaderResult = parser.reader.ReadArrayOfTableHeaderKey(false, currentTable, out arrayOfTableHeaderKey);
                         }
-                        currentNode = currentNode.AddArrayOfTableHeaderKeyLastNode(arrayOfTableHeaderKey!, out commentNode, out aotPreviousElementRoot);
-                        currentNode.ReserveNodeCapacity(aotPreviousElementRoot is { NodeCount: > 0 } ? aotPreviousElementRoot.NodeCount : parser.reader.EstimateDirectKeyCount());
-                        aotCurrentElementRoot = currentNode;
-                        tableKeyMirror = aotPreviousElementRoot;
-                        previousTableNode = currentNode;
+                        currentTable = currentTable.AddArrayOfTableHeaderKeyLastTable(arrayOfTableHeaderKey!, out var tableArray, out aotPreviousElement);
+                        currentTable.EnsureCapacity(aotPreviousElement is { Count: > 0 } ? aotPreviousElement.Count : parser.reader.EstimateDirectKeyCount());
+                        aotCurrentElement = currentTable;
+                        tableKeyMirror = aotPreviousElement;
+                        previousTable = currentTable;
+                        commentOwner = tableArray;
+                        commentEntryIndex = -1;
                         break;
 
                     case ParserState.ThrowException:
@@ -143,7 +140,17 @@ public partial class TomlDocument : ITomlValueFormatter<TomlDocument>
 
                 if (commentsBuilder.Count > 0)
                 {
-                    var commentsSpan = commentNode.SetCommentCount(commentsBuilder.Count);
+                    Span<TomlString> commentsSpan;
+                    if (commentOwner is TomlTable commentTable)
+                    {
+                        commentsSpan = commentEntryIndex >= 0
+                            ? commentTable.AddKeyValueComments(commentEntryIndex, commentsBuilder.Count)
+                            : commentTable.AddComments(commentsBuilder.Count);
+                    }
+                    else
+                    {
+                        commentsSpan = ((TomlTableArray)commentOwner).AddComments(commentsBuilder.Count);
+                    }
                     commentsBuilder.CopyToAndReturn(commentsSpan);
                 }
 
@@ -170,20 +177,5 @@ public partial class TomlDocument : ITomlValueFormatter<TomlDocument>
                 "Exceptions were thrown while parsing TOML. See the 'ParseExceptions' property for details about any errors.",
                 exceptions);
         }
-    }
-}
-
-internal sealed class TempTomlDocumentFormatter : ITomlValueFormatter<TomlDocument>
-{
-    public static readonly TempTomlDocumentFormatter Instance = new();
-
-    TomlDocument ITomlValueFormatter<TomlDocument>.Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
-    {
-        throw new NotSupportedException();
-    }
-
-    void ITomlValueFormatter<TomlDocument>.Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlDocument target, CsTomlSerializerOptions options)
-    {
-        target!.ToTomlString(ref writer);
     }
 }

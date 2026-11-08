@@ -3,7 +3,6 @@ using CsToml.Error;
 using CsToml.Formatter.Resolver;
 using CsToml.Utility;
 using CsToml.Values;
-using CsToml.Values.Internal;
 using System.Buffers;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
@@ -22,14 +21,14 @@ public struct TomlDocumentNode
 {
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private readonly TomlValue value;
-    private readonly TomlTableNode node;
+    private readonly TomlTable? table;
     private readonly bool isRoot;
 
-    internal readonly int NodeCount => node?.NodeCount ?? 0;
+    internal readonly int NodeCount => table?.Count ?? 0;
 
     internal readonly TomlValue Value => value;
 
-    internal readonly TomlTableNode Node => node;
+    internal readonly TomlTable? Table => table;
 
     public readonly bool HasValue => Value.HasValue || NodeCount > 0 || isRoot;
 
@@ -40,7 +39,7 @@ public struct TomlDocumentNode
     public readonly bool HasValueOnly => Value.HasValue && NodeCount == 0;
 
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public readonly bool IsTableHeader => node?.IsTableHeader ?? false;
+    public readonly bool IsTableHeader => table?.IsTableHeader ?? false;
 
     public readonly TomlValueType ValueType => Value.Type;
 
@@ -83,11 +82,12 @@ public struct TomlDocumentNode
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
-            if (node?.TryGetChildNode(key, out var value) ?? false)
+            var target = table ?? (value as TomlInlineTable)?.Table;
+            if (target != null && target.TryGetChildValue(key, out var child))
             {
-                return new TomlDocumentNode(value!);
+                return FromChild(child!);
             }
-            return new TomlDocumentNode(TomlTableNode.Empty);
+            return new TomlDocumentNode(TomlValue.Empty);
         }
     }
 
@@ -98,25 +98,22 @@ public struct TomlDocumentNode
         {
             if (Value.TryGetArrayValue(index, out var value))
             {
-                if (value is TomlTable table)
-                {
-                    return new TomlDocumentNode(table!.RootNode!);
-                }
-                else if (value is TomlInlineTable inlineTable)
-                {
-                    return new TomlDocumentNode(inlineTable!.RootNode);
-                }
                 return new TomlDocumentNode(value);
             }
-            return new TomlDocumentNode(TomlTableNode.Empty);
+            return new TomlDocumentNode(TomlValue.Empty);
         }
     }
 
-    internal TomlDocumentNode(TomlTableNode node, bool isRoot = false)
+    private TomlDocumentNode(TomlValue value, TomlTable? table, bool isRoot)
     {
-        this.node = node;
-        this.value = node.Value!;
+        this.value = value;
+        this.table = table;
         this.isRoot = isRoot;
+    }
+
+    internal TomlDocumentNode(TomlTable table, bool isRoot = false)
+        : this(TomlValue.Empty, table, isRoot)
+    {
     }
 
     public TomlDocumentNode(TomlValue value)
@@ -124,18 +121,28 @@ public struct TomlDocumentNode
         if (value is TomlTable table)
         {
             this.value = TomlValue.Empty;
-            this.node = table!.RootNode!;
+            this.table = table;
         }
         else if (value is TomlInlineTable inlineTable)
         {
             this.value = TomlValue.Empty;
-            this.node = inlineTable!.RootNode!;
+            this.table = inlineTable.Table;
         }
         else
         {
             this.value = value;
-            this.node = TomlTableNode.Empty;
+            this.table = null;
         }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static TomlDocumentNode FromChild(TomlValue value)
+    {
+        if (value is TomlTable table)
+        {
+            return new TomlDocumentNode(TomlValue.Empty, table, false);
+        }
+        return new TomlDocumentNode(value, null, false);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -273,12 +280,12 @@ public struct TomlDocumentNode
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NodeEnumerator GetEnumerator()
-        => new (this.Node, HasValue);
+        => new (table, HasValue);
 
     [StructLayout(LayoutKind.Auto)]
     public ref struct NodeEnumerator
     {
-        private TomlTableNodeDictionary.KeyValuePairEnumerator enumerator;
+        private TomlTable.KeyValuePairEnumerator enumerator;
         private bool hasValue;
         private KeyValuePair<TomlValue, TomlDocumentNode> current;
 
@@ -288,9 +295,9 @@ public struct TomlDocumentNode
             get => current;
         }
 
-        internal NodeEnumerator(TomlTableNode tomlTableNode, bool hasValue)
+        internal NodeEnumerator(TomlTable? table, bool hasValue)
         {
-            enumerator = tomlTableNode.KeyValuePairs;
+            enumerator = new TomlTable.KeyValuePairEnumerator(table);
             this.hasValue = hasValue;
         }
 
@@ -304,14 +311,15 @@ public struct TomlDocumentNode
                 return false;
             }
 
-            var node = enumerator.Current;
-            if (node.Value.NodeCount > 0)
+            var pair = enumerator.Current;
+            if (pair.Value is TomlTable childTable)
             {
-                current = new KeyValuePair<TomlValue, TomlDocumentNode>(node.Key, new TomlDocumentNode(node.Value));
+                // An empty table is enumerated as an empty node that does not refer to the table.
+                current = new KeyValuePair<TomlValue, TomlDocumentNode>(pair.Key, childTable.Count > 0 ? new TomlDocumentNode(childTable) : new TomlDocumentNode(TomlValue.Empty));
             }
             else
             {
-                current = new KeyValuePair<TomlValue, TomlDocumentNode>(node.Key, new TomlDocumentNode(node.Value.Value!));
+                current = new KeyValuePair<TomlValue, TomlDocumentNode>(pair.Key, new TomlDocumentNode(pair.Value));
             }
             return true;
         }

@@ -21,11 +21,11 @@ public sealed class ListFormatter<T> : CollectionBaseFormatter<List<T>, T, List<
 
     protected override void SerializeCollection<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, List<T> target, CsTomlSerializerOptions options)
     {
-        ListSerializer<T>.Serialize(ref writer, new CollectionContent(target), options);
+        ListSerializer<T>.Serialize(ref writer, target, options);
     }
 
     protected override bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, List<T> target, CsTomlSerializerOptions options)
     {
-        return ListSerializer<T>.TrySerializeTomlArrayHeaderStyle(ref writer, header, new CollectionContent(target), options);
+        return ListSerializer<T>.TrySerializeTomlArrayHeaderStyle(ref writer, header, target, options);
     }
 }

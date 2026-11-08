@@ -14,12 +14,12 @@ public sealed class IGroupingFormatter<TKey, TValue> : ITomlValueFormatter<IGrou
         {
             if (rootNode.Value is TomlTable table)
             {
-                var tableDocumentNode = new TomlDocumentNode(table.RootNode);
+                var tableDocumentNode = new TomlDocumentNode(table);
                 return Deserialize(ref tableDocumentNode, options);
             }
             else if (rootNode.Value is TomlInlineTable inlineTable)
             {
-                var tableDocumentNode = new TomlDocumentNode(inlineTable.RootNode);
+                var tableDocumentNode = new TomlDocumentNode(inlineTable.Table);
                 return Deserialize(ref tableDocumentNode, options);
             }
             return Grouping.Empty;
@@ -28,12 +28,12 @@ public sealed class IGroupingFormatter<TKey, TValue> : ITomlValueFormatter<IGrou
         var keyFormatter = options.Resolver.GetFormatter<TKey>();
         var valueFormatter = options.Resolver.GetFormatter<IEnumerable<TValue>>();
 
-        foreach ((var key, var node) in rootNode.Node.KeyValuePairs)
+        foreach ((var key, var value) in rootNode.Table!.KeyValuePairs)
         {
-            if (node.Value!.HasValue)
+            if (value is not TomlTable)
             {
                 var keyNode = new TomlDocumentNode(key);
-                var valueNode = new TomlDocumentNode(node);
+                var valueNode = TomlDocumentNode.FromChild(value);
 
                 return new Grouping(
                     keyFormatter!.Deserialize(ref keyNode, options),

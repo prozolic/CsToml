@@ -1,6 +1,5 @@
 ﻿
 using CsToml.Error;
-using CsToml.Values.Internal;
 using CsToml.Values;
 using System.Buffers;
 using System.Diagnostics.Metrics;

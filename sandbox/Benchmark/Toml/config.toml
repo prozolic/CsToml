@@ -1,0 +1,229 @@
+﻿# Benchmark input: a config-like TOML 1.0 document.
+# Shape follows common real-world files (Cargo.toml, pyproject.toml, app config):
+# mostly bare keys, basic strings, tables, string arrays, some integers/bools.
+
+title = "CsToml benchmark document"
+version = "1.4.2"
+enabled = true
+generated = 2024-03-14T09:30:00Z
+
+[package]
+name = "example-service"
+version = "0.12.3"
+edition = "2021"
+rust-version = "1.74"
+description = "A small HTTP service used as a realistic TOML benchmark input."
+authors = ["Jane Doe <jane@example.com>", "John Smith <john@example.com>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/example/example-service"
+homepage = "https://example.com/example-service"
+documentation = "https://docs.example.com/example-service"
+readme = "README.md"
+keywords = ["http", "server", "async", "config", "example"]
+categories = ["web-programming::http-server", "network-programming"]
+publish = false
+build = "build.rs"
+exclude = ["/.github", "/benches", "/docs/*.png"]
+
+[dependencies]
+anyhow = "1.0"
+bytes = "1.5"
+clap = { version = "4.4", features = ["derive", "env"] }
+futures = "0.3"
+http = "1.0"
+hyper = { version = "1.1", features = ["server", "http1", "http2"] }
+once_cell = "1.19"
+regex = { version = "1.10", default-features = false, features = ["std", "unicode-perl"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+tokio = { version = "1.35", features = ["rt-multi-thread", "macros", "net", "signal", "time"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+url = "2.5"
+uuid = { version = "1.6", features = ["v4", "serde"] }
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+pretty_assertions = "1.4"
+tempfile = "3.9"
+
+[features]
+default = ["json", "tls"]
+json = []
+tls = ["dep:rustls", "hyper/http2"]
+metrics = ["dep:prometheus"]
+full = ["json", "tls", "metrics"]
+
+[profile.release]
+opt-level = 3  # favor speed over binary size
+lto = "thin"
+codegen-units = 1
+debug = false
+strip = true
+panic = "abort"
+
+[[bin]]
+name = "example-service"
+path = "src/main.rs"
+
+[[bin]]
+name = "example-cli"
+path = "src/bin/cli.rs"
+required-features = ["full"]
+
+[[bench]]
+name = "throughput"
+harness = false
+
+# ---------------------------------------------------------------------------
+# Python project metadata (pyproject.toml style)
+# ---------------------------------------------------------------------------
+
+[project]
+name = "example-tools"
+version = "2.3.0"
+description = "Helper scripts for the example service"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [
+    { name = "Jane Doe", email = "jane@example.com" },
+    { name = "John Smith", email = "john@example.com" },
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Software Development :: Libraries",
+]
+dependencies = [
+    "click>=8.1",
+    "httpx>=0.25",
+    "pydantic>=2.5,<3",
+    "rich>=13.0",
+    "tomli>=2.0; python_version < '3.11'",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.4", "pytest-cov>=4.1", "mypy>=1.7", "ruff>=0.1.8"]
+docs = ["mkdocs>=1.5", "mkdocs-material>=9.5"]
+
+[project.scripts]
+example-tools = "example_tools.cli:main"
+
+[project.urls]
+Homepage = "https://example.com/example-tools"
+Issues = "https://github.com/example/example-tools/issues"
+
+[build-system]
+requires = ["hatchling>=1.18"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM"]
+ignore = ["E501", "B008"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+"tests/*.py" = ["S101", "PLR2004"]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q --strict-markers"
+testpaths = ["tests"]
+
+[tool.mypy]
+strict = true
+warn_unused_ignores = true
+plugins = ["pydantic.mypy"]
+
+# ---------------------------------------------------------------------------
+# Application settings
+# ---------------------------------------------------------------------------
+
+[server]
+host = "0.0.0.0"
+port = 8080
+workers = 8  # one per physical core
+keep_alive = true
+request_timeout_ms = 30000
+max_body_bytes = 10_485_760
+allowed_origins = ["https://example.com", "https://admin.example.com"]
+
+[server.tls]
+enabled = true
+cert = "/etc/example/tls/server.crt"
+key = "/etc/example/tls/server.key"
+min_version = "1.2"
+
+[database]
+url = "postgres://app@db.internal:5432/example"
+pool_size = 20  # max open connections
+min_idle = 2
+connect_timeout = 5.0
+statement_cache = 256
+read_only = false
+replicas = ["db-replica-1.internal", "db-replica-2.internal"]
+
+[cache]
+backend = "redis"
+endpoint = "redis://cache.internal:6379/0"
+ttl_seconds = 3600
+eviction_ratio = 0.25
+
+[logging]
+level = "info"
+format = "json"
+file = 'C:\ProgramData\Example\logs\service.log'
+filter = 'example_service=debug,hyper=warn'
+include_spans = true
+banner = """
+Example service
+Copyright (c) Example Corp.
+"""
+
+[metrics]
+enabled = true
+endpoint = "/metrics"
+interval = 15
+histogram_buckets = [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5]
+
+[maintenance]
+window_start = 02:00:00
+window_days = ["sat", "sun"]
+last_run = 2024-03-10
+message = "Scheduled maintenance.\nThe service may be \"read-only\" for up to 30 minutes."
+
+[[upstream]]
+name = "auth"
+url = "http://auth.internal:9000"
+timeout_ms = 2000
+retries = 3
+
+[[upstream]]
+name = "billing"
+url = "http://billing.internal:9100"
+timeout_ms = 5000
+retries = 2
+headers = { "X-Service" = "example", "X-Region" = "eu-west-1" }
+
+[[upstream]]
+name = "search"
+url = "http://search.internal:9200"
+timeout_ms = 1500
+retries = 5
+weight = 0.8
+
+[feature_flags]
+new_checkout = true
+beta_dashboard = false
+dark_mode.default = true
+dark_mode.rollout_percent = 50

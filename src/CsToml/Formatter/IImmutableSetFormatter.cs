@@ -32,7 +32,7 @@ public sealed class IImmutableSetFormatter<T> : CollectionBaseFormatter<IImmutab
         }
         else
         {
-            IEnumerableSerializer<T>.Serialize(ref writer, new CollectionContent(target), options);
+            IEnumerableSerializer<T>.Serialize(ref writer, target, options);
         }
     }
 
@@ -49,6 +49,6 @@ public sealed class IImmutableSetFormatter<T> : CollectionBaseFormatter<IImmutab
             return serializer.TrySerializeTomlArrayHeaderStyle(ref writer, header, options);
         }
 
-        return IEnumerableSerializer<T>.TrySerializeTomlArrayHeaderStyle(ref writer, header, new CollectionContent(target), options);
+        return IEnumerableSerializer<T>.TrySerializeTomlArrayHeaderStyle(ref writer, header, target, options);
     }
 }

@@ -22,12 +22,7 @@ internal sealed class TomlValueFormatterResolverEmitter
             case TomlSerializationKind.PrimitiveArray:
                 return;
             case TomlSerializationKind.Enum:
-                builder.AppendLine($$"""
-{{indent}}        if (!TomlValueFormatterResolver.IsRegistered<{{fullTypeName}}>())
-{{indent}}        {
-{{indent}}            TomlValueFormatterResolver.Register(new EnumFormatter<{{fullTypeName}}>());
-{{indent}}        }
-""");
+                AppendRegister(fullTypeName, $"EnumFormatter<{fullTypeName}>");
                 return;
             case TomlSerializationKind.Union:
                 // Only a type-level [TomlUnion<T>] produces a resolver-registered formatter; unions pinned at
@@ -38,23 +33,12 @@ internal sealed class TomlValueFormatterResolverEmitter
                 }
                 return;
             case TomlSerializationKind.TomlSerializedObject:
-                builder.AppendLine($$"""
-{{indent}}        if (!TomlValueFormatterResolver.IsRegistered<{{fullTypeName}}>())
-{{indent}}        {
-{{indent}}            TomlValueFormatterResolver.Register<{{fullTypeName}}>();
-{{indent}}        }
-""");
+                builder.AppendLine($"{indent}        TomlValueFormatterResolver.Register<{fullTypeName}>();");
                 return;
             case TomlSerializationKind.TomlSerializedObjectArray:
                 var arrayNamedType = (IArrayTypeSymbol)type;
                 var elementType = arrayNamedType.ElementType;
-
-                builder.AppendLine($$"""
-{{indent}}        if (!TomlValueFormatterResolver.IsRegistered<{{fullTypeName}}>())
-{{indent}}        {
-{{indent}}            TomlValueFormatterResolver.Register(new ArrayFormatter<{{elementType.ToFullFormatString()}}>());
-{{indent}}        }
-""");
+                AppendRegister(fullTypeName, $"ArrayFormatter<{elementType.ToFullFormatString()}>");
                 return;
             case TomlSerializationKind.TomlSerializedObjectCollection:
                 if (type is INamedTypeSymbol namedTypeSymbol && namedTypeSymbol.IsGenericType)
@@ -63,26 +47,14 @@ internal sealed class TomlValueFormatterResolverEmitter
                     var typeSymbol = namedTypeSymbol.ConstructUnboundGenericType();
                     if (typeSymbol.ToDisplayString() == "T?")
                     {
-                        builder.AppendLine($$"""
-{{indent}}        if (!TomlValueFormatterResolver.IsRegistered<{{fullTypeName}}>())
-{{indent}}        {
-{{indent}}            TomlValueFormatterResolver.Register(new NullableFormatter<{{namedTypeSymbol.TypeArguments[0].ToFullFormatString()}}>());
-{{indent}}        }
-""");
+                        AppendRegister(fullTypeName, $"NullableFormatter<{namedTypeSymbol.TypeArguments[0].ToFullFormatString()}>");
                         return;
                     }
 
                     if (FormatterTypeMetaData.TryGetGenericFormatterType(typeSymbol.ToFullFormatString(), out var typeFormatter) != GenericFormatterType.None)
                     {
                         var typeParameters = string.Join(",", namedTypeSymbol.TypeArguments.Select(x => x.ToFullFormatString()));
-                        typeFormatter = typeFormatter!.Replace("TYPEPARAMETER", typeParameters);
-
-                        builder.AppendLine($$"""
-{{indent}}        if (!TomlValueFormatterResolver.IsRegistered<{{fullTypeName}}>())
-{{indent}}        {
-{{indent}}            TomlValueFormatterResolver.Register(new {{typeFormatter}}());
-{{indent}}        }
-""");
+                        AppendRegister(fullTypeName, typeFormatter!.Replace("TYPEPARAMETER", typeParameters));
                         return;
                     }
                 }
@@ -92,14 +64,7 @@ internal sealed class TomlValueFormatterResolverEmitter
                     {
                         var collectionNamedType = (INamedTypeSymbol)type;
                         var typeParameters = string.Join(",", collectionNamedType.TypeArguments.Select(x => x.ToFullFormatString()));
-                        formatter = formatter!.Replace("TYPEPARAMETER", typeParameters);
-
-                        builder.AppendLine($$"""
-{{indent}}        if (!TomlValueFormatterResolver.IsRegistered<{{fullTypeName}}>())
-{{indent}}        {
-{{indent}}            TomlValueFormatterResolver.Register(new {{formatter}}());
-{{indent}}        }
-""");
+                        AppendRegister(fullTypeName, formatter!.Replace("TYPEPARAMETER", typeParameters));
                     }
                 }
 
@@ -109,27 +74,13 @@ internal sealed class TomlValueFormatterResolverEmitter
                 {
                     var dictNamedType = (INamedTypeSymbol)type;
                     var typeParameters = string.Join(",", dictNamedType.TypeArguments.Select(x => x.ToFullFormatString()));
-                    dictFormatter = dictFormatter!.Replace("TYPEPARAMETER", typeParameters);
-
-                    builder.AppendLine($$"""
-{{indent}}        if (!TomlValueFormatterResolver.IsRegistered<{{fullTypeName}}>())
-{{indent}}        {
-{{indent}}            TomlValueFormatterResolver.Register(new {{dictFormatter}}());
-{{indent}}        }
-""");
+                    AppendRegister(fullTypeName, dictFormatter!.Replace("TYPEPARAMETER", typeParameters));
                 }
                 return;
             case TomlSerializationKind.NullableStructWithTypeParameter:
                 if (type is not INamedTypeSymbol namedType) return;
 
-                var namedTypeName = namedType.ToFullFormatString();
-                builder.AppendLine($$"""
-{{indent}}        if (!TomlValueFormatterResolver.IsRegistered<{{namedTypeName}}>())
-{{indent}}        {
-{{indent}}            TomlValueFormatterResolver.Register(new NullableFormatter<{{namedType.TypeArguments[0].ToFullFormatString()}}>());
-{{indent}}        }
-""");
-
+                AppendRegister(namedType.ToFullFormatString(), $"NullableFormatter<{namedType.TypeArguments[0].ToFullFormatString()}>");
                 return;
             default:
                 if (FormatterTypeMetaData.ContainsBuiltInFormatterType(type))
@@ -141,31 +92,24 @@ internal sealed class TomlValueFormatterResolverEmitter
                     var typeSymbol = namedTypeSymbol2.ConstructUnboundGenericType();
                     if (typeSymbol.ToDisplayString() == "T?")
                     {
-                        builder.AppendLine($$"""
-{{indent}}        if (!TomlValueFormatterResolver.IsRegistered<{{fullTypeName}}>())
-{{indent}}        {
-{{indent}}            TomlValueFormatterResolver.Register(new NullableFormatter<{{namedTypeSymbol2.TypeArguments[0].ToFullFormatString()}}>());
-{{indent}}        }
-""");
+                        AppendRegister(fullTypeName, $"NullableFormatter<{namedTypeSymbol2.TypeArguments[0].ToFullFormatString()}>");
                         return;
                     }
 
                     if (FormatterTypeMetaData.TryGetGenericFormatterType(typeSymbol.ToFullFormatString(), out var typeFormatter) != GenericFormatterType.None)
                     {
                         var typeParameters = string.Join(",", namedTypeSymbol2.TypeArguments.Select(x => x.ToFullFormatString()));
-                        typeFormatter = typeFormatter!.Replace("TYPEPARAMETER", typeParameters);
-
-                        builder.AppendLine($$"""
-{{indent}}        if (!TomlValueFormatterResolver.IsRegistered<{{fullTypeName}}>())
-{{indent}}        {
-{{indent}}            TomlValueFormatterResolver.Register(new {{typeFormatter}}());
-{{indent}}        }
-""");
+                        AppendRegister(fullTypeName, typeFormatter!.Replace("TYPEPARAMETER", typeParameters));
                         return;
                     }
                 }
                 return;
         }
+    }
+
+    private void AppendRegister(string typeName, string formatterTypeName)
+    {
+        builder.AppendLine($"{indent}        TomlValueFormatterResolver.Register<{typeName}, {formatterTypeName}>();");
     }
 
     public override string ToString()
