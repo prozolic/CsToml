@@ -77,17 +77,17 @@ public class WriteBareKeyTest
         return bufferWriter.WrittenSpan.ToArray();
     }
 
-    [Theory]
-    [InlineData(WriteMode.BareKey)]
-    [InlineData(WriteMode.BareKeyValidated)]
-    [InlineData(WriteMode.BareTableHeader)]
-    [InlineData(WriteMode.BareTableHeaderValidated)]
+    [Test]
+    [Arguments(WriteMode.BareKey)]
+    [Arguments(WriteMode.BareKeyValidated)]
+    [Arguments(WriteMode.BareTableHeader)]
+    [Arguments(WriteMode.BareTableHeaderValidated)]
     public void ThrowIfKeyIsInvalidUtf8SequenceWhenValidationIsNotSkipped(WriteMode mode)
     {
         Should.Throw<CsTomlSerializeException>(() => SerializeToUtf8(InvalidUtf8Key, mode));
     }
 
-    [Fact]
+    [Test]
     public void WriteKeyAsIsIfValidationIsSkipped()
     {
         var written = SerializeToUtf8(InvalidUtf8Key, WriteMode.BareKeySkipValidation);
@@ -95,7 +95,7 @@ public class WriteBareKeyTest
         written.AsSpan(0, 5).ToArray().ShouldBe([0xC3, (byte)' ', (byte)'=', (byte)' ', (byte)'1']);
     }
 
-    [Fact]
+    [Test]
     public void WriteTableHeaderAsIsIfValidationIsSkipped()
     {
         var written = SerializeToUtf8(InvalidUtf8Key, WriteMode.BareTableHeaderSkipValidation);
@@ -103,10 +103,10 @@ public class WriteBareKeyTest
         written.ShouldBe([(byte)'[', 0xC3, (byte)']']);
     }
 
-    [Theory]
-    [InlineData(WriteMode.BareTableHeader)]
-    [InlineData(WriteMode.BareTableHeaderValidated)]
-    [InlineData(WriteMode.BareTableHeaderSkipValidation)]
+    [Test]
+    [Arguments(WriteMode.BareTableHeader)]
+    [Arguments(WriteMode.BareTableHeaderValidated)]
+    [Arguments(WriteMode.BareTableHeaderSkipValidation)]
     public void WriteTableHeaderWhenKeyIsValid(WriteMode mode)
     {
         var written = SerializeToUtf8(ImmutableArray.Create("table"u8), mode);
@@ -114,10 +114,10 @@ public class WriteBareKeyTest
         written.ShouldBe("[table]"u8.ToArray());
     }
 
-    [Theory]
-    [InlineData(WriteMode.BareKey)]
-    [InlineData(WriteMode.BareKeyValidated)]
-    [InlineData(WriteMode.BareKeySkipValidation)]
+    [Test]
+    [Arguments(WriteMode.BareKey)]
+    [Arguments(WriteMode.BareKeyValidated)]
+    [Arguments(WriteMode.BareKeySkipValidation)]
     public void WriteKeyWhenKeyIsValid(WriteMode mode)
     {
         var written = SerializeToUtf8(ImmutableArray.Create("key"u8), mode);

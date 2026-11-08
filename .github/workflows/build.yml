@@ -29,3 +29,25 @@ jobs:
       run: dotnet build --no-restore
     - name: Test
       run: dotnet test --no-build --verbosity normal
+
+  aot-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+    - name: Setup .NET
+      uses: prozolic/Actions/.github/actions/setup-dotnet@main
+      with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
+            11.0.x
+    - name: Install NativeAOT prerequisites
+      run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
+    - name: Publish and run the tests as NativeAOT executables
+      run: |
+        for project in CsToml.Tests CsToml.Generator.Tests CsToml.Extensions.Configuration.Tests; do
+          dotnet publish tests/$project/$project.csproj -c Release -f net10.0 -r linux-x64
+          tests/$project/bin/Release/net10.0/linux-x64/publish/$project
+        done

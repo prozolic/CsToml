@@ -8,7 +8,7 @@ namespace CsToml.Generator.Tests;
 // union declaration syntax tests (net11.0 only).
 public class UnionNet11Test
 {
-    [Fact]
+    [Test]
     public void SerializeUnionDeclarationMember()
     {
         var target = new Net11UnionHolder() { Name = "cfg", Num = 123L };
@@ -22,7 +22,7 @@ public class UnionNet11Test
         bytes.ByteSpan.ToArray().ShouldBe(buffer.ToArray());
     }
 
-    [Fact]
+    [Test]
     public void RoundTripUnionDeclarationMember()
     {
         var target = new Net11UnionHolder() { Name = "cfg", Num = 123L };
@@ -32,14 +32,14 @@ public class UnionNet11Test
         deserialized!.Num.Value.ShouldBe(123L);
     }
 
-    [Fact]
+    [Test]
     public void DeserializeMissingUnionDeclarationKeyAsDefault()
     {
         var deserialized = CsTomlSerializer.Deserialize<Net11UnionHolder>("Name = \"x\""u8);
         deserialized!.Num.Value.ShouldBeNull();
     }
 
-    [Fact]
+    [Test]
     public void SerializeDefaultUnionDeclarationThrows()
     {
         var target = new Net11UnionHolder() { Name = "x", Num = default };
@@ -49,7 +49,7 @@ public class UnionNet11Test
         });
     }
 
-    [Fact]
+    [Test]
     public void SerializeUnionDeclarationWithMismatchedCaseThrows()
     {
         var target = new Net11UnionHolder() { Name = "x", Num = "text" };
@@ -59,7 +59,7 @@ public class UnionNet11Test
         });
     }
 
-    [Fact]
+    [Test]
     public void RoundTripStandaloneUnionDeclarationWithManualRegistration()
     {
         global::CsToml.Generated.CsToml.Generator.Tests.StandaloneIntOrTextFormatter.Register();
@@ -72,7 +72,7 @@ public class UnionNet11Test
         deserialized.Value.ShouldBe(42L);
     }
 
-    [Fact]
+    [Test]
     public void RoundTripGenericUnionDeclarationMember()
     {
         var target = new Net11GenericUnionHolder() { Value = new List<long> { 1, 2 } };

@@ -7,7 +7,7 @@ namespace CsToml.Generator.Tests;
 
 public class TypeNullBehaviorGlobalTest
 {
-    [Fact]
+    [Test]
     public void Serialize_GlobalSkip_AllNull_ShouldSkipAll()
     {
         var type = new TypeNullBehaviorAllNullable
@@ -22,7 +22,7 @@ public class TypeNullBehaviorGlobalTest
         bytes.ByteSpan.ToArray().ShouldBe(""u8.ToArray());
     }
 
-    [Fact]
+    [Test]
     public void Serialize_GlobalSkip_MixedNull_ShouldSkipOnlyNull()
     {
         var type = new TypeNullBehaviorAllNullable
@@ -43,7 +43,7 @@ public class TypeNullBehaviorGlobalTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Serialize_GlobalDefault_HasNull_ShouldThrow()
     {
         var type = new TypeNullBehaviorAllNullable
@@ -56,7 +56,7 @@ public class TypeNullBehaviorGlobalTest
         Should.Throw<CsTomlSerializeException>(() => CsTomlSerializer.Serialize(type, Option.ErrorTomlNullHandling));
     }
 
-    [Fact]
+    [Test]
     public void RoundTrip_GlobalSkip_ShouldWork()
     {
         var original = new TypeNullBehaviorAllNullable

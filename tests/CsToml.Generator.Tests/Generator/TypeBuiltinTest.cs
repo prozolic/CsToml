@@ -6,7 +6,7 @@ namespace CsToml.Generator.Tests;
 
 public class TypeBuiltinTest()
 {
-    [Fact]
+    [Test]
     public void Serialize()
     {
         var typeBuiltin = new TypeBuiltin()
@@ -36,7 +36,7 @@ public class TypeBuiltinTest()
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);

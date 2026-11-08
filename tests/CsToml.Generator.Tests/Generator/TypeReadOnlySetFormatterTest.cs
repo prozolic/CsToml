@@ -18,7 +18,7 @@ public class TypeReadOnlySetFormatterTest
         };
     }
 
-    [Fact]
+    [Test]
     public void Serialize()
     {
         using var bytes = CsTomlSerializer.Serialize(typeReadOnlySetFormatter);
@@ -31,7 +31,7 @@ public class TypeReadOnlySetFormatterTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(typeReadOnlySetFormatter, Option.Header);
@@ -44,7 +44,7 @@ public class TypeReadOnlySetFormatterTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithArrayHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(typeReadOnlySetFormatter, Option.ArrayHeader);
@@ -57,7 +57,7 @@ public class TypeReadOnlySetFormatterTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderAndArrayHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(typeReadOnlySetFormatter, Option.HeaderAndArrayHeader);
@@ -70,7 +70,7 @@ public class TypeReadOnlySetFormatterTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);

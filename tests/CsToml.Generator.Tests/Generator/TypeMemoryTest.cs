@@ -5,7 +5,7 @@ namespace CsToml.Generator.Tests;
 
 public class TypeMemoryTest
 {
-    [Fact]
+    [Test]
     public void Serialize()
     {
         var type = new TypeMemory() { Memory = new byte[] { 1, 2, 3 } };
@@ -19,7 +19,7 @@ public class TypeMemoryTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeSlice()
     {
         var type = new TypeMemory() { Memory = new byte[] { 1, 2, 3, 4, 5 }.AsMemory(1, 3) };
@@ -33,7 +33,7 @@ public class TypeMemoryTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         var type = CsTomlSerializer.Deserialize<TypeMemory>("Memory = [ 1, 2, 3 ]"u8);
@@ -56,7 +56,7 @@ public class TypeNestedArrayTest
         };
     }
 
-    [Fact]
+    [Test]
     public void Serialize()
     {
         using var bytes = CsTomlSerializer.Serialize(type);
@@ -70,7 +70,7 @@ public class TypeNestedArrayTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithArrayHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(type, Option.ArrayHeader);
@@ -94,7 +94,7 @@ public class TypeNestedArrayTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderAndArrayHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(type, Option.HeaderAndArrayHeader);

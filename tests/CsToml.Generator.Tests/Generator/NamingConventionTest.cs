@@ -4,7 +4,7 @@ namespace CsToml.Generator.Tests;
 
 public class NamingConventionTest
 {
-    [Fact]
+    [Test]
     public void SnakeCase_SerializesCorrectly()
     {
         var type = new TypeSnakeCase
@@ -22,7 +22,7 @@ public class NamingConventionTest
         toml.ShouldContain("xml_parser = \"xml\"");
     }
 
-    [Fact]
+    [Test]
     public void SnakeCase_DeserializesCorrectly()
     {
         var toml = """
@@ -39,7 +39,7 @@ public class NamingConventionTest
         result.XMLParser.ShouldBe("xml");
     }
 
-    [Fact]
+    [Test]
     public void KebabCase_SerializesCorrectly()
     {
         var type = new TypeKebabCase
@@ -55,7 +55,7 @@ public class NamingConventionTest
         toml.ShouldContain("another-value = 42");
     }
 
-    [Fact]
+    [Test]
     public void KebabCase_DeserializesCorrectly()
     {
         var toml = """
@@ -70,7 +70,7 @@ public class NamingConventionTest
         result.AnotherValue.ShouldBe(42);
     }
 
-    [Fact]
+    [Test]
     public void CamelCase_SerializesCorrectly()
     {
         var type = new TypeCamelCase
@@ -86,7 +86,7 @@ public class NamingConventionTest
         toml.ShouldContain("anotherValue = 42");
     }
 
-    [Fact]
+    [Test]
     public void CamelCase_DeserializesCorrectly()
     {
         var toml = """
@@ -101,7 +101,7 @@ public class NamingConventionTest
         result.AnotherValue.ShouldBe(42);
     }
 
-    [Fact]
+    [Test]
     public void PascalCase_SerializesCorrectly()
     {
         var type = new TypePascalCase
@@ -117,7 +117,7 @@ public class NamingConventionTest
         toml.ShouldContain("AnotherValue = 42");
     }
 
-    [Fact]
+    [Test]
     public void PascalCase_DeserializesCorrectly()
     {
         var toml = """
@@ -132,7 +132,7 @@ public class NamingConventionTest
         result.anotherValue.ShouldBe(42);
     }
 
-    [Fact]
+    [Test]
     public void LowerCase_SerializesCorrectly()
     {
         var type = new TypeLowerCase
@@ -148,7 +148,7 @@ public class NamingConventionTest
         toml.ShouldContain("anothervalue = 42");
     }
 
-    [Fact]
+    [Test]
     public void LowerCase_DeserializesCorrectly()
     {
         var toml = """
@@ -163,7 +163,7 @@ public class NamingConventionTest
         result.AnotherValue.ShouldBe(42);
     }
 
-    [Fact]
+    [Test]
     public void UpperCase_SerializesCorrectly()
     {
         var type = new TypeUpperCase
@@ -179,7 +179,7 @@ public class NamingConventionTest
         toml.ShouldContain("ANOTHERVALUE = 42");
     }
 
-    [Fact]
+    [Test]
     public void UpperCase_DeserializesCorrectly()
     {
         var toml = """
@@ -194,7 +194,7 @@ public class NamingConventionTest
         result.AnotherValue.ShouldBe(42);
     }
 
-    [Fact]
+    [Test]
     public void ScreamingSnakeCase_SerializesCorrectly()
     {
         var type = new TypeScreamingSnakeCase
@@ -210,7 +210,7 @@ public class NamingConventionTest
         toml.ShouldContain("ANOTHER_VALUE = 42");
     }
 
-    [Fact]
+    [Test]
     public void ScreamingSnakeCase_DeserializesCorrectly()
     {
         var toml = """
@@ -225,7 +225,7 @@ public class NamingConventionTest
         result.AnotherValue.ShouldBe(42);
     }
 
-    [Fact]
+    [Test]
     public void ScreamingKebabCase_SerializesCorrectly()
     {
         var type = new TypeScreamingKebabCase
@@ -241,7 +241,7 @@ public class NamingConventionTest
         toml.ShouldContain("ANOTHER-VALUE = 42");
     }
 
-    [Fact]
+    [Test]
     public void ScreamingKebabCase_DeserializesCorrectly()
     {
         var toml = """
@@ -256,7 +256,7 @@ public class NamingConventionTest
         result.AnotherValue.ShouldBe(42);
     }
 
-    [Fact]
+    [Test]
     public void AliasOverridesConvention_SerializesCorrectly()
     {
         var type = new TypeAliasOverridesConvention
@@ -276,7 +276,7 @@ public class NamingConventionTest
         toml.ShouldNotContain("another_value");
     }
 
-    [Fact]
+    [Test]
     public void AliasOverridesConvention_DeserializesCorrectly()
     {
         var toml = """

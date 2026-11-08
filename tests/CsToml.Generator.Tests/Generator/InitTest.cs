@@ -5,7 +5,7 @@ namespace CsToml.Generator.Tests;
 
 public class InitTest
 {
-    [Fact]
+    [Test]
     public void Serialize()
     {
         var primitive = new Init()
@@ -28,7 +28,7 @@ public class InitTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);
@@ -48,7 +48,7 @@ public class InitTest
 
 public class Init2Test
 {
-    [Fact]
+    [Test]
     public void Serialize()
     {
         var primitive = new Init2()
@@ -71,7 +71,7 @@ public class Init2Test
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);

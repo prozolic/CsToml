@@ -26,7 +26,7 @@ public class ArrayReadMultiSegmentTest
         return multiSegment;
     }
 
-    [Fact]
+    [Test]
     public void Elements_SplitAcrossTwoSegments()
     {
         var document = DeserializeAndCompare(
@@ -38,7 +38,7 @@ public class ArrayReadMultiSegmentTest
         document.RootNode["value"u8][2].GetInt64().ShouldBe(3);
     }
 
-    [Fact]
+    [Test]
     public void DelimiterRun_ExhaustsSegment()
     {
         // The first segment ends inside a run of spaces, driving the
@@ -51,7 +51,7 @@ public class ArrayReadMultiSegmentTest
         document.RootNode["value"u8][1].GetInt64().ShouldBe(2);
     }
 
-    [Fact]
+    [Test]
     public void ClosingBracket_IsFirstByteOfNextSegment()
     {
         var document = DeserializeAndCompare(
@@ -61,7 +61,7 @@ public class ArrayReadMultiSegmentTest
         document.RootNode["value"u8][1].GetInt64().ShouldBe(2);
     }
 
-    [Fact]
+    [Test]
     public void ValueStart_IsFirstByteOfNextSegment()
     {
         var document = DeserializeAndCompare(
@@ -71,7 +71,7 @@ public class ArrayReadMultiSegmentTest
         document.RootNode["value"u8][1].GetInt64().ShouldBe(22);
     }
 
-    [Fact]
+    [Test]
     public void LineFeed_IsLastByteOfSegment()
     {
         // LF as the final byte of a segment drives the Advance + IncreaseLineNumber sync path.
@@ -84,7 +84,7 @@ public class ArrayReadMultiSegmentTest
         document.LineNumber.ShouldBe(3);
     }
 
-    [Fact]
+    [Test]
     public void MultilineArray_CountsLines_SingleSegmentEquivalence()
     {
         var document = DeserializeAndCompare(
@@ -96,7 +96,7 @@ public class ArrayReadMultiSegmentTest
         document.LineNumber.ShouldBe(6);
     }
 
-    [Fact]
+    [Test]
     public void CrLf_SplitAcrossSegments()
     {
         // CR as the final byte of a segment drives the reader-synced CR fallback.
@@ -107,7 +107,7 @@ public class ArrayReadMultiSegmentTest
         document.RootNode["value"u8][1].GetInt64().ShouldBe(2);
     }
 
-    [Fact]
+    [Test]
     public void NestedArray_AtSegmentBoundary()
     {
         var document = DeserializeAndCompare(
@@ -118,7 +118,7 @@ public class ArrayReadMultiSegmentTest
         document.RootNode["value"u8][1][0].GetInt64().ShouldBe(3);
     }
 
-    [Fact]
+    [Test]
     public void CommentInsideArray_SplitAcrossSegments()
     {
         var document = DeserializeAndCompare(
@@ -129,7 +129,7 @@ public class ArrayReadMultiSegmentTest
         document.RootNode["value"u8][1].GetInt64().ShouldBe(2);
     }
 
-    [Fact]
+    [Test]
     public void TrailingComma_BeforeSegmentBoundary()
     {
         var document = DeserializeAndCompare(
@@ -139,7 +139,7 @@ public class ArrayReadMultiSegmentTest
         document.RootNode["value"u8][1].GetInt64().ShouldBe(2);
     }
 
-    [Fact]
+    [Test]
     public void DoubleComma_AcrossSegments_Throws()
     {
         var sequence = CreateSequence(
@@ -149,7 +149,7 @@ public class ArrayReadMultiSegmentTest
         Should.Throw<CsTomlSerializeException>(() => CsTomlSerializer.Deserialize<TomlDocument>(sequence));
     }
 
-    [Fact]
+    [Test]
     public void UnclosedArray_EndsAtSegmentBoundary_Throws()
     {
         var sequence = CreateSequence(

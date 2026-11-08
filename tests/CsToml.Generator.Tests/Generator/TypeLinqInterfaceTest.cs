@@ -31,7 +31,7 @@ public class TypeLinqInterfaceTest
         };
     }
 
-    [Fact]
+    [Test]
     public void Serialize()
     {
         using var bytes = CsTomlSerializer.Serialize(typeLinqInterface);
@@ -47,7 +47,7 @@ public class TypeLinqInterfaceTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(typeLinqInterface, Option.Header);
@@ -63,7 +63,7 @@ public class TypeLinqInterfaceTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithArrayHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(typeLinqInterface, Option.ArrayHeader);
@@ -79,7 +79,7 @@ public class TypeLinqInterfaceTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderAndArrayHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(typeLinqInterface, Option.HeaderAndArrayHeader);
@@ -96,7 +96,7 @@ public class TypeLinqInterfaceTest
 
     }
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);

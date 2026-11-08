@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-using Shouldly;
+﻿using Shouldly;
 using System.Collections.ObjectModel;
 using System.Text.Json.Serialization.Metadata;
 using Utf8StringInterpolation;
@@ -32,8 +31,8 @@ public class TypeCollectionInterfaceTest
         }};
     }
 
-    [Theory]
-    [MemberData(nameof(GetTypeCollectionInterfaces))]
+    [Test]
+    [MethodDataSource(nameof(GetTypeCollectionInterfaces))]
     public void Serialize(TypeCollectionInterface typeCollectionInterface)
     {
         using var bytes = CsTomlSerializer.Serialize(typeCollectionInterface);
@@ -52,8 +51,8 @@ public class TypeCollectionInterfaceTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Theory]
-    [MemberData(nameof(GetTypeCollectionInterfaces))]
+    [Test]
+    [MethodDataSource(nameof(GetTypeCollectionInterfaces))]
     public void SerializeWithHeaderOption(TypeCollectionInterface typeCollectionInterface)
     {
         using var bytes = CsTomlSerializer.Serialize(typeCollectionInterface, Option.Header);
@@ -72,8 +71,8 @@ public class TypeCollectionInterfaceTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Theory]
-    [MemberData(nameof(GetTypeCollectionInterfaces))]
+    [Test]
+    [MethodDataSource(nameof(GetTypeCollectionInterfaces))]
     public void SerializeWithArrayHeaderOption(TypeCollectionInterface typeCollectionInterface)
     {
         using var bytes = CsTomlSerializer.Serialize(typeCollectionInterface, Option.ArrayHeader);
@@ -92,8 +91,8 @@ public class TypeCollectionInterfaceTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Theory]
-    [MemberData(nameof(GetTypeCollectionInterfaces))]
+    [Test]
+    [MethodDataSource(nameof(GetTypeCollectionInterfaces))]
     public void SerializeWithHeaderAndArrayHeaderOption(TypeCollectionInterface typeCollectionInterface)
     {
         using var bytes = CsTomlSerializer.Serialize(typeCollectionInterface, Option.HeaderAndArrayHeader);
@@ -112,7 +111,7 @@ public class TypeCollectionInterfaceTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);

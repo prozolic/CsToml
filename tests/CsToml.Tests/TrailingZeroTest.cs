@@ -2,35 +2,35 @@
 
 public class TrailingZeroTest
 {
-    [Fact]
+    [Test]
     public void ZeroAtEndOfFileWithoutNewLine()
     {
         var document = CsTomlSerializer.Deserialize<TomlDocument>("v = 0"u8);
         document.RootNode["v"].GetInt64().ShouldBe(0);
     }
 
-    [Fact]
+    [Test]
     public void ZeroAtEndOfFileWithNewLine()
     {
         CsTomlSerializer.Deserialize<TomlDocument>("v = 0\n"u8).RootNode["v"].GetInt64().ShouldBe(0);
         CsTomlSerializer.Deserialize<TomlDocument>("v = 0\r\n"u8).RootNode["v"].GetInt64().ShouldBe(0);
     }
 
-    [Fact]
+    [Test]
     public void ZeroFollowedByWhiteSpaceAtEndOfFile()
     {
         CsTomlSerializer.Deserialize<TomlDocument>("v = 0 "u8).RootNode["v"].GetInt64().ShouldBe(0);
         CsTomlSerializer.Deserialize<TomlDocument>("v = 0\t"u8).RootNode["v"].GetInt64().ShouldBe(0);
     }
 
-    [Fact]
+    [Test]
     public void SignedZeroAtEndOfFileWithoutNewLine()
     {
         CsTomlSerializer.Deserialize<TomlDocument>("v = +0"u8).RootNode["v"].GetInt64().ShouldBe(0);
         CsTomlSerializer.Deserialize<TomlDocument>("v = -0"u8).RootNode["v"].GetInt64().ShouldBe(0);
     }
 
-    [Fact]
+    [Test]
     public void NonZeroAtEndOfFileWithoutNewLine()
     {
         CsTomlSerializer.Deserialize<TomlDocument>("v = 1"u8).RootNode["v"].GetInt64().ShouldBe(1);
@@ -42,7 +42,7 @@ public class TrailingZeroTest
         CsTomlSerializer.Deserialize<TomlDocument>("v = 0e0"u8).RootNode["v"].GetDouble().ShouldBe(0.0);
     }
 
-    [Fact]
+    [Test]
     public void ZeroIsTheLastValueOfMultipleKeyValues()
     {
         var document = CsTomlSerializer.Deserialize<TomlDocument>("a = 1\nb = 0"u8);
@@ -51,7 +51,7 @@ public class TrailingZeroTest
         document.RootNode["b"].GetInt64().ShouldBe(0);
     }
 
-    [Fact]
+    [Test]
     public void ZeroAtEndOfFileInTable()
     {
         var document = CsTomlSerializer.Deserialize<TomlDocument>("[table]\nv = 0"u8);
@@ -59,7 +59,7 @@ public class TrailingZeroTest
         document.RootNode["table"]["v"].GetInt64().ShouldBe(0);
     }
 
-    [Fact]
+    [Test]
     public void ZeroAtEndOfFileWithDottedKey()
     {
         var document = CsTomlSerializer.Deserialize<TomlDocument>("a.b = 0"u8);
@@ -67,7 +67,7 @@ public class TrailingZeroTest
         document.RootNode["a"]["b"].GetInt64().ShouldBe(0);
     }
 
-    [Fact]
+    [Test]
     public void ZeroAtEndOfArrayWithoutNewLine()
     {
         var array = CsTomlSerializer.Deserialize<TomlDocument>("v = [0]"u8).RootNode["v"];
@@ -83,7 +83,7 @@ public class TrailingZeroTest
         CsTomlSerializer.Deserialize<TomlDocument>("v = [[0]]"u8).RootNode["v"][0][0].GetInt64().ShouldBe(0);
     }
 
-    [Fact]
+    [Test]
     public void ZeroAtEndOfInlineTableWithoutNewLine()
     {
         CsTomlSerializer.Deserialize<TomlDocument>("v = {a = 0}"u8).RootNode["v"]["a"].GetInt64().ShouldBe(0);
@@ -92,7 +92,7 @@ public class TrailingZeroTest
         CsTomlSerializer.Deserialize<TomlDocument>("v = {a = {b = 0}}"u8).RootNode["v"]["a"]["b"].GetInt64().ShouldBe(0);
     }
 
-    [Fact]
+    [Test]
     public void ZeroAtEndOfFileIsSerializedBack()
     {
         var document = CsTomlSerializer.Deserialize<TomlDocument>("v = 0"u8);

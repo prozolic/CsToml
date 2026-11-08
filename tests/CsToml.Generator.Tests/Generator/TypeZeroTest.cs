@@ -12,35 +12,35 @@ public class TypeZeroTest
         type = new TypeZero();
     }
 
-    [Fact]
+    [Test]
     public void Serialize()
     {
         using var bytes = CsTomlSerializer.Serialize(type);
         bytes.ByteSpan.ToArray().ShouldBe(""u8.ToArray());
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
         bytes.ByteSpan.ToArray().ShouldBe(""u8.ToArray());
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithArrayHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(type, Option.ArrayHeader);
         bytes.ByteSpan.ToArray().ShouldBe(""u8.ToArray());
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderAndArrayHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(type, Option.HeaderAndArrayHeader);
         bytes.ByteSpan.ToArray().ShouldBe(""u8.ToArray());
     }
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         var type = CsTomlSerializer.Deserialize<TypeZero>(""u8);
@@ -60,7 +60,7 @@ public class TypeOneTest
         };
     }
 
-    [Fact]
+    [Test]
     public void Serialize()
     {
         using var bytes = CsTomlSerializer.Serialize(type);
@@ -73,7 +73,7 @@ public class TypeOneTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderOption()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);
@@ -85,7 +85,7 @@ public class TypeOneTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithArrayHeaderOption()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);
@@ -97,7 +97,7 @@ public class TypeOneTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderAndArrayHeaderOption()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);
@@ -109,7 +109,7 @@ public class TypeOneTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         var type = CsTomlSerializer.Deserialize<TypeOne>(@"Value = 999"u8);
@@ -130,7 +130,7 @@ public class TypeTwoTest
         };
     }
 
-    [Fact]
+    [Test]
     public void Serialize()
     {
         using var bytes = CsTomlSerializer.Serialize(type);
@@ -144,7 +144,7 @@ public class TypeTwoTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
@@ -158,7 +158,7 @@ public class TypeTwoTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithArrayHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(type, Option.ArrayHeader);
@@ -172,7 +172,7 @@ public class TypeTwoTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderAndArrayHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(type, Option.HeaderAndArrayHeader);
@@ -186,7 +186,7 @@ public class TypeTwoTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);

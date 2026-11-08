@@ -7,7 +7,7 @@ namespace CsToml.Generator.Tests;
 
 public class TypeNullBehaviorFieldLevelTest
 {
-    [Fact]
+    [Test]
     public void Serialize_FieldLevelSkipNull_ShouldSkipNullFields()
     {
         var type = new TypeNullBehaviorFieldLevel
@@ -29,7 +29,7 @@ public class TypeNullBehaviorFieldLevelTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Serialize_FieldLevelSkipNull_WithValues_ShouldIncludeAll()
     {
         var type = new TypeNullBehaviorFieldLevel
@@ -53,7 +53,7 @@ public class TypeNullBehaviorFieldLevelTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Serialize_FieldLevelSkipNull_RequiredFieldNull_ShouldThrow()
     {
         var type = new TypeNullBehaviorFieldLevel
@@ -67,7 +67,7 @@ public class TypeNullBehaviorFieldLevelTest
         Should.Throw<CsTomlSerializeException>(() => CsTomlSerializer.Serialize(type));
     }
 
-    [Fact]
+    [Test]
     public void Deserialize_MissingOptionalFields_ShouldSucceed()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);
@@ -82,7 +82,7 @@ public class TypeNullBehaviorFieldLevelTest
         type.OptionalNumber.ShouldBeNull();
     }
 
-    [Fact]
+    [Test]
     public void RoundTrip_PartialNull_ShouldMaintainValues()
     {
         var original = new TypeNullBehaviorFieldLevel

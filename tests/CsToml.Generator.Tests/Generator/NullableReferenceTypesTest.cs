@@ -7,7 +7,7 @@ namespace CsToml.Generator.Tests;
 
 public class NullableReferenceTypesTest
 {
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         var types = CsTomlSerializer.Deserialize<NullableReferenceTypes>(""u8);

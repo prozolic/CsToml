@@ -87,7 +87,7 @@ public class FormatterResolverTest
             => throw new NotSupportedException();
     }
 
-    [Fact]
+    [Test]
     public void LazyRegisterConstructsTheFormatterOnce()
     {
         TomlValueFormatterResolver.Register<LazyMarker, CountingLazyMarkerFormatter>();
@@ -98,7 +98,7 @@ public class FormatterResolverTest
         TomlValueFormatterResolver.Instance.GetFormatter<LazyMarker>().ShouldBeOfType<CountingLazyMarkerFormatter>();
     }
 
-    [Fact]
+    [Test]
     public void LazyRegisterDoesNotConstructWhenBuiltinExists()
     {
         TomlValueFormatterResolver.Register<int, CountingIntFormatter>();
@@ -107,7 +107,7 @@ public class FormatterResolverTest
         TomlValueFormatterResolver.Instance.GetFormatter<int>().ShouldBeSameAs(Int32Formatter.Instance);
     }
 
-    [Fact]
+    [Test]
     public void ConcurrentRegisterPublishesExactlyOneInstance()
     {
         const int threadCount = 16;
@@ -138,7 +138,7 @@ public class FormatterResolverTest
         results.ShouldAllBe(r => ReferenceEquals(r, published));
     }
 
-    [Fact]
+    [Test]
     public void RegisterAfterFailedLookup()
     {
         TomlValueFormatterResolver.IsRegistered<LateMarker>().ShouldBeFalse();
@@ -150,14 +150,14 @@ public class FormatterResolverTest
         TomlValueFormatterResolver.Instance.GetFormatter<LateMarker>().ShouldBeSameAs(formatter);
     }
 
-    [Fact]
+    [Test]
     public void ObjectIsRegisteredAsBuiltin()
     {
         TomlValueFormatterResolver.IsRegistered<object>().ShouldBeTrue();
         TomlValueFormatterResolver.Instance.GetFormatter<object>().ShouldBeSameAs(PrimitiveObjectFormatter.Instance);
     }
 
-    [Fact]
+    [Test]
     public void RegisterDoesNotReplaceBuiltinFormatter()
     {
         TomlValueFormatterResolver.Register(new ObjectFormatter());
@@ -179,7 +179,7 @@ public class FormatterResolverTest
             => throw new NotSupportedException();
     }
 
-    [Fact]
+    [Test]
     public void BeginRegistrationIsOncePerThreadUntilRegistered()
     {
         TomlValueFormatterResolver.BeginRegistration<BeginMarker>().ShouldBeTrue();

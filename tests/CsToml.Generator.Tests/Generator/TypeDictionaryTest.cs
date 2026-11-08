@@ -35,7 +35,7 @@ public class TypeDictionaryTest
         };
     }
 
-    [Fact]
+    [Test]
     public void Serialize()
     {
         using var bytes = CsTomlSerializer.Serialize(typeDict);
@@ -48,7 +48,7 @@ public class TypeDictionaryTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(typeDict, Option.Header);
@@ -62,7 +62,7 @@ public class TypeDictionaryTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithArrayHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(typeDict, Option.ArrayHeader);
@@ -75,7 +75,7 @@ public class TypeDictionaryTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderAndArrayHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(typeDict, Option.HeaderAndArrayHeader);
@@ -89,7 +89,7 @@ public class TypeDictionaryTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         {
@@ -98,15 +98,15 @@ public class TypeDictionaryTest
             writer.Flush();
 
             var type = CsTomlSerializer.Deserialize<TypeDictionary>(buffer.WrittenSpan);
-            dynamic dynamicDict = type.Value;
+            var dict = type.Value;
 
-            long value = dynamicDict["key"][0];
+            long value = ObjectGraph.Get<long>(dict, "key", 0);
             value.ShouldBe(999);
-            string value2 = dynamicDict["key"][1];
+            string value2 = ObjectGraph.Get<string>(dict, "key", 1);
             value2.ShouldBe("Value");
-            object[] value3 = dynamicDict["key"][2]["key"][0];
+            object[] value3 = ObjectGraph.Get<object[]>(dict, "key", 2, "key", 0);
             value3.ShouldBe(new object[] { 1, 2, 3 });
-            string value4 = dynamicDict["key"][2]["key"][1]["key"];
+            string value4 = ObjectGraph.Get<string>(dict, "key", 2, "key", 1, "key");
             value4.ShouldBe("value");
         }
         {
@@ -116,15 +116,15 @@ public class TypeDictionaryTest
             writer.Flush();
 
             var type = CsTomlSerializer.Deserialize<TypeDictionary>(buffer.WrittenSpan);
-            dynamic dynamicDict = type.Value;
+            var dict = type.Value;
 
-            long value = dynamicDict["key"][0];
+            long value = ObjectGraph.Get<long>(dict, "key", 0);
             value.ShouldBe(999);
-            string value2 = dynamicDict["key"][1];
+            string value2 = ObjectGraph.Get<string>(dict, "key", 1);
             value2.ShouldBe("Value");
-            object[] value3 = dynamicDict["key"][2]["key"][0];
+            object[] value3 = ObjectGraph.Get<object[]>(dict, "key", 2, "key", 0);
             value3.ShouldBe(new object[] { 1, 2, 3 });
-            string value4 = dynamicDict["key"][2]["key"][1]["key"];
+            string value4 = ObjectGraph.Get<string>(dict, "key", 2, "key", 1, "key");
             value4.ShouldBe("value");
         }
     }
@@ -132,7 +132,7 @@ public class TypeDictionaryTest
 
 public class TypeDictionaryTest2
 {
-    [Fact]
+    [Test]
     public void Serialize()
     {
         var dict = new Dictionary<object, object>()
@@ -202,7 +202,7 @@ public class TypeDictionaryTest2
         }
     }
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         {
@@ -251,15 +251,15 @@ public class TypeDictionaryTest2
             Validate(type.Value6);
         }
 
-        static void Validate(dynamic dynamicDict)
+        static void Validate(object dict)
         {
-            long value = dynamicDict["key"][0];
+            long value = ObjectGraph.Get<long>(dict, "key", 0);
             value.ShouldBe(999);
-            string value2 = dynamicDict["key"][1];
+            string value2 = ObjectGraph.Get<string>(dict, "key", 1);
             value2.ShouldBe("Value");
-            object[] value3 = dynamicDict["key"][2]["key"][0];
+            object[] value3 = ObjectGraph.Get<object[]>(dict, "key", 2, "key", 0);
             value3.ShouldBe(new object[] { 1, 2, 3 });
-            string value4 = dynamicDict["key"][2]["key"][1]["key"];
+            string value4 = ObjectGraph.Get<string>(dict, "key", 2, "key", 1, "key");
             value4.ShouldBe("value");
         }
     }
@@ -267,7 +267,7 @@ public class TypeDictionaryTest2
 
 public class TypeDictionaryTest3
 {
-    [Fact]
+    [Test]
     public void Serialize()
     {
         var type = new TypeDictionary3()
@@ -305,7 +305,7 @@ public class TypeDictionaryTest3
         }
     }
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         {
@@ -329,13 +329,13 @@ public class TypeDictionaryTest3
             Validate(type.Value);
         }
 
-        static void Validate(dynamic dynamicDict)
+        static void Validate(Dictionary<long, string> dict)
         {
-            string value = dynamicDict[123];
+            string value = dict[123];
             value.ShouldBe("Value");
-            string value2 = dynamicDict[-1];
+            string value2 = dict[-1];
             value2.ShouldBe("Value2");
-            string value3 = dynamicDict[123456789];
+            string value3 = dict[123456789];
             value3.ShouldBe("Value3");
         }
     }

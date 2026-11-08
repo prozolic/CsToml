@@ -51,23 +51,23 @@ value3 = 3
         document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
     }
 
-    [Fact]
+    [Test]
     public void StringTest()
     {
         var value = document.RootNode["str"u8];
         value!.GetString().ShouldBe("string");
 
-        Assert.Throws<CsTomlException>(() => value!.GetInt64());
-        Assert.Throws<CsTomlException>(() => value!.GetDouble());
-        Assert.Throws<CsTomlException>(() => value!.GetBool());
-        Assert.Throws<CsTomlException>(() => value!.GetDateTime());
-        Assert.Throws<CsTomlException>(() => value!.GetDateTimeOffset());
-        Assert.Throws<CsTomlException>(() => value!.GetDateOnly());
-        Assert.Throws<CsTomlException>(() => value!.GetTimeOnly());
-        Assert.Throws<CsTomlException>(() => value!.GetNumber<int>());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetInt64());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDouble());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetBool());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateTime());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateTimeOffset());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateOnly());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetTimeOnly());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetNumber<int>());
     }
 
-    [Fact]
+    [Test]
     public void TryStringTest()
     {
         var value = document.RootNode["str"u8];
@@ -86,22 +86,22 @@ value3 = 3
         value!.TryGetTimeOnly(out var _).ShouldBeFalse();
     }
 
-    [Fact]
+    [Test]
     public void StringTest2()
     {
         var value = document.RootNode["str2"u8];
         value!.GetString().ShouldBe("123");
         value!.GetInt64().ShouldBe(123);
         value!.GetDouble().ShouldBe(123d);
-        Assert.Throws<CsTomlException>(() => value!.GetBool());
-        Assert.Throws<CsTomlException>(() => value!.GetDateTime());
-        Assert.Throws<CsTomlException>(() => value!.GetDateTimeOffset());
-        Assert.Throws<CsTomlException>(() => value!.GetDateOnly());
-        Assert.Throws<CsTomlException>(() => value!.GetTimeOnly());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetBool());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateTime());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateTimeOffset());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateOnly());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetTimeOnly());
         value!.GetNumber<int>().ShouldBe(123);
     }
 
-    [Fact]
+    [Test]
     public void TryStringTest2()
     {
         var value = document.RootNode["str2"u8];
@@ -126,22 +126,22 @@ value3 = 3
         value!.TryGetTimeOnly(out var _).ShouldBeFalse();
     }
 
-    [Fact]
+    [Test]
     public void StringTest3()
     {
         var value = document.RootNode["str3"u8];
         value!.GetString().ShouldBe(" true ");
-        Assert.Throws<CsTomlException>(() => value!.GetInt64());
-        Assert.Throws<CsTomlException>(() => value!.GetDouble());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetInt64());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDouble());
         value!.GetBool().ShouldBeTrue();
-        Assert.Throws<CsTomlException>(() => value!.GetDateTime());
-        Assert.Throws<CsTomlException>(() => value!.GetDateTimeOffset());
-        Assert.Throws<CsTomlException>(() => value!.GetDateOnly());
-        Assert.Throws<CsTomlException>(() => value!.GetTimeOnly());
-        Assert.Throws<CsTomlException>(() => value!.GetNumber<int>());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateTime());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateTimeOffset());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateOnly());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetTimeOnly());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetNumber<int>());
     }
 
-    [Fact]
+    [Test]
     public void TryStringTest3()
     {
         var value = document.RootNode["str3"u8];
@@ -163,52 +163,52 @@ value3 = 3
         value!.TryGetTimeOnly(out var _).ShouldBeFalse();
     }
 
-    [Fact]
+    [Test]
     public void StringTest4()
     {
         var value = document.RootNode["str4"u8];
         value!.GetString().ShouldBe("The quick brown fox jumps over the lazy dog.");
-        Assert.Throws<CsTomlException>(() => value!.GetInt64());
-        Assert.Throws<CsTomlException>(() => value!.GetDouble());
-        Assert.Throws<CsTomlException>(() => value!.GetBool());
-        Assert.Throws<CsTomlException>(() => value!.GetDateTime());
-        Assert.Throws<CsTomlException>(() => value!.GetDateTimeOffset());
-        Assert.Throws<CsTomlException>(() => value!.GetDateOnly());
-        Assert.Throws<CsTomlException>(() => value!.GetTimeOnly());
-        Assert.Throws<CsTomlException>(() => value!.GetNumber<int>());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetInt64());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDouble());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetBool());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateTime());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateTimeOffset());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateOnly());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetTimeOnly());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetNumber<int>());
     }
 
-    [Fact]
+    [Test]
     public void StringTest5()
     {
         var value = document.RootNode["str5"u8];
         value!.GetString().ShouldBe("this is str5.");
-        Assert.Throws<CsTomlException>(() => value!.GetInt64());
-        Assert.Throws<CsTomlException>(() => value!.GetDouble());
-        Assert.Throws<CsTomlException>(() => value!.GetBool());
-        Assert.Throws<CsTomlException>(() => value!.GetDateTime());
-        Assert.Throws<CsTomlException>(() => value!.GetDateTimeOffset());
-        Assert.Throws<CsTomlException>(() => value!.GetDateOnly());
-        Assert.Throws<CsTomlException>(() => value!.GetTimeOnly());
-        Assert.Throws<CsTomlException>(() => value!.GetNumber<int>());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetInt64());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDouble());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetBool());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateTime());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateTimeOffset());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateOnly());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetTimeOnly());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetNumber<int>());
     }
 
-    [Fact]
+    [Test]
     public void StringTest6()
     {
         var value = document.RootNode["str6"u8];
         value!.GetString().ShouldBe("t\\h\\i\\s i\\s s\\t\\r\\6");
-        Assert.Throws<CsTomlException>(() => value!.GetInt64());
-        Assert.Throws<CsTomlException>(() => value!.GetDouble());
-        Assert.Throws<CsTomlException>(() => value!.GetBool());
-        Assert.Throws<CsTomlException>(() => value!.GetDateTime());
-        Assert.Throws<CsTomlException>(() => value!.GetDateTimeOffset());
-        Assert.Throws<CsTomlException>(() => value!.GetDateOnly());
-        Assert.Throws<CsTomlException>(() => value!.GetTimeOnly());
-        Assert.Throws<CsTomlException>(() => value!.GetNumber<int>());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetInt64());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDouble());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetBool());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateTime());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateTimeOffset());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateOnly());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetTimeOnly());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetNumber<int>());
     }
 
-    [Fact]
+    [Test]
     public void IntTest()
     {
         var value = document.RootNode["int"u8];
@@ -216,14 +216,14 @@ value3 = 3
         value!.GetInt64().ShouldBe(99);
         value!.GetDouble().ShouldBe(99d);
         value!.GetBool().ShouldBeTrue();
-        Assert.Throws<CsTomlException>(() => value!.GetDateTime());
-        Assert.Throws<CsTomlException>(() => value!.GetDateTimeOffset());
-        Assert.Throws<CsTomlException>(() => value!.GetDateOnly());
-        Assert.Throws<CsTomlException>(() => value!.GetTimeOnly());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateTime());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateTimeOffset());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateOnly());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetTimeOnly());
         value!.GetNumber<int>().ShouldBe(99);
     }
 
-    [Fact]
+    [Test]
     public void TryIntTest()
     {
         var value = document.RootNode["int"u8];
@@ -254,7 +254,7 @@ value3 = 3
         value!.TryGetTimeOnly(out var _).ShouldBeFalse();
     }
 
-    [Fact]
+    [Test]
     public void FloatTest()
     {
         var value = document.RootNode["flt"u8];
@@ -262,14 +262,14 @@ value3 = 3
         value!.GetInt64().ShouldBe(1);
         value!.GetDouble().ShouldBe(1.0d);
         value!.GetBool().ShouldBeTrue();
-        Assert.Throws<CsTomlException>(() => value!.GetDateTime());
-        Assert.Throws<CsTomlException>(() => value!.GetDateTimeOffset());
-        Assert.Throws<CsTomlException>(() => value!.GetDateOnly());
-        Assert.Throws<CsTomlException>(() => value!.GetTimeOnly());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateTime());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateTimeOffset());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateOnly());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetTimeOnly());
         value!.GetNumber<int>().ShouldBe(1);
     }
 
-    [Fact]
+    [Test]
     public void TryFloatTest()
     {
         var value = document.RootNode["flt"u8];
@@ -300,7 +300,7 @@ value3 = 3
         value!.TryGetTimeOnly(out var _).ShouldBeFalse();
     }
 
-    [Fact]
+    [Test]
     public void BoolTest()
     {
         var value = document.RootNode["bool"u8];
@@ -308,14 +308,14 @@ value3 = 3
         value!.GetInt64().ShouldBe(1);
         value!.GetDouble().ShouldBe(1d);
         value!.GetBool().ShouldBeTrue();
-        Assert.Throws<CsTomlException>(() => value!.GetDateTime());
-        Assert.Throws<CsTomlException>(() => value!.GetDateTimeOffset());
-        Assert.Throws<CsTomlException>(() => value!.GetDateOnly());
-        Assert.Throws<CsTomlException>(() => value!.GetTimeOnly());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateTime());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateTimeOffset());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateOnly());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetTimeOnly());
         value!.GetNumber<int>().ShouldBe(1);
     }
 
-    [Fact]
+    [Test]
     public void TryBoolTest()
     {
         var value = document.RootNode["bool"u8];
@@ -346,14 +346,14 @@ value3 = 3
         value!.TryGetTimeOnly(out var _).ShouldBeFalse();
     }
 
-    [Fact]
+    [Test]
     public void OffsetDateTimeTest()
     {
         var value = document.RootNode["odt"u8];
         value!.GetString().ShouldBe(new DateTimeOffset(1979, 5, 27, 7, 32, 0, TimeSpan.Zero).ToString("o"));
-        Assert.Throws<CsTomlException>(() => value!.GetInt64());
-        Assert.Throws<CsTomlException>(() => value!.GetDouble());
-        Assert.Throws<CsTomlException>(() => value!.GetBool());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetInt64());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDouble());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetBool());
 
         var utcTime1 = DateTime.SpecifyKind(new DateTime(1979, 5, 27, 7, 32, 0), DateTimeKind.Utc);
         DateTimeOffset utcTime2 = utcTime1;
@@ -362,10 +362,10 @@ value3 = 3
         value!.GetDateTimeOffset().ShouldBe(utcTime2);
         value!.GetDateOnly().ShouldBe(new DateOnly(1979, 5, 27));
         value!.GetTimeOnly().ShouldBe(new TimeOnly(7, 32, 0));
-        Assert.Throws<CsTomlException>(() => value!.GetNumber<int>());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetNumber<int>());
     }
 
-    [Fact]
+    [Test]
     public void TryOffsetDateTimeTest()
     {
         var value = document.RootNode["odt"u8];
@@ -398,14 +398,14 @@ value3 = 3
         value!.TryGetNumber<int>(out var _).ShouldBeFalse();
     }
 
-    [Fact]
+    [Test]
     public void LocalDateTimeTest()
     {
         var value = document.RootNode["ldt"u8];
         value.GetString()!.ShouldBe(new DateTime(1979, 5, 27, 7, 32, 0).ToString("yyyy-MM-ddTHH:mm:ss.fffffff"));
-        Assert.Throws<CsTomlException>(() => value!.GetInt64());
-        Assert.Throws<CsTomlException>(() => value!.GetDouble());
-        Assert.Throws<CsTomlException>(() => value!.GetBool());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetInt64());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDouble());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetBool());
 
         var utcTime1 = new DateTime(1979, 5, 27, 7, 32, 0);
         DateTimeOffset utcTime2 = utcTime1;
@@ -413,10 +413,10 @@ value3 = 3
         value!.GetDateTimeOffset().ShouldBe(utcTime2);
         value!.GetDateOnly().ShouldBe(new DateOnly(1979, 5, 27));
         value!.GetTimeOnly().ShouldBe(new TimeOnly(7, 32, 0));
-        Assert.Throws<CsTomlException>(() => value!.GetNumber<int>());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetNumber<int>());
     }
 
-    [Fact]
+    [Test]
     public void TryLocalDateTimeTest()
     {
         var value = document.RootNode["ldt"u8];
@@ -450,25 +450,25 @@ value3 = 3
         value!.TryGetNumber<int>(out var _).ShouldBeFalse();
     }
 
-    [Fact]
+    [Test]
     public void LocalDateTest()
     {
         var value = document.RootNode["ld1"u8];
         value!.GetString()!.ShouldBe(new DateOnly(1979, 5, 27).ToString("yyyy-MM-dd"));
-        Assert.Throws<CsTomlException>(() => value!.GetInt64());
-        Assert.Throws<CsTomlException>(() => value!.GetDouble());
-        Assert.Throws<CsTomlException>(() => value!.GetBool());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetInt64());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDouble());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetBool());
 
         var utcTime1 = new DateTime(1979, 5, 27);
         DateTimeOffset utcTime2 = utcTime1;
         value!.GetDateTime().ShouldBe(utcTime1);
         value!.GetDateTimeOffset().ShouldBe(utcTime2);
         value!.GetDateOnly().ShouldBe(new DateOnly(1979, 5, 27));
-        Assert.Throws<CsTomlException>(() => value!.GetTimeOnly());
-        Assert.Throws<CsTomlException>(() => value!.GetNumber<int>());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetTimeOnly());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetNumber<int>());
     }
 
-    [Fact]
+    [Test]
     public void TryLocalDateTest()
     {
         var value = document.RootNode["ld1"u8];
@@ -498,23 +498,23 @@ value3 = 3
         value!.TryGetNumber<int>(out var _).ShouldBeFalse();
     }
 
-    [Fact]
+    [Test]
     public void LocalTimeTest()
     {
         var value = document.RootNode["lt1"u8];
         value!.GetString()!.ShouldBe(new TimeOnly(7, 32, 30).ToString("HH:mm:ss.fffffff"));
-        Assert.Throws<CsTomlException>(() => value!.GetInt64());
-        Assert.Throws<CsTomlException>(() => value!.GetDouble());
-        Assert.Throws<CsTomlException>(() => value!.GetBool());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetInt64());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDouble());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetBool());
 
-        Assert.Throws<CsTomlException>(() => value!.GetDateTime());
-        Assert.Throws<CsTomlException>(() => value!.GetDateTimeOffset());
-        Assert.Throws<CsTomlException>(() => value!.GetDateOnly());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateTime());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateTimeOffset());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateOnly());
         value!.GetTimeOnly().ShouldBe(new TimeOnly(7, 32, 30));
-        Assert.Throws<CsTomlException>(() => value!.GetNumber<int>());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetNumber<int>());
     }
 
-    [Fact]
+    [Test]
     public void TryLocalTimeTest()
     {
         var value = document.RootNode["lt1"u8];
@@ -536,7 +536,7 @@ value3 = 3
         value!.TryGetNumber<int>(out var _).ShouldBeFalse();
     }
 
-    [Fact]
+    [Test]
     public void ArrayTest()
     {
         var value = document.RootNode["array"u8];
@@ -556,17 +556,17 @@ value3 = 3
         var arrayIndexValue = value!.GetArrayValue(0);
         arrayIndexValue.GetInt64().ShouldBe(1);
         value!.GetString().ShouldBe("[1, 2, 3]");
-        Assert.Throws<CsTomlException>(() => value!.GetInt64());
-        Assert.Throws<CsTomlException>(() => value!.GetDouble());
-        Assert.Throws<CsTomlException>(() => value!.GetBool());
-        Assert.Throws<CsTomlException>(() => value!.GetDateTime());
-        Assert.Throws<CsTomlException>(() => value!.GetDateTimeOffset());
-        Assert.Throws<CsTomlException>(() => value!.GetDateOnly());
-        Assert.Throws<CsTomlException>(() => value!.GetTimeOnly());
-        Assert.Throws<CsTomlException>(() => value!.GetNumber<int>());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetInt64());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDouble());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetBool());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateTime());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateTimeOffset());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateOnly());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetTimeOnly());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetNumber<int>());
     }
 
-    [Fact]
+    [Test]
     public void TryArrayTest()
     {
         var value = document.RootNode["array"u8];
@@ -605,52 +605,52 @@ value3 = 3
         value!.TryGetNumber<int>(out var _).ShouldBeFalse();
     }
 
-    [Fact]
+    [Test]
     public void QuotedkeysTest()
     {
         var value = document.RootNode["127.0.0.1"u8];
         value!.GetString().ShouldBe("value");
 
-        Assert.Throws<CsTomlException>(() => value!.GetInt64());
-        Assert.Throws<CsTomlException>(() => value!.GetDouble());
-        Assert.Throws<CsTomlException>(() => value!.GetBool());
-        Assert.Throws<CsTomlException>(() => value!.GetDateTime());
-        Assert.Throws<CsTomlException>(() => value!.GetDateTimeOffset());
-        Assert.Throws<CsTomlException>(() => value!.GetDateOnly());
-        Assert.Throws<CsTomlException>(() => value!.GetTimeOnly());
-        Assert.Throws<CsTomlException>(() => value!.GetNumber<int>());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetInt64());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDouble());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetBool());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateTime());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateTimeOffset());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateOnly());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetTimeOnly());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetNumber<int>());
     }
 
 
-    [Fact]
+    [Test]
     public void TableTest()
     {
         var value = document.RootNode["Table"u8]["value"u8];
         value!.GetInt64().ShouldBe(100);
         value!.GetDouble().ShouldBe(100d);
         value!.GetBool().ShouldBeTrue();
-        Assert.Throws<CsTomlException>(() => value!.GetDateTime());
-        Assert.Throws<CsTomlException>(() => value!.GetDateTimeOffset());
-        Assert.Throws<CsTomlException>(() => value!.GetDateOnly());
-        Assert.Throws<CsTomlException>(() => value!.GetTimeOnly());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateTime());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateTimeOffset());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateOnly());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetTimeOnly());
         value!.GetNumber<int>().ShouldBe(100);
     }
 
-    [Fact]
+    [Test]
     public void DottedTableTest()
     {
         var value = document.RootNode["Dotted"u8]["Table"u8]["value"u8];
         value!.GetInt64().ShouldBe(200);
         value!.GetDouble().ShouldBe(200d);
         value!.GetBool().ShouldBeTrue();
-        Assert.Throws<CsTomlException>(() => value!.GetDateTime());
-        Assert.Throws<CsTomlException>(() => value!.GetDateTimeOffset());
-        Assert.Throws<CsTomlException>(() => value!.GetDateOnly());
-        Assert.Throws<CsTomlException>(() => value!.GetTimeOnly());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateTime());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateTimeOffset());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateOnly());
+        Assert.ThrowsExactly<CsTomlException>(() => value!.GetTimeOnly());
         value!.GetNumber<int>().ShouldBe(200);
     }
 
-    [Fact]
+    [Test]
     public void ArrayOfTablesTest()
     {
         var arrayOfTables = document.RootNode["ArrayOfTables"u8];
@@ -659,10 +659,10 @@ value3 = 3
             value!.GetInt64().ShouldBe(1);
             value!.GetDouble().ShouldBe(1d);
             value!.GetBool().ShouldBeTrue();
-            Assert.Throws<CsTomlException>(() => value!.GetDateTime());
-            Assert.Throws<CsTomlException>(() => value!.GetDateTimeOffset());
-            Assert.Throws<CsTomlException>(() => value!.GetDateOnly());
-            Assert.Throws<CsTomlException>(() => value!.GetTimeOnly());
+            Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateTime());
+            Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateTimeOffset());
+            Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateOnly());
+            Assert.ThrowsExactly<CsTomlException>(() => value!.GetTimeOnly());
             value!.GetNumber<int>().ShouldBe(1);
         }
         {
@@ -670,10 +670,10 @@ value3 = 3
             value!.GetInt64().ShouldBe(2);
             value!.GetDouble().ShouldBe(2d);
             value!.GetBool().ShouldBeTrue();
-            Assert.Throws<CsTomlException>(() => value!.GetDateTime());
-            Assert.Throws<CsTomlException>(() => value!.GetDateTimeOffset());
-            Assert.Throws<CsTomlException>(() => value!.GetDateOnly());
-            Assert.Throws<CsTomlException>(() => value!.GetTimeOnly());
+            Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateTime());
+            Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateTimeOffset());
+            Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateOnly());
+            Assert.ThrowsExactly<CsTomlException>(() => value!.GetTimeOnly());
             value!.GetNumber<int>().ShouldBe(2);
         }
         {
@@ -681,10 +681,10 @@ value3 = 3
             value!.GetInt64().ShouldBe(3);
             value!.GetDouble().ShouldBe(3d);
             value!.GetBool().ShouldBeTrue();
-            Assert.Throws<CsTomlException>(() => value!.GetDateTime());
-            Assert.Throws<CsTomlException>(() => value!.GetDateTimeOffset());
-            Assert.Throws<CsTomlException>(() => value!.GetDateOnly());
-            Assert.Throws<CsTomlException>(() => value!.GetTimeOnly());
+            Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateTime());
+            Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateTimeOffset());
+            Assert.ThrowsExactly<CsTomlException>(() => value!.GetDateOnly());
+            Assert.ThrowsExactly<CsTomlException>(() => value!.GetTimeOnly());
             value!.GetNumber<int>().ShouldBe(3);
         }
     }

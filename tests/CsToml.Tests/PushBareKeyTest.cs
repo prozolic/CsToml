@@ -57,19 +57,19 @@ public class PushBareKeyTest
     private static string Serialize(ImmutableArray<byte> key)
         => Encoding.UTF8.GetString(SerializeToUtf8(key));
 
-    [Fact]
+    [Test]
     public void PushedKeyIsUsedAsDottedKeyPrefix()
     {
         Serialize(ImmutableArray.Create("table"u8)).ShouldStartWith("table.value = 1");
     }
 
-    [Fact]
+    [Test]
     public void ThrowIfImmutableArrayIsUninitialized()
     {
         Should.Throw<CsTomlSerializeException>(() => Serialize(default));
     }
 
-    [Fact]
+    [Test]
     public void ThrowIfKeyIsInvalidUtf8SequenceWhenValidationIsNotSkipped()
     {
         // 0xC3 is the lead byte of a 2-byte sequence, but the continuation byte is missing.
@@ -79,7 +79,7 @@ public class PushBareKeyTest
         Should.Throw<CsTomlSerializeException>(() => SerializeToUtf8(invalidKey, pushAsSpan: true));
     }
 
-    [Fact]
+    [Test]
     public void WriteKeyAsIsIfValidationIsSkipped()
     {
         var invalidKey = ImmutableArray.Create<byte>(0xC3);

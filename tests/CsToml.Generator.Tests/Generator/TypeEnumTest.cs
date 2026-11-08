@@ -5,7 +5,7 @@ namespace CsToml.Generator.Tests;
 
 public class TypeEnumTest
 {
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         {
@@ -26,7 +26,7 @@ public class TypeEnumTest
         }
     }
 
-    [Fact]
+    [Test]
     public void Serialize()
     {
         var type = new TypeEnum()

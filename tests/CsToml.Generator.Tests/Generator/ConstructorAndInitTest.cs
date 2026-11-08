@@ -5,7 +5,7 @@ namespace CsToml.Generator.Tests.Seirialization;
 
 public class ConstructorAndInitTest
 {
-    [Fact]
+    [Test]
     public void Serialize()
     {
         var primitive = new ConstructorAndInit(123, 123.456)
@@ -26,7 +26,7 @@ public class ConstructorAndInitTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);

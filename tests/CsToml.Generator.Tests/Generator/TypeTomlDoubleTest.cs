@@ -22,7 +22,7 @@ public class TypeTomlDoubleTest
         };
     }
 
-    [Fact]
+    [Test]
     public void Serialize()
     {
         using var bytes = CsTomlSerializer.Serialize(typeTomlDouble);
@@ -42,7 +42,7 @@ public class TypeTomlDoubleTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(typeTomlDouble, Option.Header);
@@ -62,7 +62,7 @@ public class TypeTomlDoubleTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithArrayHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(typeTomlDouble, Option.ArrayHeader);
@@ -82,7 +82,7 @@ public class TypeTomlDoubleTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderAndArrayHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(typeTomlDouble, Option.HeaderAndArrayHeader);
@@ -102,7 +102,7 @@ public class TypeTomlDoubleTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         var expected = typeTomlDouble;

@@ -10,7 +10,7 @@ namespace CsToml.Generator.Tests;
 
 public class UnionTest
 {
-    [Fact]
+    [Test]
     public void SerializeUnionMember()
     {
         var target = new UnionHolder() { Name = "cfg", Value = new StringOrInt(123) };
@@ -24,7 +24,7 @@ public class UnionTest
         bytes.ByteSpan.ToArray().ShouldBe(buffer.ToArray());
     }
 
-    [Fact]
+    [Test]
     public void SerializeUnionMemberWithHeaderStyleStaysInline()
     {
         // The pinned case is a primitive, so the header style does not apply to this member.
@@ -39,7 +39,7 @@ public class UnionTest
         bytes.ByteSpan.ToArray().ShouldBe(buffer.ToArray());
     }
 
-    [Fact]
+    [Test]
     public void RoundTripUnionMember()
     {
         var target = new UnionHolder() { Name = "cfg", Value = new StringOrInt(123) };
@@ -50,7 +50,7 @@ public class UnionTest
         deserialized.Value.Value.ShouldBe(123);
     }
 
-    [Fact]
+    [Test]
     public void DeserializeMissingUnionKeyAsDefault()
     {
         var deserialized = CsTomlSerializer.Deserialize<UnionHolder>("Name = \"x\""u8);
@@ -59,7 +59,7 @@ public class UnionTest
         deserialized.Value.Value.ShouldBeNull();
     }
 
-    [Fact]
+    [Test]
     public void SerializeDefaultUnionThrows()
     {
         var target = new UnionHolder() { Name = "x", Value = default };
@@ -69,7 +69,7 @@ public class UnionTest
         });
     }
 
-    [Fact]
+    [Test]
     public void SerializeMismatchedCaseThrows()
     {
         // StringOrInt is pinned to int; holding the string case is a declaration violation.
@@ -80,7 +80,7 @@ public class UnionTest
         });
     }
 
-    [Fact]
+    [Test]
     public void RoundTripTryGetValueUnion()
     {
         var target = new TriStateHolder() { State = new TriState(42L) };
@@ -96,7 +96,7 @@ public class UnionTest
         value.ShouldBe(42L);
     }
 
-    [Fact]
+    [Test]
     public void SerializeValuelessTryGetValueUnionThrows()
     {
         var target = new TriStateHolder() { State = default };
@@ -106,7 +106,7 @@ public class UnionTest
         });
     }
 
-    [Fact]
+    [Test]
     public void RoundTripProvidedUnion()
     {
         var target = new ProvidedUnionHolder() { Value = ProvidedUnion.IUnionMembers.Create(7L) };
@@ -121,7 +121,7 @@ public class UnionTest
         ((ProvidedUnion.IUnionMembers)deserialized!.Value).Value.ShouldBe(7L);
     }
 
-    [Fact]
+    [Test]
     public void RoundTripClassUnion()
     {
         var target = new ClassUnionHolder() { Value = new ClassUnion("abc") };
@@ -136,7 +136,7 @@ public class UnionTest
         deserialized!.Value!.Value.ShouldBe("abc");
     }
 
-    [Fact]
+    [Test]
     public void SerializeNullClassUnionIsIgnored()
     {
         var target = new ClassUnionHolder() { Value = null };
@@ -144,7 +144,7 @@ public class UnionTest
         bytes.ByteSpan.Length.ShouldBe(0);
     }
 
-    [Fact]
+    [Test]
     public void RoundTripNestedUnion()
     {
         var target = new OuterUnionHolder() { Value = new OuterUnion(new StringOrInt(5)) };
@@ -160,7 +160,7 @@ public class UnionTest
         inner.Value.ShouldBe(5);
     }
 
-    [Fact]
+    [Test]
     public void RoundTripGenericUnionWithMemberLevelPin()
     {
         var target = new GenericUnionHolder() { Value = new ListOrText<long>(new List<long> { 1, 2 }) };
@@ -175,7 +175,7 @@ public class UnionTest
         ((List<long>)deserialized!.Value.Value!).ShouldBe(new List<long> { 1, 2 });
     }
 
-    [Fact]
+    [Test]
     public void RoundTripUnionPinnedToPoco()
     {
         var target = new PinnedUnionHolder() { Value = new PinnedUnion(new PinCaseA() { Number = 5 }) };
@@ -192,7 +192,7 @@ public class UnionTest
         ((PinCaseA)deserialized!.Value.Value!).Number.ShouldBe(5);
     }
 
-    [Fact]
+    [Test]
     public void SerializeUnionPinnedToPocoWithHeaderStyle()
     {
         var target = new PinnedUnionHolder() { Value = new PinnedUnion(new PinCaseA() { Number = 5 }) };
@@ -208,7 +208,7 @@ public class UnionTest
         ((PinCaseA)deserialized!.Value.Value!).Number.ShouldBe(5);
     }
 
-    [Fact]
+    [Test]
     public void SerializeUnionPinnedToPocoWithMismatchedCaseThrows()
     {
         var target = new PinnedUnionHolder() { Value = new PinnedUnion(1L) };
@@ -218,7 +218,7 @@ public class UnionTest
         });
     }
 
-    [Fact]
+    [Test]
     public void RoundTripMemberLevelPinnedUnions()
     {
         var target = new MemberPinnedHolder()
@@ -242,7 +242,7 @@ public class UnionTest
         deserialized.AsText.Value.ShouldBe("hello");
     }
 
-    [Fact]
+    [Test]
     public void RoundTripUnionNestedInGenericType()
     {
         // The formatter for GenericOuter<T>.Inner must declare T itself (review finding: containing type parameters).
@@ -264,7 +264,7 @@ public class UnionTest
         deserialized.Text.Value.ShouldBe("seven");
     }
 
-    [Fact]
+    [Test]
     public void RoundTripUnionWithCollidingSanitizedCaseNames()
     {
         // Coll_Case and Coll.Case sanitize to the same identifier; both pinned formatters must still compile.
@@ -280,7 +280,7 @@ public class UnionTest
         ((Coll.Case)deserialized.Second.Value!).Name.ShouldBe("two");
     }
 
-    [Fact]
+    [Test]
     public void RoundTripUnionWithDeclaredButUnimplementedProvider()
     {
         // The nested IUnionMembers is not implemented, so the generator must use the constructors and TryGetValue.
@@ -297,7 +297,7 @@ public class UnionTest
         number.ShouldBe(42L);
     }
 
-    [Fact]
+    [Test]
     public void GenericUnionClosedOverObjectKeepsPinnedCase()
     {
         // ObjectBox<object>: the T case becomes object and must not be mistaken for a storage constructor,
@@ -317,7 +317,7 @@ public class UnionTest
         Should.Throw<CsTomlException>(() => CsTomlSerializer.Serialize(mismatch));
     }
 
-    [Fact]
+    [Test]
     public void RoundTripUnionCollections()
     {
         var target = new UnionCollectionsHolder()
@@ -345,7 +345,7 @@ public class UnionTest
         deserialized.MaybeValue!.Value.Value.ShouldBe(5);
     }
 
-    [Fact]
+    [Test]
     public void RoundTripStandaloneUnionWithManualRegistration()
     {
         global::CsToml.Generated.CsToml.Generator.Tests.StandaloneUnionFormatter.Register();
@@ -360,7 +360,7 @@ public class UnionTest
         deserialized.Value.ShouldBe(11L);
     }
 
-    [Fact]
+    [Test]
     public void RegistrationIsFirstWins()
     {
         TomlValueFormatterResolver.Register<FirstWinsUnion>(new FirstWinsMarkerFormatter());

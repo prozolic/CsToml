@@ -58,8 +58,8 @@ public class TypeImmutableInterfaceTest
         }};
     }
 
-    [Theory]
-    [MemberData(nameof(GetTypeImmutableInterfaces))]
+    [Test]
+    [MethodDataSource(nameof(GetTypeImmutableInterfaces))]
     public void Serialize(TypeImmutableInterface typeImmutableInterface)
     {
         using var bytes = CsTomlSerializer.Serialize(typeImmutableInterface);
@@ -76,8 +76,8 @@ public class TypeImmutableInterfaceTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Theory]
-    [MemberData(nameof(GetTypeImmutableInterfaces))]
+    [Test]
+    [MethodDataSource(nameof(GetTypeImmutableInterfaces))]
     public void SerializeWithHeaderOption(TypeImmutableInterface typeImmutableInterface)
     {
         using var bytes = CsTomlSerializer.Serialize(typeImmutableInterface, Option.Header);
@@ -95,8 +95,8 @@ public class TypeImmutableInterfaceTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Theory]
-    [MemberData(nameof(GetTypeImmutableInterfaces))]
+    [Test]
+    [MethodDataSource(nameof(GetTypeImmutableInterfaces))]
     public void SerializeWithArrayHeaderOption(TypeImmutableInterface typeImmutableInterface)
     {
         using var bytes = CsTomlSerializer.Serialize(typeImmutableInterface, Option.ArrayHeader);
@@ -113,8 +113,8 @@ public class TypeImmutableInterfaceTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Theory]
-    [MemberData(nameof(GetTypeImmutableInterfaces))]
+    [Test]
+    [MethodDataSource(nameof(GetTypeImmutableInterfaces))]
     public void SerializeWithHeaderAndArrayHeaderOption(TypeImmutableInterface typeImmutableInterface)
     {
         using var bytes = CsTomlSerializer.Serialize(typeImmutableInterface, Option.HeaderAndArrayHeader);
@@ -133,7 +133,7 @@ public class TypeImmutableInterfaceTest
     }
 
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         {
@@ -169,14 +169,14 @@ public class TypeImmutableInterfaceTest
             typeImmutableInterface.IImmutableQueue.ShouldBe([1, 2, 3, 4, 5]);
             typeImmutableInterface.IImmutableSet.ShouldBe([1, 2, 3, 4, 5]);
 
-            dynamic dict = typeImmutableInterface.IImmutableDictionary;
-            long value = dict["key"][0];
+            var dict = typeImmutableInterface.IImmutableDictionary;
+            long value = ObjectGraph.Get<long>(dict, "key", 0);
             value.ShouldBe(999);
-            string value2 = dict["key"][1];
+            string value2 = ObjectGraph.Get<string>(dict, "key", 1);
             value2.ShouldBe("Value");
-            object[] value3 = dict["key"][2]["key"][0];
+            object[] value3 = ObjectGraph.Get<object[]>(dict, "key", 2, "key", 0);
             value3.ShouldBe(new object[] { 1, 2, 3 });
-            string value4 = dict["key"][2]["key"][1]["key"];
+            string value4 = ObjectGraph.Get<string>(dict, "key", 2, "key", 1, "key");
             value4.ShouldBe("value");
         }
     }

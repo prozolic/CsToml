@@ -5,7 +5,7 @@ namespace CsToml.Generator.Tests;
 
 public class WithLazyTest
 {
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);
@@ -22,7 +22,7 @@ public class WithLazyTest
         withLazy.IntList.Value.ShouldBe([1, 2, 3]);
     }
 
-    [Fact]
+    [Test]
     public void Serialize()
     {
         var type = new WithLazy()

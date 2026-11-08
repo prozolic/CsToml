@@ -7,7 +7,7 @@ namespace CsToml.Generator.Tests;
 
 public class TypeNullBehaviorMixedTest
 {
-    [Fact]
+    [Test]
     public void Serialize_FieldOverridesGlobal_SkipNullField()
     {
         var type = new TypeNullBehaviorMixed
@@ -22,7 +22,7 @@ public class TypeNullBehaviorMixedTest
         Should.Throw<CsTomlSerializeException>(() => CsTomlSerializer.Serialize(type, Option.ErrorTomlNullHandling));
     }
 
-    [Fact]
+    [Test]
     public void Serialize_FieldOverridesGlobal_WithGlobalSkip()
     {
         var type = new TypeNullBehaviorMixed
@@ -42,7 +42,7 @@ public class TypeNullBehaviorMixedTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Serialize_MixedValues_ShouldHandleCorrectly()
     {
         var type = new TypeNullBehaviorMixed
@@ -64,10 +64,10 @@ public class TypeNullBehaviorMixedTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Theory]
-    [InlineData(null, "Value")]
-    [InlineData("Value", null)]
-    [InlineData("Value1", "Value2")]
+    [Test]
+    [Arguments(null, "Value")]
+    [Arguments("Value", null)]
+    [Arguments("Value1", "Value2")]
     public void Serialize_VariousCombinations_WithGlobalSkip(string? skippable, string? nonSkippable)
     {
         var type = new TypeNullBehaviorMixed

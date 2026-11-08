@@ -21,7 +21,7 @@ public class TypeHashtableTest
         };
     }
 
-    [Fact]
+    [Test]
     public void Serialize()
     {
         using var bytes = CsTomlSerializer.Serialize(typeHashtable);
@@ -34,7 +34,7 @@ public class TypeHashtableTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(typeHashtable, Option.Header);
@@ -47,7 +47,7 @@ public class TypeHashtableTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithArrayHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(typeHashtable, Option.ArrayHeader);
@@ -60,7 +60,7 @@ public class TypeHashtableTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderAndArrayHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(typeHashtable, Option.HeaderAndArrayHeader);
@@ -74,7 +74,7 @@ public class TypeHashtableTest
 
     }
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);

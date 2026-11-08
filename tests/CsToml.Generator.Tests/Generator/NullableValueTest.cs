@@ -5,7 +5,7 @@ namespace CsToml.Generator.Tests;
 
 public class NullableValueTest
 {
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         {
