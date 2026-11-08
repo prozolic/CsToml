@@ -1,6 +1,7 @@
 ﻿using CsToml.Error;
 using CsToml.Formatter;
 using CsToml.Formatter.Resolver;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Numerics;
 using System.Text;
@@ -27,7 +28,7 @@ public class DecimalFloatingPointTest
         where T : struct, IDecimalFloatingPointIeee754<T>
         => T.Parse(text, NumberStyles.Float, CultureInfo.InvariantCulture);
 
-    private static string Serialize<T>(T value)
+    private static string Serialize<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(T value)
     {
         using var serialized = CsTomlSerializer.SerializeValueType(value);
         return Encoding.UTF8.GetString(serialized.ByteSpan);

@@ -1,6 +1,7 @@
 ﻿using CsToml.Error;
 using CsToml.Formatter;
 using CsToml.Formatter.Resolver;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Numerics;
 using System.Text;
@@ -14,7 +15,7 @@ public class ComplexOfTTest
     private static TomlDocument Deserialize(string tomlValue)
         => CsTomlSerializer.Deserialize<TomlDocument>(Encoding.UTF8.GetBytes($"v = {tomlValue}\n"));
 
-    private static string Serialize<T>(T value)
+    private static string Serialize<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(T value)
     {
         using var serialized = CsTomlSerializer.SerializeValueType(value);
         return Encoding.UTF8.GetString(serialized.ByteSpan);

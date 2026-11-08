@@ -48,7 +48,7 @@ dotnet publish tests/CsToml.Tests/CsToml.Tests.csproj -c Release -f net10.0 -r w
 tests/CsToml.Tests/bin/Release/net10.0/win-x64/publish/CsToml.Tests.exe
 ```
 
-- `PublishAot` is enabled only when publishing with `-r`, so `dotnet test` stays a normal JIT run and still covers `BuiltinFormatterResolver`'s `MakeGenericType` fallback.
+- `PublishAot` is enabled only by `dotnet publish` (not by `-r` alone), so `dotnet test` stays a normal JIT run and still covers `BuiltinFormatterResolver`'s `MakeGenericType` fallback.
 - Test code must be AOT-safe: no `dynamic` (use `ObjectGraph.Get<T>` in Generator tests), and locate files from `AppContext.BaseDirectory`, not the working directory.
 - `[SkipOnNativeAot("reason")]` skips a test only in the AOT executable. Use it only for types resolvable solely through `MakeGenericType`, or for library gaps (reasons starting with `Known gap:`; remove the skip once fixed). Split such cases into their own test.
 

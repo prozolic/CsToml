@@ -12,10 +12,10 @@
       TUnit finds tests with its source generator (its default mode; do not enable reflection mode),
       so the same project also runs as a NativeAOT executable:
       dotnet publish -c Release -f net10.0 -r <rid>
-      PublishAot is set only for such a publish. Set unconditionally, it would also put its feature switches
-      (no dynamic code, size-optimized LINQ, source-generated Bind(), ...) into the JIT build that `dotnet test` runs.
+      PublishAot is set only by `dotnet publish`, not by a runtime identifier alone. Otherwise its feature switches
+      (no dynamic code, size-optimized LINQ, source-generated Bind(), ...) would also reach JIT builds and `dotnet test`.
     -->
-    <PublishAot Condition="'$(RuntimeIdentifier)' != '' or '$(_IsPublishing)' == 'true'">true</PublishAot>
+    <PublishAot Condition="'$(_IsPublishing)' == 'true'">true</PublishAot>
     <!-- Report AOT and trimming problems in test code on every build, not only when publishing. -->
     <EnableAotAnalyzer>true</EnableAotAnalyzer>
     <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
