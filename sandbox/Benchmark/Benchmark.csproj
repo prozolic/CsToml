@@ -28,7 +28,7 @@
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
     <PackageReference Include="Samboy063.Tomlet" Version="6.2.0" />
-    <PackageReference Include="Tomlyn" Version="2.10.1" />
+    <PackageReference Include="Tomlyn" Version="2.10.2" />
     <PackageReference Include="Tommy" Version="3.1.2" />
   </ItemGroup>
 
