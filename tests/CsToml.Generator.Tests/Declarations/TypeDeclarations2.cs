@@ -75,6 +75,14 @@ internal partial class GenericTypeWhereStruct<T> where T : struct
     public T? NullableValue { get; set; }
 }
 
+// The generator adds [DynamicallyAccessedMembers] to type parameters, so one the user already annotated must be left alone.
+[TomlSerializedObject]
+internal partial class GenericTypeWithAnnotatedTypeParameter<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)] T>
+{
+    [TomlValueOnSerialized]
+    public T Value { get; set; }
+}
+
 [TomlSerializedObject]
 internal partial struct SimpleStruct
 {

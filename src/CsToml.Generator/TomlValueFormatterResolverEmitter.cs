@@ -19,7 +19,13 @@ internal sealed class TomlValueFormatterResolverEmitter
         switch (kind)
         {
             case TomlSerializationKind.Primitive:
+                return;
             case TomlSerializationKind.PrimitiveArray:
+                if (type is IArrayTypeSymbol { Rank: 1 } primitiveArrayType &&
+                    FormatterTypeMetaData.TryGetNullableParameterType(primitiveArrayType.ElementType, out _))
+                {
+                    AppendRegister(fullTypeName, $"ArrayFormatter<{primitiveArrayType.ElementType.ToFullFormatString()}>");
+                }
                 return;
             case TomlSerializationKind.Enum:
                 AppendRegister(fullTypeName, $"EnumFormatter<{fullTypeName}>");

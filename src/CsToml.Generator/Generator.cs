@@ -202,7 +202,7 @@ using CsToml.Formatter.Resolver;
 
 {{namespaceTag}}
 
-partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{{typeMeta.GenericTypeParameterName}}>
+partial {{typeMeta.TypeKeyword}} {{typeMeta.DeclarationTypeName}} : ITomlSerializedObject<{{typeMeta.GenericTypeParameterName}}>
 {
     static {{typeMeta.GenericTypeParameterName}} ITomlSerializedObject<{{typeMeta.GenericTypeParameterName}}>.Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {

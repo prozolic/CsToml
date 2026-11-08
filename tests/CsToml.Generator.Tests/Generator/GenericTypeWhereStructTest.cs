@@ -5,13 +5,13 @@ using CsToml.Generator.Other;
 
 namespace CsToml.Generator.Tests;
 
+#if NET8_0 || NET9_0
+// A failure here is a fail-fast that ends the whole test process, so the class must not run at all.
+[SkipOnNativeAot("NativeAOT limitation fixed in .NET 10: the .NET 8/9 compiler does not generate TomlSerializedObjectFormatter<GenericTypeWhereStruct<T>>.Serialize<TBufferWriter> for a generic class, and the process fails fast.")]
+#endif
 public class GenericTypeWhereStructTest
 {
     [Test]
-#if NET8_0
-    // A failure here is a fail-fast that ends the whole test process, so the test must not run at all.
-    [SkipOnNativeAot("Known gap: .NET 8 NativeAOT does not generate TomlSerializedObjectFormatter<GenericTypeWhereStruct<int>>.Serialize<TBufferWriter>, and the process fails fast.")]
-#endif
     public void SerializeInt()
     {
         var intValue = new GenericTypeWhereStruct<int>()
@@ -32,7 +32,6 @@ public class GenericTypeWhereStructTest
     }
 
     [Test]
-    [SkipOnNativeAot("Known gap: as a type argument, SimpleStruct is resolved by reflection (TryRegister), and NativeAOT trims its Register method.")]
     public void Serialize()
     {
         {
@@ -76,7 +75,6 @@ public class GenericTypeWhereStructTest
     }
 
     [Test]
-    [SkipOnNativeAot("Known gap: as a type argument, SimpleStruct is resolved by reflection (TryRegister), and NativeAOT trims its Register method.")]
     public void SerializeWithHeaderOption()
     {
         var value = new GenericTypeWhereStruct<SimpleStruct>()
@@ -99,7 +97,6 @@ public class GenericTypeWhereStructTest
     }
 
     [Test]
-    [SkipOnNativeAot("Known gap: as a type argument, SimpleStruct is resolved by reflection (TryRegister), and NativeAOT trims its Register method.")]
     public void SerializeWithArrayHeaderOption()
     {
         var value = new GenericTypeWhereStruct<SimpleStruct>()
@@ -120,7 +117,6 @@ public class GenericTypeWhereStructTest
     }
 
     [Test]
-    [SkipOnNativeAot("Known gap: as a type argument, SimpleStruct is resolved by reflection (TryRegister), and NativeAOT trims its Register method.")]
     public void SerializeWithHeaderAndArrayHeaderOption()
     {
         var value = new GenericTypeWhereStruct<SimpleStruct>()
@@ -157,10 +153,6 @@ public class GenericTypeWhereStructTest
     }
 
     [Test]
-#if NET8_0
-    // A failure here is a fail-fast that ends the whole test process, so the test must not run at all.
-    [SkipOnNativeAot("Known gap: .NET 8 NativeAOT does not generate TomlSerializedObjectFormatter<GenericTypeWhereStruct<int>>.Serialize<TBufferWriter>, and the process fails fast.")]
-#endif
     public void DeserializeInt()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);
@@ -174,7 +166,6 @@ public class GenericTypeWhereStructTest
     }
 
     [Test]
-    [SkipOnNativeAot("Known gap: as a type argument, SimpleStruct is resolved by reflection (TryRegister), and NativeAOT trims its Register method.")]
     public void Deserialize()
     {
         {

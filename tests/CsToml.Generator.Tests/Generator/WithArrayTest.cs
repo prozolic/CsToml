@@ -80,7 +80,7 @@ public class WithArrayTest
     }
 }
 
-[SkipOnNativeAot("Known gap: the generated Register() does not register long[][], so only the MakeGenericType fallback resolves it.")]
+[SkipOnNativeAot("Jagged arrays of built-in types such as long[][] are not registered by the generated Register(); only the MakeGenericType fallback resolves them.")]
 public class WithArray2Test
 {
     private WithArray2 withArray2;

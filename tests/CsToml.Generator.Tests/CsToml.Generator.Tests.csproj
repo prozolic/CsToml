@@ -35,6 +35,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\CsToml.Extensions\CsToml.Extensions.csproj" />
     <ProjectReference Include="..\..\src\CsToml\CsToml.csproj" />
     <ProjectReference Include="..\..\src\CsToml.Generator\CsToml.Generator.csproj">
       <OutputItemType>Analyzer</OutputItemType>

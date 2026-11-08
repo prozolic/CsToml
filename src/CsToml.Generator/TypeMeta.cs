@@ -18,6 +18,7 @@ internal sealed class TypeMeta
     public string NameSpace { get; }
     public TomlSerializedObjectType Type { get; }
     public string TypeName { get; }
+    public string DeclarationTypeName { get; }
     public string FullTypeName { get; }
     public string TypeKeyword { get; }
     public string GenericTypeParameterName { get; }
@@ -26,6 +27,22 @@ internal sealed class TypeMeta
     public bool IsUnion { get; }
     public EquatableArray<UnionMeta> UnionMetas { get; }
     public HashSet<TomlSerializationKind> TomlSerializationKindLookup { get; }
+
+    private const string DynamicallyAccessedMembersAttributeName = "global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembersAttribute";
+
+    private static string GetDeclarationTypeName(INamedTypeSymbol symbol, string typeName)
+    {
+        if (symbol.TypeParameters.Length == 0)
+        {
+            return typeName;
+        }
+
+        var typeParameters = symbol.TypeParameters.Select(static p =>
+            p.GetAttributes().Any(static a => a.AttributeClass?.ToFullFormatString() == DynamicallyAccessedMembersAttributeName)
+                ? p.Name
+                : $"[{DynamicallyAccessedMembersAttributeName}(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicMethods)] {p.Name}");
+        return $"{symbol.Name}<{string.Join(", ", typeParameters)}>";
+    }
 
     public TypeMeta(INamedTypeSymbol symbol, TypeDeclarationSyntax syntax)
     {
@@ -36,6 +53,7 @@ internal sealed class TypeMeta
         TypeName = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
         FullTypeName = symbol.ToFullFormatString();
         GenericTypeParameterName = symbol.IsValueType ? TypeName : $"{TypeName}?";
+        DeclarationTypeName = GetDeclarationTypeName(symbol, TypeName);
 
         if (symbol.IsRecord)
             TypeKeyword = symbol.IsValueType ? "record struct" : "record";
