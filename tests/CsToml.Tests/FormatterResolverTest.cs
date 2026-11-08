@@ -166,4 +166,36 @@ public class FormatterResolverTest
         TomlValueFormatterResolver.Register(new IntFormatter());
         TomlValueFormatterResolver.Instance.GetFormatter<int>().ShouldBeSameAs(Int32Formatter.Instance);
     }
+
+    private sealed class BeginMarker { }
+
+    private sealed class BeginMarkerFormatter : ITomlValueFormatter<BeginMarker>
+    {
+        public BeginMarker Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
+            => throw new NotSupportedException();
+
+        public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, BeginMarker target, CsTomlSerializerOptions options)
+            where TBufferWriter : IBufferWriter<byte>
+            => throw new NotSupportedException();
+    }
+
+    [Fact]
+    public void BeginRegistrationIsOncePerThreadUntilRegistered()
+    {
+        TomlValueFormatterResolver.BeginRegistration<BeginMarker>().ShouldBeTrue();
+        TomlValueFormatterResolver.BeginRegistration<BeginMarker>().ShouldBeFalse();
+
+        var otherThread = false;
+        var thread = new Thread(() => otherThread = TomlValueFormatterResolver.BeginRegistration<BeginMarker>());
+        thread.Start();
+        thread.Join();
+        otherThread.ShouldBeTrue();
+
+        TomlValueFormatterResolver.Register(new BeginMarkerFormatter());
+        var afterRegister = true;
+        var thread2 = new Thread(() => afterRegister = TomlValueFormatterResolver.BeginRegistration<BeginMarker>());
+        thread2.Start();
+        thread2.Join();
+        afterRegister.ShouldBeFalse();
+    }
 }

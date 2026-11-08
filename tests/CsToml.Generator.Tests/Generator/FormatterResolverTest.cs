@@ -49,4 +49,51 @@ public class FormatterResolverTest
         deserialized.Child.Name.ShouldBe("child");
         deserialized.Children.Length.ShouldBe(2);
     }
+
+    [Fact]
+    public void TypeIsNotPublishedBeforeItsMemberFormatters()
+    {
+        // Thread A resolves TypeA1Outer for the first time and is held inside TypeA1Slow's static constructor,
+        // i.e. halfway through the generated Register(). Thread B must wait for that registration instead of
+        // getting a TypeA1Outer whose member formatters are not registered yet.
+        var toml = "Id = 1\n"u8.ToArray();
+        TypeA1Outer? resultA = null;
+        TypeA1Outer? resultB = null;
+        var a = new Thread(() => resultA = CsTomlSerializer.Deserialize<TypeA1Outer>(toml)) { IsBackground = true };
+        var b = new Thread(() => resultB = CsTomlSerializer.Deserialize<TypeA1Outer>(toml)) { IsBackground = true };
+        try
+        {
+            a.Start();
+            TypeA1Gate.EnteredSlowConstructor.Wait(TimeSpan.FromSeconds(30)).ShouldBeTrue();
+
+            b.Start();
+            b.Join(TimeSpan.FromMilliseconds(500)).ShouldBeFalse();
+        }
+        finally
+        {
+            TypeA1Gate.ReleaseSlowConstructor.Set();
+        }
+
+        a.Join(TimeSpan.FromSeconds(30)).ShouldBeTrue();
+        b.Join(TimeSpan.FromSeconds(30)).ShouldBeTrue();
+        resultA!.Id.ShouldBe(1);
+        resultB!.Id.ShouldBe(1);
+        TomlValueFormatterResolver.IsRegistered<List<TypeA1Inner>>().ShouldBeTrue();
+    }
+
+    [Fact]
+    public void SelfReferencingTypeRegistersAndRoundTrips()
+    {
+        var toml = "Value = 1\nChildren = [{ Value = 2, Children = [] }, { Value = 3, Children = [{ Value = 4, Children = [] }] }]\n"u8;
+        var node = CsTomlSerializer.Deserialize<TypeCycleNode>(toml);
+        node.Value.ShouldBe(1);
+        node.Children.Count.ShouldBe(2);
+        node.Children[1].Children[0].Value.ShouldBe(4);
+        TomlValueFormatterResolver.IsRegistered<TypeCycleNode>().ShouldBeTrue();
+        TomlValueFormatterResolver.IsRegistered<List<TypeCycleNode>>().ShouldBeTrue();
+
+        using var bytes = CsTomlSerializer.Serialize(node);
+        var again = CsTomlSerializer.Deserialize<TypeCycleNode>(bytes.ByteSpan);
+        again.Children[1].Children[0].Value.ShouldBe(4);
+    }
 }

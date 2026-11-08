@@ -310,9 +310,9 @@ partial class CsTomlClass : ITomlSerializedObject<CsTomlClass?>
 
     static void ITomlSerializedObjectRegister.Register()
     {
-        TomlValueFormatterResolver.Register<CsTomlClass?, TomlSerializedObjectFormatter<CsTomlClass>>();
+        if (!TomlValueFormatterResolver.BeginRegistration<CsTomlClass>()) return;
 
-        // Register Formatter in advance.
+        // Register the member formatters first; CsTomlClass itself is published last.
         TomlValueFormatterResolver.Register<global::System.Collections.Generic.IEnumerable<char>, IEnumerableFormatter<char>>();
         TomlValueFormatterResolver.Register<global::System.Collections.Generic.IList<int>, IListFormatter<int>>();
         TomlValueFormatterResolver.Register<global::System.Collections.Generic.ICollection<int>, ICollectionFormatter<int>>();
@@ -320,7 +320,7 @@ partial class CsTomlClass : ITomlSerializedObject<CsTomlClass?>
         TomlValueFormatterResolver.Register<global::System.Collections.Generic.IReadOnlyList<int>, IReadOnlyListFormatter<int>>();
         TomlValueFormatterResolver.Register<global::System.Collections.Generic.IReadOnlyCollection<int>, IReadOnlyCollectionFormatter<int>>();
         TomlValueFormatterResolver.Register<global::ConsoleApp.TableClass>();
-
+        TomlValueFormatterResolver.Register<CsTomlClass?, TomlSerializedObjectFormatter<CsTomlClass>>();
     }
 }
 ```
@@ -397,11 +397,11 @@ partial class TableClass : ITomlSerializedObject<TableClass?>
 
     static void ITomlSerializedObjectRegister.Register()
     {
-        TomlValueFormatterResolver.Register<TableClass?, TomlSerializedObjectFormatter<TableClass>>();
+        if (!TomlValueFormatterResolver.BeginRegistration<TableClass>()) return;
 
-        // Register Formatter in advance.
+        // Register the member formatters first; TableClass itself is published last.
         TomlValueFormatterResolver.Register<global::System.Collections.Generic.IEnumerable<char>, IEnumerableFormatter<char>>();
-
+        TomlValueFormatterResolver.Register<TableClass?, TomlSerializedObjectFormatter<TableClass>>();
     }
 }
 ```

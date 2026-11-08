@@ -913,20 +913,20 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.TypeName}} : ITomlSerializedObject<{
         if (typeMeta.IsReferenceType)
         {
             var code = $$"""
-        TomlValueFormatterResolver.Register<{{typeMeta.GenericTypeParameterName}}, TomlSerializedObjectFormatter<{{typeMeta.TypeName}}>>();
+        if (!TomlValueFormatterResolver.BeginRegistration<{{typeMeta.TypeName}}>()) return;
 
-        // Register Formatter in advance.
-{{builder}}
+        // Register the member formatters first; {{typeMeta.TypeName}} itself is published last.
+{{builder}}        TomlValueFormatterResolver.Register<{{typeMeta.GenericTypeParameterName}}, TomlSerializedObjectFormatter<{{typeMeta.TypeName}}>>();
 """;
             return code;
         }
         else
         {
             var code = $$"""
-        TomlValueFormatterResolver.Register<{{typeMeta.TypeName}}, StructTomlSerializedObjectFormatter<{{typeMeta.TypeName}}>>();
+        if (!TomlValueFormatterResolver.BeginRegistration<{{typeMeta.TypeName}}>()) return;
 
-        // Register Formatter in advance.
-{{builder}}
+        // Register the member formatters first; {{typeMeta.TypeName}} itself is published last.
+{{builder}}        TomlValueFormatterResolver.Register<{{typeMeta.TypeName}}, StructTomlSerializedObjectFormatter<{{typeMeta.TypeName}}>>();
 """;
             return code;
         }

@@ -130,4 +130,23 @@ public sealed class TomlValueFormatterResolver : ITomlValueFormatterResolver
             T.Register();
         }
     }
+
+    private static class Registering<T>
+    {
+        [ThreadStatic]
+        public static bool InProgress;
+    }
+
+    public static bool BeginRegistration<T>()
+    {
+        // Generated Register() bodies start here and publish T last, after the formatters of its members.
+        // False once T is registered, or while this thread is already inside T.Register() (type cycles).
+        if (Cache<T>.Formatter != null || Registering<T>.InProgress)
+        {
+            return false;
+        }
+
+        Registering<T>.InProgress = true;
+        return true;
+    }
 }
