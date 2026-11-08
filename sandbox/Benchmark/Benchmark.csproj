@@ -16,10 +16,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Toml\config.toml" />
     <None Remove="Toml\test.toml" />
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="Toml\config.toml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Toml\test.toml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

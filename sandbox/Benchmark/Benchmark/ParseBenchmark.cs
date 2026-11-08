@@ -2,6 +2,7 @@
 
 using BenchmarkDotNet.Attributes;
 using CsToml;
+using System.Globalization;
 using System.Text;
 using Tommy;
 using Tomlyn;
@@ -17,14 +18,17 @@ public class DefaultParseBenchmark
     private static byte[] tomlText;
 #pragma warning restore CS8618
 
+    [Params("config.toml", "test.toml")]
+    public string TomlFile { get; set; } = "test.toml";
+
     [GlobalSetup]
     public void GlobalSetup()
     {
-        tomlUtf16Text = File.ReadAllText(Constants.TomlFilePath);
+        tomlUtf16Text = File.ReadAllText(Path.Combine(Constants.TomlDirectoryPath, TomlFile));
         tomlText = Encoding.UTF8.GetBytes(tomlUtf16Text);
     }
 
-    [BenchmarkCategory("Benchmark"), Benchmark]
+    [BenchmarkCategory("Benchmark"), Benchmark(Baseline = true)]
     public CsToml.TomlDocument CsToml_Parse_FromUTF16()
     {
         var document = CsTomlSerializer.Deserialize<TomlDocument>(Encoding.UTF8.GetBytes(tomlUtf16Text));
@@ -174,15 +178,28 @@ public class IntOnlyParseBenchmark
     [GlobalSetup]
     public void GlobalSetup()
     {
+        var random = new Random(42);
         var builder = new StringBuilder(2097152);
-        for (int i = 0; i < 100000; i += 5)
+        for (int i = 0; i < 100000; i++)
         {
-            builder.AppendLine($"test{i} = 123456789");
-            builder.AppendLine($"test{i + 1} = 1_000");
-            builder.AppendLine($"test{i + 2} = 0xDEADBEEF");
-            builder.AppendLine($"test{i + 3} = 0o01234567");
-            builder.AppendLine($"test{i + 4} = 0b11010110");
-
+            switch (i % 20)
+            {
+                case < 16:
+                    var number = random.NextInt64(1L << random.Next(4, 34));
+                    builder.AppendLine(CultureInfo.InvariantCulture, $"test{i} = {(random.Next(5) == 0 ? -number : number)}");
+                    break;
+                case < 18:
+                    builder.AppendLine(CultureInfo.InvariantCulture, $"test{i} = {random.Next(1000, int.MaxValue).ToString("#,0", CultureInfo.InvariantCulture).Replace(',', '_')}");
+                    break;
+                case 18:
+                    builder.AppendLine(CultureInfo.InvariantCulture, $"test{i} = 0x{random.Next():X8}");
+                    break;
+                default:
+                    builder.AppendLine(i / 20 % 2 == 0
+                        ? $"test{i} = 0o{Convert.ToString(random.Next(1 << 21), 8)}"
+                        : $"test{i} = 0b{Convert.ToString(random.Next(256), 2)}");
+                    break;
+            }
         }
         tomlUtf16Text = builder.ToString();
         tomlText = Encoding.UTF8.GetBytes(tomlUtf16Text);
@@ -229,14 +246,26 @@ public class FloatOnlyParseBenchmark
     [GlobalSetup]
     public void GlobalSetup()
     {
+        var random = new Random(42);
         var builder = new StringBuilder(2097152);
-        for (int i = 0; i < 100000; i += 5)
+        for (int i = 0; i < 100000; i++)
         {
-            builder.AppendLine($"test{i} = +1.0");
-            builder.AppendLine($"test{i + 1} = 3.1415");
-            builder.AppendLine($"test{i + 2} = -2E-2");
-            builder.AppendLine($"test{i + 3} = nan");
-            builder.AppendLine($"test{i + 4} = inf");
+            var sign = random.Next(4) == 0 ? "-" : "";
+            switch (i % 50)
+            {
+                case < 40:
+                    builder.AppendLine(CultureInfo.InvariantCulture, $"test{i} = {sign}{random.Next(10000)}.{random.Next(10000)}");
+                    break;
+                case < 45:
+                    builder.AppendLine(CultureInfo.InvariantCulture, $"test{i} = {sign}{random.Next(1, 10)}.{random.Next(1000)}e{random.Next(-30, 31)}");
+                    break;
+                case < 49:
+                    builder.AppendLine(CultureInfo.InvariantCulture, $"test{i} = {sign}{random.Next(1, 10)}E{random.Next(-30, 31)}");
+                    break;
+                default:
+                    builder.AppendLine((i / 50 % 3) switch { 0 => $"test{i} = inf", 1 => $"test{i} = -inf", _ => $"test{i} = nan" });
+                    break;
+            }
         }
         tomlUtf16Text = builder.ToString();
         tomlText = Encoding.UTF8.GetBytes(tomlUtf16Text);
@@ -493,9 +522,9 @@ public class ArrayOnlyParseBenchmark
         var builder = new StringBuilder(2097152);
         for (int i = 0; i < 100000; i += 5)
         {
-            builder.AppendLine($"test{i} = [ 1, 2, 3 ]");
+            builder.AppendLine($"test{i} = [ 10, 200, 3000 ]");
             builder.AppendLine($"test{i + 1} = [ \"red\", \"yellow\", \"green\" ]");
-            builder.AppendLine($"test{i + 2} = [ [ 1, 2 ], [3, 4, 5] ]");
+            builder.AppendLine($"test{i + 2} = [ [ 1, 20 ], [300, 4000, 50000] ]");
             builder.AppendLine($"test{i + 3} = [ [ 1, 2 ], [\"a\", \"b\", \"c\"] ]");
             builder.AppendLine($"test{i + 4} = [ \"all\", 'strings', \"\"\"are the same\"\"\", '''type''' ]");
         }
