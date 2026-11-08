@@ -16,7 +16,7 @@ public class TypeTableTest
 
     }
 
-    [Fact]
+    [Test]
     public void Serialize()
     {
         using var bytes = CsTomlSerializer.Serialize(table);
@@ -29,7 +29,7 @@ public class TypeTableTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(table, Option.Header);
@@ -44,7 +44,7 @@ public class TypeTableTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithArrayHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(table, Option.ArrayHeader);
@@ -57,7 +57,7 @@ public class TypeTableTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderAndArrayHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(table, Option.HeaderAndArrayHeader);
@@ -71,7 +71,7 @@ public class TypeTableTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         {

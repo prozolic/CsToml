@@ -1,4 +1,7 @@
 ﻿using CsToml.Error;
+using CsToml.Formatter;
+using CsToml.Formatter.Resolver;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Numerics;
 using System.Text;
@@ -12,13 +15,13 @@ public class ComplexOfTTest
     private static TomlDocument Deserialize(string tomlValue)
         => CsTomlSerializer.Deserialize<TomlDocument>(Encoding.UTF8.GetBytes($"v = {tomlValue}\n"));
 
-    private static string Serialize<T>(T value)
+    private static string Serialize<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(T value)
     {
         using var serialized = CsTomlSerializer.SerializeValueType(value);
         return Encoding.UTF8.GetString(serialized.ByteSpan);
     }
 
-    [Fact]
+    [Test]
     public void Serialize_BinaryFloatingPoint()
     {
         Serialize(new Complex<float>(1.5f, -2f)).ShouldBe("[ 1.5, -2.0 ]");
@@ -27,7 +30,7 @@ public class ComplexOfTTest
         Serialize(new Complex<BFloat16>((BFloat16)1.5, (BFloat16)0.25)).ShouldBe("[ 1.5, 0.25 ]");
     }
 
-    [Fact]
+    [Test]
     public void Serialize_DecimalFloatingPoint()
     {
         Serialize(new Complex<Decimal32>(Decimal32.Parse("3.14", CultureInfo.InvariantCulture), (Decimal32)100)).ShouldBe("[ 3.14, 100 ]");
@@ -35,14 +38,14 @@ public class ComplexOfTTest
         Serialize(new Complex<Decimal128>(Decimal128.Parse("3.14", CultureInfo.InvariantCulture), 100)).ShouldBe("[ 3.14, 100 ]");
     }
 
-    [Fact]
+    [Test]
     public void Serialize_SpecialValue()
     {
         Serialize(new Complex<double>(double.NaN, double.NegativeInfinity)).ShouldBe("[ nan, -inf ]");
         Serialize(new Complex<Decimal64>(Decimal64.PositiveInfinity, Decimal64.NaN)).ShouldBe("[ inf, nan ]");
     }
 
-    [Fact]
+    [Test]
     public void Deserialize_BinaryFloatingPoint()
     {
         var node = Deserialize("[ 1.5, -2.0 ]").RootNode["v"];
@@ -53,7 +56,7 @@ public class ComplexOfTTest
         node.GetValue<Complex<BFloat16>>().ShouldBe(new Complex<BFloat16>((BFloat16)1.5, (BFloat16)(-2)));
     }
 
-    [Fact]
+    [Test]
     public void Deserialize_DecimalFloatingPoint()
     {
         var node = Deserialize("[ 3.14, 100 ]").RootNode["v"];
@@ -71,27 +74,29 @@ public class ComplexOfTTest
         decimal128.Imaginary.ShouldBe((Decimal128)100);
     }
 
-    [Fact]
+    [Test]
     public void Deserialize_IntegerElements()
     {
         Deserialize("[ 12, 6 ]").RootNode["v"].GetValue<Complex<double>>().ShouldBe(new Complex<double>(12, 6));
     }
 
-    [Theory]
-    [InlineData("[ 1.0 ]")]
-    [InlineData("[ 1.0, 2.0, 3.0 ]")]
-    [InlineData("[]")]
-    [InlineData("1.0")]
-    [InlineData("\"1.0\"")]
+    [Test]
+    [Arguments("[ 1.0 ]")]
+    [Arguments("[ 1.0, 2.0, 3.0 ]")]
+    [Arguments("[]")]
+    [Arguments("1.0")]
+    [Arguments("\"1.0\"")]
     public void Deserialize_InvalidShape_Throws(string tomlValue)
     {
         Should.Throw<CsTomlException>(() => Deserialize(tomlValue).RootNode["v"].GetValue<Complex<double>>());
     }
 
-    [Fact]
+    [Test]
     public void RoundTrip()
     {
         var value = new Complex<float>(3.14f, -0.1f);
+        // The dictionary only carries the value; registering its formatter lets this also run without dynamic code (NativeAOT).
+        TomlValueFormatterResolver.Register<Dictionary<string, Complex<float>>, DictionaryFormatter<string, Complex<float>>>();
         var dict = new Dictionary<string, Complex<float>>() { ["v"] = value };
         using var serialized = CsTomlSerializer.Serialize(dict);
         var document = CsTomlSerializer.Deserialize<TomlDocument>(serialized.ByteSpan);
@@ -99,7 +104,7 @@ public class ComplexOfTTest
         document.RootNode["v"].GetValue<Complex<float>>().ShouldBe(value);
     }
 
-    [Fact]
+    [Test]
     public void Nullable()
     {
         var node = Deserialize("[ 1.5, -2.0 ]").RootNode["v"];
@@ -111,7 +116,8 @@ public class ComplexOfTTest
         Should.Throw<CsTomlException>(() => Serialize<Complex<float>?>(null));
     }
 
-    [Fact]
+    [Test]
+    [SkipOnNativeAot("Complex<double>[] and List<Complex<double>> have no pre-registered formatter.")]
     public void Collection()
     {
         Complex<double>[] values = [new(1, 2), new(-3.5, 0.25)];

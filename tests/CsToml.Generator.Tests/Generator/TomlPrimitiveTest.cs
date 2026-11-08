@@ -22,7 +22,7 @@ public class TomlPrimitiveTest
         };
     }
 
-    [Fact]
+    [Test]
     public void Serialize()
     {
         using var bytes = CsTomlSerializer.Serialize(tomlPrimitive);
@@ -42,7 +42,7 @@ public class TomlPrimitiveTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(tomlPrimitive, Option.Header);
@@ -62,7 +62,7 @@ public class TomlPrimitiveTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithArrayHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(tomlPrimitive, Option.ArrayHeader);
@@ -82,7 +82,7 @@ public class TomlPrimitiveTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderAndArrayHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(tomlPrimitive, Option.HeaderAndArrayHeader);
@@ -102,7 +102,7 @@ public class TomlPrimitiveTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);

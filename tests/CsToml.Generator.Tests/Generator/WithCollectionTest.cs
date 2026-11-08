@@ -16,7 +16,7 @@ public class WithCollectionTest
         };
     }
 
-    [Fact]
+    [Test]
     public void Serialize()
     {
         using var bytes = CsTomlSerializer.Serialize(withCollection);
@@ -29,7 +29,7 @@ public class WithCollectionTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(withCollection, Option.Header);
@@ -42,7 +42,7 @@ public class WithCollectionTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithArrayHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(withCollection, Option.ArrayHeader);
@@ -55,7 +55,7 @@ public class WithCollectionTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderAndArrayHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(withCollection, Option.HeaderAndArrayHeader);
@@ -68,7 +68,7 @@ public class WithCollectionTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);

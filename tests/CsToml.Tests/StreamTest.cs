@@ -84,7 +84,7 @@ number2 = 123456
         expectedtomlText = expectedBuffer.WrittenSpan.ToArray();
     }
 
-    [Fact]
+    [Test]
     public void DeserializeMemoryStreamTest()
     {
         var ms = new MemoryStream(tomlText);
@@ -126,11 +126,11 @@ number2 = 123456
         document!.RootNode["failed"u8].HasValue.ShouldBeFalse();
     }
 
-    [Fact]
-    public async Task DeserializeAsyncMemoryStreamTest()
+    [Test]
+    public async Task DeserializeAsyncMemoryStreamTest(CancellationToken cancellationToken)
     {
         var ms = new MemoryStream(tomlText);
-        TomlDocument document = await CsTomlSerializer.DeserializeAsync<TomlDocument>(ms, cancellationToken: TestContext.Current.CancellationToken);
+        TomlDocument document = await CsTomlSerializer.DeserializeAsync<TomlDocument>(ms, cancellationToken: cancellationToken);
 
         document!.RootNode["str"u8].GetString().ShouldBe("value");
         document!.RootNode["int"u8].GetInt64().ShouldBe(123);
@@ -168,7 +168,7 @@ number2 = 123456
         document!.RootNode["failed"u8].HasValue.ShouldBeFalse();
     }
 
-    [Fact]
+    [Test]
     public void SerializeMemoryStreamTest()
     {
         TomlDocument document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
@@ -181,13 +181,13 @@ number2 = 123456
         buffer.ShouldBe(expectedtomlText);
     }
 
-    [Fact]
-    public async Task SerializeAsyncMemoryStreamTest()
+    [Test]
+    public async Task SerializeAsyncMemoryStreamTest(CancellationToken cancellationToken)
     {
         TomlDocument document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
 
         var ms = new MemoryStream(65536);
-        await CsTomlSerializer.SerializeAsync(ms, document, cancellationToken: TestContext.Current.CancellationToken);
+        await CsTomlSerializer.SerializeAsync(ms, document, cancellationToken: cancellationToken);
 
         var buffer = ms.ToArray();
         buffer.ShouldBe(expectedtomlText);

@@ -15,7 +15,7 @@ public class WithNullableCollectionTest
         };
     }
 
-    [Fact]
+    [Test]
     public void Serialize()
     {
         using var bytes = CsTomlSerializer.Serialize(withNullableCollection);
@@ -28,7 +28,7 @@ public class WithNullableCollectionTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(withNullableCollection, Option.Header);
@@ -41,7 +41,7 @@ public class WithNullableCollectionTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithArrayHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(withNullableCollection, Option.ArrayHeader);
@@ -54,7 +54,7 @@ public class WithNullableCollectionTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderAndArrayHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(withNullableCollection, Option.HeaderAndArrayHeader);
@@ -67,7 +67,7 @@ public class WithNullableCollectionTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         var nullableValue = CsTomlSerializer.Deserialize<WithNullableCollection>(""u8);

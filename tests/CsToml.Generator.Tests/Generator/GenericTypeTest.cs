@@ -5,9 +5,13 @@ using CsToml.Generator.Other;
 
 namespace CsToml.Generator.Tests;
 
+#if NET8_0
+// A failure here is a fail-fast that ends the whole test process, so the class must not run at all.
+[SkipOnNativeAot("Known gap: .NET 8 NativeAOT does not generate TomlSerializedObjectFormatter<GenericType<T>>.Serialize<TBufferWriter>, and the process fails fast.")]
+#endif
 public class GenericTypeTest
 {
-    [Fact]
+    [Test]
     public void Serialize()
     {
         {
@@ -82,7 +86,7 @@ public class GenericTypeTest
         }
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderOption()
     {
         var value = new GenericType<Simple>()
@@ -104,7 +108,7 @@ public class GenericTypeTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithArrayHeaderOption()
     {
         var value = new GenericType<Simple>()
@@ -124,7 +128,7 @@ public class GenericTypeTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderAndArrayHeaderOption()
     {
         var value = new GenericType<Simple>()
@@ -146,7 +150,7 @@ public class GenericTypeTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         {

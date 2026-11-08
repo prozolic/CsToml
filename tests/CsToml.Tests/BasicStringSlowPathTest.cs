@@ -18,7 +18,7 @@ public class BasicStringSlowPathTest
         return new ReadOnlySequence<byte>(first, 0, last, last.Length);
     }
 
-    [Fact]
+    [Test]
     public void PlainContent_SplitAcrossTwoSegments()
     {
         var sequence = CreateSequence(
@@ -30,7 +30,7 @@ public class BasicStringSlowPathTest
         document!.RootNode["value"u8].GetString().ShouldBe("abcdefghij");
     }
 
-    [Fact]
+    [Test]
     public void PlainContent_SplitAcrossManySegments()
     {
         var sequence = CreateSequence(
@@ -44,7 +44,7 @@ public class BasicStringSlowPathTest
         document!.RootNode["value"u8].GetString().ShouldBe("abcdefgh");
     }
 
-    [Fact]
+    [Test]
     public void ClosingQuote_IsFirstByteOfNextSegment()
     {
         var sequence = CreateSequence(
@@ -56,7 +56,7 @@ public class BasicStringSlowPathTest
         document!.RootNode["value"u8].GetString().ShouldBe("abcde");
     }
 
-    [Fact]
+    [Test]
     public void EscapeSequence_PrecededByPlainContentSplitAcrossSegments()
     {
         // "sta" | "rt" + \n(escape) + "end" + closing quote
@@ -69,7 +69,7 @@ public class BasicStringSlowPathTest
         document!.RootNode["value"u8].GetString().ShouldBe("start\nend");
     }
 
-    [Fact]
+    [Test]
     public void EscapeSequence_BackslashAtSegmentBoundary()
     {
         // "ab" + '\' | 'n' + "cd" + closing quote
@@ -82,7 +82,7 @@ public class BasicStringSlowPathTest
         document!.RootNode["value"u8].GetString().ShouldBe("ab\ncd");
     }
 
-    [Fact]
+    [Test]
     public void UnescapedControlCharacter_InSecondSegment()
     {
         var chunk2 = new byte[] { 0x01 }.Concat("cd\""u8.ToArray()).ToArray();
@@ -96,7 +96,7 @@ public class BasicStringSlowPathTest
         });
     }
 
-    [Fact]
+    [Test]
     public void UnterminatedString_AcrossMultipleSegments()
     {
         var sequence = CreateSequence(
@@ -109,7 +109,7 @@ public class BasicStringSlowPathTest
         });
     }
 
-    [Fact]
+    [Test]
     public void MultiByteUtf8Character_SplitAcrossSegmentBoundary()
     {
         // U+00E9 ('e' with acute accent) as UTF-8: 0xC3 0xA9, split between the two bytes.
@@ -123,7 +123,7 @@ public class BasicStringSlowPathTest
         document!.RootNode["value"u8].GetString().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void InvalidUtf8AfterEscapeSequence_Throws()
     {
         // \n (escape, forces the slow path) followed by a lone UTF-8 continuation byte

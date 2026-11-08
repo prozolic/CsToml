@@ -5,7 +5,7 @@ namespace CsToml.Generator.Tests.Seirialization;
 
 public class AliasNameTest
 {
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);
@@ -26,7 +26,7 @@ public class AliasNameTest
         aliasName.Literal.ShouldBe(@"this is <\i\c*\s*\\>");
     }
 
-    [Fact]
+    [Test]
     public void Serialize()
     {
         var aliasName = new AliasName()
@@ -88,7 +88,7 @@ public class AliasNameListTest
         };
     }
 
-    [Fact]
+    [Test]
     public void Serialize()
     {
         using var bytes = CsTomlSerializer.Serialize(aliasNameList);
@@ -102,7 +102,7 @@ public class AliasNameListTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(aliasNameList, Option.Header);
@@ -116,7 +116,7 @@ public class AliasNameListTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithArrayHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(aliasNameList, Option.ArrayHeader);
@@ -145,7 +145,7 @@ public class AliasNameListTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderAndArrayHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(aliasNameList, Option.HeaderAndArrayHeader);
@@ -174,7 +174,7 @@ public class AliasNameListTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         {

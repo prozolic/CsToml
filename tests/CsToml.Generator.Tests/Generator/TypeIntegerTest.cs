@@ -5,7 +5,7 @@ namespace CsToml.Generator.Tests;
 
 public class TypeIntegerTest
 {
-    [Fact]
+    [Test]
     public void Serialize()
     {
         var integer = new TypeInteger()
@@ -45,7 +45,7 @@ public class TypeIntegerTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);

@@ -5,7 +5,7 @@ namespace CsToml.Generator.Tests;
 
 public class TypeDecimalTest
 {
-    [Fact]
+    [Test]
     public void Serialize()
     {
         var decimalObj = new TypeDecimal()
@@ -33,7 +33,7 @@ public class TypeDecimalTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void DeserializeFromInteger()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);
@@ -50,7 +50,7 @@ public class TypeDecimalTest
         result.ZeroValue.ShouldBe(0m);
     }
 
-    [Fact]
+    [Test]
     public void DeserializeFromFloat()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);
@@ -66,7 +66,7 @@ public class TypeDecimalTest
         result.ZeroValue.ShouldBe(0m);
     }
 
-    [Fact]
+    [Test]
     public void DeserializeNullable()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);
@@ -83,7 +83,7 @@ public class TypeDecimalTest
         result.NullableFloatValue.ShouldBe(1.5m);
     }
 
-    [Fact]
+    [Test]
     public void RoundTrip()
     {
         var original = new TypeDecimal()
@@ -109,7 +109,7 @@ public class TypeDecimalTest
 
     // --- Edge Cases: Integer Boundaries ---
 
-    [Fact]
+    [Test]
     public void DeserializeFromInteger_LongMaxValue()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);
@@ -124,7 +124,7 @@ public class TypeDecimalTest
         result.IntegerValue.ShouldBe(9223372036854775807m);
     }
 
-    [Fact]
+    [Test]
     public void DeserializeFromInteger_LongMinValue()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);
@@ -138,7 +138,7 @@ public class TypeDecimalTest
         result.IntegerValue.ShouldBe(-9223372036854775808m);
     }
 
-    [Fact]
+    [Test]
     public void DeserializeFromInteger_MinPositiveAndNegative()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);
@@ -154,7 +154,7 @@ public class TypeDecimalTest
         result.ZeroValue.ShouldBe(0m);
     }
 
-    [Fact]
+    [Test]
     public void DeserializeFromFloat_ExponentOnly()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);
@@ -169,7 +169,7 @@ public class TypeDecimalTest
         result.FloatValue.ShouldBe(-2E-2m);
     }
 
-    [Fact]
+    [Test]
     public void DeserializeFromFloat_ExponentWithLeadingZero()
     {
         // TOML spec: "1e06" — exponent part allows leading zeros
@@ -184,7 +184,7 @@ public class TypeDecimalTest
         result.IntegerValue.ShouldBe(1e6m);
     }
 
-    [Fact]
+    [Test]
     public void DeserializeFromFloat_FracAndExp()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);
@@ -200,7 +200,7 @@ public class TypeDecimalTest
         result.NegativeValue.ShouldBe(-1.23e4m);
     }
 
-    [Fact]
+    [Test]
     public void DeserializeFromFloat_PositiveSign()
     {
         // TOML spec: "+1.0" — explicit positive sign on float
@@ -216,7 +216,7 @@ public class TypeDecimalTest
         result.NegativeValue.ShouldBe(-0.01m);
     }
 
-    [Fact]
+    [Test]
     public void DeserializeFromFloat_Underscore()
     {
         // TOML spec: "224_617.445_991_228" — underscores enhance readability
@@ -231,7 +231,7 @@ public class TypeDecimalTest
         result.IntegerValue.ShouldBe(224617.445991228m);
     }
 
-    [Fact]
+    [Test]
     public void DeserializeFromFloat_Inf_ThrowsOverflowException()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);
@@ -245,7 +245,7 @@ public class TypeDecimalTest
             CsTomlSerializer.Deserialize<TypeDecimal>(buffer.WrittenSpan));
     }
 
-    [Fact]
+    [Test]
     public void DeserializeFromFloat_PositiveInf_ThrowsOverflowException()
     {
         // TOML spec: "+inf" — explicit positive infinity
@@ -260,7 +260,7 @@ public class TypeDecimalTest
             CsTomlSerializer.Deserialize<TypeDecimal>(buffer.WrittenSpan));
     }
 
-    [Fact]
+    [Test]
     public void DeserializeFromFloat_NegativeInf_ThrowsOverflowException()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);
@@ -274,7 +274,7 @@ public class TypeDecimalTest
             CsTomlSerializer.Deserialize<TypeDecimal>(buffer.WrittenSpan));
     }
 
-    [Fact]
+    [Test]
     public void DeserializeFromFloat_Nan_ThrowsOverflowException()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);
@@ -288,7 +288,7 @@ public class TypeDecimalTest
             CsTomlSerializer.Deserialize<TypeDecimal>(buffer.WrittenSpan));
     }
 
-    [Fact]
+    [Test]
     public void DeserializeFromFloat_PositiveNan_ThrowsOverflowException()
     {
         // TOML spec: "+nan" — same as nan
@@ -303,7 +303,7 @@ public class TypeDecimalTest
             CsTomlSerializer.Deserialize<TypeDecimal>(buffer.WrittenSpan));
     }
 
-    [Fact]
+    [Test]
     public void DeserializeFromFloat_NegativeNan_ThrowsOverflowException()
     {
         // TOML spec: "-nan" — valid, implementation-specific encoding
@@ -318,7 +318,7 @@ public class TypeDecimalTest
             CsTomlSerializer.Deserialize<TypeDecimal>(buffer.WrittenSpan));
     }
 
-    [Fact]
+    [Test]
     public void DeserializeFromFloat_SmallValue()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);
@@ -334,7 +334,7 @@ public class TypeDecimalTest
         result.NegativeValue.ShouldBe(0m); // -0.0 as double → decimal becomes 0
     }
 
-    [Fact]
+    [Test]
     public void DeserializeFromFloat_PositiveZero()
     {
         // TOML spec: "+0.0" is valid and should map per IEEE 754
@@ -349,7 +349,7 @@ public class TypeDecimalTest
         result.IntegerValue.ShouldBe(0m);
     }
 
-    [Fact]
+    [Test]
     public void DeserializeFromFloat_LargeExponent_ThrowsOverflowException()
     {
         // TOML spec: "5e+22" — valid TOML float but exceeds decimal range (~7.9e28)
@@ -365,7 +365,7 @@ public class TypeDecimalTest
         result.IntegerValue.ShouldBe(5e+22m);
     }
 
-    [Fact]
+    [Test]
     public void DeserializeFromFloat_ExceedDecimalRange_ThrowsOverflowException()
     {
         // 1e+29 exceeds decimal.MaxValue (~7.9e28)
@@ -380,7 +380,7 @@ public class TypeDecimalTest
             CsTomlSerializer.Deserialize<TypeDecimal>(buffer.WrittenSpan));
     }
 
-    [Fact]
+    [Test]
     public void Serialize_DecimalMaxValue()
     {
         var decimalObj = new TypeDecimal()
@@ -408,7 +408,7 @@ public class TypeDecimalTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Serialize_SmallDecimalPrecision()
     {
         var decimalObj = new TypeDecimal()
@@ -436,7 +436,7 @@ public class TypeDecimalTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void DeserializeFromFloat_KeepsShortestRoundTripDigits()
     {
         // These need 16-17 significant digits, which a (decimal)double cast would have rounded away.
@@ -453,7 +453,7 @@ public class TypeDecimalTest
         result.NegativeValue.ShouldBe(-12345678901234566000000000m);
     }
 
-    [Fact]
+    [Test]
     public void DeserializeNullable_FromLongBoundaries()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);
@@ -470,7 +470,7 @@ public class TypeDecimalTest
         result.NullableFloatValue.ShouldBe(-9223372036854775808m);
     }
 
-    [Fact]
+    [Test]
     public void DeserializeNullable_ProducesSameValueAsNonNullable()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);
@@ -487,7 +487,7 @@ public class TypeDecimalTest
         result.NullableFloatValue.ShouldBe(result.FloatValue);
     }
 
-    [Fact]
+    [Test]
     public void DeserializeNullable_MissingKey_ReturnsNull()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);
@@ -502,7 +502,7 @@ public class TypeDecimalTest
         result.NullableFloatValue.ShouldBeNull();
     }
 
-    [Fact]
+    [Test]
     public void DeserializeNullable_FromInf_ThrowsOverflowException()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);
@@ -517,7 +517,7 @@ public class TypeDecimalTest
             CsTomlSerializer.Deserialize<TypeDecimal>(buffer.WrittenSpan));
     }
 
-    [Fact]
+    [Test]
     public void RoundTrip_KeepsShortestRoundTripDigits()
     {
         var original = new TypeDecimal()

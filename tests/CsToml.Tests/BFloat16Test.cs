@@ -1,4 +1,6 @@
 ﻿using CsToml.Error;
+using CsToml.Formatter;
+using CsToml.Formatter.Resolver;
 using System.Numerics;
 using System.Text;
 
@@ -23,20 +25,20 @@ public class BFloat16Test
         return Encoding.UTF8.GetString(serialized.ByteSpan);
     }
 
-    [Theory]
-    [InlineData("1.5", 1.5)]
-    [InlineData("-2.0", -2.0)]
-    [InlineData("0.25", 0.25)]
-    [InlineData("0.0", 0.0)]
-    [InlineData("3", 3.0)]
-    [InlineData("1e10", 1e10)]
-    [InlineData("3.14", 3.14)]
+    [Test]
+    [Arguments("1.5", 1.5)]
+    [Arguments("-2.0", -2.0)]
+    [Arguments("0.25", 0.25)]
+    [Arguments("0.0", 0.0)]
+    [Arguments("3", 3.0)]
+    [Arguments("1e10", 1e10)]
+    [Arguments("3.14", 3.14)]
     public void Deserialize_Float(string tomlValue, double expected)
     {
         GetBFloat16(tomlValue).ShouldBe((BFloat16)expected);
     }
 
-    [Fact]
+    [Test]
     public void Deserialize_SpecialValue()
     {
         BFloat16.IsPositiveInfinity(GetBFloat16("inf")).ShouldBeTrue();
@@ -44,7 +46,7 @@ public class BFloat16Test
         BFloat16.IsNaN(GetBFloat16("nan")).ShouldBeTrue();
     }
 
-    [Fact]
+    [Test]
     public void Deserialize_OutOfRange_IsInfinity()
     {
         // BFloat16.MaxValue is about 3.39E+38.
@@ -52,25 +54,25 @@ public class BFloat16Test
         BFloat16.IsNegativeInfinity(GetBFloat16("-1e300")).ShouldBeTrue();
     }
 
-    [Fact]
+    [Test]
     public void Deserialize_InvalidType_Throws()
     {
         Should.Throw<CsTomlException>(() => GetBFloat16("[ 1.5 ]"));
         Should.Throw<CsTomlException>(() => GetBFloat16("\"abc\""));
     }
 
-    [Theory]
-    [InlineData(1.5, "1.5")]
-    [InlineData(-2.0, "-2.0")]
-    [InlineData(0.25, "0.25")]
-    [InlineData(0.0, "0.0")]
-    [InlineData(100.0, "100.0")]
+    [Test]
+    [Arguments(1.5, "1.5")]
+    [Arguments(-2.0, "-2.0")]
+    [Arguments(0.25, "0.25")]
+    [Arguments(0.0, "0.0")]
+    [Arguments(100.0, "100.0")]
     public void Serialize_ExactlyRepresentableValue(double value, string expected)
     {
         Serialize((BFloat16)value).ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Serialize_WritesWidenedDoubleValue()
     {
         // Like float and Half, the value is widened to double: BFloat16 has 8 significant bits,
@@ -78,7 +80,7 @@ public class BFloat16Test
         Serialize((BFloat16)3.14).ShouldBe("3.140625");
     }
 
-    [Fact]
+    [Test]
     public void Serialize_SpecialValue()
     {
         Serialize(BFloat16.PositiveInfinity).ShouldBe("inf");
@@ -86,15 +88,17 @@ public class BFloat16Test
         Serialize(BFloat16.NaN).ShouldBe("nan");
     }
 
-    [Theory]
-    [InlineData(3.14)]
-    [InlineData(0.1)]
-    [InlineData(-123456.789)]
-    [InlineData(1e-10)]
-    [InlineData(3.0e38)]
+    [Test]
+    [Arguments(3.14)]
+    [Arguments(0.1)]
+    [Arguments(-123456.789)]
+    [Arguments(1e-10)]
+    [Arguments(3.0e38)]
     public void RoundTrip(double source)
     {
         var value = (BFloat16)source;
+        // The dictionary only carries the value; registering its formatter lets this also run without dynamic code (NativeAOT).
+        TomlValueFormatterResolver.Register<Dictionary<string, BFloat16>, DictionaryFormatter<string, BFloat16>>();
         var dict = new Dictionary<string, BFloat16>() { ["v"] = value };
         using var serialized = CsTomlSerializer.Serialize(dict);
         var document = CsTomlSerializer.Deserialize<TomlDocument>(serialized.ByteSpan);
@@ -102,7 +106,7 @@ public class BFloat16Test
         document.RootNode["v"].GetValue<BFloat16>().ShouldBe(value);
     }
 
-    [Fact]
+    [Test]
     public void RoundTrip_MinMaxEpsilon()
     {
         foreach (var value in new[] { BFloat16.MaxValue, BFloat16.MinValue, BFloat16.Epsilon })
@@ -112,22 +116,22 @@ public class BFloat16Test
         }
     }
 
-    [Theory]
-    [InlineData("1.5")]
-    [InlineData("3")]
-    [InlineData("3.14")]
+    [Test]
+    [Arguments("1.5")]
+    [Arguments("3")]
+    [Arguments("3.14")]
     public void Nullable_ProducesSameValueAsNonNullable(string tomlValue)
     {
         GetNullableBFloat16(tomlValue).ShouldBe(GetBFloat16(tomlValue));
     }
 
-    [Fact]
+    [Test]
     public void Nullable_MissingKey_ReturnsNull()
     {
         Deserialize("1.5").RootNode["missing"].GetValue<BFloat16?>().ShouldBeNull();
     }
 
-    [Fact]
+    [Test]
     public void Nullable_Serialize()
     {
         using var serialized = CsTomlSerializer.SerializeValueType<BFloat16?>((BFloat16)1.5);
@@ -136,7 +140,8 @@ public class BFloat16Test
         Should.Throw<CsTomlException>(() => CsTomlSerializer.SerializeValueType<BFloat16?>(null));
     }
 
-    [Fact]
+    [Test]
+    [SkipOnNativeAot("BFloat16[] and List<BFloat16> have no pre-registered formatter.")]
     public void Collection()
     {
         BFloat16[] values = [(BFloat16)1.5, (BFloat16)(-0.25), (BFloat16)8.0];

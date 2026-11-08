@@ -1,26 +1,32 @@
 ﻿using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json.Linq;
 using Shouldly;
+using System.Diagnostics.CodeAnalysis;
 
 namespace CsToml.Extensions.Configuration.Tests;
 
 public class ConfigurationTest
 {
-    [Fact]
+    // test.toml is copied next to the executable, which is not the working directory when a NativeAOT build is run from elsewhere.
+    private static readonly string TestTomlPath = Path.Combine(AppContext.BaseDirectory, "test.toml");
+
+    [Test]
     public void ConfigurationBuilderTest()
     {
         Should.NotThrow(() =>
         {
-            var conf = new ConfigurationBuilder().AddTomlFile("test.toml").Build();
+            var conf = new ConfigurationBuilder().AddTomlFile(TestTomlPath).Build();
         });
         Should.NotThrow(() =>
         {
-            using var fs = new FileStream("test.toml", FileMode.Open);
+            using var fs = new FileStream(TestTomlPath, FileMode.Open);
             var conf = new ConfigurationBuilder().AddTomlStream(fs).Build();
         });
     }
 
-    [Fact]
+    [Test]
+    // The JIT build binds by reflection; the NativeAOT publish turns on the binding source generator, which replaces Bind().
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Bind() is source-generated in the NativeAOT publish.")]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Bind() is source-generated in the NativeAOT publish.")]
     public void EqualsTest()
     {
         var toml = @"
@@ -85,7 +91,9 @@ name = ""Tom""
         actual.ShouldBeEquivalentTo(expected);
     }
 
-    [Fact]
+    [Test]
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Bind() is source-generated in the NativeAOT publish.")]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Bind() is source-generated in the NativeAOT publish.")]
     public void EqualsTestWithSerializerOptions()
     {
         var toml = @"

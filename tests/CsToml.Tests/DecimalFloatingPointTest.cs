@@ -1,4 +1,7 @@
 ﻿using CsToml.Error;
+using CsToml.Formatter;
+using CsToml.Formatter.Resolver;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Numerics;
 using System.Text;
@@ -25,7 +28,7 @@ public class DecimalFloatingPointTest
         where T : struct, IDecimalFloatingPointIeee754<T>
         => T.Parse(text, NumberStyles.Float, CultureInfo.InvariantCulture);
 
-    private static string Serialize<T>(T value)
+    private static string Serialize<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(T value)
     {
         using var serialized = CsTomlSerializer.SerializeValueType(value);
         return Encoding.UTF8.GetString(serialized.ByteSpan);
@@ -34,19 +37,21 @@ public class DecimalFloatingPointTest
     private static T RoundTrip<T>(T value)
         where T : struct, IDecimalFloatingPointIeee754<T>
     {
+        // The dictionary only carries the value; registering its formatter lets this also run without dynamic code (NativeAOT).
+        TomlValueFormatterResolver.Register<Dictionary<string, T>, DictionaryFormatter<string, T>>();
         var dict = new Dictionary<string, T>() { ["v"] = value };
         using var serialized = CsTomlSerializer.Serialize(dict);
         var document = CsTomlSerializer.Deserialize<TomlDocument>(serialized.ByteSpan);
         return document.RootNode["v"].GetValue<T>();
     }
 
-    [Theory]
-    [InlineData("3.14", "3.14")]
-    [InlineData("-123.456", "-123.456")]
-    [InlineData("-0.01", "-0.01")]
-    [InlineData("+1.0", "1")]
-    [InlineData("1.5", "1.5")]
-    [InlineData("6.626e-3", "0.006626")]
+    [Test]
+    [Arguments("3.14", "3.14")]
+    [Arguments("-123.456", "-123.456")]
+    [Arguments("-0.01", "-0.01")]
+    [Arguments("+1.0", "1")]
+    [Arguments("1.5", "1.5")]
+    [Arguments("6.626e-3", "0.006626")]
     public void Float_PreservesTextDigits(string tomlValue, string expected)
     {
         // A cast from double would give 3.140000 / 3.140000000000000 / 3.140000000000000124344978758017533.
@@ -55,7 +60,7 @@ public class DecimalFloatingPointTest
         GetText<Decimal128>(tomlValue).ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Float_RoundsToPrecisionOfTargetType()
     {
         // The shortest round-trippable form of the parsed double has 17 digits.
@@ -64,13 +69,13 @@ public class DecimalFloatingPointTest
         GetText<Decimal128>("0.30000000000000004").ShouldBe("0.30000000000000004");
     }
 
-    [Theory]
-    [InlineData("0")]
-    [InlineData("42")]
-    [InlineData("-1")]
-    [InlineData("999999")]
-    [InlineData("1_000_000")]
-    [InlineData("0xFF")]
+    [Test]
+    [Arguments("0")]
+    [Arguments("42")]
+    [Arguments("-1")]
+    [Arguments("999999")]
+    [Arguments("1_000_000")]
+    [Arguments("0xFF")]
     public void Integer_IsExact(string tomlValue)
     {
         var expected = Deserialize(tomlValue).RootNode["v"].GetValue<long>();
@@ -81,7 +86,7 @@ public class DecimalFloatingPointTest
         GetText<Decimal128>(tomlValue).ShouldBe(expected.ToString(CultureInfo.InvariantCulture));
     }
 
-    [Fact]
+    [Test]
     public void Integer_Int64Boundary()
     {
         // long.MaxValue is not representable as double, so going through double would give ...808.
@@ -93,7 +98,7 @@ public class DecimalFloatingPointTest
         GetText<Decimal32>("9223372036854775807").ShouldBe("9.223372E+18");
     }
 
-    [Fact]
+    [Test]
     public void Float_SpecialValue()
     {
         Decimal32.IsPositiveInfinity(Get<Decimal32>("inf")).ShouldBeTrue();
@@ -109,7 +114,7 @@ public class DecimalFloatingPointTest
         Decimal128.IsNaN(Get<Decimal128>("+nan")).ShouldBeTrue();
     }
 
-    [Fact]
+    [Test]
     public void Float_OutOfRangeOfDecimal32()
     {
         // Decimal32 covers 1E-101 .. 9.999999E+96, narrower than double.
@@ -122,7 +127,7 @@ public class DecimalFloatingPointTest
         GetText<Decimal128>("1e-300").ShouldBe("1E-300");
     }
 
-    [Fact]
+    [Test]
     public void InvalidType_Throws()
     {
         Should.Throw<CsTomlException>(() => Get<Decimal32>("[ 1.5 ]"));
@@ -130,14 +135,14 @@ public class DecimalFloatingPointTest
         Should.Throw<CsTomlException>(() => Get<Decimal128>("[ 1.5 ]"));
     }
 
-    [Theory]
-    [InlineData("3.14")]
-    [InlineData("1.50")]
-    [InlineData("-0.5")]
-    [InlineData("100")]
-    [InlineData("0")]
-    [InlineData("1E+20")]
-    [InlineData("1E-06")]
+    [Test]
+    [Arguments("3.14")]
+    [Arguments("1.50")]
+    [Arguments("-0.5")]
+    [Arguments("100")]
+    [Arguments("0")]
+    [Arguments("1E+20")]
+    [Arguments("1E-06")]
     public void Serialize_WritesInvariantText(string text)
     {
         // The quantum is kept as is (1.50 stays 1.50) and the exponent form is a valid TOML float.
@@ -146,7 +151,7 @@ public class DecimalFloatingPointTest
         Serialize(Parse<Decimal128>(text)).ShouldBe(text);
     }
 
-    [Fact]
+    [Test]
     public void Serialize_SpecialValue()
     {
         Serialize(Decimal32.PositiveInfinity).ShouldBe("inf");
@@ -163,7 +168,7 @@ public class DecimalFloatingPointTest
         Serialize(Decimal128.NaN).ShouldBe("nan");
     }
 
-    [Fact]
+    [Test]
     public void Serialize_IsCultureInvariant()
     {
         var original = CultureInfo.CurrentCulture;
@@ -180,21 +185,21 @@ public class DecimalFloatingPointTest
         }
     }
 
-    [Theory]
-    [InlineData("9223372036854775807", "9223372036854775807")]
-    [InlineData("-9223372036854775808", "-9223372036854775808")]
-    [InlineData("9223372036854775808", "9223372036854775808.0")]
-    [InlineData("-9223372036854775809", "-9223372036854775809.0")]
-    [InlineData("1234567890123456789012345678901234", "1234567890123456789012345678901234.0")]
-    [InlineData("-1234567890123456789012345678901234", "-1234567890123456789012345678901234.0")]
-    [InlineData("123456789012345678", "123456789012345678")]
+    [Test]
+    [Arguments("9223372036854775807", "9223372036854775807")]
+    [Arguments("-9223372036854775808", "-9223372036854775808")]
+    [Arguments("9223372036854775808", "9223372036854775808.0")]
+    [Arguments("-9223372036854775809", "-9223372036854775809.0")]
+    [Arguments("1234567890123456789012345678901234", "1234567890123456789012345678901234.0")]
+    [Arguments("-1234567890123456789012345678901234", "-1234567890123456789012345678901234.0")]
+    [Arguments("123456789012345678", "123456789012345678")]
     public void Serialize_Decimal128IntegerBeyondInt64_IsWrittenAsFloat(string text, string expected)
     {
         // A TOML integer must fit in Int64; anything larger has to be a float to stay parsable.
         Serialize(Parse<Decimal128>(text)).ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void RoundTrip_Decimal128IntegerBeyondInt64()
     {
         var value = Parse<Decimal128>("1234567890123456789012345678901234");
@@ -205,14 +210,14 @@ public class DecimalFloatingPointTest
         RoundTrip((Decimal128)long.MinValue).ShouldBe((Decimal128)long.MinValue);
     }
 
-    [Theory]
-    [InlineData("3.14")]
-    [InlineData("-99.99")]
-    [InlineData("0.000001")]
-    [InlineData("1E-20")]
-    [InlineData("1E+20")]
-    [InlineData("1234567")]
-    [InlineData("-0.5")]
+    [Test]
+    [Arguments("3.14")]
+    [Arguments("-99.99")]
+    [Arguments("0.000001")]
+    [Arguments("1E-20")]
+    [Arguments("1E+20")]
+    [Arguments("1234567")]
+    [Arguments("-0.5")]
     public void RoundTrip_Value(string text)
     {
         RoundTrip(Parse<Decimal32>(text)).ShouldBe(Parse<Decimal32>(text));
@@ -220,7 +225,7 @@ public class DecimalFloatingPointTest
         RoundTrip(Parse<Decimal128>(text)).ShouldBe(Parse<Decimal128>(text));
     }
 
-    [Fact]
+    [Test]
     public void RoundTrip_ValueRoundedOnConstruction()
     {
         // 12345678 does not fit in the 7 digits of Decimal32 and is formatted as 1.234568E+07.
@@ -229,7 +234,7 @@ public class DecimalFloatingPointTest
         RoundTrip(value).ShouldBe(value);
     }
 
-    [Fact]
+    [Test]
     public void RoundTrip_DefaultValue()
     {
         // default has the smallest exponent of each type (0E-101 / 0E-398 / 0E-6176).
@@ -238,7 +243,7 @@ public class DecimalFloatingPointTest
         RoundTrip(default(Decimal128)).ShouldBe(Decimal128.Zero);
     }
 
-    [Fact]
+    [Test]
     public void RoundTrip_SpecialValue()
     {
         Decimal64.IsPositiveInfinity(RoundTrip(Decimal64.PositiveInfinity)).ShouldBeTrue();
@@ -246,12 +251,12 @@ public class DecimalFloatingPointTest
         Decimal64.IsNaN(RoundTrip(Decimal64.NaN)).ShouldBeTrue();
     }
 
-    [Theory]
-    [InlineData("3.14")]
-    [InlineData("0.30000000000000004")]
-    [InlineData("9223372036854775807")]
-    [InlineData("0")]
-    [InlineData("inf")]
+    [Test]
+    [Arguments("3.14")]
+    [Arguments("0.30000000000000004")]
+    [Arguments("9223372036854775807")]
+    [Arguments("0")]
+    [Arguments("inf")]
     public void Nullable_ProducesSameValueAsNonNullable(string tomlValue)
     {
         var node = Deserialize(tomlValue).RootNode["v"];
@@ -261,7 +266,7 @@ public class DecimalFloatingPointTest
         node.GetValue<Decimal128?>().ShouldBe(node.GetValue<Decimal128>());
     }
 
-    [Fact]
+    [Test]
     public void Nullable_MissingKey_ReturnsNull()
     {
         var node = Deserialize("1.5").RootNode["missing"];
@@ -271,7 +276,7 @@ public class DecimalFloatingPointTest
         node.GetValue<Decimal128?>().ShouldBeNull();
     }
 
-    [Fact]
+    [Test]
     public void Nullable_Serialize()
     {
         Serialize<Decimal32?>(Parse<Decimal32>("3.14")).ShouldBe("3.14");
@@ -283,7 +288,8 @@ public class DecimalFloatingPointTest
         Should.Throw<CsTomlException>(() => Serialize<Decimal128?>(null));
     }
 
-    [Fact]
+    [Test]
+    [SkipOnNativeAot("Decimal64[] and List<Decimal64> have no pre-registered formatter.")]
     public void Collection()
     {
         Decimal64[] values = [Parse<Decimal64>("3.14"), Parse<Decimal64>("-0.5"), (Decimal64)100];

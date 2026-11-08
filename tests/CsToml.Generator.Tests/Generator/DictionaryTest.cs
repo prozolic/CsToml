@@ -61,7 +61,7 @@ public class DictionaryTest
         };
     }
 
-    [Fact]
+    [Test]
     public void Serialize()
     {
         using var bytes = CsTomlSerializer.Serialize(dict);
@@ -77,7 +77,7 @@ public class DictionaryTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(dict, options: Option.Header);
@@ -100,7 +100,7 @@ public class DictionaryTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithArrayHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(dict, options: Option.ArrayHeader);
@@ -116,7 +116,7 @@ public class DictionaryTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderAndArrayHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(dict, options: Option.HeaderAndArrayHeader);
@@ -139,7 +139,7 @@ public class DictionaryTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         {
@@ -174,32 +174,32 @@ public class DictionaryTest
 
         static void Validate(IDictionary<object, object?> typeOrderedDictionary)
         {
-            dynamic dynamicDict = typeOrderedDictionary;
-            long value = dynamicDict["key"][0];
+            var dict = typeOrderedDictionary;
+            long value = ObjectGraph.Get<long>(dict, "key", 0);
             value.ShouldBe(999);
-            string value2 = dynamicDict["key"][1];
+            string value2 = ObjectGraph.Get<string>(dict, "key", 1);
             value2.ShouldBe("Value");
-            string value3 = dynamicDict["key"][2];
+            string value3 = ObjectGraph.Get<string>(dict, "key", 2);
             value3.ShouldBe("Red");
-            object[] value4 = dynamicDict["key"][3]["key"][0];
+            object[] value4 = ObjectGraph.Get<object[]>(dict, "key", 3, "key", 0);
             value4.ShouldBe(new object[] { 1, 2, 3 });
-            string value5 = dynamicDict["key"][3]["key"][1]["key"];
+            string value5 = ObjectGraph.Get<string>(dict, "key", 3, "key", 1, "key");
             value5.ShouldBe("value");
-            string value6 = dynamicDict["Table"]["1"];
+            string value6 = ObjectGraph.Get<string>(dict, "Table", "1");
             value6.ShouldBe("2");
-            string value7 = dynamicDict["Table"]["3"];
+            string value7 = ObjectGraph.Get<string>(dict, "Table", "3");
             value7.ShouldBe("4");
-            long value8 = dynamicDict["Array"][0];
+            long value8 = ObjectGraph.Get<long>(dict, "Array", 0);
             value8.ShouldBe(123);
-            double value9 = dynamicDict["Array"][1];
+            double value9 = ObjectGraph.Get<double>(dict, "Array", 1);
             value9.ShouldBe(456.0f);
-            string value10 = dynamicDict["Array"][2];
+            string value10 = ObjectGraph.Get<string>(dict, "Array", 2);
             value10.ShouldBe("789");
-            object[] value11 = dynamicDict["TableParent"]["Table3"]["1"]["key"][0];
+            object[] value11 = ObjectGraph.Get<object[]>(dict, "TableParent", "Table3", "1", "key", 0);
             value11.ShouldBe(new object[] { 1, 2, 3 });
-            string value12 = dynamicDict["TableParent"]["Table3"]["1"]["key"][1]["key"];
+            string value12 = ObjectGraph.Get<string>(dict, "TableParent", "Table3", "1", "key", 1, "key");
             value12.ShouldBe("value");
-            string value13 = dynamicDict["TableParent"]["Table3"]["2"]["key"];
+            string value13 = ObjectGraph.Get<string>(dict, "TableParent", "Table3", "2", "key");
             value13.ShouldBe("value");
         }
     }

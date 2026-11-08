@@ -37,7 +37,8 @@ internal static class TomlDocumentExtensions
                 }
                 else
                 {
-                    arrayJsonObj.Add(new JsonObject() { [key] = value });
+                    // The cast picks Add(JsonNode?); a JsonObject argument binds to Add<T>(T), which is not AOT-safe.
+                    arrayJsonObj.Add((JsonNode)new JsonObject() { [key] = value });
                 }
             }
         }
@@ -71,7 +72,7 @@ internal static class TomlDocumentExtensions
                 }
                 else
                 {
-                    arrayJsonObj.Add(new JsonObject() { [key] = value });
+                    arrayJsonObj.Add((JsonNode)new JsonObject() { [key] = value });
                 }
             }
         }

@@ -5,7 +5,7 @@ namespace CsToml.Generator.Tests;
 
 public class ConstructorTest
 {
-    [Fact]
+    [Test]
     public void Serialize()
     {
         var primitive = new Constructor
@@ -29,7 +29,7 @@ public class ConstructorTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);
@@ -49,7 +49,7 @@ public class ConstructorTest
 
 public class Constructor2Test
 {
-    [Fact]
+    [Test]
     public void Serialize()
     {
         var primitive = new Constructor2("I'm a string.", 123.456)
@@ -70,7 +70,7 @@ public class Constructor2Test
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);
@@ -90,7 +90,7 @@ public class Constructor2Test
 
 public class Constructor3Test
 {
-    [Fact]
+    [Test]
     public void Serialize()
     {
         var primitive = new Constructor3("I'm a string.", 123, 123.456, true);
@@ -107,7 +107,7 @@ public class Constructor3Test
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);
@@ -127,7 +127,7 @@ public class Constructor3Test
 
 public class Constructor4Test
 {
-    [Fact]
+    [Test]
     public void Serialize()
     {
         var primitive = new Constructor4(true, "I'm a string.", 123.456, 123);
@@ -144,7 +144,7 @@ public class Constructor4Test
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);
@@ -164,7 +164,7 @@ public class Constructor4Test
 
 public class Constructor5Test
 {
-    [Fact]
+    [Test]
     public void Serialize()
     {
         var primitive = new Constructor5()
@@ -187,7 +187,7 @@ public class Constructor5Test
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);
@@ -207,7 +207,7 @@ public class Constructor5Test
 
 public class Constructor6Test
 {
-    [Fact]
+    [Test]
     public void Serialize()
     {
         var primitive = new Constructor6()
@@ -230,7 +230,7 @@ public class Constructor6Test
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);
@@ -250,7 +250,7 @@ public class Constructor6Test
 
 public class Constructor7Test
 {
-    [Fact]
+    [Test]
     public void Serialize()
     {
         var primitive = new Constructor7("I'm a string.", 123);
@@ -265,7 +265,7 @@ public class Constructor7Test
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);
@@ -281,7 +281,7 @@ public class Constructor7Test
 
 public class Constructor8Test
 {
-    [Fact]
+    [Test]
     public void Serialize()
     {
         var primitive = new Constructor8("I'm a string.", 123)
@@ -302,7 +302,7 @@ public class Constructor8Test
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);

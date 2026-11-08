@@ -6,7 +6,7 @@ namespace CsToml.Generator.Tests;
 
 public class FormatterResolverTest
 {
-    [Fact]
+    [Test]
     public void ConcurrentLookupResolvesGeneratedTypeOnce()
     {
         const int threadCount = 16;
@@ -50,7 +50,7 @@ public class FormatterResolverTest
         deserialized.Children.Length.ShouldBe(2);
     }
 
-    [Fact]
+    [Test]
     public void TypeIsNotPublishedBeforeItsMemberFormatters()
     {
         // Thread A resolves TypeA1Outer for the first time and is held inside TypeA1Slow's static constructor,
@@ -81,7 +81,7 @@ public class FormatterResolverTest
         TomlValueFormatterResolver.IsRegistered<List<TypeA1Inner>>().ShouldBeTrue();
     }
 
-    [Fact]
+    [Test]
     public void SelfReferencingTypeRegistersAndRoundTrips()
     {
         var toml = "Value = 1\nChildren = [{ Value = 2, Children = [] }, { Value = 3, Children = [{ Value = 4, Children = [] }] }]\n"u8;

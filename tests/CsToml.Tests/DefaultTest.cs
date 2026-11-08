@@ -53,7 +53,7 @@ number2 = 123456
 
     }
 
-    [Fact]
+    [Test]
     public void BasicTest()
     {
         var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
@@ -134,7 +134,7 @@ number2 = 123456
 
     }
 
-    [Fact]
+    [Test]
     public void Utf16IndexerTest()
     {
         //TomlDocumentNode[ReadOnlySpan<char> key]
@@ -175,7 +175,7 @@ number2 = 123456
         document!.RootNode["failed"].HasValue.ShouldBeFalse();
     }
 
-    [Fact]
+    [Test]
     public void ThrowTest()
     {
         var ex =  Should.Throw<CsTomlSerializeException>(() =>
@@ -194,7 +194,7 @@ flt = 3.1415
 
 public class TomlStringTest
 {
-    [Fact]
+    [Test]
     public void DeserializeAndSerialize()
     {
         var toml = @"
@@ -249,7 +249,7 @@ trimmed in raw strings.
 
     }
 
-    [Fact]
+    [Test]
     public void ValueType()
     {
         var document = CsTomlSerializer.Deserialize<TomlDocument>(@"key = ""value"""u8);
@@ -257,7 +257,7 @@ trimmed in raw strings.
         document!.RootNode["key"u8].GetString().ShouldBe("value");
     }
 
-    [Fact]
+    [Test]
     public void SupportsEscapeSequenceETest()
     {
         var document = CsTomlSerializer.Deserialize<TomlDocument>(@"""\e-esc"" = ""\e There is no escape! \e"""u8, Options.TomlSpecVersion110);
@@ -266,7 +266,7 @@ trimmed in raw strings.
         document!.RootNode[@"\e-esc"u8].GetString().ShouldBe("\x1b There is no escape! \x1b");
     }
 
-    [Fact]
+    [Test]
     public void SupportsEscapeSequenceXTest()
     {
         var document = CsTomlSerializer.Deserialize<TomlDocument>(@"""\x43\x73\x54\x6f\x6d\x6c"" = ""this is \x43\x73\x54\x6f\x6d\x6c"""u8, Options.TomlSpecVersion110);
@@ -277,7 +277,7 @@ trimmed in raw strings.
 
 public class TomlIntegerTest
 {
-    [Fact]
+    [Test]
     public void DeserializeAndSerialize()
     {
         var toml = @"
@@ -324,7 +324,7 @@ bin1 = 0b11010110
         buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
 
-    [Fact]
+    [Test]
     public void ValueType()
     {
         var document = CsTomlSerializer.Deserialize<TomlDocument>(@"int1 = +99"u8);
@@ -337,7 +337,7 @@ bin1 = 0b11010110
         (document3!.RootNode["int1"].ValueType == TomlValueType.Integer).ShouldBeTrue();
     }
 
-    [Fact]
+    [Test]
     public void Exception()
     {
         Should.Throw<CsTomlSerializeException>(() => {
@@ -360,7 +360,7 @@ bin1 = 0b11010110
 
 public class TomlFloatTest
 {
-    [Fact]
+    [Test]
     public void DeserializeAndSerialize()
     {
         var toml = @"
@@ -403,63 +403,63 @@ sf6 = -nan
         buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
 
-    [Fact]
+    [Test]
     public void ValueType()
     {
         var document = CsTomlSerializer.Deserialize<TomlDocument>(@"flt1 = +1.0"u8);
         (document!.RootNode["flt1"].ValueType == TomlValueType.Float).ShouldBeTrue();
     }
 
-    [Fact]
+    [Test]
     public void MaxValue()
     {
         var document = CsTomlSerializer.Deserialize<TomlDocument>(@"v = 1.7976931348623157e+308"u8);
         document!.RootNode["v"].GetDouble().ShouldBe(double.MaxValue);
     }
 
-    [Fact]
+    [Test]
     public void MinValue()
     {
         var document = CsTomlSerializer.Deserialize<TomlDocument>(@"v = -1.7976931348623157e+308"u8);
         document!.RootNode["v"].GetDouble().ShouldBe(double.MinValue);
     }
 
-    [Fact]
+    [Test]
     public void Epsilon()
     {
         var document = CsTomlSerializer.Deserialize<TomlDocument>(@"v = 5e-324"u8);
         document!.RootNode["v"].GetDouble().ShouldBe(double.Epsilon);
     }
 
-    [Fact]
+    [Test]
     public void VerySmallPositive()
     {
         var document = CsTomlSerializer.Deserialize<TomlDocument>(@"v = 2.2250738585072014e-308"u8);
         document!.RootNode["v"].GetDouble().ShouldBe(2.2250738585072014e-308);
     }
 
-    [Fact]
+    [Test]
     public void VeryLargeExponent()
     {
         var document = CsTomlSerializer.Deserialize<TomlDocument>(@"v = 1.0e+300"u8);
         document!.RootNode["v"].GetDouble().ShouldBe(1.0e+300);
     }
 
-    [Fact]
+    [Test]
     public void VerySmallExponent()
     {
         var document = CsTomlSerializer.Deserialize<TomlDocument>(@"v = 1.0e-300"u8);
         document!.RootNode["v"].GetDouble().ShouldBe(1.0e-300);
     }
 
-    [Fact]
+    [Test]
     public void NegativeZero()
     {
         var document = CsTomlSerializer.Deserialize<TomlDocument>(@"v = -0.0"u8);
         document!.RootNode["v"].GetDouble().ShouldBe(-0.0d);
     }
 
-    [Fact]
+    [Test]
     public void LargeExponentWithDecimal()
     {
         var document = CsTomlSerializer.Deserialize<TomlDocument>(@"v = 1.23456789012345e+200"u8);
@@ -469,7 +469,7 @@ sf6 = -nan
 
 public class TomlBooleanTest
 {
-    [Fact]
+    [Test]
     public void DeserializeAndSerialize()
     {
         var toml = @"
@@ -488,7 +488,7 @@ bool2 = false
         buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
 
-    [Fact]
+    [Test]
     public void ValueType()
     {
         var document = CsTomlSerializer.Deserialize<TomlDocument>(@"bool1 = true"u8);
@@ -498,7 +498,7 @@ bool2 = false
 
 public class TomlOffsetDateTimeTest
 {
-    [Fact]
+    [Test]
     public void DeserializeAndSerialize()
     {
         var toml = @"
@@ -659,7 +659,7 @@ odt45 = 1979-05-27T00:32:00.111111-07:00
         }
     }
 
-    [Fact]
+    [Test]
     public void DeserializeAndSerializeSecondsOmissionInTime()
     {
         var toml = @"
@@ -773,7 +773,7 @@ odt45 = 1979-05-27T00:32.111111-07:00
         }
     }
 
-    [Fact]
+    [Test]
     public void ValueType()
     {
         var document = CsTomlSerializer.Deserialize<TomlDocument>(@"odt1 = 1979-05-27T07:32:00Z"u8);
@@ -785,7 +785,7 @@ odt45 = 1979-05-27T00:32.111111-07:00
         document2!.RootNode["odt1"].GetDateTimeOffset().ShouldBe(new DateTimeOffset(1979, 5, 27, 7, 32, 0, TimeSpan.Zero));
     }
 
-    [Fact]
+    [Test]
     public void ValueTypeSecondsOmissionInTime()
     {
         Should.Throw<CsTomlSerializeException>(() => {
@@ -800,7 +800,7 @@ odt45 = 1979-05-27T00:32.111111-07:00
 
 public class TomlLocalDateTimeTest
 {
-    [Fact]
+    [Test]
     public void DeserializeAndSerialize()
     {
         var toml = @"
@@ -897,7 +897,7 @@ ldt24 = 1979-05-27T00:32:00.111111
         }
     }
 
-    [Fact]
+    [Test]
     public void DeserializeAndSerializeSecondsOmissionInTime()
     {
         var toml = @"
@@ -970,7 +970,7 @@ ldt24 = 1979-05-27T00:32.111111
     }
 
 
-    [Fact]
+    [Test]
     public void ValueType()
     {
         var document = CsTomlSerializer.Deserialize<TomlDocument>(@"ldt1 = 1979-05-27T07:32:00"u8);
@@ -982,7 +982,7 @@ ldt24 = 1979-05-27T00:32.111111
         document2!.RootNode["ldt1"].GetDateTime().ShouldBe(new DateTime(1979, 5, 27, 7, 32, 0, DateTimeKind.Local));
     }
 
-    [Fact]
+    [Test]
     public void ValueTypeSecondsOmissionInTime()
     {
         Should.Throw<CsTomlSerializeException>(() => {
@@ -997,7 +997,7 @@ ldt24 = 1979-05-27T00:32.111111
 
 public class TomlLocalDateTest
 {
-    [Fact]
+    [Test]
     public void DeserializeAndSerialize()
     {
         var toml = @"
@@ -1031,7 +1031,7 @@ ld3 = 1979-12-31
         }
     }
 
-    [Fact]
+    [Test]
     public void ValueType()
     {
         var document = CsTomlSerializer.Deserialize<TomlDocument>(@"ld1 = 1979-05-27"u8);
@@ -1046,7 +1046,7 @@ ld3 = 1979-12-31
 
 public class TomlLocalTimeTest
 {
-    [Fact]
+    [Test]
     public void DeserializeAndSerialize()
     {
         var toml = @"
@@ -1143,7 +1143,7 @@ lt24 = 00:32:00.111111
         }
     }
 
-    [Fact]
+    [Test]
     public void DeserializeAndSerializeSecondsOmissionInTime()
     {
         var toml = @"
@@ -1215,7 +1215,7 @@ lt24 = 00:32.111111
         }
     }
 
-    [Fact]
+    [Test]
     public void ValueType()
     {
         var document = CsTomlSerializer.Deserialize<TomlDocument>(@"lt1 = 07:32:00"u8);
@@ -1227,7 +1227,7 @@ lt24 = 00:32.111111
         document2!.RootNode["lt1"].GetTimeOnly().ShouldBe(new TimeOnly(7, 32, 0));
     }
 
-    [Fact]
+    [Test]
     public void ValueTypeSecondsOmissionInTime()
     {
         Should.Throw<CsTomlSerializeException>(() => {
@@ -1245,7 +1245,7 @@ lt24 = 00:32.111111
 public class TomlArrayOfTableTest
 {
 
-    [Fact]
+    [Test]
     public void DeserializeAndSerialize()
     {
         var toml = @"
@@ -1308,7 +1308,7 @@ smooth = true
 
 public class TomlArrayTest
 {
-    [Fact]
+    [Test]
     public void DeserializeAndSerialize()
     {
         var toml = @"
@@ -1341,7 +1341,7 @@ large = [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
         buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
 
-    [Fact]
+    [Test]
     public void ValueType()
     {
         var document = CsTomlSerializer.Deserialize<TomlDocument>("integers = [ 1, 2, 3 ]"u8);
@@ -1351,7 +1351,7 @@ large = [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
 
 public class TomlTableTest
 {
-    [Fact]
+    [Test]
     public void DeserializeAndSerialize()
     {
         var toml = @"
@@ -1397,7 +1397,7 @@ smooth = true
 
 public class TomlInlineTableTest
 {
-    [Fact]
+    [Test]
     public void DeserializeAndSerialize()
     {
         var toml = @"
@@ -1418,7 +1418,7 @@ animal = { type.name = ""pug"" }
         buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
 
-    [Fact]
+    [Test]
     public void AllowNewlinesInInlineTablesAndTrailingCommaInInlineTablesTest()
     {
         var toml = @"
@@ -1444,7 +1444,7 @@ animal = { type.name = ""pug"" }
         buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
 
-    [Fact]
+    [Test]
     public void AllowNewlinesInInlineTablesTest()
     {
         var toml = @"
@@ -1478,7 +1478,7 @@ animal = { type.name = ""pug"" }
         buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
 
-    [Fact]
+    [Test]
     public void AllowTrailingCommaInInlineTablesTest()
     {
         var toml = @"
@@ -1507,7 +1507,7 @@ animal = { type.name = ""pug"",}
         buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
 
-    [Fact]
+    [Test]
     public void DottedKeysWithSharedPrefixSerializeTest()
     {
         var toml = @"
@@ -1524,7 +1524,7 @@ val = { a.x = 1, a.y = 2 }
         buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
 
-    [Fact]
+    [Test]
     public void DeeplyNestedDottedKeysSerializeTest()
     {
         var toml = @"
@@ -1541,7 +1541,7 @@ val = { a.b.c = 1 }
         buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
 
-    [Fact]
+    [Test]
     public void DeeplyNestedDottedKeysWithSharedPrefixSerializeTest()
     {
         var toml = @"
@@ -1558,7 +1558,7 @@ val = { a.b.c = 1, a.d.e = 2 }
         buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
 
-    [Fact]
+    [Test]
     public void MixedRegularAndDottedKeysSerializeTest()
     {
         var toml = @"
@@ -1575,7 +1575,7 @@ val = { x = 1, y.z = 2 }
         buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
 
-    [Fact]
+    [Test]
     public void DottedKeysExceedInitialCapacitySerializeTest()
     {
         var toml = @"
@@ -1592,7 +1592,7 @@ val = { a.b.c.d.e = 1 }
         buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
 
-    [Fact]
+    [Test]
     public void MultipleIndependentDottedKeysSerializeTest()
     {
         var toml = @"
@@ -1609,7 +1609,7 @@ val = { a.b = 1, c.d = 2 }
         buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
 
-    [Fact]
+    [Test]
     public void DottedKeysResizeKeyStackSerializeTest()
     {
         var toml = @"
@@ -1626,7 +1626,7 @@ val = { a.b.c.d.e.f = 1 }
         buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
 
-    [Fact]
+    [Test]
     public void DottedKeysResizeKeyStackWithSharedPrefixSerializeTest()
     {
         var toml = @"
@@ -1643,7 +1643,7 @@ val = { a.b.c.d.e.f = 1, a.b.c.d.e.g = 2 }
         buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
 
-    [Fact]
+    [Test]
     public void NestedInlineTableSerializeTest()
     {
         var toml = @"
@@ -1660,7 +1660,7 @@ val = { a = { b = { c = 1 } } }
         buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
 
-    [Fact]
+    [Test]
     public void NestedInlineTableWithDottedKeysSerializeTest()
     {
         var toml = @"
@@ -1677,7 +1677,7 @@ val = { a = { b.c = 1, d.e = 2 } }
         buffer.ToArray().ShouldBe(serializeText.ByteSpan.ToArray());
     }
 
-    [Fact]
+    [Test]
     public void DottedKeysAtExactInitialCapacityWithSharedPrefixSerializeTest()
     {
         var toml = @"
@@ -1697,7 +1697,7 @@ val = { a.b.c.d.e = 1, a.b.c.d.f = 2 }
 
 public class DeserializeValueTypeTest
 {
-    [Fact]
+    [Test]
     public void Test()
     {
         var tomlIntValue = CsTomlSerializer.DeserializeValueType<long>("1234"u8);
@@ -1717,7 +1717,12 @@ public class DeserializeValueTypeTest
         tomlinlineTableValue["x"].ShouldBe((object)1);
         tomlinlineTableValue["y"].ShouldBe((object)2);
         tomlinlineTableValue["z"].ShouldBe((object)"3");
+    }
 
+    [Test]
+    [SkipOnNativeAot("Tuple<string, string, string> has no pre-registered formatter.")]
+    public void TupleValue()
+    {
         var tomlTupleValue = CsTomlSerializer.DeserializeValueType<Tuple<string, string, string>>("[ \"red\", \"yellow\", \"green\" ]"u8);
         tomlTupleValue.ShouldBe(new Tuple<string, string, string>("red", "yellow", "green"));
     }
@@ -1725,7 +1730,7 @@ public class DeserializeValueTypeTest
 
 public class SerializeValueTypeTest
 {
-    [Fact]
+    [Test]
     public void Test()
     {
         using var serializedTomlValue1 = CsTomlSerializer.SerializeValueType(123);
@@ -1746,12 +1751,18 @@ public class SerializeValueTypeTest
         dict["z"] = "3";
         using var serializedTomlValue5 = CsTomlSerializer.SerializeValueType(dict);
         serializedTomlValue5.ByteSpan.ToArray().ShouldBe("{x = 1, y = 2, z = \"3\"}"u8.ToArray());
-
-        using var serializedTomlValue6 = CsTomlSerializer.SerializeValueType(new Tuple<string, string, string>("red", "yellow", "green"));
-        serializedTomlValue6.ByteSpan.ToArray().ShouldBe("[ \"red\", \"yellow\", \"green\" ]"u8.ToArray());
     }
 
-    [Fact]
+    [Test]
+    [SkipOnNativeAot("Tuple<string, string, string> has no pre-registered formatter.")]
+    public void TupleValue()
+    {
+        using var serializedTomlValue = CsTomlSerializer.SerializeValueType(new Tuple<string, string, string>("red", "yellow", "green"));
+        serializedTomlValue.ByteSpan.ToArray().ShouldBe("[ \"red\", \"yellow\", \"green\" ]"u8.ToArray());
+    }
+
+    [Test]
+    [SkipOnNativeAot("IEnumerable<object> and the other collection interfaces of object have no pre-registered formatter.")]
     public void CovariantArrayAsInterface()
     {
         object[] array = new string[] { "red", "yellow", "green" };
@@ -1773,7 +1784,8 @@ public class SerializeValueTypeTest
         serializedTomlValue5.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
+    [SkipOnNativeAot("Memory<int> and ReadOnlyMemory<string> have no pre-registered formatter.")]
     public void MemoryAndReadOnlyMemory()
     {
         using var serializedTomlValue1 = CsTomlSerializer.SerializeValueType(new int[] { 1, 2, 3 }.AsMemory());
@@ -1789,7 +1801,8 @@ public class SerializeValueTypeTest
         serializedTomlValue4.ByteSpan.ToArray().ShouldBe("[ ]"u8.ToArray());
     }
 
-    [Fact]
+    [Test]
+    [SkipOnNativeAot("object[] and ImmutableArray<object> have no pre-registered formatter.")]
     public void CovariantArray()
     {
         string[] source = ["red", "yellow", "green"];
@@ -1809,7 +1822,7 @@ public class SerializeValueTypeTest
 
 public class MulitipleThreadTest
 {
-    [Fact]
+    [Test]
     public async Task ExecuteAsync()
     {
         var tomlText = @"
@@ -1864,7 +1877,7 @@ number2 = 123456
 
 public class TomlDocumentTest
 {
-    [Fact]
+    [Test]
     public void Execute()
     {
         var tomlText = @"
@@ -1952,7 +1965,7 @@ number2 = 123456
 
 public class DynamicTest
 {
-    [Fact]
+    [Test]
     public void Execute()
     {
         var tomlText = @"
@@ -1991,7 +2004,10 @@ number2 = 123456
 
 "u8;
 
-        var document = (IDictionary<object, object>)CsTomlSerializer.Deserialize<dynamic>(tomlText);
+        // Receive the dynamic result as object first: casting a dynamic value goes through the runtime binder,
+        // which needs dynamic code and fails in the NativeAOT build.
+        object result = CsTomlSerializer.Deserialize<dynamic>(tomlText);
+        var document = (IDictionary<object, object>)result;
         document["str"].ShouldBe("value");
         document["int"].ShouldBe(123);
         document["flt"].ShouldBe(3.1415d);
@@ -2040,7 +2056,7 @@ number2 = 123456
 
 public class KeyTest
 {
-    [Fact]
+    [Test]
     public void DeserializeAndSerialize()
     {
         var toml = @"
@@ -2091,7 +2107,7 @@ value2 = ""rofl""
 
 public class CommentTest
 {
-    [Fact]
+    [Test]
     public void Execute()
     {
     var tomlText = @"
@@ -2123,7 +2139,7 @@ int = 123
         expected.ShouldBe(actual);
     }
 
-    [Fact]
+    [Test]
     public void FirstKeyAfterTableHeader()
     {
         var tomlText = @"
@@ -2150,7 +2166,7 @@ y = 2
         actual.ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void FirstKeyAfterTableHeaderWithoutTableComment()
     {
         var tomlText = @"
@@ -2171,7 +2187,7 @@ x = 1
         actual.ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void FirstKeyAfterNestedTableHeader()
     {
         var tomlText = @"
@@ -2196,7 +2212,7 @@ y = 2
         actual.ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void FirstKeyAfterTableHeaderInArrayOfTables()
     {
         var tomlText = @"
@@ -2222,7 +2238,7 @@ z = 1
         actual.ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void FirstKeyOfEachTable()
     {
         var tomlText = @"

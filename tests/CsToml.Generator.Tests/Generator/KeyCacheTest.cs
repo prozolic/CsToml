@@ -5,7 +5,7 @@ namespace CsToml.Generator.Tests;
 
 public class KeyCacheTest
 {
-    [Fact]
+    [Test]
     public void SerializeWithHeaderOptionWhenSamePropertyNameWithoutAliasName()
     {
         var target = new KeyCacheWithoutAliasName() { Conflict = new KeyCacheInner() { Inner = new KeyCacheLeaf() { Value = "value" } } };
@@ -20,7 +20,7 @@ public class KeyCacheTest
         bytes.ByteSpan.ToArray().ShouldBe(buffer.ToArray());
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderOptionWhenSamePropertyNameWithAliasName()
     {
         var target = new KeyCacheWithAliasName() { Conflict = new KeyCacheInner() { Inner = new KeyCacheLeaf() { Value = "value" } } };
@@ -35,7 +35,7 @@ public class KeyCacheTest
         bytes.ByteSpan.ToArray().ShouldBe(buffer.ToArray());
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderOptionWhenKeyIsNotCSharpIdentifier()
     {
         var target = new KeyCacheEscapedKey() { Escaped = new KeyCacheLeaf() { Value = "value" } };
@@ -49,7 +49,7 @@ public class KeyCacheTest
         bytes.ByteSpan.ToArray().ShouldBe(buffer.ToArray());
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderOptionWhenKeysDifferOnlyByEscapedCharacter()
     {
         var target = new KeyCacheEscapedKey2() { Hyphen = new KeyCacheLeaf() { Value = "hyphen" }, Underscore = new KeyCacheLeaf() { Value = "underscore" } };

@@ -9,7 +9,7 @@ namespace CsToml.Generator.Tests;
 // https://github.com/prozolic/CsToml/issues/24
 public class Issue24Test
 {
-    [Fact]
+    [Test]
     public void DeserializeAndSerialize()
     {
         TomlValueFormatterResolver.Register(new SpecialHashFormatter());
@@ -51,7 +51,7 @@ public class Issue70Test
         };
     }
 
-    [Fact]
+    [Test]
     public void Serialize()
     {
         using var bytes = CsTomlSerializer.Serialize(interchangeChallenge);
@@ -75,7 +75,7 @@ public class Issue70Test
         deserialized.Flags.Static[0].Value.ShouldBe("flag{crypto_master}");
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(interchangeChallenge, options: Option.Header);
@@ -100,7 +100,7 @@ public class Issue70Test
         deserialized.Flags.Static[0].Value.ShouldBe("flag{crypto_master}");
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithArrayHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(interchangeChallenge, options: Option.ArrayHeader);
@@ -124,7 +124,7 @@ public class Issue70Test
         deserialized.Flags.Static[0].Value.ShouldBe("flag{crypto_master}");
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderAndArrayHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(interchangeChallenge, options: Option.HeaderAndArrayHeader);

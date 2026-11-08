@@ -19,7 +19,7 @@ public class TypeSortedListTest
         typeSortedList = new TypeSortedList() { Value = sortedList };
     }
 
-    [Fact]
+    [Test]
     public void Serialize()
     {
         using var bytes = CsTomlSerializer.Serialize(typeSortedList);
@@ -32,7 +32,7 @@ public class TypeSortedListTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(typeSortedList, Option.Header);
@@ -48,7 +48,7 @@ public class TypeSortedListTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithArrayHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(typeSortedList, Option.ArrayHeader);
@@ -61,7 +61,7 @@ public class TypeSortedListTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderAndArrayHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(typeSortedList, Option.HeaderAndArrayHeader);
@@ -77,7 +77,7 @@ public class TypeSortedListTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         var expected = typeSortedList.Value;

@@ -6,7 +6,7 @@ namespace CsToml.Generator.Tests;
 
 public class NullableTypeTest
 {
-    [Fact]
+    [Test]
     public void Serialize()
     {
         var type = new NullableType()
@@ -36,21 +36,21 @@ public class NullableTypeTest
         }
     }
 
-    [Fact]
+    [Test]
     public void SerializeNull()
     {
         var throwAction = () => { using var bytes = CsTomlSerializer.Serialize(new NullableType()); };
         throwAction.ShouldThrow<CsTomlException>();
     }
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         var type = CsTomlSerializer.Deserialize<NullableType>(@"Value = 999"u8);
         type.Value.ShouldBe(999);
     }
 
-    [Fact]
+    [Test]
     public void DeserializeNull()
     {
         var type = CsTomlSerializer.Deserialize<NullableType>(@""u8);

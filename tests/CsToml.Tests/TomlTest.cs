@@ -13,7 +13,7 @@ namespace CsToml.Tests;
 /// </summary>
 public class TomlTest
 {
-    private static readonly string TomlTestDirectoryPath = "./../../../toml-test/";
+    private static readonly string TomlTestDirectoryPath = FindTomlTestDirectory();
     private static readonly string ValidDirectory = "valid";
     private static readonly string InvalidDirectory = "invalid";
     private static readonly string TomlExtension = ".toml";
@@ -25,68 +25,86 @@ public class TomlTest
         "invalid/key/special-character.toml"
     };
 
-    [Theory, MemberData(nameof(ValidTomlFileV100))]
+    // `dotnet test` runs from bin/<config>/<tfm>/ and a NativeAOT build from bin/<config>/<tfm>/<rid>/publish/,
+    // so search upward from the executable instead of using a fixed relative path.
+    private static string FindTomlTestDirectory()
+    {
+        for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent)
+        {
+            var candidate = Path.Combine(directory.FullName, "toml-test");
+            if (Directory.Exists(candidate))
+            {
+                return candidate;
+            }
+        }
+        throw new DirectoryNotFoundException($"toml-test was not found above {AppContext.BaseDirectory}.");
+    }
+
+    // Test arguments stay relative to toml-test/ so that test names do not depend on the checkout location.
+    private static string FullPath(string file) => Path.Combine(TomlTestDirectoryPath, file);
+
+    [Test, MethodDataSource(nameof(ValidTomlFileV100))]
     public void ValidTestV100(string tomlFile, string jsonFile)
     {
         Should.NotThrow(() => {
-            var document = CsTomlFileSerializer.Deserialize<TomlDocument>(tomlFile);
+            var document = CsTomlFileSerializer.Deserialize<TomlDocument>(FullPath(tomlFile));
 
-            var jsonNode = JsonNode.Parse(File.ReadAllText(jsonFile))!;
+            var jsonNode = JsonNode.Parse(File.ReadAllText(FullPath(jsonFile)))!;
             var tomlDocumentJsonNode = document!.ToJsonObject();
             JsonNodeExtensions.DeepEqualsForTomlFormat(jsonNode, tomlDocumentJsonNode).ShouldBeTrue();
         }, $"TomlFile:{tomlFile}");
     }
 
-    [Theory, MemberData(nameof(ValidTomlFileV110))]
+    [Test, MethodDataSource(nameof(ValidTomlFileV110))]
     public void ValidTestV110(string tomlFile, string jsonFile)
     {
         Should.NotThrow(() => {
-            var document = CsTomlFileSerializer.Deserialize<TomlDocument>(tomlFile, Options.TomlSpecVersion110);
+            var document = CsTomlFileSerializer.Deserialize<TomlDocument>(FullPath(tomlFile), Options.TomlSpecVersion110);
 
-            var jsonNode = JsonNode.Parse(File.ReadAllText(jsonFile))!;
+            var jsonNode = JsonNode.Parse(File.ReadAllText(FullPath(jsonFile)))!;
             var tomlDocumentJsonNode = document!.ToJsonObject();
             JsonNodeExtensions.DeepEqualsForTomlFormat(jsonNode, tomlDocumentJsonNode).ShouldBeTrue();
         }, $"TomlFile:{tomlFile}");
     }
 
-    [Theory, MemberData(nameof(InvalidTomlFileV100))]
+    [Test, MethodDataSource(nameof(InvalidTomlFileV100))]
     public void InvalidTestV100(string tomlFile)
     {
         Should.Throw<CsTomlSerializeException>(() => {
-            var document = CsTomlFileSerializer.Deserialize<TomlDocument>(tomlFile);
+            var document = CsTomlFileSerializer.Deserialize<TomlDocument>(FullPath(tomlFile));
         }, $"TomlFile:{tomlFile}");
     }
 
-    [Theory, MemberData(nameof(InvalidTomlFileV110))]
+    [Test, MethodDataSource(nameof(InvalidTomlFileV110))]
     public void InvalidTestV110(string tomlFile)
     {
         Should.Throw<CsTomlSerializeException>(() => {
-            var document = CsTomlFileSerializer.Deserialize<TomlDocument>(tomlFile, Options.TomlSpecVersion110);
+            var document = CsTomlFileSerializer.Deserialize<TomlDocument>(FullPath(tomlFile), Options.TomlSpecVersion110);
         }, $"TomlFile:{tomlFile}");
     }
 
-    [Theory, MemberData(nameof(ValidTomlFileV100))]
+    [Test, MethodDataSource(nameof(ValidTomlFileV100))]
     public void ValidTestForStream(string tomlFile, string jsonFile)
     {
         Should.NotThrow(() => {
-            using var fs = new FileStream(tomlFile, FileMode.Open, FileAccess.Read);
+            using var fs = new FileStream(FullPath(tomlFile), FileMode.Open, FileAccess.Read);
             var document = CsTomlSerializer.Deserialize<TomlDocument>(fs);
 
-            var jsonNode = JsonNode.Parse(File.ReadAllText(jsonFile))!;
+            var jsonNode = JsonNode.Parse(File.ReadAllText(FullPath(jsonFile)))!;
             var tomlDocumentJsonNode = document!.ToJsonObject();
             JsonNodeExtensions.DeepEqualsForTomlFormat(jsonNode, tomlDocumentJsonNode).ShouldBeTrue();
         }, $"TomlFile:{tomlFile}");
     }
 
-    [Theory, MemberData(nameof(ValidTomlFileV100))]
+    [Test, MethodDataSource(nameof(ValidTomlFileV100))]
     public async Task ValidTestForStreamAsync(string tomlFile, string jsonFile)
     {
         var task = Should.NotThrowAsync(async () =>
         {
-            using var fs = new FileStream(tomlFile, FileMode.Open, FileAccess.Read);
+            using var fs = new FileStream(FullPath(tomlFile), FileMode.Open, FileAccess.Read);
             var document = await CsTomlSerializer.DeserializeAsync<TomlDocument>(fs);
 
-            var jsonNode = JsonNode.Parse(File.ReadAllText(jsonFile))!;
+            var jsonNode = JsonNode.Parse(File.ReadAllText(FullPath(jsonFile)))!;
             var tomlDocumentJsonNode = document!.ToJsonObject();
             JsonNodeExtensions.DeepEqualsForTomlFormat(jsonNode, tomlDocumentJsonNode).ShouldBeTrue();
         }, $"TomlFile:{tomlFile}");
@@ -94,46 +112,46 @@ public class TomlTest
         await task;
     }
 
-    [Theory, MemberData(nameof(InvalidTomlFileV100))]
+    [Test, MethodDataSource(nameof(InvalidTomlFileV100))]
     public void InvalidTestForStream(string tomlFile)
     {
         Should.Throw<CsTomlSerializeException>(() => {
-            using var fs = new FileStream(tomlFile, FileMode.Open, FileAccess.Read);
+            using var fs = new FileStream(FullPath(tomlFile), FileMode.Open, FileAccess.Read);
             var document = CsTomlSerializer.Deserialize<TomlDocument>(fs);
         }, $"TomlFile:{tomlFile}");
     }
 
-    [Theory, MemberData(nameof(ValidTomlFileV100))]
+    [Test, MethodDataSource(nameof(ValidTomlFileV100))]
     public void EncoderTestV100(string tomlFile, string jsonFile)
     {
         Should.NotThrow(() =>
         {
-            var documentA = CsTomlFileSerializer.Deserialize<TomlDocument>(tomlFile);
+            var documentA = CsTomlFileSerializer.Deserialize<TomlDocument>(FullPath(tomlFile));
             using var result = CsTomlSerializer.Serialize(documentA);
             var documentB = CsTomlSerializer.Deserialize<TomlDocument>(result.ByteSpan);
 
-            var jsonNode = JsonNode.Parse(File.ReadAllText(jsonFile))!;
+            var jsonNode = JsonNode.Parse(File.ReadAllText(FullPath(jsonFile)))!;
             var actualJsonNode = documentB!.ToJsonObject();
             JsonNodeExtensions.DeepEqualsForTomlFormat(jsonNode, actualJsonNode).ShouldBeTrue();
         }, $"TomlFile:{tomlFile}");
     }
 
-    [Theory, MemberData(nameof(ValidTomlFileV110))]
+    [Test, MethodDataSource(nameof(ValidTomlFileV110))]
     public void EncoderTestV110(string tomlFile, string jsonFile)
     {
         Should.NotThrow(() =>
         {
-            var documentA = CsTomlFileSerializer.Deserialize<TomlDocument>(tomlFile, Options.TomlSpecVersion110);
+            var documentA = CsTomlFileSerializer.Deserialize<TomlDocument>(FullPath(tomlFile), Options.TomlSpecVersion110);
             using var result = CsTomlSerializer.Serialize(documentA);
             var documentB = CsTomlSerializer.Deserialize<TomlDocument>(result.ByteSpan, Options.TomlSpecVersion110);
 
-            var jsonNode = JsonNode.Parse(File.ReadAllText(jsonFile))!;
+            var jsonNode = JsonNode.Parse(File.ReadAllText(FullPath(jsonFile)))!;
             var actualJsonNode = documentB!.ToJsonObject();
             JsonNodeExtensions.DeepEqualsForTomlFormat(jsonNode, actualJsonNode).ShouldBeTrue();
         }, $"TomlFile:{tomlFile}");
     }
 
-    public static IEnumerable<object[]> ValidTomlFileV100()
+    public static IEnumerable<(string TomlFile, string JsonFile)> ValidTomlFileV100()
     {
         var filesToml = Path.Combine(TomlTestDirectoryPath, TomlFilesVer100);
         var files = File.ReadAllLines(filesToml);
@@ -148,14 +166,11 @@ public class TomlTest
 
         foreach(var file in filePathTable)
         {
-            yield return new object[] {
-                Path.Combine(TomlTestDirectoryPath, Path.ChangeExtension(file, "toml")),
-                Path.Combine(TomlTestDirectoryPath, Path.ChangeExtension(file, "json")),
-            };
+            yield return (Path.ChangeExtension(file, "toml"), Path.ChangeExtension(file, "json"));
         }
     }
 
-    public static IEnumerable<object[]> ValidTomlFileV110()
+    public static IEnumerable<(string TomlFile, string JsonFile)> ValidTomlFileV110()
     {
         var filesToml = Path.Combine(TomlTestDirectoryPath, TomlFilesVer110);
         var files = File.ReadAllLines(filesToml);
@@ -170,14 +185,11 @@ public class TomlTest
 
         foreach (var file in filePathTable)
         {
-            yield return new object[] {
-                Path.Combine(TomlTestDirectoryPath, Path.ChangeExtension(file, "toml")),
-                Path.Combine(TomlTestDirectoryPath, Path.ChangeExtension(file, "json")),
-            };
+            yield return (Path.ChangeExtension(file, "toml"), Path.ChangeExtension(file, "json"));
         }
     }
 
-    public static IEnumerable<object[]> InvalidTomlFileV100()
+    public static IEnumerable<string> InvalidTomlFileV100()
     {
         var filesToml = Path.Combine(TomlTestDirectoryPath, TomlFilesVer100);
         var files = File.ReadAllLines(filesToml);
@@ -187,12 +199,12 @@ public class TomlTest
             var tomlFile = new FileInfo(Path.Combine(TomlTestDirectoryPath, file));
             if (tomlFile.Exists && tomlFile.Extension == TomlExtension && directoryName == InvalidDirectory)
             {
-                yield return new object[] { Path.Combine(TomlTestDirectoryPath, file) };
+                yield return file;
             }
         }
     }
 
-    public static IEnumerable<object[]> InvalidTomlFileV110()
+    public static IEnumerable<string> InvalidTomlFileV110()
     {
         var filesToml = Path.Combine(TomlTestDirectoryPath, TomlFilesVer110);
         var files = File.ReadAllLines(filesToml);
@@ -206,7 +218,7 @@ public class TomlTest
             var tomlFile = new FileInfo(Path.Combine(TomlTestDirectoryPath, file));
             if (tomlFile.Exists && tomlFile.Extension == TomlExtension && directoryName == InvalidDirectory)
             {
-                yield return new object[] { Path.Combine(TomlTestDirectoryPath, file) };
+                yield return file;
             }
         }
     }

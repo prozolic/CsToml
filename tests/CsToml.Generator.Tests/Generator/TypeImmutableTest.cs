@@ -55,7 +55,7 @@ public class TypeImmutableTest
         };
     }
 
-    [Fact]
+    [Test]
     public void Serialize()
     {
         using var bytes = CsTomlSerializer.Serialize(typeImmutable);
@@ -75,7 +75,7 @@ public class TypeImmutableTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(typeImmutable, Option.Header);
@@ -97,7 +97,7 @@ public class TypeImmutableTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithArrayHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(typeImmutable, Option.ArrayHeader);
@@ -117,7 +117,7 @@ public class TypeImmutableTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderAndArrayHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(typeImmutable, Option.HeaderAndArrayHeader);
@@ -139,7 +139,7 @@ public class TypeImmutableTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         {
@@ -184,25 +184,25 @@ public class TypeImmutableTest
             typeImmutable.ImmutableSortedSet.ShouldBe([1, 2, 3, 4, 5]);
 
             {
-                dynamic dict = typeImmutable.ImmutableDictionary;
-                long value = dict["key"][0];
+                var dict = typeImmutable.ImmutableDictionary;
+                long value = ObjectGraph.Get<long>(dict, "key", 0);
                 value.ShouldBe(999);
-                string value2 = dict["key"][1];
+                string value2 = ObjectGraph.Get<string>(dict, "key", 1);
                 value2.ShouldBe("Value");
-                object[] value3 = dict["key"][2]["key"][0];
+                object[] value3 = ObjectGraph.Get<object[]>(dict, "key", 2, "key", 0);
                 value3.ShouldBe(new object[] { 1, 2, 3 });
-                string value4 = dict["key"][2]["key"][1]["key"];
+                string value4 = ObjectGraph.Get<string>(dict, "key", 2, "key", 1, "key");
                 value4.ShouldBe("value");
             }
             {
-                dynamic dict = typeImmutable.ImmutableSortedDictionary;
-                long value = dict["key"][0];
+                var dict = typeImmutable.ImmutableSortedDictionary;
+                long value = ObjectGraph.Get<long>(dict, "key", 0);
                 value.ShouldBe(999);
-                string value2 = dict["key"][1];
+                string value2 = ObjectGraph.Get<string>(dict, "key", 1);
                 value2.ShouldBe("Value");
-                object[] value3 = dict["key"][2]["key"][0];
+                object[] value3 = ObjectGraph.Get<object[]>(dict, "key", 2, "key", 0);
                 value3.ShouldBe(new object[] { 1, 2, 3 });
-                string value4 = dict["key"][2]["key"][1]["key"];
+                string value4 = ObjectGraph.Get<string>(dict, "key", 2, "key", 1, "key");
                 value4.ShouldBe("value");
             }
         }
@@ -211,7 +211,7 @@ public class TypeImmutableTest
 
 public class TypeImmutableTest2
 {
-    [Fact]
+    [Test]
     public void Serialize()
     {
         var type = new TypeImmutable2()
@@ -303,7 +303,7 @@ public class TypeImmutableTest2
         }
     }
 
-    [Fact]
+    [Test]
     public void Serialize2()
     {
         ImmutableArray<TypeTable3> immutableArray = [new TypeTable3() { Value = "[1] This is TypeTable3 in IImmutableList" },
@@ -397,7 +397,7 @@ public class TypeImmutableTest2
     }
 
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);

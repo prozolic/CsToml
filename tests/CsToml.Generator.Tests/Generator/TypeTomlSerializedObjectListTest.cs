@@ -22,7 +22,7 @@ public class TypeTomlSerializedObjectListTest
         };
     }
 
-    [Fact]
+    [Test]
     public void Serialize()
     {
         using var bytes = CsTomlSerializer.Serialize(typeTomlSerializedObjectList);
@@ -35,7 +35,7 @@ public class TypeTomlSerializedObjectListTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(typeTomlSerializedObjectList, Option.Header);
@@ -48,7 +48,7 @@ public class TypeTomlSerializedObjectListTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithArrayHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(typeTomlSerializedObjectList, Option.ArrayHeader);
@@ -75,7 +75,7 @@ public class TypeTomlSerializedObjectListTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void SerializeWithHeaderAndArrayHeaderOption()
     {
         using var bytes = CsTomlSerializer.Serialize(typeTomlSerializedObjectList, Option.HeaderAndArrayHeader);
@@ -102,7 +102,7 @@ public class TypeTomlSerializedObjectListTest
         bytes.ByteSpan.ToArray().ShouldBe(expected);
     }
 
-    [Fact]
+    [Test]
     public void Deserialize()
     {
         {

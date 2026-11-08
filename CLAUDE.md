@@ -22,23 +22,35 @@ dotnet build
 dotnet build -c Release
 ```
 
-There is no `global.json`, so the newest installed SDK wins (currently a .NET 11 preview → `NETSDK1057` preview warnings are expected noise). There is no separate lint or format step: `TreatWarningsAsErrors`, `AnalysisLevel` and central package management are deliberately not adopted, and style is enforced only by `.editorconfig` during build.
+The root `global.json` only selects the test runner and pins no SDK, so the newest installed SDK wins (currently a .NET 11 preview → `NETSDK1057` preview warnings are expected noise). There is no separate lint or format step: `TreatWarningsAsErrors`, `AnalysisLevel` and central package management are deliberately not adopted, and style is enforced only by `.editorconfig` during build.
 
 ### Test
 
-Test projects run **xUnit v3 on Microsoft.Testing.Platform** (`UseMicrosoftTestingPlatformRunner`), not VSTest. `dotnet test --filter` does **not** work here — pass runner args after `--`:
+Test projects use **TUnit on Microsoft.Testing.Platform**. `global.json` puts `dotnet test` in MTP mode, so a project is passed with `--project`, and filtering uses `--treenode-filter "/<assembly>/<namespace>/<class>/<test>"` (VSTest's `--filter` does not exist):
 
 ```bash
-dotnet test                                                                    # every project x 3 TFMs
-dotnet test tests/CsToml.Tests/CsToml.Tests.csproj --framework net10.0         # one project, one TFM
-
-# a single class / method
-dotnet test tests/CsToml.Tests/CsToml.Tests.csproj --framework net10.0 -- --filter-class "CsToml.Tests.PushBareKeyTest"
-dotnet test tests/CsToml.Tests/CsToml.Tests.csproj --framework net10.0 -- --filter-method "*.SerializeWithHeaderOption*"
-dotnet test tests/CsToml.Tests/CsToml.Tests.csproj --framework net10.0 -- --list-tests
+dotnet test                                                                    # every project x 4 TFMs
+dotnet test --project tests/CsToml.Tests --framework net10.0                   # one project, one TFM
+dotnet test --project tests/CsToml.Tests --framework net10.0 --treenode-filter "/*/*/PushBareKeyTest/*"
+dotnet test --project tests/CsToml.Tests --framework net10.0 --list-tests
 ```
 
-`--filter-class` / `--filter-method` / `--filter-namespace` / `--filter-trait` are "simple filters" and cannot be mixed with `--filter-query`. Wildcards are allowed at either end.
+- Each project references `TUnit.Engine` + `TUnit.Assertions`, not the `TUnit` meta-package (which adds CodeCoverage, Telemetry and TRX extensions).
+- TUnit runs all tests in parallel, including tests of the same class, so tests must not share mutable static state.
+- Assertions are Shouldly; for exceptions use `Assert.ThrowsExactly<T>` (exact type) or `Should.Throw<T>`.
+
+### NativeAOT test run
+
+The same tests also run as a NativeAOT executable (CI job `aot-test`). This relies on TUnit's default source-generation mode; never enable its reflection mode.
+
+```bash
+dotnet publish tests/CsToml.Tests/CsToml.Tests.csproj -c Release -f net10.0 -r win-x64
+tests/CsToml.Tests/bin/Release/net10.0/win-x64/publish/CsToml.Tests.exe
+```
+
+- `PublishAot` is enabled only by `dotnet publish` (not by `-r` alone), so `dotnet test` stays a normal JIT run and still covers `BuiltinFormatterResolver`'s `MakeGenericType` fallback.
+- Test code must be AOT-safe: no `dynamic` (use `ObjectGraph.Get<T>` in Generator tests), and locate files from `AppContext.BaseDirectory`, not the working directory.
+- `[SkipOnNativeAot("reason")]` skips a test only in the AOT executable. Use it only for types resolvable solely through `MakeGenericType`, or for library gaps (reasons starting with `Known gap:`; remove the skip once fixed). Split such cases into their own test.
 
 ### Benchmarks
 
@@ -131,4 +143,4 @@ Non-obvious parts:
 
 ## CI
 
-`.github/workflows/build.yml` runs `dotnet restore` → `build --no-restore` → `test --no-build` on ubuntu-latest with SDKs 8/9/10. All three TFMs must build and pass on Linux, so avoid Windows-only assumptions in tests (path separators, file casing).
+`.github/workflows/build.yml` runs `dotnet restore` → `build --no-restore` → `test --no-build` on ubuntu-latest with SDKs 8/9/10/11. Every TFM must build and pass on Linux, so avoid Windows-only assumptions in tests (path separators, file casing). A second job, `aot-test`, publishes each test project for net10.0 / linux-x64 with NativeAOT and runs the executable.
