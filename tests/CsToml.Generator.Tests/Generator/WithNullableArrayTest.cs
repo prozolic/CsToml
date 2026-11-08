@@ -82,7 +82,6 @@ public class WithNullableArrayTest
     }
 }
 
-[SkipOnNativeAot("Known gap: the generated Register() does not register the long? element formatter of long?[], so only the MakeGenericType fallback resolves it.")]
 public class WithNullableArray2Test
 {
     private WithNullableArray2 withNullableArray2;

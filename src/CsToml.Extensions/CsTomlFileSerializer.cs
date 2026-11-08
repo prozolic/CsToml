@@ -2,6 +2,7 @@
 using CsToml.Extensions.Utility;
 using Cysharp.Collections;
 using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace CsToml.Extensions;
@@ -10,10 +11,10 @@ public partial class CsTomlFileSerializer
 {
     private static readonly string TomlExtension = ".toml";
 
-    public static T Deserialize<T>(string tomlFilePath, CsTomlSerializerOptions? options = null)
+    public static T Deserialize<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(string tomlFilePath, CsTomlSerializerOptions? options = null)
         => Deserialize<T>(tomlFilePath, options, TomlFileExtensionPolicy.Strict);
 
-    public static T Deserialize<T>(string tomlFilePath, CsTomlSerializerOptions? options, TomlFileExtensionPolicy extensionPolicy)
+    public static T Deserialize<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(string tomlFilePath, CsTomlSerializerOptions? options, TomlFileExtensionPolicy extensionPolicy)
     {
         ValidateExtension(tomlFilePath, extensionPolicy);
 
@@ -57,13 +58,13 @@ public partial class CsTomlFileSerializer
         }
     }
 
-    public static ValueTask<T> DeserializeAsync<T>(string tomlFilePath, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
+    public static ValueTask<T> DeserializeAsync<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(string tomlFilePath, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
         => DeserializeAsyncCore<T>(tomlFilePath, options, TomlFileExtensionPolicy.Strict, configureAwait, cancellationToken);
 
-    public static ValueTask<T> DeserializeAsync<T>(string tomlFilePath, CsTomlSerializerOptions? options, TomlFileExtensionPolicy extensionPolicy, bool configureAwait = false, CancellationToken cancellationToken = default)
+    public static ValueTask<T> DeserializeAsync<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(string tomlFilePath, CsTomlSerializerOptions? options, TomlFileExtensionPolicy extensionPolicy, bool configureAwait = false, CancellationToken cancellationToken = default)
         => DeserializeAsyncCore<T>(tomlFilePath, options, extensionPolicy, configureAwait, cancellationToken);
 
-    private static async ValueTask<T> DeserializeAsyncCore<T>(string tomlFilePath, CsTomlSerializerOptions? options, TomlFileExtensionPolicy extensionPolicy, bool configureAwait, CancellationToken cancellationToken)
+    private static async ValueTask<T> DeserializeAsyncCore<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(string tomlFilePath, CsTomlSerializerOptions? options, TomlFileExtensionPolicy extensionPolicy, bool configureAwait, CancellationToken cancellationToken)
     {
         ValidateExtension(tomlFilePath, extensionPolicy);
 
@@ -106,10 +107,10 @@ public partial class CsTomlFileSerializer
         }
     }
 
-    public static void Serialize<T>(string tomlFilePath, T value, CsTomlSerializerOptions? options = null)
+    public static void Serialize<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(string tomlFilePath, T value, CsTomlSerializerOptions? options = null)
         => Serialize<T>(tomlFilePath, value, options, TomlFileExtensionPolicy.Strict);
 
-    public static void Serialize<T>(string tomlFilePath, T value, CsTomlSerializerOptions? options, TomlFileExtensionPolicy extensionPolicy)
+    public static void Serialize<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(string tomlFilePath, T value, CsTomlSerializerOptions? options, TomlFileExtensionPolicy extensionPolicy)
     {
         ValidateExtension(tomlFilePath, extensionPolicy);
 
@@ -126,13 +127,13 @@ public partial class CsTomlFileSerializer
         bufferWriter.WriteTo(fileWriter.ByteWriter);
     }
 
-    public static ValueTask SerializeAsync<T>(string tomlFilePath, T value, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
+    public static ValueTask SerializeAsync<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(string tomlFilePath, T value, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
         => SerializeAsyncCore<T>(tomlFilePath, value, options, TomlFileExtensionPolicy.Strict, configureAwait, cancellationToken);
 
-    public static ValueTask SerializeAsync<T>(string tomlFilePath, T value, CsTomlSerializerOptions? options, TomlFileExtensionPolicy extensionPolicy, bool configureAwait = false, CancellationToken cancellationToken = default)
+    public static ValueTask SerializeAsync<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(string tomlFilePath, T value, CsTomlSerializerOptions? options, TomlFileExtensionPolicy extensionPolicy, bool configureAwait = false, CancellationToken cancellationToken = default)
         => SerializeAsyncCore<T>(tomlFilePath, value, options, extensionPolicy, configureAwait, cancellationToken);
 
-    private static async ValueTask SerializeAsyncCore<T>(string tomlFilePath, T value, CsTomlSerializerOptions? options, TomlFileExtensionPolicy extensionPolicy, bool configureAwait, CancellationToken cancellationToken)
+    private static async ValueTask SerializeAsyncCore<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(string tomlFilePath, T value, CsTomlSerializerOptions? options, TomlFileExtensionPolicy extensionPolicy, bool configureAwait, CancellationToken cancellationToken)
     {
         ValidateExtension(tomlFilePath, extensionPolicy);
 

@@ -5,9 +5,9 @@ using CsToml.Generator.Other;
 
 namespace CsToml.Generator.Tests;
 
-#if NET8_0
+#if NET8_0 || NET9_0
 // A failure here is a fail-fast that ends the whole test process, so the class must not run at all.
-[SkipOnNativeAot("Known gap: .NET 8 NativeAOT does not generate TomlSerializedObjectFormatter<GenericType<T>>.Serialize<TBufferWriter>, and the process fails fast.")]
+[SkipOnNativeAot("NativeAOT limitation fixed in .NET 10: the .NET 8/9 compiler does not generate TomlSerializedObjectFormatter<GenericType<T>>.Serialize<TBufferWriter> for a generic class, and the process fails fast.")]
 #endif
 public class GenericTypeTest
 {
@@ -195,5 +195,29 @@ public class GenericTypeTest
             value.Value.Value.ShouldBe("This is Simple");
             value.NullableValue!.Value.ShouldBe("This is Nullable Simple");
         }
+    }
+}
+
+#if NET8_0 || NET9_0
+[SkipOnNativeAot("NativeAOT limitation fixed in .NET 10: the .NET 8/9 compiler does not generate TomlSerializedObjectFormatter<GenericTypeWithAnnotatedTypeParameter<T>>.Serialize<TBufferWriter> for a generic class, and the process fails fast.")]
+#endif
+public class GenericTypeWithAnnotatedTypeParameterTest
+{
+    [Test]
+    public void SerializeAndDeserialize()
+    {
+        var value = new GenericTypeWithAnnotatedTypeParameter<SimpleStruct>()
+        {
+            Value = new SimpleStruct() { Value = "value" }
+        };
+        using var bytes = CsTomlSerializer.Serialize(value);
+
+        using var buffer = Utf8String.CreateWriter(out var writer);
+        writer.AppendLine("Value.Value = \"value\"");
+        writer.Flush();
+        bytes.ByteSpan.ToArray().ShouldBe(buffer.ToArray());
+
+        var deserialized = CsTomlSerializer.Deserialize<GenericTypeWithAnnotatedTypeParameter<SimpleStruct>>(bytes.ByteSpan);
+        deserialized.Value.Value.ShouldBe("value");
     }
 }

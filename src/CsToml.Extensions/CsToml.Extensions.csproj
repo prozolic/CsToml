@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Description>Extensions to CsToml.</Description>
     <PackageTags>TOML,serializer,parser,writer,reader</PackageTags>
+    <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
 
   <ItemGroup>
