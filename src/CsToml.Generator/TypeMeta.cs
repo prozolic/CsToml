@@ -39,9 +39,9 @@ internal sealed class TypeMeta
 
         var typeParameters = symbol.TypeParameters.Select(static p =>
             p.GetAttributes().Any(static a => a.AttributeClass?.ToFullFormatString() == DynamicallyAccessedMembersAttributeName)
-                ? p.Name
-                : $"[{DynamicallyAccessedMembersAttributeName}(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicMethods)] {p.Name}");
-        return $"{symbol.Name}<{string.Join(", ", typeParameters)}>";
+                ? $"@{p.Name}"
+                : $"[{DynamicallyAccessedMembersAttributeName}(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicMethods)] @{p.Name}");
+        return $"@{symbol.Name}<{string.Join(", ", typeParameters)}>";
     }
 
     public TypeMeta(INamedTypeSymbol symbol, TypeDeclarationSyntax syntax)
