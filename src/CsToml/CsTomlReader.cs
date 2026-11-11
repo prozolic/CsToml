@@ -1177,7 +1177,12 @@ internal ref struct CsTomlReader
 
         if (fullSpan)
         {
-            return mirrorTable.GetKey<T>(unreadSpan[..totalLength]);
+            // A key is stored as raw bytes and never decoded, so it has to be validated here.
+            var value = unreadSpan[..totalLength];
+            if (Utf8Helper.ContainInvalidSequences(value))
+                ExceptionHelper.ThrowInvalidCodePoints();
+
+            return mirrorTable.GetKey<T>(value);
         }
 
         try
@@ -1629,12 +1634,6 @@ internal ref struct CsTomlReader
             {
                 table = table.GetOrAddKeyTable(key!);
                 readResult = ReadKey(false, null, out key);
-
-                while (TryPeek(out var numberSignCh) && numberSignCh == TomlCodes.Symbol.NUMBERSIGN)
-                {
-                    SkipOneLine();
-                    SkipWhiteSpace();
-                }
             }
 
             table.AddKeyValue(key!, ReadValue());
@@ -1796,6 +1795,9 @@ internal ref struct CsTomlReader
                 case TomlCodes.Symbol.CARRIAGE:
                 case TomlCodes.Symbol.SPACE:
                 case TomlCodes.Symbol.COMMA:
+                case TomlCodes.Symbol.RIGHTSQUAREBRACKET:
+                case TomlCodes.Symbol.RIGHTBRACES:
+                case TomlCodes.Symbol.NUMBERSIGN:
                     goto BREAK;
                 case TomlCodes.Symbol.DOT:
                 case TomlCodes.Alphabet.E:
@@ -1831,6 +1833,7 @@ internal ref struct CsTomlReader
                 case TomlCodes.Symbol.COMMA: // 0,
                 case TomlCodes.Symbol.RIGHTSQUAREBRACKET: // 0]
                 case TomlCodes.Symbol.RIGHTBRACES: // 0}
+                case TomlCodes.Symbol.NUMBERSIGN: // 0#
                     Advance(1); // 0
                     return TomlInteger.Zero;
                 case TomlCodes.Symbol.CARRIAGE:
@@ -1878,6 +1881,7 @@ internal ref struct CsTomlReader
             {
                 if (ExistNoNewLineAndComment(minimumLength))
                 {
+                    var consumed = sequenceReader.Consumed;
                     var bufferWriter2 = RecycleArrayPoolBufferWriter<byte>.Rent();
                     try
                     {
@@ -1892,10 +1896,15 @@ internal ref struct CsTomlReader
                     {
                         RecycleArrayPoolBufferWriter<byte>.Return(bufferWriter2);
                     }
+
+                    // Not a time: give the bytes back so that the caller can read them as a number.
+                    Rewind(sequenceReader.Consumed - consumed);
                 }
             }
         }
-        else if (TryPeek(4, out var hyphen) && TomlCodes.IsHyphen(hyphen))
+        // A '-' that follows 'e' is the sign of a float exponent (1.5e-3), not a date delimiter.
+        else if (TryPeek(4, out var hyphen) && TomlCodes.IsHyphen(hyphen)
+            && !(TryPeek(3, out var exponent) && (exponent == TomlCodes.Alphabet.e || exponent == TomlCodes.Alphabet.E)))
         {
             if (sequenceReader.IsFullSpan)
             {
@@ -1919,6 +1928,7 @@ internal ref struct CsTomlReader
             {
                 if (ExistNoNewLineAndComment(TomlCodes.DateTime.LocalDateFormatLength))
                 {
+                    var consumed = sequenceReader.Consumed;
                     var bufferWriter2 = RecycleArrayPoolBufferWriter<byte>.Rent();
                     try
                     {
@@ -1941,6 +1951,9 @@ internal ref struct CsTomlReader
                     {
                         RecycleArrayPoolBufferWriter<byte>.Return(bufferWriter2);
                     }
+
+                    // Not a date: give the bytes back so that the caller can read them as a number.
+                    Rewind(sequenceReader.Consumed - consumed);
                 }
             }
         }
@@ -1969,10 +1982,11 @@ internal ref struct CsTomlReader
                         case TomlCodes.Symbol.COMMA: // 0,
                         case TomlCodes.Symbol.RIGHTSQUAREBRACKET: // 0]
                         case TomlCodes.Symbol.RIGHTBRACES: // 0}
+                        case TomlCodes.Symbol.NUMBERSIGN: // 0#
                             Advance(2); // 0
                             return TomlInteger.Zero;
                         case TomlCodes.Symbol.CARRIAGE:
-                            if (TryPeek(2, out var lf) && TomlCodes.IsLf(lf))
+                            if (TryPeek(3, out var lf) && TomlCodes.IsLf(lf))
                             {
                                 Advance(2); // 0
                                 return TomlInteger.Zero;
@@ -2012,6 +2026,9 @@ internal ref struct CsTomlReader
                 case TomlCodes.Symbol.CARRIAGE:
                 case TomlCodes.Symbol.SPACE:
                 case TomlCodes.Symbol.COMMA:
+                case TomlCodes.Symbol.RIGHTSQUAREBRACKET:
+                case TomlCodes.Symbol.RIGHTBRACES:
+                case TomlCodes.Symbol.NUMBERSIGN:
                     return ReadDecimalNumeric();
                 case TomlCodes.Symbol.DOT:
                 case TomlCodes.Alphabet.E:
@@ -2458,9 +2475,12 @@ internal ref struct CsTomlReader
         {
             if (sequenceReader.Length < sequenceReader.Consumed + 3) ExceptionHelper.ThrowIncorrectTomlFloatFormat();
 
-            if (sequenceReader.TryFullSpan(3, out var span) && span.SequenceEqual("inf"u8))
+            if (sequenceReader.TryFullSpan(3, out var span))
             {
-                return TomlFloat.Inf;
+                if (span.SequenceEqual("inf"u8))
+                {
+                    return TomlFloat.Inf;
+                }
             }
             else
             {
@@ -2543,9 +2563,12 @@ internal ref struct CsTomlReader
         {
             if (sequenceReader.Length < sequenceReader.Consumed + 3) ExceptionHelper.ThrowIncorrectTomlFloatFormat();
 
-            if (sequenceReader.TryFullSpan(3, out var span) && span.SequenceEqual("nan"u8))
+            if (sequenceReader.TryFullSpan(3, out var span))
             {
-                return TomlFloat.Nan;
+                if (span.SequenceEqual("nan"u8))
+                {
+                    return TomlFloat.Nan;
+                }
             }
             else
             {
@@ -2761,14 +2784,18 @@ internal ref struct CsTomlReader
         if (!TomlCodes.IsNumber(bytes[14])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
         if (!TomlCodes.IsNumber(bytes[15])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
 
-        if (bytes.Length > TomlCodes.DateTime.LocalDateTimeFormatLength)
+        if (bytes.Length > TomlCodes.DateTime.LocalDateTimeOptionFormatLength)
         {
             if (!TomlCodes.IsDot(bytes[16])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
+
+            var dot = true;
             var index = 17;
             while (index < bytes.Length)
             {
                 if (!TomlCodes.IsNumber(bytes[index++])) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
+                dot = false;
             }
+            if (dot) ExceptionHelper.ThrowIncorrectTomlLocalDateTimeFormat();
         }
 
         return TomlLocalDateTime.ParseToOmitSeconds(bytes);
@@ -2948,6 +2975,23 @@ internal ref struct CsTomlReader
         if (!TomlCodes.IsNumber(bytes[14])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
         if (!TomlCodes.IsNumber(bytes[15])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
 
+        // Only a fraction may sit between the minutes and the trailing Z.
+        if (bytes.Length > TomlCodes.DateTime.OffsetDateTimeZOptionFormatLength)
+        {
+            if (!TomlCodes.IsDot(bytes[16])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+
+            var index = 17;
+            var dot = true;
+            while (index < bytes.Length - 1)
+            {
+                if (!TomlCodes.IsNumber(bytes[index++]))
+                    ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+
+                dot = false;
+            }
+            if (dot) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        }
+
         return TomlOffsetDateTime.ParseToOmitSeconds(bytes);
     }
 
@@ -2981,6 +3025,10 @@ internal ref struct CsTomlReader
 
         if (TomlCodes.IsPlusOrMinusSign(bytes[19]))
         {
+            // YYYY-MM-DDTHH:MM:SS+HH:MM
+            if (bytes.Length != TomlCodes.DateTime.LocalDateTimeFormatLength + 6)
+                ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+
             if (!TomlCodes.IsNumber(bytes[20])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
             if (!TomlCodes.IsNumber(bytes[21])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
             if (!TomlCodes.IsColon(bytes[22])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
@@ -2999,7 +3047,8 @@ internal ref struct CsTomlReader
                     ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
                 }
             }
-            if (bytes.Length < index + 5)
+            // YYYY-MM-DDTHH:MM:SS.+HH:MM has no digit in the fraction.
+            if (index == 21 || bytes.Length < index + 5)
                 ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
 
             if (!TomlCodes.IsNumber(bytes[index++])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
@@ -3039,6 +3088,10 @@ internal ref struct CsTomlReader
 
         if (TomlCodes.IsPlusOrMinusSign(bytes[16]))
         {
+            // YYYY-MM-DDTHH:MM+HH:MM
+            if (bytes.Length != TomlCodes.DateTime.LocalDateTimeOptionFormatLength + 6)
+                ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+
             if (!TomlCodes.IsNumber(bytes[17])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
             if (!TomlCodes.IsNumber(bytes[18])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
             if (!TomlCodes.IsColon(bytes[19])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
@@ -3057,6 +3110,10 @@ internal ref struct CsTomlReader
                     ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
                 }
             }
+            // YYYY-MM-DDTHH:MM.+HH:MM has no digit in the fraction.
+            if (index == 18 || bytes.Length < index + 5)
+                ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+
             if (!TomlCodes.IsNumber(bytes[index++])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
             if (!TomlCodes.IsNumber(bytes[index++])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
             if (!TomlCodes.IsColon(bytes[index++])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
@@ -3085,16 +3142,13 @@ internal ref struct CsTomlReader
                 case TomlCodes.Symbol.RIGHTSQUAREBRACKET:
                 case TomlCodes.Symbol.RIGHTBRACES:
                 case TomlCodes.Symbol.NUMBERSIGN:
-                    if (delimiterSpace)
-                    {
-                        totalLength--;
-                    }
                     goto BREAK;
                 case TomlCodes.Symbol.SPACE:
                     if (index == 10) // space or T
                     {
+                        // The space is the date/time delimiter only if a time follows it,
+                        // so it is not counted until the next byte has been seen.
                         delimiterSpace = true;
-                        totalLength++;
                         continue;
                     }
                     goto BREAK;
@@ -3111,6 +3165,11 @@ internal ref struct CsTomlReader
                     value = [];
                     return false;
                 default:
+                    if (delimiterSpace)
+                    {
+                        totalLength++; // the delimiter space
+                        delimiterSpace = false;
+                    }
                     totalLength++;
                     continue;
             }
