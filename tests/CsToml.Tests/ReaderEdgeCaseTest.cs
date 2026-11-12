@@ -1,4 +1,4 @@
-using CsToml.Error;
+﻿using CsToml.Error;
 using CsToml.Utility;
 using CsToml.Values;
 using System.Buffers;
@@ -467,7 +467,47 @@ public class ReaderEdgeCaseTest
         ShouldFail(toml);
     }
 
-    // The escapes are assembled here so that this file never contains a literal backslash-U sequence.
+    [Test]
+    [Arguments("x = 0x00000000000000001\n", 1L)]
+    [Arguments("x = 0x00000000000000000\n", 0L)]
+    [Arguments("x = 0x07FFFFFFFFFFFFFFF\n", long.MaxValue)]
+    [Arguments("x = 0x0000_0000_0000_0000_0000_0000_0000_0000_0000_00FF\n", 255L)]
+    [Arguments("x = 0o0000000000000000000001\n", 1L)]
+    [Arguments("x = 0o0777777777777777777777\n", long.MaxValue)]
+    [Arguments("x = 0o0000_0000_0000_0000_0000_0000_0000_0000_0000_0017\n", 15L)]
+    [Arguments("x = 0b00000000000000000000000000000000000000000000000000000000000000001\n", 1L)]
+    [Arguments("x = 0b00111111111111111111111111111111111111111111111111111111111111111\n", long.MaxValue)]
+    [Arguments("x = 0b0000000000000000000000000000000000000000000000000000000000000000000000000101\n", 5L)]
+    public void PrefixedInteger_LeadingZeros(string toml, long expected)
+    {
+        Parse(toml, document => ShouldBeInteger(document.RootNode["x"u8], expected));
+    }
+
+    [Test]
+    public void PrefixedInteger_LeadingZeros_SplitAcrossSegments()
+    {
+        var sequence = CreateSequence(
+            "x = 0x0000000000"u8.ToArray(),
+            "0000000001\ny = 0o00000000000"u8.ToArray(),
+            "00000000000017\nz = 0b000000000000000000000000000000000"u8.ToArray(),
+            "000000000000000000000000000000000010\n"u8.ToArray());
+
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(sequence);
+        ShouldBeInteger(document.RootNode["x"u8], 1);
+        ShouldBeInteger(document.RootNode["y"u8], 15);
+        ShouldBeInteger(document.RootNode["z"u8], 2);
+    }
+
+    [Test]
+    [Arguments("x = 0x08000000000000000\n")]
+    [Arguments("x = 0x00010000000000000000\n")]
+    [Arguments("x = 0o01000000000000000000000\n")]
+    [Arguments("x = 0b01000000000000000000000000000000000000000000000000000000000000000\n")]
+    public void PrefixedInteger_LeadingZeros_Overflow_Throws(string toml)
+    {
+        ShouldFail(toml);
+    }
+
     private static string Escape32(string digits) => "\\" + "U" + digits;
 
     private static void ShouldFailAsBasicString(string content)
