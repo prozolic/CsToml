@@ -415,4 +415,190 @@ public class ReaderEdgeCaseTest
         Parse("x = 1979-05-27T07:32:00.5+09:00\n", document =>
             document.RootNode["x"u8].GetDateTimeOffset().ShouldBe(new DateTimeOffset(1979, 5, 27, 7, 32, 0, 500, TimeSpan.FromHours(9))));
     }
+
+    [Test]
+    [Arguments("x = 0xFF#comment\n", 255L)]
+    [Arguments("x = 0xdead_beef#\n", 0xdeadbeefL)]
+    [Arguments("x = 0o17#comment\n", 15L)]
+    [Arguments("x = 0o7#\n", 7L)]
+    [Arguments("x = 0b101#comment\n", 5L)]
+    [Arguments("x = 0b1#", 1L)]
+    [Arguments("x = 0xFF #comment\n", 255L)]
+    [Arguments("x = 0o17\t#comment\n", 15L)]
+    [Arguments("x = 0b101 #comment\n", 5L)]
+    public void PrefixedInteger_FollowedByComment(string toml, long expected)
+    {
+        Parse(toml, document => ShouldBeInteger(document.RootNode["x"u8], expected));
+    }
+
+    [Test]
+    [Arguments("x = [0x1F#c\n]\n", 31L)]
+    [Arguments("x = [0o17#c\n, 2]\n", 15L)]
+    [Arguments("x = [ 0b11#c\n ]\n", 3L)]
+    public void PrefixedInteger_FollowedByComment_InArray(string toml, long expected)
+    {
+        Parse(toml, document => ShouldBeInteger(document.RootNode["x"u8][0], expected));
+    }
+
+    [Test]
+    public void PrefixedInteger_FollowedByComment_SplitAcrossSegments()
+    {
+        var sequence = CreateSequence(
+            "x = 0xF"u8.ToArray(),
+            "F#c\ny = 0o1"u8.ToArray(),
+            "7#c\nz = 0b10"u8.ToArray(),
+            "#c\n"u8.ToArray());
+
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(sequence);
+        ShouldBeInteger(document.RootNode["x"u8], 255);
+        ShouldBeInteger(document.RootNode["y"u8], 15);
+        ShouldBeInteger(document.RootNode["z"u8], 2);
+    }
+
+    [Test]
+    [Arguments("x = 0xFF_#c\n")]
+    [Arguments("x = 0o17_#c\n")]
+    [Arguments("x = 0b11_#c\n")]
+    [Arguments("x = 0x#c\n")]
+    [Arguments("x = 0o#c\n")]
+    [Arguments("x = 0b#c\n")]
+    public void PrefixedInteger_Malformed_FollowedByComment_Throws(string toml)
+    {
+        ShouldFail(toml);
+    }
+
+    // The escapes are assembled here so that this file never contains a literal backslash-U sequence.
+    private static string Escape32(string digits) => "\\" + "U" + digits;
+
+    private static void ShouldFailAsBasicString(string content)
+    {
+        ShouldFail("x = \"" + content + "\"\n");
+        ShouldFail("x = \"\"\"" + content + "\"\"\"\n");
+        ShouldFail("\"" + content + "\" = 1\n");
+    }
+
+    [Test]
+    [Arguments("0000004G")]
+    [Arguments("0000004g")]
+    [Arguments("0000004 ")]
+    [Arguments("0000004-")]
+    [Arguments("0000004\"")]
+    [Arguments("0010FFFZ")]
+    public void UnicodeEscape32_NonHexLastDigit_Throws(string digits)
+    {
+        ShouldFailAsBasicString(Escape32(digits));
+    }
+
+    [Test]
+    [Arguments("G0000041")]
+    [Arguments("0G000041")]
+    [Arguments("00G00041")]
+    [Arguments("000G0041")]
+    [Arguments("0000G041")]
+    [Arguments("00000G41")]
+    [Arguments("000000G1")]
+    public void UnicodeEscape32_NonHexDigit_Throws(string digits)
+    {
+        ShouldFailAsBasicString(Escape32(digits));
+    }
+
+    [Test]
+    [Arguments("80000041")]
+    [Arguments("90000041")]
+    [Arguments("F0000041")]
+    [Arguments("FFFFFF41")]
+    [Arguments("FFFFFF00")]
+    [Arguments("8000007F")]
+    [Arguments("FFFFFFFF")]
+    [Arguments("7FFFFFFF")]
+    [Arguments("00110000")]
+    public void UnicodeEscape32_OutOfRange_Throws(string digits)
+    {
+        ShouldFailAsBasicString(Escape32(digits));
+    }
+
+    [Test]
+    public void UnicodeEscape32_OutOfRange_FormingValidUtf8_Throws()
+    {
+        // The low bytes C3 A9 are the UTF-8 encoding of U+00E9, so the UTF-8 validation alone does not reject this.
+        ShouldFailAsBasicString(Escape32("FFFFFFC3") + Escape32("FFFFFFA9"));
+    }
+
+    [Test]
+    [Arguments("00000041")]
+    [Arguments("0000007F")]
+    [Arguments("00000080")]
+    [Arguments("000000e9")]
+    [Arguments("000007FF")]
+    [Arguments("00000800")]
+    [Arguments("0000FFFD")]
+    [Arguments("00010000")]
+    [Arguments("0001F600")]
+    [Arguments("0010FFFF")]
+    [Arguments("0010ffff")]
+    public void UnicodeEscape32_Valid(string digits)
+    {
+        var expected = char.ConvertFromUtf32(Convert.ToInt32(digits, 16));
+
+        Parse("x = \"" + Escape32(digits) + "\"\n", document => document.RootNode["x"u8].GetString().ShouldBe(expected));
+        Parse("x = \"\"\"" + Escape32(digits) + "\"\"\"\n", document => document.RootNode["x"u8].GetString().ShouldBe(expected));
+        Parse("\"" + Escape32(digits) + "\" = 1\n", document => document.RootNode[expected].GetInt64().ShouldBe(1));
+    }
+
+    [Test]
+    public void UnicodeEscape32_SplitAcrossSegments()
+    {
+        var invalid = CreateSequence(
+            Encoding.UTF8.GetBytes("x = \"" + Escape32("0000")),
+            "004G\"\n"u8.ToArray());
+        Should.Throw<CsTomlSerializeException>(() => CsTomlSerializer.Deserialize<TomlDocument>(invalid));
+
+        var outOfRange = CreateSequence(
+            Encoding.UTF8.GetBytes("x = \"" + Escape32("8000")),
+            "0041\"\n"u8.ToArray());
+        Should.Throw<CsTomlSerializeException>(() => CsTomlSerializer.Deserialize<TomlDocument>(outOfRange));
+
+        var valid = CreateSequence(
+            Encoding.UTF8.GetBytes("x = \"" + Escape32("0000")),
+            "0041\"\n"u8.ToArray());
+        CsTomlSerializer.Deserialize<TomlDocument>(valid).RootNode["x"u8].GetString().ShouldBe("A");
+    }
+
+    [Test]
+    [Arguments("x = []\n", "[]")]
+    [Arguments("x = [ ]\n", "[]")]
+    [Arguments("x = [\n]\n", "[]")]
+    [Arguments("x = [[]]\n", "[[]]")]
+    [Arguments("x = [[], [1], []]\n", "[[], [1], []]")]
+    [Arguments("x = [1, []]\n", "[1, []]")]
+    public void EmptyArray_GetString(string toml, string expected)
+    {
+        Parse(toml, document =>
+        {
+            var node = document.RootNode["x"u8];
+            node.GetString().ShouldBe(expected);
+            node.TryGetString(out var value).ShouldBeTrue();
+            value.ShouldBe(expected);
+            node.GetTomlValue().ToString().ShouldBe(expected);
+        });
+    }
+
+    [Test]
+    public void EmptyArray_TryFormat()
+    {
+        Parse("x = []\n", document =>
+        {
+            var array = document.RootNode["x"u8].GetTomlValue();
+
+            Span<char> destination = stackalloc char[2];
+            array.TryFormat(destination, out var charsWritten).ShouldBeTrue();
+            charsWritten.ShouldBe(2);
+            destination.ToString().ShouldBe("[]");
+
+            array.TryFormat(destination[..1], out charsWritten).ShouldBeFalse();
+            charsWritten.ShouldBe(0);
+            array.TryFormat(Span<char>.Empty, out charsWritten).ShouldBeFalse();
+            charsWritten.ShouldBe(0);
+        });
+    }
 }

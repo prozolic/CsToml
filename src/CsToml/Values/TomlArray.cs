@@ -90,6 +90,18 @@ internal partial class TomlArray : TomlValue, IEnumerable<TomlValue>
         destination[written++] = '[';
 
         var arraySpan = AsSpan();
+        if (arraySpan.Length == 0)
+        {
+            if (destination.Length - written == 0)
+            {
+                charsWritten = 0;
+                return false;
+            }
+            destination[written++] = ']';
+            charsWritten = written;
+            return true;
+        }
+
         for (int i = 0; i < arraySpan.Length - 1; i++)
         {
             if (arraySpan[i].TryFormat(destination.Slice(written), out var charsWritten2, format, provider))

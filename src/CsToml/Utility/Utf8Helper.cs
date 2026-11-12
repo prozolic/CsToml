@@ -128,20 +128,20 @@ internal static class Utf8Helper
     public static void ParseFromCodePointToUtf8(int utf32CodePoint, Span<byte> utf8Bytes, out int writtenCount)
     {
         // unicode -> utf8
-        if (utf32CodePoint < 0x80)
+        if ((uint)utf32CodePoint < 0x80)
         {
             utf8Bytes[0] = (byte)utf32CodePoint;
             writtenCount = 1;
             return;
         }
-        else if (utf32CodePoint < 0x800)
+        else if ((uint)utf32CodePoint < 0x800)
         {
             utf8Bytes[0] = (byte)(0xc0 | utf32CodePoint >> 6);
             utf8Bytes[1] = (byte)(0x80 | utf32CodePoint & 0x3f);
             writtenCount = 2;
             return;
         }
-        else if (utf32CodePoint < 0x10000)
+        else if ((uint)utf32CodePoint < 0x10000)
         {
             utf8Bytes[0] = (byte)(0xe0 | utf32CodePoint >> 12);
             utf8Bytes[1] = (byte)(0x80 | (utf32CodePoint & 0xfc0) >> 6);
@@ -149,7 +149,7 @@ internal static class Utf8Helper
             writtenCount = 3;
             return;
         }
-        else if (utf32CodePoint < 0x110000)
+        else if ((uint)utf32CodePoint < 0x110000)
         {
             utf8Bytes[0] = (byte)(0xF0 | utf32CodePoint >> 18);
             utf8Bytes[1] = (byte)(0x80 | (utf32CodePoint & 0x3F000) >> 12);
@@ -237,7 +237,7 @@ internal static class Utf8Helper
             ExceptionHelper.ThrowException("Number of elements in the source ReadOnlySpan<byte> is not 8.");
         }
 
-        for (var i = 0; i < source.Length - 1; i++)
+        for (var i = 0; i < source.Length; i++)
         {
             if (!TomlCodes.IsHex(source[i]))
             {
