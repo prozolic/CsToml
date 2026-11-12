@@ -70,6 +70,13 @@ internal abstract partial class TomlInteger : TomlValue
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static ReadOnlySpan<byte> TrimLeadingZeros(ReadOnlySpan<byte> bytes)
+    {
+        var index = bytes.IndexOfAnyExcept(TomlCodes.Number.Zero);
+        return index < 0 ? [] : bytes[index..];
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TomlInteger ParseBinary(ReadOnlySpan<byte> bytes)
     {
         return TomlBinaryInteger.Create(bytes);
@@ -128,6 +135,7 @@ internal abstract partial class TomlInteger : TomlValue
 
         private static long ParseBinaryValue(ReadOnlySpan<byte> bytes)
         {
+            bytes = TrimLeadingZeros(bytes);
             var length = bytes.Length;
             if (length > 64) ExceptionHelper.ThrowOverflowCount();
 
@@ -169,7 +177,9 @@ internal abstract partial class TomlInteger : TomlValue
 
         private static long ParseOctalValue(ReadOnlySpan<byte> bytes)
         {
+            bytes = TrimLeadingZeros(bytes);
             var digits = bytes.Length;
+            if (digits == 0) return 0;
             if (digits > 21) ExceptionHelper.ThrowOverflowCount();
 
             long value = 0;
@@ -234,7 +244,9 @@ internal abstract partial class TomlInteger : TomlValue
 
         private static long ParseHexValue(ReadOnlySpan<byte> bytes)
         {
+            bytes = TrimLeadingZeros(bytes);
             var digits = bytes.Length;
+            if (digits == 0) return 0;
             if (digits > 16) ExceptionHelper.ThrowOverflowCount();
 
             long value = 0;

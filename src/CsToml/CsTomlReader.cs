@@ -2163,7 +2163,8 @@ internal ref struct CsTomlReader
             if (TomlCodes.IsHex(ch))
             {
                 underscore = false;
-                writer.Write(ch);
+                if (ch != TomlCodes.Number.Zero || writer.Written != 0)
+                    writer.Write(ch);
                 Advance(1);
                 continue;
             }
@@ -2224,7 +2225,8 @@ internal ref struct CsTomlReader
             if (TomlCodes.IsOctal(ch))
             {
                 underscore = false;
-                writer.Write(ch);
+                if (ch != TomlCodes.Number.Zero || writer.Written != 0)
+                    writer.Write(ch);
                 Advance(1);
                 continue;
             }
@@ -2285,7 +2287,8 @@ internal ref struct CsTomlReader
             if (TomlCodes.IsBinary(ch))
             {
                 underscore = false;
-                writer.Write(ch);
+                if (ch != TomlCodes.Number.Zero || writer.Written != 0)
+                    writer.Write(ch);
                 Advance(1);
                 continue;
             }
