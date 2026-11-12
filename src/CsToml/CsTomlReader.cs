@@ -958,10 +958,9 @@ internal ref struct CsTomlReader
         {
             if (TomlCodes.IsCr(newlineCh))
             {
-                Advance(1);
-                if (TryPeek(out var linebreakCh) && TomlCodes.IsLf(linebreakCh))
+                if (TryPeek(1, out var linebreakCh) && TomlCodes.IsLf(linebreakCh))
                 {
-                    Advance(1);
+                    Advance(2);
                     IncreaseLineNumber();
                 }
             }

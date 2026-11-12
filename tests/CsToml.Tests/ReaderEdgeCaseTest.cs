@@ -641,4 +641,45 @@ public class ReaderEdgeCaseTest
             charsWritten.ShouldBe(0);
         });
     }
+
+    [Test]
+    [Arguments("x = \"\"\"\rabc\"\"\"\n")]
+    [Arguments("x = \"\"\"\r\"\"\"\n")]
+    [Arguments("x = \"\"\"\r\rabc\"\"\"\n")]
+    [Arguments("x = '''\rabc'''\n")]
+    [Arguments("x = '''\r'''\n")]
+    [Arguments("x = '''\r\rabc'''\n")]
+    public void MultiLineString_BareCrAfterOpeningDelimiter_Throws(string toml)
+    {
+        ShouldFail(toml);
+        ShouldFail(toml, Options.TomlSpecVersion110);
+    }
+
+    [Test]
+    [Arguments("x = \"\"\"\r\nabc\"\"\"\n", "abc")]
+    [Arguments("x = \"\"\"\nabc\"\"\"\n", "abc")]
+    [Arguments("x = \"\"\"\r\n\r\nabc\"\"\"\n", "\r\nabc")]
+    [Arguments("x = '''\r\nabc'''\n", "abc")]
+    [Arguments("x = '''\nabc'''\n", "abc")]
+    [Arguments("x = '''\r\n\r\nabc'''\n", "\r\nabc")]
+    public void MultiLineString_NewlineAfterOpeningDelimiter_IsTrimmed(string toml, string expected)
+    {
+        Parse(toml, document => document.RootNode["x"u8].GetString().ShouldBe(expected));
+    }
+
+    [Test]
+    [Arguments("\"\"\"")]
+    [Arguments("'''")]
+    public void MultiLineString_NewlineAfterOpeningDelimiter_SplitAcrossSegments(string delimiter)
+    {
+        var crlf = CreateSequence(
+            Encoding.UTF8.GetBytes("x = " + delimiter + "\r"),
+            Encoding.UTF8.GetBytes("\nabc" + delimiter + "\n"));
+        CsTomlSerializer.Deserialize<TomlDocument>(crlf).RootNode["x"u8].GetString().ShouldBe("abc");
+
+        var bareCr = CreateSequence(
+            Encoding.UTF8.GetBytes("x = " + delimiter + "\r"),
+            Encoding.UTF8.GetBytes("abc" + delimiter + "\n"));
+        Should.Throw<CsTomlSerializeException>(() => CsTomlSerializer.Deserialize<TomlDocument>(bareCr));
+    }
 }
