@@ -2177,6 +2177,7 @@ internal ref struct CsTomlReader
                 case TomlCodes.Symbol.COMMA:
                 case TomlCodes.Symbol.RIGHTSQUAREBRACKET:
                 case TomlCodes.Symbol.RIGHTBRACES:
+                case TomlCodes.Symbol.NUMBERSIGN:
                     goto BREAK;
                 case TomlCodes.Symbol.UNDERSCORE:
                     // Each underscore is not surrounded by at least one digit on each side.
@@ -2237,6 +2238,7 @@ internal ref struct CsTomlReader
                 case TomlCodes.Symbol.COMMA:
                 case TomlCodes.Symbol.RIGHTSQUAREBRACKET:
                 case TomlCodes.Symbol.RIGHTBRACES:
+                case TomlCodes.Symbol.NUMBERSIGN:
                     goto BREAK;
                 case TomlCodes.Symbol.UNDERSCORE:
                     // Each underscore is not surrounded by at least one digit on each side.
@@ -2297,6 +2299,7 @@ internal ref struct CsTomlReader
                 case TomlCodes.Symbol.COMMA:
                 case TomlCodes.Symbol.RIGHTSQUAREBRACKET:
                 case TomlCodes.Symbol.RIGHTBRACES:
+                case TomlCodes.Symbol.NUMBERSIGN:
                     goto BREAK;
                 case TomlCodes.Symbol.UNDERSCORE:
                     // Each underscore is not surrounded by at least one digit on each side.
