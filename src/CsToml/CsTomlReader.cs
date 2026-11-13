@@ -2948,6 +2948,10 @@ internal ref struct CsTomlReader
             }
             if (dot) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
         }
+        else if (bytes.Length != TomlCodes.DateTime.OffsetDateTimeZFormatLength)
+        {
+            ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
+        }
 
         return TomlOffsetDateTime.Parse(bytes);
     }
@@ -3053,7 +3057,7 @@ internal ref struct CsTomlReader
                 }
             }
             // YYYY-MM-DDTHH:MM:SS.+HH:MM has no digit in the fraction.
-            if (index == 21 || bytes.Length < index + 5)
+            if (index == 21 || bytes.Length != index + 5)
                 ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
 
             if (!TomlCodes.IsNumber(bytes[index++])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
@@ -3116,7 +3120,7 @@ internal ref struct CsTomlReader
                 }
             }
             // YYYY-MM-DDTHH:MM.+HH:MM has no digit in the fraction.
-            if (index == 18 || bytes.Length < index + 5)
+            if (index == 18 || bytes.Length != index + 5)
                 ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
 
             if (!TomlCodes.IsNumber(bytes[index++])) ExceptionHelper.ThrowIncorrectTomlOffsetDateTimeFormat();
