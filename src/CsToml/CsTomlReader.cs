@@ -740,6 +740,38 @@ internal ref struct CsTomlReader
         }
     }
 
+    private void SkipWhiteSpaceAndCommentAndNewLine()
+    {
+        SkipWhiteSpaceAndNewLine();
+        while (TryPeek(out var ch) && ch == TomlCodes.Symbol.NUMBERSIGN)
+        {
+            SkipComment();
+            SkipWhiteSpaceAndNewLine();
+        }
+    }
+
+    private void SkipComment()
+    {
+        var unreadSpan = sequenceReader.UnreadSpan;
+        var lineFeedIndex = unreadSpan.IndexOf(TomlCodes.Symbol.LINEFEED);
+        if (lineFeedIndex > 0)
+        {
+            var comment = unreadSpan.Slice(1, lineFeedIndex - 1);
+            if (comment.Length > 0 && TomlCodes.IsCr(comment[^1]))
+            {
+                comment = comment[..^1];
+            }
+
+            if (!comment.ContainsAny(TomlCodes.ControlChars) && !Utf8Helper.ContainInvalidSequences(comment))
+            {
+                Advance(comment.Length + 1);
+                return;
+            }
+        }
+
+        ReadEndComment();
+    }
+
     public bool TrySkipIfNewLine<TThrowControlCharacterMarker>(byte ch)
         where TThrowControlCharacterMarker : struct
     {
@@ -1612,7 +1644,7 @@ internal ref struct CsTomlReader
 
         if (spec.AllowNewlinesInInlineTables) // TOML v1.1.0
         {
-            SkipWhiteSpaceAndNewLine();
+            SkipWhiteSpaceAndCommentAndNewLine();
         }
         else
         {
@@ -1638,15 +1670,6 @@ internal ref struct CsTomlReader
         {
             var table = inlineTable.Table;
 
-            if (spec.AllowNewlinesInInlineTables)
-            {
-                while (TryPeek(out var numberSignCh) && numberSignCh == TomlCodes.Symbol.NUMBERSIGN)
-                {
-                    SkipOneLine();
-                    SkipWhiteSpace();
-                }
-            }
-
             var readResult = ReadKey(true, null, out var key);
             while (readResult == ReadKeyResult.FoundDot)
             {
@@ -1658,7 +1681,7 @@ internal ref struct CsTomlReader
 
             if (spec.AllowNewlinesInInlineTables) // TOML v1.1.0
             {
-                SkipWhiteSpaceAndNewLine();
+                SkipWhiteSpaceAndCommentAndNewLine();
             }
             else
             {
@@ -1672,12 +1695,7 @@ internal ref struct CsTomlReader
                     Advance(1);
                     if (spec.AllowNewlinesInInlineTables) // TOML v1.1.0
                     {
-                        SkipWhiteSpaceAndNewLine();
-                        while (TryPeek(out var commentCh) && commentCh == TomlCodes.Symbol.NUMBERSIGN)
-                        {
-                            SkipOneLine();
-                            SkipWhiteSpaceAndNewLine();
-                        }
+                        SkipWhiteSpaceAndCommentAndNewLine();
                     }
                     else
                     {
@@ -1698,27 +1716,10 @@ internal ref struct CsTomlReader
                         continue;
                     }
                 }
-                if (spec.AllowNewlinesInInlineTables) // TOML v1.1.0
+                if (TomlCodes.IsRightBraces(ch))
                 {
-                    SkipWhiteSpaceAndNewLine();
-                    while (TryPeek(out var commentCh) && commentCh == TomlCodes.Symbol.NUMBERSIGN)
-                    {
-                        SkipOneLine();
-                        SkipWhiteSpaceAndNewLine();
-                    }
-                    if (TryPeek(out var ch2) && TomlCodes.IsRightBraces(ch2))
-                    {
-                        Advance(1);
-                        return inlineTable;
-                    }
-                }
-                else
-                {
-                    if (TomlCodes.IsRightBraces(ch))
-                    {
-                        Advance(1);
-                        return inlineTable;
-                    }
+                    Advance(1);
+                    return inlineTable;
                 }
                 ExceptionHelper.ThrowIncorrectTomlInlineTableFormat();
             }
