@@ -1538,6 +1538,7 @@ internal ref struct CsTomlReader
                 Advance(index);
                 if (ch == TomlCodes.Symbol.LEFTSQUAREBRACKET)
                 {
+                    if (!comma) ExceptionHelper.ThrowNotSeparatedByCommas();
                     comma = false;
                     arrayBuilder.Add(ReadArray());
                     goto RESCAN;
