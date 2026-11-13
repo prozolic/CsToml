@@ -75,10 +75,11 @@ cd sandbox/ConsoleNativeAOT && dotnet publish -c Release   # PublishAot, net10.0
 
 `CsTomlSerializer.Deserialize` → `Utf8SequenceReader` (wraps the caller's `ReadOnlySpan<byte>` / `ReadOnlySequence<byte>` **without copying**) → `CsTomlReader` (`src/CsToml/CsTomlReader.cs`, ~3k lines; all lexing lives here — keys, strings, numbers, date/times, arrays) → `CsTomlParser` (a small `ref struct` state machine: `Comment` / `KeyValue` / `TableHeader` / `ArrayOfTablesHeader`) → `TomlDocument.Parse` drives that loop and builds the `TomlTableNode` tree.
 
-Two things to know before editing the reader:
+Three things to know before editing the reader:
 
 - The whole chain is `ref struct`s threaded by `ref`. Adding a field or changing a signature ripples through every layer.
 - The reader must survive input split across multiple `ReadOnlySequence<byte>` segments. Nearly all tests feed a single span, so segment-boundary paths are easy to leave silently untested. `BasicStringSlowPathTest.cs` and `ArrayReadMultiSegmentTest.cs` show the pattern: build a real multi-segment sequence from the internal `ByteSequenceSegment` (reachable from tests via `InternalsVisibleTo`).
+- Arrays and inline tables are read recursively, and a stack overflow cannot be caught. `ReadValue(depth)` threads the nesting depth as a parameter, and `ReadArray` / `ReadInlineTable` start with `EnsureCanNest(depth)`, which enforces `CsTomlSerializerOptions.MaxDepth` (default 64). Any new recursive read must do the same; `NestingDepthTest.cs` covers it.
 
 ### Errors accumulate; they don't fail fast
 

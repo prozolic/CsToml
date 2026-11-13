@@ -34,6 +34,18 @@ public record CsTomlSerializerOptions(ITomlValueFormatterResolver Resolver)
     public SerializeOptions SerializeOptions { get; init; } = new();
 
     public TomlSpec Spec { get; init; } = TomlSpec.Version100;
+
+    public int MaxDepth
+    {
+        get;
+        init
+        {
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(value);
+            field = value;
+        }
+    } = DefaultMaxDepth;
+
+    internal const int DefaultMaxDepth = 64;
 }
 
 public record SerializeOptions

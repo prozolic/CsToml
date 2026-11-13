@@ -42,7 +42,7 @@ internal ref struct CsTomlParser
     [DebuggerStepThrough]
     internal CsTomlParser(ref Utf8SequenceReader reader, CsTomlSerializerOptions options)
     {
-        this.reader = new CsTomlReader(ref reader, options.Spec);
+        this.reader = new CsTomlReader(ref reader, options);
         CurrentState = ParserState.ParseStart;
     }
 

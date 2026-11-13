@@ -19,16 +19,19 @@ internal enum ReadKeyResult : byte
 [StructLayout(LayoutKind.Auto)]
 internal ref struct CsTomlReader
 {
+    private const int StackMaxDepth = CsTomlSerializerOptions.DefaultMaxDepth;
     private Utf8SequenceReader sequenceReader;
     private readonly TomlSpec spec;
+    private readonly int maxDepth;
 
     public long LineNumber { get; private set; }
 
     [DebuggerStepThrough]
-    public CsTomlReader(ref Utf8SequenceReader sequenceReader, TomlSpec spec)
+    public CsTomlReader(ref Utf8SequenceReader sequenceReader, CsTomlSerializerOptions options)
     {
         this.sequenceReader = sequenceReader;
-        this.spec = spec;
+        this.spec = options.Spec;
+        this.maxDepth = options.MaxDepth;
         LineNumber = 1;
     }
 
@@ -626,7 +629,7 @@ internal ref struct CsTomlReader
         return ReadKeyResult.Failed;
     }
 
-    public TomlValue ReadValue()
+    public TomlValue ReadValue(int depth)
     {
         if (!TryPeek(out var ch)) ExceptionHelper.ThrowEndOfFileReached();  // value is nothing
 
@@ -652,7 +655,7 @@ internal ref struct CsTomlReader
             case TomlCodes.Number.Nine:
                 return ReadNumericValueOrDate();
             case TomlCodes.Symbol.LEFTSQUAREBRACKET:
-                return ReadArray();
+                return ReadArray(depth);
             case TomlCodes.Alphabet.f:
                 return ReadBool<FalseMarker>();
             case TomlCodes.Alphabet.t:
@@ -662,7 +665,7 @@ internal ref struct CsTomlReader
             case TomlCodes.Alphabet.n:
                 return ReadDoubleNan(false);
             case TomlCodes.Symbol.LEFTBRACES:
-                return ReadInlineTable();
+                return ReadInlineTable(depth);
         }
 
         ExceptionHelper.ThrowUnexpectedValueFound();
@@ -1465,9 +1468,21 @@ internal ref struct CsTomlReader
         }
     }
 
-
-    internal TomlArray ReadArray()
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private readonly void EnsureCanNest(int depth)
     {
+        if (depth >= maxDepth)
+            ExceptionHelper.ThrowMaxDepthExceeded(maxDepth);
+
+        if (depth >= StackMaxDepth && !RuntimeHelpers.TryEnsureSufficientExecutionStack())
+            ExceptionHelper.ThrowInsufficientExecutionStack();
+    }
+
+    internal TomlArray ReadArray(int depth)
+    {
+        EnsureCanNest(depth);
+        depth++;
+
         Advance(1); // [
 
         var initialArray = default(InlineArray16<TomlValue>);
@@ -1492,7 +1507,7 @@ internal ref struct CsTomlReader
                     Advance(index);
                     if (!comma) ExceptionHelper.ThrowNotSeparatedByCommas();
                     comma = false;
-                    arrayBuilder.Add(ReadValue());
+                    arrayBuilder.Add(ReadValue(depth));
                     goto RESCAN;
                 }
                 if (ch is TomlCodes.Symbol.SPACE or TomlCodes.Symbol.TAB)
@@ -1540,7 +1555,7 @@ internal ref struct CsTomlReader
                 {
                     if (!comma) ExceptionHelper.ThrowNotSeparatedByCommas();
                     comma = false;
-                    arrayBuilder.Add(ReadArray());
+                    arrayBuilder.Add(ReadArray(depth));
                     goto RESCAN;
                 }
                 if (ch == TomlCodes.Symbol.NUMBERSIGN)
@@ -1588,8 +1603,11 @@ internal ref struct CsTomlReader
         }
     }
 
-    private TomlInlineTable ReadInlineTable()
+    private TomlInlineTable ReadInlineTable(int depth)
     {
+        EnsureCanNest(depth);
+        depth++;
+
         Advance(1); // {
 
         if (spec.AllowNewlinesInInlineTables) // TOML v1.1.0
@@ -1636,7 +1654,7 @@ internal ref struct CsTomlReader
                 readResult = ReadKey(false, null, out key);
             }
 
-            table.AddKeyValue(key!, ReadValue());
+            table.AddKeyValue(key!, ReadValue(depth));
 
             if (spec.AllowNewlinesInInlineTables) // TOML v1.1.0
             {
