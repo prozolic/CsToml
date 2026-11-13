@@ -172,6 +172,20 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.NoInlining)]
+    internal static void ThrowMaxDepthExceeded(int maxDepth)
+    {
+        ThrowException($@"The maximum depth of {maxDepth} for nested arrays and inline tables has been exceeded. Change CsTomlSerializerOptions.MaxDepth to allow deeper nesting.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    internal static void ThrowInsufficientExecutionStack()
+    {
+        ThrowException($@"Arrays and inline tables are nested too deeply for the remaining stack space.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.NoInlining)]
     internal static void ThrowInlineTableIsNotClosedWithClosingCurlyBrackets()
     {
         ThrowException($@"InlineTable is not closed with closing curly brackets.");

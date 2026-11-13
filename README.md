@@ -895,6 +895,21 @@ var serializedTomlText = Encoding.UTF8.GetString(serializedText.ByteSpan);
 `Spec` can enable features in TOML v1.1.0.
 For more information, please click [TOML v1.1.0 features overview](#toml-v110-features-overview).
 
+#### MaxDepth
+
+`MaxDepth` limits how deeply arrays and inline tables can be nested when reading TOML. The default is 64.
+A value nested deeper than this is reported as a parse error (`CsTomlSerializeException`), so untrusted input such as thousands of `[` cannot overflow the stack.
+The reader stops before the stack runs out even with a larger `MaxDepth`
+
+```csharp
+var options = CsTomlSerializerOptions.Default with
+{
+    MaxDepth = 128
+};
+
+var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText, options);
+```
+
 Built-in support type
 ---
 

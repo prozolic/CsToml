@@ -113,8 +113,8 @@ public static class CsTomlSerializer
     {
         options ??= DefaultOptions;
         var utf8SequenceReader = new Utf8SequenceReader(tomlText, true);
-        var reader = new CsTomlReader(ref utf8SequenceReader, options.Spec);
-        TomlValue tomlValue = reader.ReadValue();
+        var reader = new CsTomlReader(ref utf8SequenceReader, options);
+        TomlValue tomlValue = reader.ReadValue(depth: 0);
 
         var tomlDocumentNode = new TomlDocumentNode(tomlValue);
         return options.Resolver.GetFormatter<T>()!.Deserialize(ref tomlDocumentNode, options);
@@ -124,8 +124,8 @@ public static class CsTomlSerializer
     {
         options ??= DefaultOptions;
         var utf8SequenceReader = new Utf8SequenceReader(tomlSequence, true);
-        var reader = new CsTomlReader(ref utf8SequenceReader, options.Spec);
-        TomlValue tomlValue = reader.ReadValue();
+        var reader = new CsTomlReader(ref utf8SequenceReader, options);
+        TomlValue tomlValue = reader.ReadValue(depth: 0);
 
         var tomlDocumentNode = new TomlDocumentNode(tomlValue);
         return options.Resolver.GetFormatter<T>()!.Deserialize(ref tomlDocumentNode, options);

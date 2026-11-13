@@ -86,7 +86,7 @@ public partial class TomlDocument
                             readResult = parser.reader.ReadKey(false, keyMirror, out key);
                         }
 
-                        var value = parser.reader.ReadValue();
+                        var value = parser.reader.ReadValue(depth: 0);
                         var entryIndex = keyValueTable.AddKeyValue(key!, value);
                         commentOwner = keyValueTable;
                         commentEntryIndex = entryIndex;
