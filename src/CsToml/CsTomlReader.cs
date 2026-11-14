@@ -2,6 +2,7 @@
 using CsToml.Extension;
 using CsToml.Utility;
 using CsToml.Values;
+using System.Buffers;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -2345,133 +2346,161 @@ internal ref struct CsTomlReader
 
     private TomlFloat ReadDouble()
     {
+        byte[]? rentedBuffer = null;
         var writer = new SpanWriter(stackalloc byte[64]);
-        if (TryPeek(out var plusOrMinusCh) && TomlCodes.IsPlusOrMinusSign(plusOrMinusCh))
+        try
         {
-            writer.Write(plusOrMinusCh);
-            Advance(1);
-        }
-
-        if (TryPeek(out var firstNumberCh))
-        {
-            switch (firstNumberCh)
+            if (TryPeek(out var plusOrMinusCh) && TomlCodes.IsPlusOrMinusSign(plusOrMinusCh))
             {
-                case TomlCodes.Symbol.UNDERSCORE:
-                    return ExceptionHelper.NotReturnThrow<TomlFloat>(ExceptionHelper.ThrowUnderscoreUsedFirst);
-                case TomlCodes.Symbol.DOT:
-                    return ExceptionHelper.NotReturnThrow<TomlFloat>(ExceptionHelper.ThrowDotIsUsedFirst);
-                case var zero when zero == TomlCodes.Number.Zero:
-                    if (TryPeek(1, out var secondNumberCh))
-                    {
-                        switch (secondNumberCh)
-                        {
-                            case TomlCodes.Symbol.DOT: // 0.1 ..
-                            case TomlCodes.Alphabet.e: // 0e...
-                            case TomlCodes.Alphabet.E: // 0E...
-                                break;
-                            default:
-                                ExceptionHelper.ThrowIncorrectTomlFloatFormat();
-                                break;
-                        }
-                    }
-                    break;
+                writer.Write(plusOrMinusCh);
+                Advance(1);
             }
-        }
 
-        var number = false;
-        var sign = false;
-        var underline = false;
-        var dot = false;
-        var exp = false;
-        while (TryPeek(out var ch))
-        {
-            if (TomlCodes.IsNumber(ch))
+            if (TryPeek(out var firstNumberCh))
             {
-                number = true;
-                underline = false;
+                switch (firstNumberCh)
+                {
+                    case TomlCodes.Symbol.UNDERSCORE:
+                        return ExceptionHelper.NotReturnThrow<TomlFloat>(ExceptionHelper.ThrowUnderscoreUsedFirst);
+                    case TomlCodes.Symbol.DOT:
+                        return ExceptionHelper.NotReturnThrow<TomlFloat>(ExceptionHelper.ThrowDotIsUsedFirst);
+                    case var zero when zero == TomlCodes.Number.Zero:
+                        if (TryPeek(1, out var secondNumberCh))
+                        {
+                            switch (secondNumberCh)
+                            {
+                                case TomlCodes.Symbol.DOT: // 0.1 ..
+                                case TomlCodes.Alphabet.e: // 0e...
+                                case TomlCodes.Alphabet.E: // 0E...
+                                    break;
+                                default:
+                                    ExceptionHelper.ThrowIncorrectTomlFloatFormat();
+                                    break;
+                            }
+                        }
+                        break;
+                }
+            }
+
+            var number = false;
+            var sign = false;
+            var underline = false;
+            var dot = false;
+            var exp = false;
+            while (TryPeek(out var ch))
+            {
+                if (TomlCodes.IsNumber(ch))
+                {
+                    number = true;
+                    underline = false;
+                    if (!writer.TryWrite(ch)) goto GROW;
+                    Advance(1);
+                    continue;
+                }
+
+                switch (ch)
+                {
+                    case TomlCodes.Symbol.UNDERSCORE:
+                        if (!number) ExceptionHelper.ThrowUnderscoreUsedWhereNotSurroundedByNumbers();
+                        // Each underscore is not surrounded by at least one digit on each side.
+                        if (underline) ExceptionHelper.ThrowUnderscoreUsedConsecutively();
+                        number = false;
+                        underline = true;
+                        Advance(1);
+                        continue;
+                    case TomlCodes.Symbol.DOT:
+                        if (!number) ExceptionHelper.ThrowDotIsUsedWhereNotSurroundedByNumbers();
+                        if (dot) ExceptionHelper.ThrowDotsAreUsedMoreThanOnce();
+                        if (exp) ExceptionHelper.ThrowDecimalPointIsPresentAfterTheExponentialPartE();
+                        number = false;
+                        dot = true;
+                        if (!writer.TryWrite(ch)) goto GROW;
+                        Advance(1);
+                        continue;
+                    case TomlCodes.Alphabet.e:
+                    case TomlCodes.Alphabet.E:
+                        if (!number) ExceptionHelper.ThrowExponentPartUsedWhereNotSurroundedByNumbers();
+                        if (exp) ExceptionHelper.ThrowTheExponentPartUsedMoreThanOnce();
+                        number = false;
+                        sign = false;
+                        exp = true;
+                        if (!writer.TryWrite(ch)) goto GROW;
+                        Advance(1);
+                        continue;
+                    case TomlCodes.Symbol.PLUS:
+                    case TomlCodes.Symbol.MINUS:
+                        if (!exp || sign) ExceptionHelper.ThrowIncorrectPositiveAndNegativeSigns();
+                        number = false;
+                        sign = true;
+                        if (!writer.TryWrite(ch)) goto GROW;
+                        Advance(1);
+                        continue;
+                    case TomlCodes.Symbol.TAB:
+                    case TomlCodes.Symbol.SPACE:
+                    case TomlCodes.Symbol.CARRIAGE:
+                    case TomlCodes.Symbol.LINEFEED:
+                    case TomlCodes.Symbol.COMMA:
+                    case TomlCodes.Symbol.RIGHTSQUAREBRACKET:
+                    case TomlCodes.Symbol.RIGHTBRACES:
+                    case TomlCodes.Symbol.NUMBERSIGN:
+                        goto BREAK;
+                    default:
+                        return ExceptionHelper.NotReturnThrow<TomlFloat, byte>(ExceptionHelper.ThrowEscapeCharactersIncluded, ch);
+                }
+
+            BREAK:
+                break;
+
+            GROW:
+                rentedBuffer = GrowFloatBuffer(writer.WrittenSpan, rentedBuffer);
+                writer = new SpanWriter(rentedBuffer, writer.Written);
                 writer.Write(ch);
                 Advance(1);
-                continue;
             }
 
-            switch (ch)
+            if (underline)
+                ExceptionHelper.ThrowUnderscoreIsUsedAtTheEnd();
+
+            var writingSpan = writer.WrittenSpan;
+            switch (writingSpan[^1])
             {
                 case TomlCodes.Symbol.UNDERSCORE:
-                    if (!number) ExceptionHelper.ThrowUnderscoreUsedWhereNotSurroundedByNumbers();
-                    // Each underscore is not surrounded by at least one digit on each side.
-                    if (underline) ExceptionHelper.ThrowUnderscoreUsedConsecutively();
-                    number = false;
-                    underline = true;
-                    Advance(1);
-                    continue;
+                    ExceptionHelper.ThrowUnderscoreIsUsedAtTheEnd();
+                    break;
                 case TomlCodes.Symbol.DOT:
-                    if (!number) ExceptionHelper.ThrowDotIsUsedWhereNotSurroundedByNumbers();
-                    if (dot) ExceptionHelper.ThrowDotsAreUsedMoreThanOnce();
-                    if (exp) ExceptionHelper.ThrowDecimalPointIsPresentAfterTheExponentialPartE();
-                    number = false;
-                    dot = true;
-                    writer.Write(ch);
-                    Advance(1);
-                    continue;
+                    ExceptionHelper.ThrowDotIsUsedAtTheEnd();
+                    break;
                 case TomlCodes.Alphabet.e:
                 case TomlCodes.Alphabet.E:
-                    if (!number) ExceptionHelper.ThrowExponentPartUsedWhereNotSurroundedByNumbers();
-                    if (exp) ExceptionHelper.ThrowTheExponentPartUsedMoreThanOnce();
-                    number = false;
-                    sign = false;
-                    exp = true;
-                    writer.Write(ch);
-                    Advance(1);
-                    continue;
+                    ExceptionHelper.ThrowExponentPartIsUsedAtTheEnd();
+                    break;
                 case TomlCodes.Symbol.PLUS:
                 case TomlCodes.Symbol.MINUS:
-                    if (!exp || sign) ExceptionHelper.ThrowIncorrectPositiveAndNegativeSigns();
-                    number = false;
-                    sign = true;
-                    writer.Write(ch);
-                    Advance(1);
-                    continue;
-                case TomlCodes.Symbol.TAB:
-                case TomlCodes.Symbol.SPACE:
-                case TomlCodes.Symbol.CARRIAGE:
-                case TomlCodes.Symbol.LINEFEED:
-                case TomlCodes.Symbol.COMMA:
-                case TomlCodes.Symbol.RIGHTSQUAREBRACKET:
-                case TomlCodes.Symbol.RIGHTBRACES:
-                case TomlCodes.Symbol.NUMBERSIGN:
-                    goto BREAK;
-                default:
-                    return ExceptionHelper.NotReturnThrow<TomlFloat, byte>(ExceptionHelper.ThrowEscapeCharactersIncluded, ch);
+                    ExceptionHelper.ThrowIncorrectPositiveAndNegativeSigns();
+                    break;
             }
 
-        BREAK:
-            break;
-
+            return TomlFloat.Parse(writingSpan);
         }
-
-        if (underline)
-            ExceptionHelper.ThrowUnderscoreIsUsedAtTheEnd();
-
-        var writingSpan = writer.WrittenSpan;
-        switch (writingSpan[^1])
+        finally
         {
-            case TomlCodes.Symbol.UNDERSCORE:
-                ExceptionHelper.ThrowUnderscoreIsUsedAtTheEnd();
-                break;
-            case TomlCodes.Symbol.DOT:
-                ExceptionHelper.ThrowDotIsUsedAtTheEnd();
-                break;
-            case TomlCodes.Alphabet.e:
-            case TomlCodes.Alphabet.E:
-                ExceptionHelper.ThrowExponentPartIsUsedAtTheEnd();
-                break;
-            case TomlCodes.Symbol.PLUS:
-            case TomlCodes.Symbol.MINUS:
-                ExceptionHelper.ThrowIncorrectPositiveAndNegativeSigns();
-                break;
+            if (rentedBuffer is not null)
+                ArrayPool<byte>.Shared.Return(rentedBuffer);
         }
+    }
 
-        return TomlFloat.Parse(writingSpan);
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static byte[] GrowFloatBuffer(scoped ReadOnlySpan<byte> written, byte[]? rentedBuffer)
+    {
+        if (written.Length >= Array.MaxLength)
+            ExceptionHelper.ThrowOverflowDuringParsingOfNumericTypes();
+
+        var buffer = ArrayPool<byte>.Shared.Rent((int)Math.Min((uint)written.Length * 2, (uint)Array.MaxLength));
+        written.CopyTo(buffer);
+        if (rentedBuffer is not null)
+            ArrayPool<byte>.Shared.Return(rentedBuffer);
+
+        return buffer;
     }
 
     internal TomlFloat ReadDoubleInf(bool prefixedWithPlusOrMinus)
