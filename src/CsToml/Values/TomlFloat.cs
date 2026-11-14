@@ -1,5 +1,4 @@
 ﻿using CsToml.Error;
-using System.Buffers.Text;
 using System.Diagnostics;
 using System.Globalization;
 
@@ -60,7 +59,7 @@ internal sealed partial class TomlFloat(double value) : TomlValue
     {
         if (bytes.Length < 3) ExceptionHelper.ThrowIncorrectTomlFloatFormat();
 
-        if (Utf8Parser.TryParse(bytes, out double value, out int bytesConsumed, 'G') && bytesConsumed == bytes.Length)
+        if (double.TryParse(bytes, NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint | NumberStyles.AllowExponent, CultureInfo.InvariantCulture, out var value))
         {
             return new TomlFloat(value);
         }

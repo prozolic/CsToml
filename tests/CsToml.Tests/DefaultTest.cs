@@ -465,6 +465,27 @@ sf6 = -nan
         var document = CsTomlSerializer.Deserialize<TomlDocument>(@"v = 1.23456789012345e+200"u8);
         document!.RootNode["v"].GetDouble().ShouldBe(1.23456789012345e+200);
     }
+
+    [Test]
+    public void HalfwayWithTrailingZeros_RoundsToEven()
+    {
+        {
+            var document = CsTomlSerializer.Deserialize<TomlDocument>("v = 9007199254740993.0000"u8);
+            document!.RootNode["v"].GetDouble().ShouldBe(9007199254740992d);
+        }
+        {
+            var document = CsTomlSerializer.Deserialize<TomlDocument>("v = 90071992547409930000e-4"u8);
+            document!.RootNode["v"].GetDouble().ShouldBe(9007199254740992d);
+        }
+    }
+
+    [Test]
+    public void HalfwayBeyondDigitBuffer_RoundsToEven()
+    {
+        var literal = "0." + new string('0', 323) + System.Numerics.BigInteger.Pow(5, 1075);
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(Encoding.UTF8.GetBytes($"v = {literal}"));
+        document!.RootNode["v"].GetDouble().ShouldBe(0d);
+    }
 }
 
 public class TomlBooleanTest
