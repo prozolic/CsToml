@@ -19,7 +19,7 @@ internal sealed class NullableStringFormatter : ITomlValueFormatter<string?>
             return value;
         }
 
-        ExceptionHelper.ThrowDeserializationFailed(typeof(string));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(string), rootNode);
         return default;
     }
 

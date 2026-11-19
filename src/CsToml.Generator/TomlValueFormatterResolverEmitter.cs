@@ -39,6 +39,11 @@ internal sealed class TomlValueFormatterResolverEmitter
                 }
                 return;
             case TomlSerializationKind.TomlSerializedObject:
+                if (FormatterTypeMetaData.TryGetNullableParameterType(type, out var nullableSerializedObjectType))
+                {
+                    AppendRegister(fullTypeName, $"NullableFormatter<{nullableSerializedObjectType!.ToFullFormatString()}>");
+                    return;
+                }
                 builder.AppendLine($"{indent}        TomlValueFormatterResolver.Register<{fullTypeName}>();");
                 return;
             case TomlSerializationKind.TomlSerializedObjectArray:

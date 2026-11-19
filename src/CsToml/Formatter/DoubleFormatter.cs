@@ -19,7 +19,7 @@ internal sealed class DoubleFormatter : ITomlValueFormatter<double>
             return value;
         }
 
-        ExceptionHelper.ThrowDeserializationFailed(typeof(double));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(double), rootNode);
         return default;
     }
 
@@ -36,11 +36,17 @@ internal sealed class NullableDoubleFormatter : ITomlValueFormatter<double?>
 
     public double? Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
+        if (!rootNode.HasValue)
+        {
+            return default;
+        }
+
         if (rootNode.TryGetDouble(out var value))
         {
             return value;
         }
-        return null;
+        ExceptionHelper.ThrowDeserializationFailed(typeof(double), rootNode);
+        return default;
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, double? target, CsTomlSerializerOptions options)

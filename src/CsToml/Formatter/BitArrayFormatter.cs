@@ -17,7 +17,7 @@ internal sealed class BitArrayFormatter : ITomlValueFormatter<BitArray?>
             return default;
         }
 
-        if (rootNode.CanGetValue(TomlValueFeature.Array) && rootNode.Value is TomlArray array)
+        if (rootNode.Value is TomlArray array)
         {
             var bitArray = new BitArray(array.Count);
             var i = 0;
@@ -28,7 +28,7 @@ internal sealed class BitArrayFormatter : ITomlValueFormatter<BitArray?>
             return bitArray;
         }
 
-        ExceptionHelper.ThrowDeserializationFailed(typeof(BitArray));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(BitArray), rootNode);
         return default;
     }
 

@@ -1,4 +1,5 @@
-﻿using CsToml.Error;
+﻿using CsToml.Utility;
+using CsToml.Error;
 using System.Buffers;
 
 namespace CsToml.Formatter;
@@ -16,10 +17,10 @@ internal sealed class Int16Formatter : ITomlValueFormatter<short>
 
         if (rootNode.TryGetInt64(out var value))
         {
-            return checked((short)value);
+            return IntegerRangeHelper.ConvertFromInt64<short>(value);
         }
 
-        ExceptionHelper.ThrowDeserializationFailed(typeof(short));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(short), rootNode);
         return default;
     }
 
@@ -36,11 +37,17 @@ internal sealed class NullableInt16Formatter : ITomlValueFormatter<short?>
 
     public short? Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
+        if (!rootNode.HasValue)
+        {
+            return default;
+        }
+
         if (rootNode.TryGetInt64(out var value))
         {
-            return checked((short)value);
+            return IntegerRangeHelper.ConvertFromInt64<short>(value);
         }
-        return null;
+        ExceptionHelper.ThrowDeserializationFailed(typeof(short), rootNode);
+        return default;
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, short? target, CsTomlSerializerOptions options)

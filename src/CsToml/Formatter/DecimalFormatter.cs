@@ -32,7 +32,7 @@ internal sealed class DecimalFormatter : ITomlValueFormatter<decimal>
             }
         }
 
-        ExceptionHelper.ThrowDeserializationFailed(typeof(decimal));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(decimal), rootNode);
         return default;
     }
 
@@ -43,9 +43,9 @@ internal sealed class DecimalFormatter : ITomlValueFormatter<decimal>
         // Parse the shortest round-trippable representation instead of casting, so the result keeps
         // the decimal digits written in the TOML text (e.g. 3.14 -> 3.14m) on all runtime versions.
 
-        if (!double.IsFinite(doubleValue))
+        if (!(Math.Abs(doubleValue) < 79228162514264337593543950336d))
         {
-            return (decimal)doubleValue;
+            ExceptionHelper.ThrowOverflow(typeof(decimal));
         }
 
         Span<byte> utf8 = stackalloc byte[32];
@@ -88,7 +88,8 @@ internal sealed class NullableDecimalFormatter : ITomlValueFormatter<decimal?>
             }
         }
 
-        return null;
+        ExceptionHelper.ThrowDeserializationFailed(typeof(decimal), rootNode);
+        return default;
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, decimal? target, CsTomlSerializerOptions options)

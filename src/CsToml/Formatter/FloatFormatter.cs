@@ -16,10 +16,15 @@ internal sealed class FloatFormatter : ITomlValueFormatter<float>
 
         if (rootNode.TryGetDouble(out var value))
         {
-            return (float)value;
+            var result = (float)value;
+            if (float.IsInfinity(result) && double.IsFinite(value))
+            {
+                ExceptionHelper.ThrowOverflow(typeof(float));
+            }
+            return result;
         }
 
-        ExceptionHelper.ThrowDeserializationFailed(typeof(float));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(float), rootNode);
         return default;
     }
 
@@ -36,11 +41,22 @@ internal sealed class NullableFloatFormatter : ITomlValueFormatter<float?>
 
     public float? Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
+        if (!rootNode.HasValue)
+        {
+            return default;
+        }
+
         if (rootNode.TryGetDouble(out var value))
         {
-            return (float)value;
+            var result = (float)value;
+            if (float.IsInfinity(result) && double.IsFinite(value))
+            {
+                ExceptionHelper.ThrowOverflow(typeof(float));
+            }
+            return result;
         }
-        return null;
+        ExceptionHelper.ThrowDeserializationFailed(typeof(float), rootNode);
+        return default;
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, float? target, CsTomlSerializerOptions options)

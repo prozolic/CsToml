@@ -19,7 +19,7 @@ internal sealed class DateOnlyFormatter : ITomlValueFormatter<DateOnly>
             return value;
         }
 
-        ExceptionHelper.ThrowDeserializationFailed(typeof(DateOnly));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(DateOnly), rootNode);
         return default;
     }
 
@@ -36,11 +36,17 @@ internal sealed class NullableDateOnlyFormatter : ITomlValueFormatter<DateOnly?>
 
     public DateOnly? Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
+        if (!rootNode.HasValue)
+        {
+            return default;
+        }
+
         if (rootNode.TryGetDateOnly(out var value))
         {
             return value;
         }
-        return null;
+        ExceptionHelper.ThrowDeserializationFailed(typeof(DateOnly), rootNode);
+        return default;
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, DateOnly? target, CsTomlSerializerOptions options)

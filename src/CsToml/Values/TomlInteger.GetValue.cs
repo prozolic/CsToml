@@ -3,17 +3,17 @@ namespace CsToml.Values;
 
 internal partial class TomlInteger
 {
-    public override bool CanGetValue(TomlValueFeature feature)
-        => ((TomlValueFeature.String | TomlValueFeature.Int64 | TomlValueFeature.Double | TomlValueFeature.Boolean | TomlValueFeature.Number | TomlValueFeature.Object) & feature) == feature;
+    public override bool TryGetInt64(out long value)
+    {
+        value = Value;
+        return true;
+    }
 
-    public override string GetString() => ToString();
-
-    public override long GetInt64() => Value;
-
-    public override double GetDouble() => Value;
-
-    public override bool GetBool() => Value != 0;
+    public override bool TryGetDouble(out double value)
+    {
+        value = Value;
+        return true;
+    }
 
     public override object GetObject() => Value;
 }
-

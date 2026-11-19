@@ -15,7 +15,7 @@ public abstract class ArrayBaseFormatter<TArray, TElement> : ITomlValueFormatter
             return default;
         }
 
-        if (rootNode.CanGetValue(TomlValueFeature.Array) && rootNode.Value is TomlArray tomlArray)
+        if (rootNode.Value is TomlArray tomlArray)
         {
             var formatter = options.Resolver.GetFormatter<TElement>()!;
             var array = new TElement[tomlArray.Count];
@@ -28,7 +28,7 @@ public abstract class ArrayBaseFormatter<TArray, TElement> : ITomlValueFormatter
             return Complete(array);
         }
 
-        ExceptionHelper.ThrowDeserializationFailed(typeof(TArray));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(TArray), rootNode);
         return default;
     }
 

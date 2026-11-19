@@ -130,9 +130,13 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.NoInlining)]
-    internal static void ThrowInvalidCasting()
+    internal static void ThrowTypeMismatch(TomlValueType actualType, string requestedType)
     {
-        ThrowException($@"Failed to cast to numeric value.");
+        if (actualType == TomlValueType.Empty)
+        {
+            ThrowException($"There is no value to get as {requestedType}.");
+        }
+        ThrowException($"A TOML {actualType} value cannot be retrieved as {requestedType}.");
     }
 
     [DoesNotReturn]
@@ -552,13 +556,6 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.NoInlining)]
-    internal static void ThrowArgumentOutOfRangeWhenOutsideTheBoundsOfTheArray()
-    {
-        ThrowException($"Index was outside the bounds of the array.");
-    }
-
-    [DoesNotReturn]
-    [MethodImpl(MethodImplOptions.NoInlining)]
     internal static void ThrowArgumentOutOfRangeExceptionWhenCreating<T>(ArgumentOutOfRangeException innerException)
     {
         ThrowException($"ArgumentOutOfRangeException was thrown when creating {typeof(T)}.", innerException);
@@ -657,9 +654,10 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.NoInlining)]
-    internal static void ThrowDeserializationFailed(Type type)
+    internal static void ThrowDeserializationFailed(Type type, in TomlDocumentNode node)
     {
-        ThrowException($@"Cannot deserialize to {type}.");
+        var actualType = node.Table != null ? "Table" : node.ValueType.ToString();
+        ThrowException($"Cannot deserialize a TOML {actualType} value to {type}.");
     }
 
     [DoesNotReturn]

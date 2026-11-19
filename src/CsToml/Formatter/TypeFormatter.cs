@@ -22,7 +22,7 @@ public sealed class TypeFormatter : ITomlValueFormatter<Type?>
             return Type.GetType(value, true)!;
         }
 
-        ExceptionHelper.ThrowDeserializationFailed(typeof(Type));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(Type), rootNode);
         return default;
     }
 

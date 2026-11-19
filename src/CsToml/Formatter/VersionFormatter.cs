@@ -17,12 +17,12 @@ internal sealed class VersionFormatter : ITomlValueFormatter<Version?>
 
         if (rootNode.Value is TomlString tomlString)
         {
-            if (Version.TryParse(tomlString.GetString().AsSpan(), out var version))
+            if (Version.TryParse(tomlString.Utf16String.AsSpan(), out var version))
             {
                 return version;
             }
         }
-        ExceptionHelper.ThrowDeserializationFailed(typeof(Version));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(Version), rootNode);
         return default;
     }
 

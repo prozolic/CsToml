@@ -18,7 +18,7 @@ internal sealed class TimeSpanFormatter : ITomlValueFormatter<TimeSpan>
         {
             return new TimeSpan(value);
         }
-        ExceptionHelper.ThrowDeserializationFailed(typeof(TimeSpan));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(TimeSpan), rootNode);
         return default!;
     }
 
@@ -35,12 +35,18 @@ internal sealed class NullableTimeSpanFormatter : ITomlValueFormatter<TimeSpan?>
 
     public TimeSpan? Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
+        if (!rootNode.HasValue)
+        {
+            return default;
+        }
+
         if (rootNode.TryGetInt64(out var value))
         {
             return new TimeSpan(value);
         }
 
-        return null;
+        ExceptionHelper.ThrowDeserializationFailed(typeof(TimeSpan), rootNode);
+        return default;
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TimeSpan? target, CsTomlSerializerOptions options)

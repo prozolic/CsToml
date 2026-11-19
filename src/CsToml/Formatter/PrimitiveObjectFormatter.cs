@@ -1,4 +1,5 @@
-﻿using CsToml.Error;
+﻿using CsToml.Utility;
+using CsToml.Error;
 using CsToml.Values;
 using System.Buffers;
 using System.Collections;
@@ -43,35 +44,35 @@ public sealed class PrimitiveObjectFormatter : ITomlValueFormatter<object>
             var value = rootNode.Value;
             if (value is TomlBoolean boolValue)
             {
-                return boolValue.GetBool();
+                return boolValue.Value;
             }
             else if (value is TomlInteger intValue)
             {
-                return intValue.GetInt64();
+                return intValue.Value;
             }
             else if (value is TomlFloat doubleValue)
             {
-                return doubleValue.GetDouble();
+                return doubleValue.Value;
             }
             else if (value is TomlString stringValue)
             {
-                return stringValue.GetString();
+                return stringValue.Utf16String;
             }
             else if (value is TomlOffsetDateTime dateTimeOffsetValue)
             {
-                return dateTimeOffsetValue.GetDateTimeOffset();
+                return dateTimeOffsetValue.Value;
             }
             else if (value is TomlLocalDateTime dateTimeValue)
             {
-                return dateTimeValue.GetDateTime();
+                return dateTimeValue.Value;
             }
             else if (value is TomlLocalDate dateOnlyValue)
             {
-                return dateOnlyValue.GetDateOnly();
+                return dateOnlyValue.Value;
             }
             else if (value is TomlLocalTime timeOnlyValue)
             {
-                return timeOnlyValue.GetTimeOnly();
+                return timeOnlyValue.Value;
             }
             else if (value is TomlArray arrayValue)
             {
@@ -96,7 +97,7 @@ public sealed class PrimitiveObjectFormatter : ITomlValueFormatter<object>
             }
             else if (value is TomlDottedKey dottedKey)
             {
-                return dottedKey.GetString();
+                return dottedKey.Utf16String;
             }
             else
             {
@@ -146,7 +147,7 @@ public sealed class PrimitiveObjectFormatter : ITomlValueFormatter<object>
                     writer.WriteInt64((uint)target);
                     break;
                 case 9:
-                    writer.WriteInt64(checked((long)target));
+                    writer.WriteInt64(IntegerRangeHelper.ConvertToInt64((ulong)target));
                     break;
                 case 10:
                     writer.WriteDouble((float)target);

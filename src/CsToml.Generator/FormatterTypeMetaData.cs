@@ -358,19 +358,25 @@ internal static class FormatterTypeMetaData
                     return TomlSerializationKind.TomlSerializedObject;
                 }
 
-                // Nullable<TUnion> rides the same emission/registration path as other Nullable<T>
-                // special cases (ArrayOfTable state + NullableFormatter<TUnion> registration).
-                if (TryGetNullableParameterType(type, out var nullableUnionType) &&
-                    UnionSymbolAnalyzer.IsUnionWithCases(nullableUnionType!))
+                if (TryGetNullableParameterType(type, out var nullableType))
                 {
-                    return TomlSerializationKind.TomlSerializedObjectCollection;
-                }
+                    // Nullable<TUnion> rides the same emission/registration path as other Nullable<T>
+                    // special cases (ArrayOfTable state + NullableFormatter<TUnion> registration).
+                    if (UnionSymbolAnalyzer.IsUnionWithCases(nullableType!))
+                    {
+                        return TomlSerializationKind.TomlSerializedObjectCollection;
+                    }
 
-                // For a Nullable<T> Collection/Dictionary like ImmutableArray<T>?
-                if (TryGetNullableParameterType(type, out var nullableType) &&
-                    (ContainsCollectionType(nullableType!) || ContainsDictionary(nullableType!)))
-                {
-                    type = nullableType!;
+                    if (nullableType!.IsTomlSerializedObject())
+                    {
+                        return TomlSerializationKind.TomlSerializedObject;
+                    }
+
+                    // For a Nullable<T> Collection/Dictionary like ImmutableArray<T>?
+                    if (ContainsCollectionType(nullableType!) || ContainsDictionary(nullableType!))
+                    {
+                        type = nullableType!;
+                    }
                 }
 
                 var genericFormatterType = TryGetGenericFormatterType(type, out var _);

@@ -11,7 +11,7 @@ namespace CsToml;
 
 public static class CsTomlSerializer
 {
-    private static readonly CsTomlSerializerOptions DefaultOptions = CsTomlSerializerOptions.Default with { SerializeOptions = new() };
+    internal static readonly CsTomlSerializerOptions DefaultOptions = CsTomlSerializerOptions.Default with { SerializeOptions = new() };
 
     public static T Deserialize<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(ReadOnlySpan<byte> tomlText, CsTomlSerializerOptions? options = null)
     {

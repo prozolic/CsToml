@@ -34,7 +34,7 @@ internal sealed class Decimal128Formatter : ITomlValueFormatter<Decimal128>
             }
         }
 
-        ExceptionHelper.ThrowDeserializationFailed(typeof(Decimal128));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(Decimal128), rootNode);
         return default;
     }
 
@@ -68,7 +68,8 @@ internal sealed class NullableDecimal128Formatter : ITomlValueFormatter<Decimal1
             }
         }
 
-        return null;
+        ExceptionHelper.ThrowDeserializationFailed(typeof(Decimal128), rootNode);
+        return default;
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Decimal128? target, CsTomlSerializerOptions options)

@@ -17,7 +17,7 @@ public sealed class ArrayListFormatter : ITomlValueFormatter<ArrayList?>
             return default;
         }
 
-        if (rootNode.CanGetValue(TomlValueFeature.Array) && rootNode.Value is TomlArray tomlArray)
+        if (rootNode.Value is TomlArray tomlArray)
         {
             var formatter = options.Resolver.GetFormatter<object>()!;
             var arrayList = new ArrayList(tomlArray.Count);
@@ -29,7 +29,7 @@ public sealed class ArrayListFormatter : ITomlValueFormatter<ArrayList?>
             return arrayList;
         }
 
-        ExceptionHelper.ThrowDeserializationFailed(typeof(ArrayList));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(ArrayList), rootNode);
         return default;
     }
 

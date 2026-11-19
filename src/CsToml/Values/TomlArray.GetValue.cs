@@ -1,34 +1,26 @@
 ﻿
-using CsToml.Error;
 using System.Collections.Immutable;
-using System.Collections.ObjectModel;
+using System.Runtime.InteropServices;
 
 namespace CsToml.Values;
 
 internal partial class TomlArray
 {
-    public override bool CanGetValue(TomlValueFeature feature)
-        => ((TomlValueFeature.String | TomlValueFeature.Array | TomlValueFeature.Object) & feature) == feature;
-
-    public override ReadOnlyCollection<TomlValue> GetArray()
-        => count == values.Length
-            ? new ReadOnlyCollection<TomlValue>(values)
-            : new ReadOnlyCollection<TomlValue>(new ArraySegment<TomlValue>(values, 0, count));
-
-    public override TomlValue GetArrayValue(int index)
+    public override bool TryGetArray(out ImmutableArray<TomlValue> value)
     {
-        if ((uint)index >= (uint)Count)
+        if (values.Length != count)
         {
-            ExceptionHelper.ThrowArgumentOutOfRangeWhenOutsideTheBoundsOfTheArray();
+            Array.Resize(ref values, count);
         }
-        return this[index];
+        value = ImmutableCollectionsMarshal.AsImmutableArray(values);
+        return true;
     }
 
-    public override ImmutableArray<TomlValue> GetImmutableArray()
-        => ImmutableArray.Create(values, 0, count);
-
-    public override string GetString()
-        => ToString();
+    public override bool TryGetArraySpan(out ReadOnlySpan<TomlValue> value)
+    {
+        value = AsSpan();
+        return true;
+    }
 
     public override object GetObject()
     {

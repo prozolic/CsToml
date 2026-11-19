@@ -1,90 +1,61 @@
-﻿using CsToml.Error;
-using System.Buffers.Text;
+﻿using System.Buffers.Text;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 
 namespace CsToml.Values;
 
 internal partial class TomlDottedKey
 {
-    public override bool CanGetValue(TomlValueFeature feature)=> ((
-        TomlValueFeature.String | 
-        TomlValueFeature.Int64 | 
-        TomlValueFeature.Double | 
-        TomlValueFeature.Boolean |
-        TomlValueFeature.DateTime | 
-        TomlValueFeature.DateTimeOffset | 
-        TomlValueFeature.DateOnly | 
-        TomlValueFeature.TimeOnly | 
-        TomlValueFeature.Object) & feature) == feature;
-
-    public override string GetString() => Utf16String;
-
-    public override long GetInt64()
+    public override bool TryGetString([NotNullWhen(true)] out string? value)
     {
-        if (long.TryParse(Value, out var value))
-        {
-            return value;
-        }
-        return base.GetInt64();
+        value = Utf16String;
+        return true;
     }
 
-    public override double GetDouble()
+    public override bool TryGetInt64(out long value)
+        => long.TryParse(Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+
+    public override bool TryGetDouble(out double value)
+        => double.TryParse(Value, NumberStyles.Float, CultureInfo.InvariantCulture, out value);
+
+    public override bool TryGetBool(out bool value)
     {
-        if (double.TryParse(Value, out var value))
+        if (Value.SequenceEqual("true"u8))
         {
-            return value;
+            value = true;
+            return true;
         }
-        return base.GetDouble();
+        value = false;
+        return Value.SequenceEqual("false"u8);
     }
 
-    public override bool GetBool()
+    public override bool TryGetDateTime(out DateTime value)
+        => Utf8Parser.TryParse(Value, out value, out _, 'O');
+
+    public override bool TryGetDateTimeOffset(out DateTimeOffset value)
+        => Utf8Parser.TryParse(Value, out value, out _, 'O');
+
+    public override bool TryGetDateOnly(out DateOnly value)
     {
-        try
+        if (TryGetDateTime(out var dateTime))
         {
-            // no allcation.
-            return TomlBoolean.Parse(Value).GetBool();
+            value = DateOnly.FromDateTime(dateTime);
+            return true;
         }
-        catch (CsTomlException)
-        {
-            return base.GetBool();
-        }
+        value = default;
+        return false;
     }
 
-    public override DateTime GetDateTime()
+    public override bool TryGetTimeOnly(out TimeOnly value)
     {
-        if (Utf8Parser.TryParse(Value, out DateTime value, out int bytesConsumed, 'O'))
+        if (TryGetDateTime(out var dateTime))
         {
-            return value;
+            value = TimeOnly.FromDateTime(dateTime);
+            return true;
         }
-        return base.GetDateTime();
-    }
-
-    public override DateTimeOffset GetDateTimeOffset()
-    {
-        if (Utf8Parser.TryParse(Value, out DateTimeOffset value, out int bytesConsumed, 'O'))
-        {
-            return value;
-        }
-        return base.GetDateTime();
-    }
-
-    public override DateOnly GetDateOnly()
-    {
-        if (TryGetDateTime(out DateTime value))
-        {
-            return DateOnly.FromDateTime(value);
-        }
-        return base.GetDateOnly();
-    }
-
-    public override TimeOnly GetTimeOnly()
-    {
-        if (TryGetDateTime(out DateTime value))
-        {
-            return TimeOnly.FromDateTime(value);
-        }
-        return base.GetTimeOnly();
+        value = default;
+        return false;
     }
 
     public override object GetObject() => bytes.ToArray();
 }
-

@@ -611,15 +611,11 @@ public class ReaderEdgeCaseTest
     [Arguments("x = [[]]\n", "[[]]")]
     [Arguments("x = [[], [1], []]\n", "[[], [1], []]")]
     [Arguments("x = [1, []]\n", "[1, []]")]
-    public void EmptyArray_GetString(string toml, string expected)
+    public void EmptyArray_ToString(string toml, string expected)
     {
         Parse(toml, document =>
         {
-            var node = document.RootNode["x"u8];
-            node.GetString().ShouldBe(expected);
-            node.TryGetString(out var value).ShouldBeTrue();
-            value.ShouldBe(expected);
-            node.GetTomlValue().ToString().ShouldBe(expected);
+            document.RootNode["x"u8].GetTomlValue().ToString().ShouldBe(expected);
         });
     }
 

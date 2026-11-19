@@ -73,4 +73,15 @@ public class TypeNullBehaviorGlobalTest
         deserialized.Field2.ShouldBeNull();
         deserialized.Field3.ShouldBe(original.Field3);
     }
+
+    [Test]
+    public void RoundTrip_GlobalSkip_AllNullElement_ShouldKeepInstance()
+    {
+        var original = new TypeNullBehaviorAllNullableList { Items = [new TypeNullBehaviorAllNullable()] };
+
+        using var serialized = CsTomlSerializer.Serialize(original, Option.IgnoreTomlNullHandling);
+        var deserialized = CsTomlSerializer.Deserialize<TypeNullBehaviorAllNullableList>(serialized.ByteSpan);
+
+        deserialized.Items.ShouldHaveSingleItem().ShouldNotBeNull();
+    }
 }

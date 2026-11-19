@@ -1,312 +1,172 @@
 ﻿using CsToml.Error;
 using System.Collections.Immutable;
-using System.Collections.ObjectModel;
-using System.Numerics;
+using System.Diagnostics.CodeAnalysis;
 
 namespace CsToml.Values;
 
 public partial class TomlValue
 {
-    public virtual bool CanGetValue(TomlValueFeature feature)
-        => false;
+    public ImmutableArray<TomlValue> GetArray()
+    {
+        if (!TryGetArray(out var value))
+        {
+            ExceptionHelper.ThrowTypeMismatch(Type, "array");
+        }
+        return value;
+    }
 
-    public virtual ReadOnlyCollection<TomlValue> GetArray()
-        => ExceptionHelper.NotReturnThrow<ReadOnlyCollection<TomlValue>>(ExceptionHelper.ThrowInvalidCasting);
+    public ReadOnlySpan<TomlValue> GetArraySpan()
+    {
+        if (!TryGetArraySpan(out var value))
+        {
+            ExceptionHelper.ThrowTypeMismatch(Type, "array");
+        }
+        return value;
+    }
 
-    public virtual TomlValue GetArrayValue(int index)
-        => ExceptionHelper.NotReturnThrow<TomlValue>(ExceptionHelper.ThrowInvalidCasting);
+    public string GetString()
+    {
+        if (!TryGetString(out var value))
+        {
+            ExceptionHelper.ThrowTypeMismatch(Type, "string");
+        }
+        return value;
+    }
 
-    public virtual ImmutableArray<TomlValue> GetImmutableArray()
-        => ExceptionHelper.NotReturnThrow<ImmutableArray<TomlValue>>(ExceptionHelper.ThrowInvalidCasting);
+    public long GetInt64()
+    {
+        if (!TryGetInt64(out var value))
+        {
+            ExceptionHelper.ThrowTypeMismatch(Type, "long");
+        }
+        return value;
+    }
 
-    public virtual string GetString()
-        => ExceptionHelper.NotReturnThrow<string>(ExceptionHelper.ThrowInvalidCasting);
+    public double GetDouble()
+    {
+        if (!TryGetDouble(out var value))
+        {
+            ExceptionHelper.ThrowTypeMismatch(Type, "double");
+        }
+        return value;
+    }
 
-    public virtual long GetInt64()
-        => ExceptionHelper.NotReturnThrow<long>(ExceptionHelper.ThrowInvalidCasting);
+    public bool GetBool()
+    {
+        if (!TryGetBool(out var value))
+        {
+            ExceptionHelper.ThrowTypeMismatch(Type, "bool");
+        }
+        return value;
+    }
 
-    public virtual double GetDouble()
-        => ExceptionHelper.NotReturnThrow<double>(ExceptionHelper.ThrowInvalidCasting);
+    public DateTime GetDateTime()
+    {
+        if (!TryGetDateTime(out var value))
+        {
+            ExceptionHelper.ThrowTypeMismatch(Type, "DateTime");
+        }
+        return value;
+    }
 
-    public virtual bool GetBool()
-        => ExceptionHelper.NotReturnThrow<bool>(ExceptionHelper.ThrowInvalidCasting);
+    public DateTimeOffset GetDateTimeOffset()
+    {
+        if (!TryGetDateTimeOffset(out var value))
+        {
+            ExceptionHelper.ThrowTypeMismatch(Type, "DateTimeOffset");
+        }
+        return value;
+    }
 
-    public virtual DateTime GetDateTime()
-        => ExceptionHelper.NotReturnThrow<DateTime>(ExceptionHelper.ThrowInvalidCasting);
+    public DateOnly GetDateOnly()
+    {
+        if (!TryGetDateOnly(out var value))
+        {
+            ExceptionHelper.ThrowTypeMismatch(Type, "DateOnly");
+        }
+        return value;
+    }
 
-    public virtual DateTimeOffset GetDateTimeOffset()
-        => ExceptionHelper.NotReturnThrow<DateTimeOffset>(ExceptionHelper.ThrowInvalidCasting);
-
-    public virtual DateOnly GetDateOnly()
-        => ExceptionHelper.NotReturnThrow<DateOnly>(ExceptionHelper.ThrowInvalidCasting);
-
-    public virtual TimeOnly GetTimeOnly()
-        => ExceptionHelper.NotReturnThrow<TimeOnly>(ExceptionHelper.ThrowInvalidCasting);
+    public TimeOnly GetTimeOnly()
+    {
+        if (!TryGetTimeOnly(out var value))
+        {
+            ExceptionHelper.ThrowTypeMismatch(Type, "TimeOnly");
+        }
+        return value;
+    }
 
     public virtual object GetObject()
-        => ExceptionHelper.NotReturnThrow<TimeOnly>(ExceptionHelper.ThrowNoValue);
+        => ExceptionHelper.NotReturnThrow<object>(ExceptionHelper.ThrowNoValue);
 
-    public T GetNumber<T>() where T : struct, INumberBase<T>
+    public virtual bool TryGetArray(out ImmutableArray<TomlValue> value)
     {
-        try
-        {
-            return T.CreateChecked(GetDouble());
-        }
-        catch(OverflowException)
-        {
-            return ExceptionHelper.NotReturnThrow<T, Type>(ExceptionHelper.ThrowOverflow, typeof(T));
-        }
-        catch(NotSupportedException)
-        {
-            return ExceptionHelper.NotReturnThrow<T, string>(ExceptionHelper.ThrowNotSupported, nameof(T.CreateChecked));
-        }
+        value = ImmutableArray<TomlValue>.Empty;
+        return false;
     }
 
-    public T GetValue<T>()
+    public virtual bool TryGetArraySpan(out ReadOnlySpan<TomlValue> value)
     {
-        var tempDocumentNode = new TomlDocumentNode(this);
-        return tempDocumentNode.GetValue<T>();
+        value = default;
+        return false;
     }
 
-    public bool TryGetArray(out ReadOnlyCollection<TomlValue> value)
+    public virtual bool TryGetString([NotNullWhen(true)] out string? value)
     {
-        if (CanGetValue(TomlValueFeature.Array))
+        value = default;
+        return false;
+    }
+
+    public virtual bool TryGetInt64(out long value)
+    {
+        value = default;
+        return false;
+    }
+
+    public virtual bool TryGetDouble(out double value)
+    {
+        value = default;
+        return false;
+    }
+
+    public virtual bool TryGetBool(out bool value)
+    {
+        value = default;
+        return false;
+    }
+
+    public virtual bool TryGetDateTime(out DateTime value)
+    {
+        value = default;
+        return false;
+    }
+
+    public virtual bool TryGetDateTimeOffset(out DateTimeOffset value)
+    {
+        value = default;
+        return false;
+    }
+
+    public virtual bool TryGetDateOnly(out DateOnly value)
+    {
+        value = default;
+        return false;
+    }
+
+    public virtual bool TryGetTimeOnly(out TimeOnly value)
+    {
+        value = default;
+        return false;
+    }
+
+    public bool TryGetObject([NotNullWhen(true)] out object? value)
+    {
+        if (HasValue)
         {
-            value = GetArray();
+            value = GetObject();
             return true;
         }
-        value = default!;
+        value = default;
         return false;
     }
-
-    public bool TryGetArrayValue(int index, out TomlValue value)
-    {
-        try
-        {
-            value = GetArrayValue(index);
-            return true;
-        }
-        catch (CsTomlException)
-        {
-            value = default!;
-            return false;
-        }
-    }
-
-    public bool TryGetImmutableArray(out ImmutableArray<TomlValue> value)
-    {
-        if (CanGetValue(TomlValueFeature.Array))
-        {
-            value = GetImmutableArray();
-            return true;
-        }
-        value = default!;
-        return false;
-    }
-
-    public bool TryGetString(out string value)
-    {
-        if (CanGetValue(TomlValueFeature.String))
-        {
-            try
-            {
-                value = GetString();
-                return true;
-            }
-            catch(CsTomlException)
-            {
-                value = default!;
-                return false;
-            }
-        }
-        value = default!;
-        return false;
-    }
-
-    public bool TryGetInt64(out long value)
-    {
-        if (CanGetValue(TomlValueFeature.Int64))
-        {
-            try
-            {
-                value = GetInt64();
-                return true;
-            }
-            catch (CsTomlException)
-            {
-                value = default!;
-                return false;
-            }
-        }
-        value = default!;
-        return false;
-    }
-
-    public bool TryGetDouble(out double value)
-    {
-        if (CanGetValue(TomlValueFeature.Double))
-        {
-            try
-            {
-                value = GetDouble();
-                return true;
-            }
-            catch (CsTomlException)
-            {
-                value = default!;
-                return false;
-            }
-        }
-        value = default!;
-        return false;
-    }
-
-    public bool TryGetBool(out bool value)
-    {
-        if (CanGetValue(TomlValueFeature.Boolean))
-        {
-            try
-            {
-                value = GetBool();
-                return true;
-            }
-            catch (CsTomlException)
-            {
-                value = default!;
-                return false;
-            }
-    }
-        value = default!;
-        return false;
-    }
-
-    public bool TryGetDateTime(out DateTime value)
-    {
-        if (CanGetValue(TomlValueFeature.DateTime))
-        {
-            try
-            {
-                value = GetDateTime();
-                return true;
-            }
-            catch (CsTomlException)
-            {
-                value = default!;
-                return false;
-            }
-        }
-        value = default!;
-        return false;
-    }
-
-    public bool TryGetDateTimeOffset(out DateTimeOffset value)
-    {
-        if (CanGetValue(TomlValueFeature.DateTimeOffset))
-        {
-            try
-            {
-                value = GetDateTimeOffset();
-                return true;
-            }
-            catch (CsTomlException)
-            {
-                value = default!;
-                return false;
-            }
-        }
-        value = default!;
-        return false;
-    }
-
-    public bool TryGetDateOnly(out DateOnly value)
-    {
-        if (CanGetValue(TomlValueFeature.DateOnly))
-        {
-            try
-            {
-                value = GetDateOnly();
-                return true;
-            }
-            catch (CsTomlException)
-            {
-                value = default!;
-                return false;
-            }
-        }
-        value = default!;
-        return false;
-    }
-
-    public bool TryGetTimeOnly(out TimeOnly value)
-    {
-        if (CanGetValue(TomlValueFeature.TimeOnly))
-        {
-            try
-            {
-                value = GetTimeOnly();
-                return true;
-            }
-            catch (CsTomlException)
-            {
-                value = default!;
-                return false;
-            }
-        }
-        value = default!;
-        return false;
-    }
-
-    public bool TryGetObject(out object value)
-    {
-        if (CanGetValue(TomlValueFeature.Object))
-        {
-            try
-            {
-                value = GetObject();
-                return true;
-            }
-            catch (CsTomlException)
-            {
-                value = default!;
-                return false;
-            }
-        }
-        value = default!;
-        return false;
-    }
-
-    public bool TryGetNumber<T>(out T value) where T : struct, INumberBase<T>
-    {
-        if (CanGetValue(TomlValueFeature.Number))
-        {
-            try
-            {
-                value = GetNumber<T>();
-                return true;
-            }
-            catch (CsTomlException)
-            {
-                value = default!;
-                return false;
-            }
-        }
-        value = default!;
-        return false;
-    }
-
-    public bool TryGetValue<T>(out T value)
-    {
-        try
-        {
-            value = GetValue<T>();
-            return true;
-        }
-        catch (CsTomlException)
-        {
-            value = default!;
-            return false;
-        }
-    }
-
 }
-

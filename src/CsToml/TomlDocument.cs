@@ -1,4 +1,5 @@
 ﻿using CsToml.Error;
+using CsToml.Formatter.Resolver;
 using CsToml.Utility;
 using CsToml.Values;
 using System.Buffers;
@@ -24,7 +25,10 @@ public partial class TomlDocument
     }
 
     public IDictionary<TKey, TValue> ToDictionary<TKey, TValue>() where TKey : notnull
-        => RootNode.GetValue<IDictionary<TKey, TValue>>();
+    {
+        var rootNode = RootNode;
+        return TomlValueFormatterResolver.Instance.GetFormatter<IDictionary<TKey, TValue>>()!.Deserialize(ref rootNode, CsTomlSerializerOptions.Default);
+    }
 
     internal bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
         where TBufferWriter : IBufferWriter<byte>

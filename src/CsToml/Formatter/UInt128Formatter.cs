@@ -1,4 +1,5 @@
-﻿using CsToml.Error;
+﻿using CsToml.Utility;
+using CsToml.Error;
 using CsToml.Values;
 using System.Buffers;
 using System.Globalization;
@@ -18,16 +19,16 @@ internal sealed class UInt128Formatter : ITomlValueFormatter<UInt128>
 
         if (rootNode.TryGetInt64(out var value))
         {
-            return (UInt128)value;
+            return IntegerRangeHelper.ConvertFromInt64<UInt128>(value);
         }
-        ExceptionHelper.ThrowDeserializationFailed(typeof(UInt128));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(UInt128), rootNode);
         return default;
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, UInt128 target, CsTomlSerializerOptions options)
         where TBufferWriter : IBufferWriter<byte>
     {
-        writer.WriteInt64(checked((long)target));
+        writer.WriteInt64(IntegerRangeHelper.ConvertToInt64(target));
     }
 }
 
@@ -37,11 +38,17 @@ internal sealed class NullableUInt128Formatter : ITomlValueFormatter<UInt128?>
 
     public UInt128? Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
+        if (!rootNode.HasValue)
+        {
+            return default;
+        }
+
         if (rootNode.TryGetInt64(out var value))
         {
-            return (UInt128)value;
+            return IntegerRangeHelper.ConvertFromInt64<UInt128>(value);
         }
-        return null;
+        ExceptionHelper.ThrowDeserializationFailed(typeof(UInt128), rootNode);
+        return default;
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, UInt128? target, CsTomlSerializerOptions options)
@@ -49,7 +56,7 @@ internal sealed class NullableUInt128Formatter : ITomlValueFormatter<UInt128?>
     {
         if (target.HasValue)
         {
-            writer.WriteInt64(checked((long)target));
+            writer.WriteInt64(IntegerRangeHelper.ConvertToInt64(target.GetValueOrDefault()));
         }
         else
         {

@@ -286,6 +286,13 @@ internal partial class NullableType
 }
 
 [TomlSerializedObject]
+internal partial class NullableStructType
+{
+    [TomlValueOnSerialized]
+    public TestStruct? Value { get; set; }
+}
+
+[TomlSerializedObject]
 public partial class WithTuple
 {
     [TomlValueOnSerialized]
@@ -1015,7 +1022,7 @@ public class SpecialHashFormatter : ITomlValueFormatter<SpecialHash>
 
         if (rootNode.ValueType == TomlValueType.Integer)
         {
-            return new SpecialHash(rootNode.GetValue<uint>());
+            return new SpecialHash(options.Resolver.GetFormatter<uint>()!.Deserialize(ref rootNode, options));
         }
 
         if (rootNode.ValueType == TomlValueType.String)
@@ -1225,6 +1232,13 @@ internal partial class TypeNullBehaviorAllNullable
 
     [TomlValueOnSerialized]
     public int? Field3 { get; set; }
+}
+
+[TomlSerializedObject]
+internal partial class TypeNullBehaviorAllNullableList
+{
+    [TomlValueOnSerialized]
+    public List<TypeNullBehaviorAllNullable> Items { get; set; } = [];
 }
 
 [TomlSerializedObject]

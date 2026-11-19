@@ -1,4 +1,5 @@
 ﻿using CsToml.Error;
+using CsToml.Generator.Other;
 using Shouldly;
 using Utf8StringInterpolation;
 
@@ -55,5 +56,38 @@ public class NullableTypeTest
     {
         var type = CsTomlSerializer.Deserialize<NullableType>(@""u8);
         type.Value.ShouldBeNull();
+    }
+
+    [Test]
+    public void SerializeStruct()
+    {
+        var type = new NullableStructType()
+        {
+            Value = new TestStruct { Value = 1, Str = "Test" }
+        };
+
+        {
+            using var bytes = CsTomlSerializer.Serialize(type);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("Value.Value = 1");
+            writer.AppendLine("Value.Str = \"Test\"");
+            writer.Flush();
+
+            bytes.ByteSpan.ToArray().ShouldBe(buffer.ToArray());
+            CsTomlSerializer.Deserialize<NullableStructType>(bytes.ByteSpan).Value.ShouldBe(type.Value);
+        }
+        {
+            using var bytes = CsTomlSerializer.Serialize(type, Option.Header);
+
+            using var buffer = Utf8String.CreateWriter(out var writer);
+            writer.AppendLine("[Value]");
+            writer.AppendLine("Value = 1");
+            writer.AppendLine("Str = \"Test\"");
+            writer.Flush();
+
+            bytes.ByteSpan.ToArray().ShouldBe(buffer.ToArray());
+            CsTomlSerializer.Deserialize<NullableStructType>(bytes.ByteSpan).Value.ShouldBe(type.Value);
+        }
     }
 }

@@ -20,7 +20,7 @@ internal sealed class TimeOnlyFormatter : ITomlValueFormatter<TimeOnly>
             return value;
         }
 
-        ExceptionHelper.ThrowDeserializationFailed(typeof(TimeOnly));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(TimeOnly), rootNode);
         return default;
     }
 
@@ -37,11 +37,17 @@ internal sealed class NullableTimeOnlyFormatter : ITomlValueFormatter<TimeOnly?>
 
     public TimeOnly? Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
+        if (!rootNode.HasValue)
+        {
+            return default;
+        }
+
         if (rootNode.TryGetTimeOnly(out var value))
         {
             return value;
         }
-        return null;
+        ExceptionHelper.ThrowDeserializationFailed(typeof(TimeOnly), rootNode);
+        return default;
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TimeOnly? target, CsTomlSerializerOptions options)

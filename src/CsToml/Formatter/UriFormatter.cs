@@ -18,7 +18,7 @@ internal sealed class UriFormatter : ITomlValueFormatter<Uri?>
         {
             return new Uri(value, UriKind.RelativeOrAbsolute);
         }
-        ExceptionHelper.ThrowDeserializationFailed(typeof(Uri));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(Uri), rootNode);
         return default;
     }
 

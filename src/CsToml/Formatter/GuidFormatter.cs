@@ -17,12 +17,12 @@ internal sealed class GuidFormatter : ITomlValueFormatter<Guid>
 
         if (rootNode.Value is TomlString tomlString)
         {
-            if (Guid.TryParse(tomlString.GetString().AsSpan(), out var id))
+            if (Guid.TryParse(tomlString.Utf16String.AsSpan(), out var id))
             {
                 return id;
             }
         }
-        ExceptionHelper.ThrowDeserializationFailed(typeof(Guid));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(Guid), rootNode);
         return default!;
     }
 
@@ -39,14 +39,20 @@ internal sealed class NullableGuidFormatter : ITomlValueFormatter<Guid?>
 
     public Guid? Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
+        if (!rootNode.HasValue)
+        {
+            return default;
+        }
+
         if (rootNode.Value is TomlString tomlString)
         {
-            if (Guid.TryParse(tomlString.GetString().AsSpan(), out var id))
+            if (Guid.TryParse(tomlString.Utf16String.AsSpan(), out var id))
             {
                 return id;
             }
         }
-        return null;
+        ExceptionHelper.ThrowDeserializationFailed(typeof(Guid), rootNode);
+        return default;
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Guid? target, CsTomlSerializerOptions options)

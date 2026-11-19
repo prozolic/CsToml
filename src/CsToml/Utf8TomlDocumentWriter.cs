@@ -538,6 +538,12 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
 
     public void WriteDateTime(DateTime value)
     {
+        if (value.Kind == DateTimeKind.Utc)
+        {
+            WriteDateTimeOffset(new DateTimeOffset(value));
+            return;
+        }
+
         var totalMicrosecond = value.Millisecond * 1000 + value.Microsecond;
         if (totalMicrosecond == 0)
         {
@@ -604,7 +610,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
 
     public void WriteDateOnly(DateOnly value)
     {
-        value.TryFormat(writer.GetWrittenSpan(TomlCodes.DateTime.LocalDateFormatLength), out int bytesWritten, "yyyy-MM-dd");
+        value.TryFormat(writer.GetWrittenSpan(TomlCodes.DateTime.LocalDateFormatLength), out int bytesWritten, "yyyy-MM-dd", CultureInfo.InvariantCulture);
     }
 
     public void WriteTimeOnly(TimeOnly value)
@@ -678,7 +684,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
         var length = 32;
         int bytesWritten;
         Span<byte> buffer = writer.GetSpan(length);
-        while (!value.TryFormat(buffer, out bytesWritten, format))
+        while (!value.TryFormat(buffer, out bytesWritten, format, CultureInfo.InvariantCulture))
         {
             length *= 2;
             buffer = writer.GetSpan(length);
@@ -691,7 +697,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
     {
         var length = 32;
         int bytesWritten;
-        while (!value.TryFormat(writer.GetSpan(length), out bytesWritten, format))
+        while (!value.TryFormat(writer.GetSpan(length), out bytesWritten, format, CultureInfo.InvariantCulture))
         {
             length *= 2;
         }
@@ -701,7 +707,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
 
     private void WriteTimeOnlyCore(TimeOnly value, ReadOnlySpan<char> format)
     {
-        value.TryFormat(writer.GetWrittenSpan(format.Length), out var bytesWritten, format);
+        value.TryFormat(writer.GetWrittenSpan(format.Length), out var bytesWritten, format, CultureInfo.InvariantCulture);
     }
 
     private void WriteDottedKeyPrefix()
@@ -885,11 +891,11 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
                 case 9:
                     if (isObjectType)
                     {
-                        WriteInt64(checked((long)(object)refValue));
+                        WriteInt64(IntegerRangeHelper.ConvertToInt64((ulong)(object)refValue!));
                     }
                     else
                     {
-                        WriteInt64(UnsafeHelper.BitCast<T, long>(refValue));
+                        WriteInt64(IntegerRangeHelper.ConvertToInt64(UnsafeHelper.BitCast<T, ulong>(refValue)));
                     }
                     break;
                 case 10:

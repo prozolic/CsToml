@@ -19,7 +19,7 @@ internal sealed class Int64Formatter : ITomlValueFormatter<long>
             return value;
         }
 
-        ExceptionHelper.ThrowDeserializationFailed(typeof(long));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(long), rootNode);
         return default;
     }
 
@@ -36,11 +36,17 @@ internal sealed class NullableInt64Formatter : ITomlValueFormatter<long?>
 
     public long? Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
+        if (!rootNode.HasValue)
+        {
+            return default;
+        }
+
         if (rootNode.TryGetInt64(out var value))
         {
             return value;
         }
-        return null;
+        ExceptionHelper.ThrowDeserializationFailed(typeof(long), rootNode);
+        return default;
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, long? target, CsTomlSerializerOptions options)
