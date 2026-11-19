@@ -5,10 +5,6 @@ using CsToml.Generator.Other;
 
 namespace CsToml.Generator.Tests;
 
-#if NET8_0 || NET9_0
-// A failure here is a fail-fast that ends the whole test process, so the class must not run at all.
-[SkipOnNativeAot("NativeAOT limitation fixed in .NET 10: the .NET 8/9 compiler does not generate TomlSerializedObjectFormatter<GenericTypeWhereStruct<T>>.Serialize<TBufferWriter> for a generic class, and the process fails fast.")]
-#endif
 public class GenericTypeWhereStructTest
 {
     [Test]

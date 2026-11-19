@@ -1,7 +1,4 @@
-﻿
-#if NET9_0_OR_GREATER
-
-using Shouldly;
+﻿using Shouldly;
 using Utf8StringInterpolation;
 
 namespace CsToml.Generator.Tests;
@@ -127,5 +124,3 @@ public class TypeOrderedDictionaryTest
         }
     }
 }
-
-#endif

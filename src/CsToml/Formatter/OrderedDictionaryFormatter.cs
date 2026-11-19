@@ -1,6 +1,4 @@
-﻿#if NET9_0_OR_GREATER
-
-namespace CsToml.Formatter;
+﻿namespace CsToml.Formatter;
 
 public sealed class OrderedDictionaryFormatter<TKey, TValue> : DictionaryBaseFormatter<TKey, TValue, OrderedDictionary<TKey, TValue>, OrderedDictionary<TKey, TValue>>
     where TKey : notnull
@@ -20,5 +18,3 @@ public sealed class OrderedDictionaryFormatter<TKey, TValue> : DictionaryBaseFor
         return new OrderedDictionary<TKey, TValue>(capacity);
     }
 }
-
-#endif

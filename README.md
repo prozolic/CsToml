@@ -24,7 +24,7 @@ CsToml has the following features.
 
 - It complies with [TOML v1.0.0](https://toml.io/en/v1.0.0) by default.
 - [TOML v1.1.0](https://toml.io/en/v1.1.0) is also supported as an optional feature.
-- .NET 8, .NET 9, .NET 10 are supported.
+- .NET 10, .NET 11 are supported.
 - Parsing is performed using byte sequences instead of `string`.
 - Byte sequences are processed directly by the API defined in `System.Buffers`(`IBufferWriter<byte>`,`ReadOnlySequence<byte>`), resulting in small memory allocation and fast performance.
 - Buffers are rented from the pool(`ArrayPool<T>`), reducing the allocation.
@@ -57,7 +57,7 @@ Installation
 > [!NOTE]
 > The official release version is v1.1.0 or higher. Less than v1.1.0 is deprecated.
 
-This library is distributed via NuGet. We target .NET 8, .NET 9, .NET 10.  
+This library is distributed via NuGet. We target .NET 10, .NET 11.  
 
 > PM> Install-Package [CsToml](https://www.nuget.org/packages/CsToml/)
 

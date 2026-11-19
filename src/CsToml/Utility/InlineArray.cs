@@ -8,24 +8,6 @@ using System.Runtime.InteropServices;
 
 namespace CsToml.Utility;
 
-#if NET10_0_OR_GREATER
-// https://learn.microsoft.com/en-us/dotnet/api/system.runtime.compilerservices.inlinearray16-1?view=net-10.0
-// InlineArray4 and InlineArray16 is defined in the .NET 10.0, but not in the .NET 8.0 and 9.0.
-#else
-[InlineArray(4)]
-internal struct InlineArray4<T>
-{
-    T item;
-}
-
-[InlineArray(16)]
-internal struct InlineArray16<T>
-{
-    T item;
-}
-
-#endif
-
 // https://speakerdeck.com/neuecc/cedec-2023-modanhaipahuomansuc-number-2023-edition?slide=47
 // length is from 32 to 1,073,741,824
 [InlineArray(26)]
