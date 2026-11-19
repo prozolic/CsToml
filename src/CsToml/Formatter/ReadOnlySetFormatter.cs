@@ -1,6 +1,4 @@
-﻿#if NET9_0_OR_GREATER
-
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 
 namespace CsToml.Formatter;
 
@@ -62,7 +60,7 @@ public sealed class ReadOnlySetFormatter<T> : CollectionBaseFormatter<ReadOnlySe
         }
 
         var formatter = options.Resolver.GetFormatter<T>()!;
-        foreach(var item in target)
+        foreach (var item in target)
         {
             writer.BeginArrayOfTablesHeader();
             writer.WriteKey(header);
@@ -78,5 +76,3 @@ public sealed class ReadOnlySetFormatter<T> : CollectionBaseFormatter<ReadOnlySe
         return true;
     }
 }
-
-#endif

@@ -1186,8 +1186,6 @@ internal partial class TypeAliasOverridesConvention
     public int AnotherValue { get; set; }   // Will use "custom_name" instead of "another_value"
 }
 
-#if NET9_0_OR_GREATER
-
 [TomlSerializedObject]
 internal partial class TypeOrderedDictionary
 {
@@ -1201,8 +1199,6 @@ internal partial class TypeReadOnlySetFormatter
     [TomlValueOnSerialized]
     public ReadOnlySet<long> Value { get; set; }
 }
-
-#endif
 
 // Null Behavior Tests
 [TomlSerializedObject]

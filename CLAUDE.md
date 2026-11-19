@@ -11,7 +11,7 @@ CsToml is a TOML parser/serializer for .NET built for throughput and near-zero a
 - **CsToml.Extensions** — file I/O wrappers (`CsTomlFileSerializer`)
 - **CsToml.Extensions.Configuration** — `Microsoft.Extensions.Configuration` provider
 
-Solution is `CsToml.slnx` (slnx format). Libraries multi-target `net8.0;net9.0;net10.0` — set once in `src/Directory.Build.props`, along with `LangVersion 14.0` and `Nullable enable`. The core lib adds `AllowUnsafeBlocks` and `IsAotCompatible`.
+Solution is `CsToml.slnx` (slnx format). Libraries multi-target `net10.0;net11.0` — set once in `src/Directory.Build.props`, along with `LangVersion 14.0` and `Nullable enable`. The core lib adds `AllowUnsafeBlocks` and `IsAotCompatible`.
 
 ## Commands
 
@@ -29,7 +29,7 @@ The root `global.json` only selects the test runner and pins no SDK, so the newe
 Test projects use **TUnit on Microsoft.Testing.Platform**. `global.json` puts `dotnet test` in MTP mode, so a project is passed with `--project`, and filtering uses `--treenode-filter "/<assembly>/<namespace>/<class>/<test>"` (VSTest's `--filter` does not exist):
 
 ```bash
-dotnet test                                                                    # every project x 4 TFMs
+dotnet test                                                                    # every project x 2 TFMs
 dotnet test --project tests/CsToml.Tests --framework net10.0                   # one project, one TFM
 dotnet test --project tests/CsToml.Tests --framework net10.0 --treenode-filter "/*/*/PushBareKeyTest/*"
 dotnet test --project tests/CsToml.Tests --framework net10.0 --list-tests
@@ -56,11 +56,10 @@ tests/CsToml.Tests/bin/Release/net10.0/win-x64/publish/CsToml.Tests.exe
 
 ```bash
 cd sandbox/Benchmark
-dotnet run -c Release -- --filter "*ParseBenchmark*"
-dotnet run -c Release --framework net10.0 -- --filter "*ClassSerializationBenchmark*"
+dotnet run -c Release --framework net10.0 -- --filter "*ParseBenchmark*"
 ```
 
-`Program.cs` is `#if DEBUG`-gated: a Debug build bypasses `BenchmarkSwitcher` entirely and just runs `DefaultParseBenchmark` once — **always pass `-c Release`**. `BenchmarkConfig` registers a MediumRun job per TFM (net8/9/10) with `MemoryDiagnoser`; `--framework` narrows that to one.
+`Program.cs` is `#if DEBUG`-gated: a Debug build bypasses `BenchmarkSwitcher` entirely and just runs `DefaultParseBenchmark` once — **always pass `-c Release`**. `BenchmarkConfig` registers net10.0 and net11.0 MediumRun jobs plus a NuGet-package job with `MemoryDiagnoser`. It uses BenchmarkDotNet 0.16.0-preview.2, the first version with a net11.0 toolchain (`CsProjCoreToolchain` lives in `BenchmarkDotNet.Toolchains.NetCoreApp` there); `--framework` is required because the project multi-targets.
 
 ### Manual / AOT checks
 
@@ -144,4 +143,4 @@ Non-obvious parts:
 
 ## CI
 
-`.github/workflows/build.yml` runs `dotnet restore` → `build --no-restore` → `test --no-build` on ubuntu-latest with SDKs 8/9/10/11. Every TFM must build and pass on Linux, so avoid Windows-only assumptions in tests (path separators, file casing). A second job, `aot-test`, publishes each test project for net10.0 / linux-x64 with NativeAOT and runs the executable.
+`.github/workflows/build.yml` runs `dotnet restore` → `build --no-restore` → `test --no-build` on ubuntu-latest with SDKs 10/11. Every TFM must build and pass on Linux, so avoid Windows-only assumptions in tests (path separators, file casing). A second job, `aot-test`, publishes the test projects for linux-x64 with NativeAOT and runs the executables, as a matrix over net10.0 (all three) and net11.0 (all but `CsToml.Generator.Tests`).

@@ -86,11 +86,8 @@ internal sealed class BuiltinFormatterResolver : ITomlValueFormatterResolver
         { typeof(ValueTuple<,,,,,,>),  typeof(ValueTupleFormatter<,,,,,,>) },
         { typeof(ValueTuple<,,,,,,,>),  typeof(ValueTupleFormatter<,,,,,,,>) },
         { typeof(Lazy<>), typeof(LazyFormatter<>) },
-
-#if NET9_0_OR_GREATER
         { typeof(OrderedDictionary<,>), typeof(OrderedDictionaryFormatter<,>) },
         { typeof(ReadOnlySet<>), typeof(ReadOnlySetFormatter<>) },
-#endif
     };
 
     private sealed class BuiltinFormatterCache<T>

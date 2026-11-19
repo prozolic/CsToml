@@ -168,8 +168,6 @@ Console.WriteLine("CsTomlSerializer.Serialize<TestClass> END");
 // generic type
 Console.WriteLine("CsTomlSerializer.Serialize<GenericType<T>> Deserialize<GenericType<T>>");
 
-// An exception occurs when Native AOT compiling with .NET 8 and 9 due to a dotnet/runtime bug (https://github.com/dotnet/runtime/issues/113664).
-// This is fixed in .NET 10 so the exception no longer occurs.
 var genericType = new GenericType<int>()
 {
     Value = 123,

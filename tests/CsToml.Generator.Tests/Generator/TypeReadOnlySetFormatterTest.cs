@@ -1,6 +1,4 @@
-﻿#if NET9_0_OR_GREATER
-
-using Shouldly;
+﻿using Shouldly;
 using Utf8StringInterpolation;
 using System.Collections.ObjectModel;
 
@@ -81,5 +79,3 @@ public class TypeReadOnlySetFormatterTest
         type.Value.ShouldBe(new ReadOnlySet<long>(new HashSet<long>([1, 2, 3, 4, 5])));
     }
 }
-
-#endif
