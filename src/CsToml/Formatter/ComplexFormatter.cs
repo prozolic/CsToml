@@ -18,9 +18,11 @@ internal sealed class ComplexFormatter : ITomlValueFormatter<Complex>
 
         if (rootNode.Value is TomlArray array)
         {
-            var real = array[0].GetDouble();
-            var imaginary = array[1].GetDouble();
-            return new Complex(real, imaginary);
+            var values = array.AsSpan();
+            if (values.Length == 2)
+            {
+                return new Complex(values[0].GetDouble(), values[1].GetDouble());
+            }
         }
 
         ExceptionHelper.ThrowDeserializationFailed(typeof(Complex), rootNode);
@@ -54,9 +56,11 @@ internal sealed class NullableComplexFormatter : ITomlValueFormatter<Complex?>
 
         if (rootNode.Value is TomlArray array)
         {
-            var real = array[0].GetDouble();
-            var imaginary = array[1].GetDouble();
-            return new Complex(real, imaginary);
+            var values = array.AsSpan();
+            if (values.Length == 2)
+            {
+                return new Complex(values[0].GetDouble(), values[1].GetDouble());
+            }
         }
 
         ExceptionHelper.ThrowDeserializationFailed(typeof(Complex), rootNode);
