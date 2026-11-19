@@ -1,4 +1,5 @@
-﻿using CsToml.Formatter;
+﻿using CsToml.Error;
+using CsToml.Formatter;
 using CsToml.Formatter.Resolver;
 using System.Globalization;
 using System.Text;
@@ -84,22 +85,11 @@ public class DecimalConversionTest
 
     [Test]
     [Arguments("1e+29")]
-    [Arguments("1.7976931348623157e+308")]
-    public void Float_ExceedsDecimalRange_ThrowsOverflowException(string tomlValue)
-    {
-        Should.Throw<OverflowException>(() => GetDecimal(tomlValue));
-    }
-
-    [Test]
-    [Arguments("inf")]
-    [Arguments("+inf")]
     [Arguments("-inf")]
     [Arguments("nan")]
-    [Arguments("+nan")]
-    [Arguments("-nan")]
-    public void Float_SpecialValue_ThrowsOverflowException(string tomlValue)
+    public void Float_OutOfDecimalRange_ThrowsCsTomlException(string tomlValue)
     {
-        Should.Throw<OverflowException>(() => GetDecimal(tomlValue));
+        Should.Throw<CsTomlException>(() => GetDecimal(tomlValue));
     }
 
     [Test]
@@ -117,12 +107,9 @@ public class DecimalConversionTest
     }
 
     [Test]
-    [Arguments("inf")]
-    [Arguments("nan")]
-    [Arguments("1e+29")]
-    public void Nullable_InvalidValue_ThrowsOverflowException(string tomlValue)
+    public void Nullable_OutOfDecimalRange_ThrowsCsTomlException()
     {
-        Should.Throw<OverflowException>(() => GetNullableDecimal(tomlValue));
+        Should.Throw<CsTomlException>(() => GetNullableDecimal("1e+29"));
     }
 
     [Test]

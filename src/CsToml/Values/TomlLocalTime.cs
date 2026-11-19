@@ -1,5 +1,6 @@
 ﻿using CsToml.Error;
 using System.Diagnostics;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 
 namespace CsToml.Values;
@@ -22,7 +23,7 @@ internal sealed partial class TomlLocalTime(TimeOnly value) : TomlValue
     {
         if (format.Length == 0 && provider == null)
         {
-            return Value.TryFormat(destination, out charsWritten, "HH:mm:ss.fffffff", provider);
+            return Value.TryFormat(destination, out charsWritten, "HH:mm:ss.fffffff", CultureInfo.InvariantCulture);
         }
         return Value.TryFormat(destination, out charsWritten, format, provider);
     }
@@ -40,12 +41,12 @@ internal sealed partial class TomlLocalTime(TimeOnly value) : TomlValue
     {
         if (format.Length == 0 && provider == null)
         {
-            return Value.TryFormat(utf8Destination, out bytesWritten, "HH:mm:ss.fffffff", provider);
+            return Value.TryFormat(utf8Destination, out bytesWritten, "HH:mm:ss.fffffff", CultureInfo.InvariantCulture);
         }
         return Value.TryFormat(utf8Destination, out bytesWritten, format, provider);
     }
 
-    public override string ToString() => Value.ToString("HH:mm:ss.fffffff");
+    public override string ToString() => Value.ToString("HH:mm:ss.fffffff", CultureInfo.InvariantCulture);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TomlLocalTime Parse(ReadOnlySpan<byte> bytes)

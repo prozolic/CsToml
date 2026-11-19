@@ -14,13 +14,45 @@ internal sealed class DateTimeOffsetFormatter : ITomlValueFormatter<DateTimeOffs
             return default!;
         }
 
-        if (rootNode.TryGetDateTimeOffset(out var value))
+        if (TryConvert(ref rootNode, out var value))
         {
             return value;
         }
 
-        ExceptionHelper.ThrowDeserializationFailed(typeof(DateTimeOffset));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(DateTimeOffset), rootNode);
         return default;
+    }
+
+    internal static bool TryConvert(ref TomlDocumentNode rootNode, out DateTimeOffset value)
+    {
+        if (rootNode.TryGetDateTimeOffset(out value))
+        {
+            return true;
+        }
+        if (rootNode.TryGetDateTime(out var dateTime))
+        {
+            value = Create(dateTime);
+            return true;
+        }
+        if (rootNode.TryGetDateOnly(out var date))
+        {
+            value = Create(date.ToDateTime(TimeOnly.MinValue));
+            return true;
+        }
+        return false;
+    }
+
+    private static DateTimeOffset Create(DateTime dateTime)
+    {
+        try
+        {
+            return new DateTimeOffset(dateTime);
+        }
+        catch (ArgumentOutOfRangeException e)
+        {
+            ExceptionHelper.ThrowArgumentOutOfRangeExceptionWhenCreating<DateTimeOffset>(e);
+            return default;
+        }
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, DateTimeOffset target, CsTomlSerializerOptions options)
@@ -36,11 +68,17 @@ internal sealed class NullableDateTimeOffsetFormatter : ITomlValueFormatter<Date
 
     public DateTimeOffset? Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
-        if (rootNode.TryGetDateTimeOffset(out var value))
+        if (!rootNode.HasValue)
+        {
+            return default;
+        }
+
+        if (DateTimeOffsetFormatter.TryConvert(ref rootNode, out var value))
         {
             return value;
         }
-        return null;
+        ExceptionHelper.ThrowDeserializationFailed(typeof(DateTimeOffset), rootNode);
+        return default;
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, DateTimeOffset? target, CsTomlSerializerOptions options)

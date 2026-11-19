@@ -1,14 +1,12 @@
 ﻿
 using CsToml.Error;
-using CsToml.Formatter.Resolver;
 using CsToml.Utility;
 using CsToml.Values;
 using System.Buffers;
 using System.Collections.Immutable;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Numerics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.Unicode;
@@ -30,7 +28,7 @@ public struct TomlDocumentNode
 
     internal readonly TomlTable? Table => table;
 
-    public readonly bool HasValue => Value.HasValue || NodeCount > 0 || isRoot;
+    public readonly bool HasValue => Value.HasValue || table != null || isRoot;
 
     [EditorBrowsable(EditorBrowsableState.Never)]
     public readonly bool HasNodeOnly => !Value.HasValue && NodeCount > 0;
@@ -96,9 +94,13 @@ public struct TomlDocumentNode
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
-            if (Value.TryGetArrayValue(index, out var value))
+            if (Value is TomlArray array)
             {
-                return new TomlDocumentNode(value);
+                var values = array.AsSpan();
+                if ((uint)index < (uint)values.Length)
+                {
+                    return new TomlDocumentNode(values[index]);
+                }
             }
             return new TomlDocumentNode(TomlValue.Empty);
         }
@@ -150,82 +152,119 @@ public struct TomlDocumentNode
         => Value;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly bool CanGetValue(TomlValueFeature feature)
-        => Value.CanGetValue(feature);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly ReadOnlyCollection<TomlValue> GetArray()
-        => Value.GetArray();
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly TomlValue GetArrayValue(int index)
-        => Value.GetArrayValue(index);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly ImmutableArray<TomlValue> GetImmutableArray()
-        => Value.GetImmutableArray();
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly string GetString()
-        => Value.GetString();
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly long GetInt64()
-        => Value.GetInt64();
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly double GetDouble()
-        => Value.GetDouble();
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly bool GetBool()
-        => Value.GetBool();
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly DateTime GetDateTime()
-        => Value.GetDateTime();
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly DateTimeOffset GetDateTimeOffset()
-        => Value.GetDateTimeOffset();
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly DateOnly GetDateOnly()
-        => Value.GetDateOnly();
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly TimeOnly GetTimeOnly()
-        => Value.GetTimeOnly();
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly object GetObject()
-        => Value.GetObject();
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly T GetNumber<T>() where T : struct, INumberBase<T>
-        => Value.GetNumber<T>();
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public T GetValue<T>()
+    public readonly ImmutableArray<TomlValue> GetArray()
     {
-        return TomlValueFormatterResolver.Instance.GetFormatter<T>()!.
-            Deserialize(ref this, CsTomlSerializerOptions.Default);
+        if (table != null)
+        {
+            ExceptionHelper.ThrowTypeMismatch(TomlValueType.Table, "array");
+        }
+        return Value.GetArray();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly bool TryGetArray(out ReadOnlyCollection<TomlValue> value)
+    public readonly ReadOnlySpan<TomlValue> GetArraySpan()
+    {
+        if (table != null)
+        {
+            ExceptionHelper.ThrowTypeMismatch(TomlValueType.Table, "array");
+        }
+        return Value.GetArraySpan();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly string GetString()
+    {
+        if (table != null)
+        {
+            ExceptionHelper.ThrowTypeMismatch(TomlValueType.Table, "string");
+        }
+        return Value.GetString();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly long GetInt64()
+    {
+        if (table != null)
+        {
+            ExceptionHelper.ThrowTypeMismatch(TomlValueType.Table, "long");
+        }
+        return Value.GetInt64();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly double GetDouble()
+    {
+        if (table != null)
+        {
+            ExceptionHelper.ThrowTypeMismatch(TomlValueType.Table, "double");
+        }
+        return Value.GetDouble();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly bool GetBool()
+    {
+        if (table != null)
+        {
+            ExceptionHelper.ThrowTypeMismatch(TomlValueType.Table, "bool");
+        }
+        return Value.GetBool();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly DateTime GetDateTime()
+    {
+        if (table != null)
+        {
+            ExceptionHelper.ThrowTypeMismatch(TomlValueType.Table, "DateTime");
+        }
+        return Value.GetDateTime();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly DateTimeOffset GetDateTimeOffset()
+    {
+        if (table != null)
+        {
+            ExceptionHelper.ThrowTypeMismatch(TomlValueType.Table, "DateTimeOffset");
+        }
+        return Value.GetDateTimeOffset();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly DateOnly GetDateOnly()
+    {
+        if (table != null)
+        {
+            ExceptionHelper.ThrowTypeMismatch(TomlValueType.Table, "DateOnly");
+        }
+        return Value.GetDateOnly();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly TimeOnly GetTimeOnly()
+    {
+        if (table != null)
+        {
+            ExceptionHelper.ThrowTypeMismatch(TomlValueType.Table, "TimeOnly");
+        }
+        return Value.GetTimeOnly();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly object GetObject()
+        => table != null ? table.GetObject() : Value.GetObject();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly bool TryGetArray(out ImmutableArray<TomlValue> value)
         => Value.TryGetArray(out value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly bool TryGetArrayValue(int index, out TomlValue value)
-        => Value.TryGetArrayValue(index, out value);
+    public readonly bool TryGetArraySpan(out ReadOnlySpan<TomlValue> value)
+        => Value.TryGetArraySpan(out value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly bool TryGetImmutableArray(out ImmutableArray<TomlValue> value)
-        => Value.TryGetImmutableArray(out value);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly bool TryGetString(out string value)
+    public readonly bool TryGetString([NotNullWhen(true)] out string? value)
         => Value.TryGetString(out value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -257,23 +296,50 @@ public struct TomlDocumentNode
         => Value.TryGetTimeOnly(out value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly bool TryGetObject(out object value)
-        => Value.TryGetObject(out value);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly bool TryGetNumber<T>(out T value) where T : struct, INumberBase<T>
-        => Value.TryGetNumber<T>(out value);
-
-    public bool TryGetValue<T>(out T value)
+    public readonly bool TryGetObject([NotNullWhen(true)] out object? value)
     {
+        if (table != null)
+        {
+            value = table.GetObject();
+            return true;
+        }
+        return Value.TryGetObject(out value);
+    }
+
+    public readonly T GetValue<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(CsTomlSerializerOptions? options = null)
+    {
+        options ??= CsTomlSerializer.DefaultOptions;
+        var node = this;
+
         try
         {
-            value = GetValue<T>();
+            return options.Resolver.GetFormatter<T>()!.Deserialize(ref node, options);
+        }
+        catch (CsTomlException cte)
+        {
+            throw new CsTomlSerializeException("An exception was thrown while deserializing a TOML node. See the 'InnerException' property for details.", cte);
+        }
+    }
+
+    public readonly bool TryGetValue<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>([MaybeNullWhen(false)] out T value, CsTomlSerializerOptions? options = null)
+    {
+        if (!HasValue)
+        {
+            value = default;
+            return false;
+        }
+
+        options ??= CsTomlSerializer.DefaultOptions;
+        var node = this;
+
+        try
+        {
+            value = options.Resolver.GetFormatter<T>()!.Deserialize(ref node, options);
             return true;
         }
         catch (CsTomlException)
         {
-            value = default!;
+            value = default;
             return false;
         }
     }
@@ -314,8 +380,7 @@ public struct TomlDocumentNode
             var pair = enumerator.Current;
             if (pair.Value is TomlTable childTable)
             {
-                // An empty table is enumerated as an empty node that does not refer to the table.
-                current = new KeyValuePair<TomlValue, TomlDocumentNode>(pair.Key, childTable.Count > 0 ? new TomlDocumentNode(childTable) : new TomlDocumentNode(TomlValue.Empty));
+                current = new KeyValuePair<TomlValue, TomlDocumentNode>(pair.Key, new TomlDocumentNode(childTable));
             }
             else
             {

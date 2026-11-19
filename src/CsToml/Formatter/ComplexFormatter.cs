@@ -16,14 +16,14 @@ internal sealed class ComplexFormatter : ITomlValueFormatter<Complex>
             return default!;
         }
 
-        if (rootNode.CanGetValue(TomlValueFeature.Array) && rootNode.Value is TomlArray array)
+        if (rootNode.Value is TomlArray array)
         {
             var real = array[0].GetDouble();
             var imaginary = array[1].GetDouble();
             return new Complex(real, imaginary);
         }
 
-        ExceptionHelper.ThrowDeserializationFailed(typeof(Complex));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(Complex), rootNode);
         return default;
     }
 
@@ -52,14 +52,15 @@ internal sealed class NullableComplexFormatter : ITomlValueFormatter<Complex?>
             return null!;
         }
 
-        if (rootNode.CanGetValue(TomlValueFeature.Array) && rootNode.Value is TomlArray array)
+        if (rootNode.Value is TomlArray array)
         {
             var real = array[0].GetDouble();
             var imaginary = array[1].GetDouble();
             return new Complex(real, imaginary);
         }
 
-        return null;
+        ExceptionHelper.ThrowDeserializationFailed(typeof(Complex), rootNode);
+        return default;
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Complex? target, CsTomlSerializerOptions options)
@@ -97,11 +98,11 @@ internal sealed class ComplexFormatter<T> : ITomlValueFormatter<Complex<T>>
             return default!;
         }
 
-        if (rootNode.CanGetValue(TomlValueFeature.Array) && rootNode.Value is TomlArray tomlArray)
+        if (rootNode.Value is TomlArray tomlArray)
         {
             if (tomlArray.Count != 2)
             {
-                ExceptionHelper.ThrowDeserializationFailed(typeof(Complex<T>));
+                ExceptionHelper.ThrowDeserializationFailed(typeof(Complex<T>), rootNode);
                 return default!;
             }
 
@@ -114,7 +115,7 @@ internal sealed class ComplexFormatter<T> : ITomlValueFormatter<Complex<T>>
             return new Complex<T>(real, imaginary);
         }
 
-        ExceptionHelper.ThrowDeserializationFailed(typeof(Complex<T>));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(Complex<T>), rootNode);
         return default!;
     }
 

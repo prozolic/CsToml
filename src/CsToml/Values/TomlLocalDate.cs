@@ -1,5 +1,6 @@
 ﻿using CsToml.Error;
 using System.Diagnostics;
+using System.Globalization;
 
 namespace CsToml.Values;
 
@@ -21,7 +22,7 @@ internal sealed partial class TomlLocalDate(DateOnly value) : TomlValue
     {
         if (format.Length == 0 && provider == null)
         {
-            return Value.TryFormat(destination, out charsWritten, "yyyy-MM-dd", provider);
+            return Value.TryFormat(destination, out charsWritten, "yyyy-MM-dd", CultureInfo.InvariantCulture);
         }
         return Value.TryFormat(destination, out charsWritten, format, provider);
     }
@@ -30,7 +31,7 @@ internal sealed partial class TomlLocalDate(DateOnly value) : TomlValue
     {
         if (string.IsNullOrEmpty(format) && formatProvider == null)
         {
-            return Value.ToString("yyyy-MM-dd");
+            return ToString();
         }
         return Value.ToString(format, formatProvider);
     }
@@ -39,12 +40,12 @@ internal sealed partial class TomlLocalDate(DateOnly value) : TomlValue
     {
         if (format.Length == 0 && provider == null)
         {
-            return Value.TryFormat(utf8Destination, out bytesWritten, "yyyy-MM-dd", provider);
+            return Value.TryFormat(utf8Destination, out bytesWritten, "yyyy-MM-dd", CultureInfo.InvariantCulture);
         }
         return Value.TryFormat(utf8Destination, out bytesWritten, format, provider);
     }
 
-    public override string ToString() => Value.ToString("yyyy-MM-dd");
+    public override string ToString() => Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
     public static TomlLocalDate Parse(ReadOnlySpan<byte> bytes)
     {

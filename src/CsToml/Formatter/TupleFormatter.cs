@@ -20,7 +20,7 @@ public sealed class TupleFormatter<T1> : ITomlValueFormatter<Tuple<T1>?>
         }
         else
         {
-            ExceptionHelper.ThrowDeserializationFailed(typeof(Tuple<T1>));
+            ExceptionHelper.ThrowDeserializationFailed(typeof(Tuple<T1>), rootNode);
             return default!;
         }
     }
@@ -47,7 +47,7 @@ public sealed class TupleFormatter<T1, T2> : ITomlValueFormatter<Tuple<T1, T2>?>
             return default!;
         }
 
-        if (rootNode.CanGetValue(TomlValueFeature.Array) && rootNode.Value is TomlArray tomlArray)
+        if (rootNode.Value is TomlArray tomlArray)
         {
             if (tomlArray.Count != 2)
             {
@@ -63,7 +63,7 @@ public sealed class TupleFormatter<T1, T2> : ITomlValueFormatter<Tuple<T1, T2>?>
             return new Tuple<T1, T2>(t1, t2);
         }
 
-        ExceptionHelper.ThrowDeserializationFailed(typeof(Tuple<T1, T2>));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(Tuple<T1, T2>), rootNode);
         return default!;
     }
 
@@ -95,7 +95,7 @@ public sealed class TupleFormatter<T1, T2, T3> : ITomlValueFormatter<Tuple<T1, T
             return default!;
         }
 
-        if (rootNode.CanGetValue(TomlValueFeature.Array) && rootNode.Value is TomlArray tomlArray)
+        if (rootNode.Value is TomlArray tomlArray)
         {
             if (tomlArray.Count != 3)
             {
@@ -114,7 +114,7 @@ public sealed class TupleFormatter<T1, T2, T3> : ITomlValueFormatter<Tuple<T1, T
             return new Tuple<T1, T2, T3>(t1, t2, t3);
         }
 
-        ExceptionHelper.ThrowDeserializationFailed(typeof(Tuple<T1, T2, T3>));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(Tuple<T1, T2, T3>), rootNode);
         return default!;
     }
 
@@ -149,7 +149,7 @@ public sealed class TupleFormatter<T1, T2, T3, T4> : ITomlValueFormatter<Tuple<T
             return default!;
         }
 
-        if (rootNode.CanGetValue(TomlValueFeature.Array) && rootNode.Value is TomlArray tomlArray)
+        if (rootNode.Value is TomlArray tomlArray)
         {
             if (tomlArray.Count != 4)
             {
@@ -170,7 +170,7 @@ public sealed class TupleFormatter<T1, T2, T3, T4> : ITomlValueFormatter<Tuple<T
             return new Tuple<T1, T2, T3, T4>(t1, t2, t3, t4);
         }
 
-        ExceptionHelper.ThrowDeserializationFailed(typeof(Tuple<T1, T2, T3, T4>));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(Tuple<T1, T2, T3, T4>), rootNode);
         return default!;
     }
 
@@ -208,7 +208,7 @@ public sealed class TupleFormatter<T1, T2, T3, T4, T5> : ITomlValueFormatter<Tup
             return default!;
         }
 
-        if (rootNode.CanGetValue(TomlValueFeature.Array) && rootNode.Value is TomlArray tomlArray)
+        if (rootNode.Value is TomlArray tomlArray)
         {
             if (tomlArray.Count != 5)
             {
@@ -230,7 +230,7 @@ public sealed class TupleFormatter<T1, T2, T3, T4, T5> : ITomlValueFormatter<Tup
             return new Tuple<T1, T2, T3, T4, T5>(t1, t2, t3, t4, t5);
         }
 
-        ExceptionHelper.ThrowDeserializationFailed(typeof(Tuple<T1, T2, T3, T4, T5>));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(Tuple<T1, T2, T3, T4, T5>), rootNode);
         return default!;
     }
 
@@ -271,7 +271,7 @@ public sealed class TupleFormatter<T1, T2, T3, T4, T5, T6> : ITomlValueFormatter
             return default!;
         }
 
-        if (rootNode.CanGetValue(TomlValueFeature.Array) && rootNode.Value is TomlArray tomlArray)
+        if (rootNode.Value is TomlArray tomlArray)
         {
             if (tomlArray.Count != 6)
             {
@@ -295,7 +295,7 @@ public sealed class TupleFormatter<T1, T2, T3, T4, T5, T6> : ITomlValueFormatter
             return new Tuple<T1, T2, T3, T4, T5, T6>(t1, t2, t3, t4, t5, t6);
         }
 
-        ExceptionHelper.ThrowDeserializationFailed(typeof(Tuple<T1, T2, T3, T4, T5, T6>));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(Tuple<T1, T2, T3, T4, T5, T6>), rootNode);
         return default!;
     }
 
@@ -339,7 +339,7 @@ public sealed class TupleFormatter<T1, T2, T3, T4, T5, T6, T7> : ITomlValueForma
             return default!;
         }
 
-        if (rootNode.CanGetValue(TomlValueFeature.Array) && rootNode.Value is TomlArray tomlArray)
+        if (rootNode.Value is TomlArray tomlArray)
         {
             if (tomlArray.Count != 7)
             {
@@ -365,7 +365,7 @@ public sealed class TupleFormatter<T1, T2, T3, T4, T5, T6, T7> : ITomlValueForma
             return new Tuple<T1, T2, T3, T4, T5, T6, T7>(t1, t2, t3, t4, t5, t6, t7);
         }
 
-        ExceptionHelper.ThrowDeserializationFailed(typeof(Tuple<T1, T2, T3, T4, T5, T6, T7>));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(Tuple<T1, T2, T3, T4, T5, T6, T7>), rootNode);
         return default!;
     }
 
@@ -413,7 +413,7 @@ public sealed class TupleFormatter<T1, T2, T3, T4, T5, T6, T7, TRest> : ITomlVal
             return default!;
         }
 
-        if (rootNode.CanGetValue(TomlValueFeature.Array) && rootNode.Value is TomlArray tomlArray)
+        if (rootNode.Value is TomlArray tomlArray)
         {
             if (tomlArray.Count != 8)
             {
@@ -441,7 +441,7 @@ public sealed class TupleFormatter<T1, T2, T3, T4, T5, T6, T7, TRest> : ITomlVal
             return new Tuple<T1, T2, T3, T4, T5, T6, T7, TRest>(t1, t2, t3, t4, t5, t6, t7, tRest);
         }
 
-        ExceptionHelper.ThrowDeserializationFailed(typeof(Tuple<T1, T2, T3, T4, T5, T6, T7, TRest>));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(Tuple<T1, T2, T3, T4, T5, T6, T7, TRest>), rootNode);
         return default!;
     }
 

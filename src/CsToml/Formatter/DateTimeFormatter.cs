@@ -14,13 +14,32 @@ internal sealed class DateTimeFormatter : ITomlValueFormatter<DateTime>
             return default!;
         }
 
-        if (rootNode.TryGetDateTime(out var value))
+        if (TryConvert(ref rootNode, out var value))
         {
             return value;
         }
 
-        ExceptionHelper.ThrowDeserializationFailed(typeof(DateTime));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(DateTime), rootNode);
         return default;
+    }
+
+    internal static bool TryConvert(ref TomlDocumentNode rootNode, out DateTime value)
+    {
+        if (rootNode.TryGetDateTime(out value))
+        {
+            return true;
+        }
+        if (rootNode.TryGetDateTimeOffset(out var dateTimeOffset))
+        {
+            value = dateTimeOffset.UtcDateTime;
+            return true;
+        }
+        if (rootNode.TryGetDateOnly(out var date))
+        {
+            value = date.ToDateTime(TimeOnly.MinValue);
+            return true;
+        }
+        return false;
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, DateTime target, CsTomlSerializerOptions options)
@@ -36,11 +55,17 @@ internal sealed class NullableDateTimeFormatter : ITomlValueFormatter<DateTime?>
 
     public DateTime? Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
-        if (rootNode.TryGetDateTime(out var value))
+        if (!rootNode.HasValue)
+        {
+            return default;
+        }
+
+        if (DateTimeFormatter.TryConvert(ref rootNode, out var value))
         {
             return value;
         }
-        return null;
+        ExceptionHelper.ThrowDeserializationFailed(typeof(DateTime), rootNode);
+        return default;
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, DateTime? target, CsTomlSerializerOptions options)

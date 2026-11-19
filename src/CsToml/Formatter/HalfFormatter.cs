@@ -16,10 +16,15 @@ internal sealed class HalfFormatter : ITomlValueFormatter<Half>
 
         if (rootNode.TryGetDouble(out var value))
         {
-            return (Half)value;
+            var result = (Half)value;
+            if (Half.IsInfinity(result) && double.IsFinite(value))
+            {
+                ExceptionHelper.ThrowOverflow(typeof(Half));
+            }
+            return result;
         }
 
-        ExceptionHelper.ThrowDeserializationFailed(typeof(Half));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(Half), rootNode);
         return default;
     }
 
@@ -36,11 +41,22 @@ internal sealed class NullableHalfFormatter : ITomlValueFormatter<Half?>
 
     public Half? Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
+        if (!rootNode.HasValue)
+        {
+            return default;
+        }
+
         if (rootNode.TryGetDouble(out var value))
         {
-            return (Half)value;
+            var result = (Half)value;
+            if (Half.IsInfinity(result) && double.IsFinite(value))
+            {
+                ExceptionHelper.ThrowOverflow(typeof(Half));
+            }
+            return result;
         }
-        return null;
+        ExceptionHelper.ThrowDeserializationFailed(typeof(Half), rootNode);
+        return default;
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Half? target, CsTomlSerializerOptions options)

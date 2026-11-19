@@ -71,11 +71,11 @@ public class TrailingZeroTest
     public void ZeroAtEndOfArrayWithoutNewLine()
     {
         var array = CsTomlSerializer.Deserialize<TomlDocument>("v = [0]"u8).RootNode["v"];
-        array.GetArray().Count.ShouldBe(1);
+        array.GetArray().Length.ShouldBe(1);
         array[0].GetInt64().ShouldBe(0);
 
         var array2 = CsTomlSerializer.Deserialize<TomlDocument>("v = [1, 0]"u8).RootNode["v"];
-        array2.GetArray().Count.ShouldBe(2);
+        array2.GetArray().Length.ShouldBe(2);
         array2[0].GetInt64().ShouldBe(1);
         array2[1].GetInt64().ShouldBe(0);
 

@@ -42,24 +42,19 @@ internal struct TomlStreamConfigurationParser
             VisitObjectElement(node);
             return;
         }
-        else if (node.CanGetValue(TomlValueFeature.Array))
+        else if (node.ValueType == TomlValueType.Array)
         {
             VisitArrayElement(node);
             return;
         }
-        else if (node.CanGetValue(TomlValueFeature.Table | TomlValueFeature.InlineTable))
-        {
-            VisitObjectElement(node);
-            return;
-        }
-        else if (node.HasValue)
+        else if (node.HasValueOnly)
         {
             var key = paths.Peek();
             if (data.ContainsKey(key))
             {
                 throw new FormatException();
             }
-            data[key] = node.GetString();
+            data[key] = node.GetTomlValue().ToString();
         }
     }
 
@@ -67,7 +62,7 @@ internal struct TomlStreamConfigurationParser
     {
         int index = 0;
 
-        foreach (var arrayElement in node.GetArray())
+        foreach (var arrayElement in node.GetArraySpan())
         {
             paths.Push(paths.Count > 0 ? $"{paths.Peek()}{ConfigurationPath.KeyDelimiter}{index}" : $"{index}");
             VisitElement(new TomlDocumentNode(arrayElement));

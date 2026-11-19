@@ -47,11 +47,9 @@ public class BFloat16Test
     }
 
     [Test]
-    public void Deserialize_OutOfRange_IsInfinity()
+    public void Deserialize_OutOfRange_Throws()
     {
-        // BFloat16.MaxValue is about 3.39E+38.
-        BFloat16.IsPositiveInfinity(GetBFloat16("1e300")).ShouldBeTrue();
-        BFloat16.IsNegativeInfinity(GetBFloat16("-1e300")).ShouldBeTrue();
+        Should.Throw<CsTomlException>(() => GetBFloat16("1e300"));
     }
 
     [Test]

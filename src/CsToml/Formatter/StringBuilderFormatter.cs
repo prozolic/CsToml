@@ -21,7 +21,7 @@ internal sealed class StringBuilderFormatter : ITomlValueFormatter<StringBuilder
             return new StringBuilder(value);
         }
 
-        ExceptionHelper.ThrowDeserializationFailed(typeof(StringBuilder));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(StringBuilder), rootNode);
         return default;
     }
 

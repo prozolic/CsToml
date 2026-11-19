@@ -62,15 +62,15 @@ number2 = 123456
         document!.RootNode["flt"u8].GetDouble().ShouldBe(3.1415d);
         document!.RootNode["boolean"u8].GetBool().ShouldBeTrue();
         document!.RootNode["odt1"u8].GetDateTimeOffset().ShouldBe(new DateTimeOffset(1979, 5, 27, 7, 32, 0, TimeSpan.Zero));
-        document!.RootNode["ldt1"u8].GetDateTimeOffset().ShouldBe(new DateTime(1979, 5, 27, 7, 32, 0));
-        document!.RootNode["ldt2"u8].GetDateTimeOffset().ShouldBe(new DateTime(1979, 5, 27, 0, 32, 0, 999, 999));
+        document!.RootNode["ldt1"u8].GetDateTime().ShouldBe(new DateTime(1979, 5, 27, 7, 32, 0));
+        document!.RootNode["ldt2"u8].GetDateTime().ShouldBe(new DateTime(1979, 5, 27, 0, 32, 0, 999, 999));
         document!.RootNode["ld1"u8].GetDateOnly().ShouldBe(new DateOnly(1979, 5, 27));
         document!.RootNode["lt1"u8].GetTimeOnly().ShouldBe(new TimeOnly(7, 32, 0));
         document!.RootNode["key"u8].GetString().ShouldBe("value");
         document!.RootNode["first"u8]["second"u8]["third"u8].GetString().ShouldBe("value");
         document!.RootNode["number"u8].GetInt64().ShouldBe(123456);
         var arrayValue = document!.RootNode["array"u8]!.GetArray();
-        arrayValue.Count.ShouldBe(3);
+        arrayValue.Length.ShouldBe(3);
         arrayValue[0].GetInt64().ShouldBe(123);
         arrayValue[1].GetString().ShouldBe("456");
         arrayValue[2].GetBool().ShouldBeTrue();
@@ -144,15 +144,15 @@ number2 = 123456
         document!.RootNode["flt"].GetDouble().ShouldBe(3.1415d);
         document!.RootNode["boolean"].GetBool().ShouldBeTrue();
         document!.RootNode["odt1"].GetDateTimeOffset().ShouldBe(new DateTimeOffset(1979, 5, 27, 7, 32, 0, TimeSpan.Zero));
-        document!.RootNode["ldt1"].GetDateTimeOffset().ShouldBe(new DateTime(1979, 5, 27, 7, 32, 0));
-        document!.RootNode["ldt2"].GetDateTimeOffset().ShouldBe(new DateTime(1979, 5, 27, 0, 32, 0, 999, 999));
+        document!.RootNode["ldt1"].GetDateTime().ShouldBe(new DateTime(1979, 5, 27, 7, 32, 0));
+        document!.RootNode["ldt2"].GetDateTime().ShouldBe(new DateTime(1979, 5, 27, 0, 32, 0, 999, 999));
         document!.RootNode["ld1"].GetDateOnly().ShouldBe(new DateOnly(1979, 5, 27));
         document!.RootNode["lt1"].GetTimeOnly().ShouldBe(new TimeOnly(7, 32, 0));
         document!.RootNode["key"].GetString().ShouldBe("value");
         document!.RootNode["first"]["second"]["third"].GetString().ShouldBe("value");
         document!.RootNode["number"].GetInt64().ShouldBe(123456);
         var arrayValue = document!.RootNode["array"]!.GetArray();
-        arrayValue.Count.ShouldBe(3);
+        arrayValue.Length.ShouldBe(3);
         arrayValue[0].GetInt64().ShouldBe(123);
         arrayValue[1].GetString().ShouldBe("456");
         arrayValue[2].GetBool().ShouldBeTrue();
@@ -975,11 +975,12 @@ ldt24 = 1979-05-27T00:32.111111
     {
         var document = CsTomlSerializer.Deserialize<TomlDocument>(@"ldt1 = 1979-05-27T07:32:00"u8);
         (document!.RootNode["ldt1"].ValueType == TomlValueType.LocalDateTime).ShouldBeTrue();
-        document!.RootNode["ldt1"].GetDateTime().ShouldBe(new DateTime(1979, 5, 27, 7, 32, 0, DateTimeKind.Local));
+        document!.RootNode["ldt1"].GetDateTime().ShouldBe(new DateTime(1979, 5, 27, 7, 32, 0));
+        document!.RootNode["ldt1"].GetDateTime().Kind.ShouldBe(DateTimeKind.Unspecified);
 
         var document2 = CsTomlSerializer.Deserialize<TomlDocument>(@"ldt1 = 1979-05-27T07:32:00"u8, Options.TomlSpecVersion110);
         (document2!.RootNode["ldt1"].ValueType == TomlValueType.LocalDateTime).ShouldBeTrue();
-        document2!.RootNode["ldt1"].GetDateTime().ShouldBe(new DateTime(1979, 5, 27, 7, 32, 0, DateTimeKind.Local));
+        document2!.RootNode["ldt1"].GetDateTime().ShouldBe(new DateTime(1979, 5, 27, 7, 32, 0));
     }
 
     [Test]
@@ -991,7 +992,8 @@ ldt24 = 1979-05-27T00:32.111111
 
         var document = CsTomlSerializer.Deserialize<TomlDocument>(@"ldt1 = 1979-05-27T07:32"u8, Options.TomlSpecVersion110);
         (document!.RootNode["ldt1"].ValueType == TomlValueType.LocalDateTime).ShouldBeTrue();
-        document!.RootNode["ldt1"].GetDateTime().ShouldBe(new DateTime(1979, 5, 27, 7, 32, 0, DateTimeKind.Local));
+        document!.RootNode["ldt1"].GetDateTime().ShouldBe(new DateTime(1979, 5, 27, 7, 32, 0));
+        document!.RootNode["ldt1"].GetDateTime().Kind.ShouldBe(DateTimeKind.Unspecified);
     }
 }
 
@@ -1707,7 +1709,7 @@ public class DeserializeValueTypeTest
         tomlStringValue.ShouldBe("abc");
 
         var tomlDateTimeValue = CsTomlSerializer.DeserializeValueType<DateTime>("2024-10-20T15:16:00"u8);
-        tomlDateTimeValue.ShouldBe(new DateTime(2024, 10, 20, 15, 16, 0, DateTimeKind.Local));
+        tomlDateTimeValue.ShouldBe(new DateTime(2024, 10, 20, 15, 16, 0));
 
         var tomlArrayValue = CsTomlSerializer.DeserializeValueType<string[]>("[ \"red\", \"yellow\", \"green\" ]"u8);
         tomlArrayValue.ShouldBe(["red", "yellow", "green"]);
@@ -1717,6 +1719,30 @@ public class DeserializeValueTypeTest
         tomlinlineTableValue["x"].ShouldBe((object)1);
         tomlinlineTableValue["y"].ShouldBe((object)2);
         tomlinlineTableValue["z"].ShouldBe((object)"3");
+    }
+
+    [Test]
+    public void OutOfRangeThrowsCsTomlException()
+    {
+        Should.Throw<CsTomlException>(() => CsTomlSerializer.DeserializeValueType<int>("3000000000"u8));
+        Should.Throw<CsTomlException>(() => CsTomlSerializer.DeserializeValueType<UInt128>("-1"u8));
+        Should.Throw<CsTomlException>(() => CsTomlSerializer.DeserializeValueType<float>("1e300"u8));
+        CsTomlSerializer.DeserializeValueType<float>("inf"u8).ShouldBe(float.PositiveInfinity);
+    }
+
+    [Test]
+    public void DateTimeAcrossKinds()
+    {
+        var fromOffsetDateTime = CsTomlSerializer.DeserializeValueType<DateTime>("1979-05-27T07:32:00+09:00"u8);
+        fromOffsetDateTime.ShouldBe(new DateTime(1979, 5, 26, 22, 32, 0));
+        fromOffsetDateTime.Kind.ShouldBe(DateTimeKind.Utc);
+
+        var fromLocalDate = CsTomlSerializer.DeserializeValueType<DateTime>("1979-05-27"u8);
+        fromLocalDate.ShouldBe(new DateTime(1979, 5, 27));
+        fromLocalDate.Kind.ShouldBe(DateTimeKind.Unspecified);
+
+        CsTomlSerializer.DeserializeValueType<DateTimeOffset>("1979-05-27T07:32:00"u8).EqualsExact(new DateTimeOffset(new DateTime(1979, 5, 27, 7, 32, 0))).ShouldBeTrue();
+        CsTomlSerializer.DeserializeValueType<DateTimeOffset>("1979-05-27"u8).EqualsExact(new DateTimeOffset(new DateTime(1979, 5, 27))).ShouldBeTrue();
     }
 
     [Test]
@@ -1742,6 +1768,9 @@ public class SerializeValueTypeTest
         using var serializedTomlValue3 = CsTomlSerializer.SerializeValueType(new DateTime(2024, 10, 20, 15, 16, 0, DateTimeKind.Local));
         serializedTomlValue3.ByteSpan.ToArray().ShouldBe("2024-10-20T15:16:00"u8.ToArray());
 
+        using var serializedUtcDateTime = CsTomlSerializer.SerializeValueType(new DateTime(2024, 10, 20, 15, 16, 0, DateTimeKind.Utc));
+        serializedUtcDateTime.ByteSpan.ToArray().ShouldBe("2024-10-20T15:16:00Z"u8.ToArray());
+
         using var serializedTomlValue4 = CsTomlSerializer.SerializeValueType<string[]>(["red", "yellow", "green"]);
         serializedTomlValue4.ByteSpan.ToArray().ShouldBe("[ \"red\", \"yellow\", \"green\" ]"u8.ToArray());
 
@@ -1751,6 +1780,22 @@ public class SerializeValueTypeTest
         dict["z"] = "3";
         using var serializedTomlValue5 = CsTomlSerializer.SerializeValueType(dict);
         serializedTomlValue5.ByteSpan.ToArray().ShouldBe("{x = 1, y = 2, z = \"3\"}"u8.ToArray());
+    }
+
+    [Test]
+    public void UInt64Value()
+    {
+        using var serializedTomlValue = CsTomlSerializer.SerializeValueType<object>(1UL);
+        serializedTomlValue.ByteSpan.ToArray().ShouldBe("1"u8.ToArray());
+
+        Should.Throw<CsTomlException>(() => CsTomlSerializer.SerializeValueType(ulong.MaxValue));
+    }
+
+    [Test]
+    [SkipOnNativeAot("Dictionary<ulong, int> has no pre-registered formatter.")]
+    public void UInt64KeyOutOfRange()
+    {
+        Should.Throw<CsTomlException>(() => CsTomlSerializer.SerializeValueType(new Dictionary<ulong, int> { [ulong.MaxValue] = 1 }));
     }
 
     [Test]

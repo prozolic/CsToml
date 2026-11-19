@@ -13,7 +13,7 @@ public sealed class PriorityQueueFormatter<TElement, TPriority> : ITomlValueForm
             return default!;
         }
 
-        if (rootNode.CanGetValue(TomlValueFeature.Array) && rootNode.Value is TomlArray tomlArray)
+        if (rootNode.Value is TomlArray tomlArray)
         {
             var formatter = options.Resolver.GetFormatter<ValueTuple<TElement, TPriority>>()!;
             var priorityQueue = new PriorityQueue<TElement, TPriority>();
@@ -27,7 +27,7 @@ public sealed class PriorityQueueFormatter<TElement, TPriority> : ITomlValueForm
             return priorityQueue;
         }
 
-        ExceptionHelper.ThrowDeserializationFailed(typeof(PriorityQueue<TElement, TPriority>));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(PriorityQueue<TElement, TPriority>), rootNode);
         return default!;
     }
 

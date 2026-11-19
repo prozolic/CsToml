@@ -1,4 +1,5 @@
-﻿using CsToml.Error;
+﻿using CsToml.Utility;
+using CsToml.Error;
 using System.Buffers;
 
 namespace CsToml.Formatter;
@@ -16,10 +17,10 @@ internal sealed class SByteFormatter : ITomlValueFormatter<sbyte>
 
         if (rootNode.TryGetInt64(out var value))
         {
-            return checked((sbyte)value);
+            return IntegerRangeHelper.ConvertFromInt64<sbyte>(value);
         }
 
-        ExceptionHelper.ThrowDeserializationFailed(typeof(sbyte));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(sbyte), rootNode);
         return default;
     }
 
@@ -36,11 +37,17 @@ internal sealed class NullableSByteFormatter : ITomlValueFormatter<sbyte?>
 
     public sbyte? Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
+        if (!rootNode.HasValue)
+        {
+            return default;
+        }
+
         if (rootNode.TryGetInt64(out var value))
         {
-            return checked((sbyte)value);
+            return IntegerRangeHelper.ConvertFromInt64<sbyte>(value);
         }
-        return null;
+        ExceptionHelper.ThrowDeserializationFailed(typeof(sbyte), rootNode);
+        return default;
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, sbyte? target, CsTomlSerializerOptions options)

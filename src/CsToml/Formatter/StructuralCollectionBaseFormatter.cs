@@ -15,7 +15,7 @@ public abstract class StructuralCollectionBaseFormatter<TCollection, TElement, T
             return default!;
         }
 
-        if (rootNode.CanGetValue(TomlValueFeature.Array) && rootNode.Value is TomlArray tomlArray)
+        if (rootNode.Value is TomlArray tomlArray)
         {
             var formatter = options.Resolver.GetFormatter<TElement>()!;
 
@@ -28,7 +28,7 @@ public abstract class StructuralCollectionBaseFormatter<TCollection, TElement, T
             return Complete(collection);
         }
 
-        ExceptionHelper.ThrowDeserializationFailed(typeof(TCollection));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(TCollection), rootNode);
         return default;
     }
 

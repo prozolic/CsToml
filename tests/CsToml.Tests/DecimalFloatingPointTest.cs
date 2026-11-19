@@ -78,7 +78,7 @@ public class DecimalFloatingPointTest
     [Arguments("0xFF")]
     public void Integer_IsExact(string tomlValue)
     {
-        var expected = Deserialize(tomlValue).RootNode["v"].GetValue<long>();
+        var expected = Deserialize(tomlValue).RootNode["v"].GetInt64();
 
         Get<Decimal32>(tomlValue).ShouldBe((Decimal32)expected);
         Get<Decimal64>(tomlValue).ShouldBe((Decimal64)expected);

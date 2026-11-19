@@ -157,4 +157,13 @@ name = ""Tom""
 
         actual.ShouldBeEquivalentTo(expected);
     }
+
+    [Test]
+    public void EmptyTableTest()
+    {
+        var ms = new MemoryStream("x = 1\narr = [{}]\n[E]\n"u8.ToArray());
+        var conf = new ConfigurationBuilder().AddTomlStream(ms).Build();
+
+        conf.AsEnumerable().ShouldHaveSingleItem().ShouldBe(new KeyValuePair<string, string?>("x", "1"));
+    }
 }

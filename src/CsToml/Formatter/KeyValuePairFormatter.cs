@@ -13,7 +13,7 @@ public sealed class KeyValuePairFormatter<TKey, TValue> : ITomlValueFormatter<Ke
             return default!;
         }
 
-        if (rootNode.CanGetValue(TomlValueFeature.Array) && rootNode.Value is TomlArray tomlArray)
+        if (rootNode.Value is TomlArray tomlArray)
         {
             if (tomlArray.Count != 2)
             {
@@ -29,7 +29,7 @@ public sealed class KeyValuePairFormatter<TKey, TValue> : ITomlValueFormatter<Ke
             return new KeyValuePair<TKey, TValue>(key, value);
         }
 
-        ExceptionHelper.ThrowDeserializationFailed(typeof(KeyValuePair<TKey, TValue>));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(KeyValuePair<TKey, TValue>), rootNode);
         return default!;
     }
 

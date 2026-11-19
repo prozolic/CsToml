@@ -17,7 +17,7 @@ public sealed class ImmutableArrayFormatter<T> : ITomlValueFormatter<ImmutableAr
             return default;
         }
 
-        if (rootNode.CanGetValue(TomlValueFeature.Array) && rootNode.Value is TomlArray tomlArray)
+        if (rootNode.Value is TomlArray tomlArray)
         {
             var formatter = options.Resolver.GetFormatter<T>()!;
             var array = new T[tomlArray.Count];
@@ -30,7 +30,7 @@ public sealed class ImmutableArrayFormatter<T> : ITomlValueFormatter<ImmutableAr
             return ImmutableCollectionsMarshal.AsImmutableArray(array);
         }
 
-        ExceptionHelper.ThrowDeserializationFailed(typeof(ImmutableArray<T>));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(ImmutableArray<T>), rootNode);
         return default;
     }
 

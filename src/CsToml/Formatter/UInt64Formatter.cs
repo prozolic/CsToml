@@ -1,4 +1,5 @@
-﻿using CsToml.Error;
+﻿using CsToml.Utility;
+using CsToml.Error;
 using System.Buffers;
 
 namespace CsToml.Formatter;
@@ -16,16 +17,16 @@ internal sealed class UInt64Formatter : ITomlValueFormatter<ulong>
 
         if (rootNode.TryGetInt64(out var value))
         {
-            return checked((ulong)value);
+            return IntegerRangeHelper.ConvertFromInt64<ulong>(value);
         }
-        ExceptionHelper.ThrowDeserializationFailed(typeof(ulong));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(ulong), rootNode);
         return default;
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ulong target, CsTomlSerializerOptions options)
         where TBufferWriter : IBufferWriter<byte>
     {
-        writer.WriteInt64(checked((long)target));
+        writer.WriteInt64(IntegerRangeHelper.ConvertToInt64(target));
     }
 }
 
@@ -35,11 +36,17 @@ internal sealed class NullableUInt64Formatter : ITomlValueFormatter<ulong?>
 
     public ulong? Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
+        if (!rootNode.HasValue)
+        {
+            return default;
+        }
+
         if (rootNode.TryGetInt64(out var value))
         {
-            return checked((ulong)value);
+            return IntegerRangeHelper.ConvertFromInt64<ulong>(value);
         }
-        return null;
+        ExceptionHelper.ThrowDeserializationFailed(typeof(ulong), rootNode);
+        return default;
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ulong? target, CsTomlSerializerOptions options)
@@ -47,7 +54,7 @@ internal sealed class NullableUInt64Formatter : ITomlValueFormatter<ulong?>
     {
         if (target.HasValue)
         {
-            writer.WriteInt64(checked((long)target.GetValueOrDefault()));
+            writer.WriteInt64(IntegerRangeHelper.ConvertToInt64(target.GetValueOrDefault()));
         }
         else
         {

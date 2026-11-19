@@ -34,7 +34,7 @@ internal sealed class Decimal64Formatter : ITomlValueFormatter<Decimal64>
             }
         }
 
-        ExceptionHelper.ThrowDeserializationFailed(typeof(Decimal64));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(Decimal64), rootNode);
         return default;
     }
 
@@ -68,7 +68,8 @@ internal sealed class NullableDecimal64Formatter : ITomlValueFormatter<Decimal64
             }
         }
 
-        return null;
+        ExceptionHelper.ThrowDeserializationFailed(typeof(Decimal64), rootNode);
+        return default;
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Decimal64? target, CsTomlSerializerOptions options)

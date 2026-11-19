@@ -1,4 +1,5 @@
-﻿using CsToml.Error;
+﻿using CsToml.Utility;
+using CsToml.Error;
 using CsToml.Values;
 using System.Buffers;
 using System.Collections;
@@ -95,7 +96,7 @@ internal sealed class HashtableFormatter : ITomlValueFormatter<Hashtable>
                         writer.WriteInt64((uint)key);
                         break;
                     case 9:
-                        writer.WriteInt64(checked((long)key));
+                        writer.WriteInt64(IntegerRangeHelper.ConvertToInt64((ulong)key));
                         break;
                     case 10:
                         writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
@@ -185,7 +186,7 @@ internal sealed class HashtableFormatter : ITomlValueFormatter<Hashtable>
                             writer.WriteInt64((uint)key);
                             break;
                         case 9:
-                            writer.WriteInt64(checked((long)key));
+                            writer.WriteInt64(IntegerRangeHelper.ConvertToInt64((ulong)key));
                             break;
                         case 10:
                             writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);

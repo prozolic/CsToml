@@ -931,6 +931,26 @@ These types can be serialized/deserialized by default as properties of custom `c
 * `IImmutableList<>`, `IImmutableStack<>`, `IImmutableQueue<>`, `IImmutableSet<>`, `IImmutableDictionary<>`
 * `FrozenSet<>`, `FrozenDictionary<>`
 
+In v1.9.0 or later, Built-in scalar types (such as `int`, `string`, `bool` and `DateOnly`) and collections read from a TOML array are deserialized only from their matching TOML type. A value of another TOML type is not converted.
+For example, the TOML string `"123"` cannot be deserialized to `int`, and the TOML integer `123` cannot be deserialized to `string`.
+In this case, `CsTomlException` is thrown. `CsTomlSerializer.Deserialize<T>` throws `CsTomlSerializeException` instead, with the original exception as `InnerException`.
+
+* A TOML integer can also be deserialized to a floating-point type (`double`, `float`, `Half`, `decimal`, and so on).
+* `DateOnly` accepts only a local date.
+* `TimeOnly` accepts only a local time.
+* `char` (a UTF-16 code unit), `TimeSpan` (in ticks), `BigInteger`, `Int128` and `UInt128` are deserialized from a TOML integer.
+* `Enum` (by member name), `Guid`, `Uri`, `Version`, `Type` and `StringBuilder` are deserialized from a TOML string.
+* `Complex` is deserialized from a TOML array of two numbers.
+* `Nullable<T>` returns null only when there is no value. For a value of another TOML type, it throws in the same way as `T`.
+
+In v1.8.6 or earlier, a value was converted to another type when possible (for example, `"123"` to `int`, `1` to `bool`, `3.5` to `long`, and a local date-time to `DateOnly`). `Nullable<T>` returned null when the value could not be converted.
+
+`DateTime` and `DateTimeOffset` also accept other kinds of TOML date-time:
+
+* `DateTime` accepts a local date-time and a local date (as midnight). Both are returned with `DateTimeKind.Unspecified`. It also accepts an offset date-time and converts it to UTC (`DateTimeKind.Utc`).
+* `DateTimeOffset` accepts an offset date-time. It also accepts a local date-time or a local date, and gives it the offset of the machine's local time zone.
+* A `DateTime` with `DateTimeKind.Utc` is serialized as an offset date-time that ends with `Z`. A `DateTime` of any other kind is serialized as a local date-time.
+
 Customize Formatter
 ---
 
@@ -1126,7 +1146,7 @@ void SerializeValueType<TBufferWriter, T>(ref TBufferWriter bufferWriter, T targ
 ```csharp
 var tomlIntValue = CsTomlSerializer.DeserializeValueType<long>("1234"u8);
 var tomlStringValue = CsTomlSerializer.DeserializeValueType<string>("\"\\U00000061\\U00000062\\U00000063\""u8); // abc
-var tomlDateTimeOffsetValue = CsTomlSerializer.DeserializeValueType<DateTimeOffset>("2024-10-20T15:16:00"u8);
+var tomlDateTimeValue = CsTomlSerializer.DeserializeValueType<DateTime>("2024-10-20T15:16:00"u8);
 var tomlArrayValue = CsTomlSerializer.DeserializeValueType<string[]>("[ \"red\", \"yellow\", \"green\" ]"u8);
 var tomlinlineTableValue = CsTomlSerializer.DeserializeValueType<IDictionary<string, object>>("{ x = 1, y = 2, z = \"3\" }"u8);
 var tomlTupleValue = CsTomlSerializer.DeserializeValueType<Tuple<string,string,string>>("[ \"red\", \"yellow\", \"green\" ]"u8);
@@ -1135,7 +1155,7 @@ using var serializedTomlValue1 = CsTomlSerializer.SerializeValueType(tomlIntValu
 // 1234
 using var serializedTomlValue2 = CsTomlSerializer.SerializeValueType(tomlStringValue);
 // "abc"
-using var serializedTomlValue3 = CsTomlSerializer.SerializeValueType(tomlDateTimeOffsetValue);
+using var serializedTomlValue3 = CsTomlSerializer.SerializeValueType(tomlDateTimeValue);
 // 2024-10-20T15:16:00
 using var serializedTomlValue4 = CsTomlSerializer.SerializeValueType(tomlArrayValue);
 // [ "red", "yellow", "green" ]
@@ -1217,12 +1237,10 @@ if (document.RootNode["key"u8].TryGetInt64(out long value))
 }
 ```
 
-It can also retrieve the value as another primitive type (`string`, `double`, `bool`, etc...) as follows.
+You can also get a TOML integer as `double`. Any 64-bit integer works. An integer whose absolute value is larger than 2^53 is rounded to the nearest `double`, the same as the TOML float `N.0`.
 
 ```csharp
-string strValue = document.RootNode["key"u8].GetString();       // "1234"
 double doubleValue = document.RootNode["key"u8].GetDouble();    // 1234
-bool boolValue = document.RootNode["key"u8].GetBool();          // true
 ```
 
 ### TOML Float
@@ -1246,13 +1264,7 @@ if (document.RootNode["key"u8].TryGetDouble(out double value))
 }
 ```
 
-It can also retrieve the value as another primitive type (`string`,`long`, `bool`, etc...) as follows.
-
-```csharp
-string strValue = document.RootNode["key"u8].GetString();       // "3.1415"
-long longValue = document.RootNode["key"u8].GetInt64();         // 3
-bool boolValue = document.RootNode["key"u8].GetBool();          // true
-```
+You cannot get a TOML float as `long`, even when it has no fractional part (for example, `3.0`). `GetInt64` throws `CsTomlException`, and `TryGetInt64` returns false.
 
 ### TOML Boolean
 
@@ -1273,14 +1285,6 @@ if (document.RootNode["key"u8].TryGetBool(out bool value))
 {
     Console.WriteLine(value);   // true
 }
-```
-
-It can also retrieve the value as another primitive type (`string`,`long`, `bool`, etc...) as follows.
-
-```csharp
-string strValue = document.RootNode["key"u8].GetString();       // "True" ( bool.TrueString )
-long longValue = document.RootNode["key"u8].GetInt64();         // 1
-double doubleValue = document.RootNode["key"u8].GetDouble();    // 1
 ```
 
 ### TOML Offset Date-Time
@@ -1304,15 +1308,6 @@ if (document.RootNode["key"u8].TryGetDateTimeOffset(out DateTimeOffset value))
 }
 ```
 
-It can also retrieve the value as another primitive type (`string`,`DateTime`, `DateOnly`,`TimeOnly`, etc...) as follows.
-
-```csharp
-string value = document.RootNode["key"u8].GetString();              // "1979-05-27T07:32:00.0000000+00:00"
-DateTime dateTimeValue = document.RootNode["key"u8].GetDateTime();
-DateOnly dateOnlyValue = document.RootNode["key"u8].GetDateOnly();
-TimeOnly timeOnlyValue = document.RootNode["key"u8].GetTimeOnly(); 
-```
-
 ### TOML Local Date-Time
 
 For example:
@@ -1334,14 +1329,7 @@ if (document.RootNode["key"u8].TryGetDateTime(out DateTime value))
 }
 ```
 
-It can also retrieve the value as another primitive type (`string`,`DateTimeOffset`, `DateOnly`,`TimeOnly`, etc...) as follows.
-
-```csharp
-string value = document.RootNode["key"u8].GetString();              // "1979-05-27T07:32:00.0000000"
-DateTimeOffset dateTimeOffsetValue = document.RootNode["key"u8].GetDateTimeOffset();
-DateOnly dateOnlyValue = document.RootNode["key"u8].GetDateOnly();
-TimeOnly timeOnlyValue = document.RootNode["key"u8].GetTimeOnly(); 
-```
+A TOML local date-time has no offset or time zone, so the returned `DateTime` has `DateTimeKind.Unspecified`.
 
 ### TOML Local Date
 
@@ -1362,14 +1350,6 @@ if (document.RootNode["key"u8].TryGetDateOnly(out DateOnly value))
 {
     Console.WriteLine(value);
 }
-```
-
-It can also retrieve the value as another primitive type (`string`,`DateTime`, `DateOnly`, etc...) as follows.
-
-```csharp
-string value = document.RootNode["key"u8].GetString();              // "1979-05-27"
-DateTimeOffset dateTimeOffsetValue = document.RootNode["key"u8].GetDateTimeOffset();
-DateTime dateTimeValue = document.RootNode["key"u8].GetDateTime();
 ```
 
 ### TOML Local Time
@@ -1393,12 +1373,6 @@ if (document.RootNode["key"u8].TryGetTimeOnly(out TimeOnly value))
 }
 ```
 
-It can also retrieve the value as another primitive type (`string`, etc...) as follows.
-
-```csharp
-string value = document.RootNode["key"u8].GetString();              // "07:32:00.0000000"
-```
-
 ### TOML Array
 
 For example:
@@ -1411,24 +1385,20 @@ This can retrieve the value as follows.
 `TomlValue` is the class that actually has the TOML value, and the value can be retrieved with almost the same API as the `TomlDocumentNode`.
 
 ```csharp
-ReadOnlyCollection<TomlValue> array = document.RootNode["array"u8].GetArray();
+ImmutableArray<TomlValue> array = document.RootNode["array"u8].GetArray();
 var value0 = array[0].GetInt64(); // 1
 var value1 = array[1].GetInt64(); // 2
 var value2 = array[2].GetInt64(); // 3
 
-var value00 = document.RootNode["array"u8].GetArrayValue(0).GetInt64(); // 1
+var value00 = document.RootNode["array"u8][0].GetInt64(); // 1
 ```
 
 ```csharp
-if (document.RootNode["array"u8].TryGetArray(out ReadOnlyCollection<TomlValue> array))
+if (document.RootNode["array"u8].TryGetArray(out ImmutableArray<TomlValue> array))
 {
     var value0 = array[0].GetInt64(); // 1
     var value1 = array[1].GetInt64(); // 2
     var value2 = array[2].GetInt64(); // 3
-}
-if (document.RootNode["array"u8].TryGetArrayValue(0, out TomlValue value11))
-{
-    Console.WriteLine(value11.GetInt64());
 }
 ```
 
@@ -1509,6 +1479,56 @@ var configurations = document!.RootNode["configurations"u8][1]["key"u8][0]["key2
 To retrieve primitive values from `TomlDocumentNode` and `TomlValue`, call the following API.
 If an API with the `Get` prefix fails, an `CsTomlException` is thrown and a value is returned if it was successful.
 If an API with the `TryGet` prefix fails, false is returned and the value is set to the argument of the out parameter if it was successful.
+You can get each TOML value only as the type that matches its TOML type (for example, a TOML string only with `GetString`, and a TOML boolean only with `GetBool`). The only exception is a TOML integer, which you can also get with `GetDouble`.
+
+The API in v1.9.0 or later:
+
+```csharp
+public struct TomlDocumentNode
+{
+    public bool HasValue { get; }
+    public TomlValueType ValueType { get; }
+    public readonly TomlValue GetTomlValue()
+    public readonly ImmutableArray<TomlValue> GetArray()
+    public readonly ReadOnlySpan<TomlValue> GetArraySpan()
+    public readonly string GetString()
+    public readonly long GetInt64()
+    public readonly double GetDouble()
+    public readonly bool GetBool()
+    public readonly DateTime GetDateTime()
+    public readonly DateTimeOffset GetDateTimeOffset()
+    public readonly DateOnly GetDateOnly()
+    public readonly TimeOnly GetTimeOnly()
+    public readonly object GetObject()
+    public readonly bool TryGetArray(out ImmutableArray<TomlValue> value)
+    public readonly bool TryGetArraySpan(out ReadOnlySpan<TomlValue> value)
+    public readonly bool TryGetString([NotNullWhen(true)] out string? value)
+    public readonly bool TryGetInt64(out long value)
+    public readonly bool TryGetDouble(out double value)
+    public readonly bool TryGetBool(out bool value)
+    public readonly bool TryGetDateTime(out DateTime value)
+    public readonly bool TryGetDateTimeOffset(out DateTimeOffset value)
+    public readonly bool TryGetDateOnly(out DateOnly value)
+    public readonly bool TryGetTimeOnly(out TimeOnly value)
+    public readonly bool TryGetObject([NotNullWhen(true)] out object? value)
+    public readonly T GetValue<T>(CsTomlSerializerOptions? options = null)
+    public readonly bool TryGetValue<T>([MaybeNullWhen(false)] out T value, CsTomlSerializerOptions? options = null)
+}
+```
+
+`GetArraySpan` and `TryGetArraySpan` return the elements of a TOML array or an array of tables as `ReadOnlySpan<TomlValue>`. They do not allocate memory.
+
+`TomlDocumentNode.GetValue<T>` converts the node to `T` with the formatters in `options.Resolver`. If it fails, it throws `CsTomlSerializeException`. `TryGetValue<T>` returns false instead of throwing. It also returns false when the node has no value. `TomlValue` does not have these methods.
+
+```csharp
+var document = CsTomlSerializer.Deserialize<TomlDocument>("number = 123"u8);
+var number = document.RootNode["number"u8].GetValue<int>(); // 123
+```
+
+<details>
+<summary>v1.8.6 or earlier</summary>
+
+In v1.8.6 or earlier, you could also get a value as another primitive type (for example, `GetString` on a TOML integer returned `"1234"`). `CanGetValue(TomlValueFeature)` checked whether you could get a value as the given type.
 
 ```csharp
 public struct TomlDocumentNode
@@ -1548,6 +1568,8 @@ public struct TomlDocumentNode
 }
 ```
 
+</details>
+
 ### Check the TOML type
 
 `TomlDocumentNode.ValueType` can be used to check the TOML type being held.
@@ -1571,63 +1593,11 @@ public enum TomlValueType
 }
 ```
 
-### Converted to other convertible values
-
-`TomlDocumentNode.GetValue<T>` and `TomlDocumentNode.TryGetValue<T>` can be used to obtain a value converted from a Toml value type to a specified type.
-The type that can be specified for `T` is [Built-in support type](#built-in-support-type).
-
-```TOML
-key = "https://github.com/prozolic/CsToml"
-```
-
-```csharp
-var uri = document.RootNode["key"u8].GetValue<Uri>(); // https://github.com/prozolic/CsToml
-```
-
-### Check which values can be converted
-
-`TomlDocumentNode.CanGetValue` can be used to see which Toml value types can be converted.
-
-```csharp
-if (document.RootNode["key"u8].CanGetValue(feature: TomlValueFeature.Int64)) 
-{
-    var value = document.RootNode["key"u8].GetInt64();
-    Console.WriteLine(value);
-}
-else
-{
-    var value = document.RootNode["key"u8].GetInt64(); // Throw CsTomlException.
-    Console.WriteLine(value);
-}
-```
-
-```csharp
-[Flags]
-public enum TomlValueFeature
-{
-    None = 0,
-    String = 1,
-    Int64 = 1 << 1,
-    Double = 1 << 2,
-    Boolean = 1 << 3,
-    Number = 1 << 4,
-    DateTime = 1 << 5,
-    DateTimeOffset = 1 << 6,
-    DateOnly = 1 << 7,
-    TimeOnly = 1 << 8,
-    Object = 1 << 9,
-    Array = 1 << 10,
-    Table = 1 << 11,
-    InlineTable = 1 << 12,
-}
-```
-
 `ToDictionary` method is available as an API to convert from `TomlDocument` to `IDictionary<TKey, TValue>`.
 
 ```csharp
 var document = CsTomlSerializer.Deserialize<TomlDocument>(tomlText);
 
-// Same as document.RootNode.GetValue<Dictionary<object, object>>().
 var dict = document.ToDictionary<object, object>();
 ```
 

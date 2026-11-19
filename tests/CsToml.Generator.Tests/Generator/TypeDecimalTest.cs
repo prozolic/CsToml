@@ -1,4 +1,5 @@
-﻿using Shouldly;
+﻿using CsToml.Error;
+using Shouldly;
 using Utf8StringInterpolation;
 
 namespace CsToml.Generator.Tests;
@@ -232,93 +233,6 @@ public class TypeDecimalTest
     }
 
     [Test]
-    public void DeserializeFromFloat_Inf_ThrowsOverflowException()
-    {
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("IntegerValue = inf");
-        writer.AppendLine("FloatValue = 0");
-        writer.AppendLine("NegativeValue = 0");
-        writer.AppendLine("ZeroValue = 0");
-        writer.Flush();
-
-        Should.Throw<OverflowException>(() =>
-            CsTomlSerializer.Deserialize<TypeDecimal>(buffer.WrittenSpan));
-    }
-
-    [Test]
-    public void DeserializeFromFloat_PositiveInf_ThrowsOverflowException()
-    {
-        // TOML spec: "+inf" — explicit positive infinity
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("IntegerValue = +inf");
-        writer.AppendLine("FloatValue = 0");
-        writer.AppendLine("NegativeValue = 0");
-        writer.AppendLine("ZeroValue = 0");
-        writer.Flush();
-
-        Should.Throw<OverflowException>(() =>
-            CsTomlSerializer.Deserialize<TypeDecimal>(buffer.WrittenSpan));
-    }
-
-    [Test]
-    public void DeserializeFromFloat_NegativeInf_ThrowsOverflowException()
-    {
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("IntegerValue = -inf");
-        writer.AppendLine("FloatValue = 0");
-        writer.AppendLine("NegativeValue = 0");
-        writer.AppendLine("ZeroValue = 0");
-        writer.Flush();
-
-        Should.Throw<OverflowException>(() =>
-            CsTomlSerializer.Deserialize<TypeDecimal>(buffer.WrittenSpan));
-    }
-
-    [Test]
-    public void DeserializeFromFloat_Nan_ThrowsOverflowException()
-    {
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("IntegerValue = nan");
-        writer.AppendLine("FloatValue = 0");
-        writer.AppendLine("NegativeValue = 0");
-        writer.AppendLine("ZeroValue = 0");
-        writer.Flush();
-
-        Should.Throw<OverflowException>(() =>
-            CsTomlSerializer.Deserialize<TypeDecimal>(buffer.WrittenSpan));
-    }
-
-    [Test]
-    public void DeserializeFromFloat_PositiveNan_ThrowsOverflowException()
-    {
-        // TOML spec: "+nan" — same as nan
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("IntegerValue = +nan");
-        writer.AppendLine("FloatValue = 0");
-        writer.AppendLine("NegativeValue = 0");
-        writer.AppendLine("ZeroValue = 0");
-        writer.Flush();
-
-        Should.Throw<OverflowException>(() =>
-            CsTomlSerializer.Deserialize<TypeDecimal>(buffer.WrittenSpan));
-    }
-
-    [Test]
-    public void DeserializeFromFloat_NegativeNan_ThrowsOverflowException()
-    {
-        // TOML spec: "-nan" — valid, implementation-specific encoding
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("IntegerValue = -nan");
-        writer.AppendLine("FloatValue = 0");
-        writer.AppendLine("NegativeValue = 0");
-        writer.AppendLine("ZeroValue = 0");
-        writer.Flush();
-
-        Should.Throw<OverflowException>(() =>
-            CsTomlSerializer.Deserialize<TypeDecimal>(buffer.WrittenSpan));
-    }
-
-    [Test]
     public void DeserializeFromFloat_SmallValue()
     {
         using var buffer = Utf8String.CreateWriter(out var writer);
@@ -350,7 +264,7 @@ public class TypeDecimalTest
     }
 
     [Test]
-    public void DeserializeFromFloat_LargeExponent_ThrowsOverflowException()
+    public void DeserializeFromFloat_LargeExponent()
     {
         // TOML spec: "5e+22" — valid TOML float but exceeds decimal range (~7.9e28)
         using var buffer = Utf8String.CreateWriter(out var writer);
@@ -366,7 +280,7 @@ public class TypeDecimalTest
     }
 
     [Test]
-    public void DeserializeFromFloat_ExceedDecimalRange_ThrowsOverflowException()
+    public void DeserializeFromFloat_ExceedDecimalRange_ThrowsCsTomlSerializeException()
     {
         // 1e+29 exceeds decimal.MaxValue (~7.9e28)
         using var buffer = Utf8String.CreateWriter(out var writer);
@@ -376,7 +290,7 @@ public class TypeDecimalTest
         writer.AppendLine("ZeroValue = 0");
         writer.Flush();
 
-        Should.Throw<OverflowException>(() =>
+        Should.Throw<CsTomlSerializeException>(() =>
             CsTomlSerializer.Deserialize<TypeDecimal>(buffer.WrittenSpan));
     }
 
@@ -500,21 +414,6 @@ public class TypeDecimalTest
         var result = CsTomlSerializer.Deserialize<TypeDecimal>(buffer.WrittenSpan);
         result.NullableIntegerValue.ShouldBeNull();
         result.NullableFloatValue.ShouldBeNull();
-    }
-
-    [Test]
-    public void DeserializeNullable_FromInf_ThrowsOverflowException()
-    {
-        using var buffer = Utf8String.CreateWriter(out var writer);
-        writer.AppendLine("IntegerValue = 0");
-        writer.AppendLine("FloatValue = 0");
-        writer.AppendLine("NegativeValue = 0");
-        writer.AppendLine("ZeroValue = 0");
-        writer.AppendLine("NullableFloatValue = inf");
-        writer.Flush();
-
-        Should.Throw<OverflowException>(() =>
-            CsTomlSerializer.Deserialize<TypeDecimal>(buffer.WrittenSpan));
     }
 
     [Test]

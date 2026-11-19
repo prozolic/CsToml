@@ -1,5 +1,6 @@
 ﻿using CsToml.Error;
 using System.Diagnostics;
+using System.Globalization;
 
 namespace CsToml.Values;
 
@@ -21,7 +22,7 @@ internal sealed partial class TomlLocalDateTime(DateTime value) : TomlValue
     {
         if (format.Length == 0 && provider == null)
         {
-            return Value.TryFormat(destination, out charsWritten, "yyyy-MM-ddTHH:mm:ss.fffffff", provider);
+            return Value.TryFormat(destination, out charsWritten, "yyyy-MM-ddTHH:mm:ss.fffffff", CultureInfo.InvariantCulture);
         }
         return Value.TryFormat(destination, out charsWritten, format, provider);
     }
@@ -39,12 +40,12 @@ internal sealed partial class TomlLocalDateTime(DateTime value) : TomlValue
     {
         if (format.Length == 0 && provider == null)
         {
-            return Value.TryFormat(utf8Destination, out bytesWritten, "yyyy-MM-ddTHH:mm:ss.fffffff", provider);
+            return Value.TryFormat(utf8Destination, out bytesWritten, "yyyy-MM-ddTHH:mm:ss.fffffff", CultureInfo.InvariantCulture);
         }
         return Value.TryFormat(utf8Destination, out bytesWritten, format, provider);
     }
 
-    public override string ToString() => Value.ToString("yyyy-MM-ddTHH:mm:ss.fffffff"); // Time zone information ('zzz') is not included.
+    public override string ToString() => Value.ToString("yyyy-MM-ddTHH:mm:ss.fffffff", CultureInfo.InvariantCulture); // Time zone information ('zzz') is not included.
 
     public static TomlLocalDateTime Parse(ReadOnlySpan<byte> bytes)
     {
@@ -52,7 +53,7 @@ internal sealed partial class TomlLocalDateTime(DateTime value) : TomlValue
         TimeOnly localTime = TomlLocalTime.ParseTimeOnly(bytes[11..]);
         try
         {
-            return new TomlLocalDateTime(new DateTime(localDate, localTime, DateTimeKind.Local));
+            return new TomlLocalDateTime(new DateTime(localDate, localTime, DateTimeKind.Unspecified));
         }
         catch (ArgumentOutOfRangeException e)
         {
@@ -67,7 +68,7 @@ internal sealed partial class TomlLocalDateTime(DateTime value) : TomlValue
         TimeOnly localTime = TomlLocalTime.ParseTimeOnlyToOmitSeconds(bytes[11..]);
         try
         {
-            return new TomlLocalDateTime(new DateTime(localDate, localTime, DateTimeKind.Local));
+            return new TomlLocalDateTime(new DateTime(localDate, localTime, DateTimeKind.Unspecified));
         }
         catch (ArgumentOutOfRangeException e)
         {

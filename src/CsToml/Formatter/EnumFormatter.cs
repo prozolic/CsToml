@@ -67,7 +67,7 @@ public sealed class EnumFormatter<[DynamicallyAccessedMembers(DynamicallyAccesse
             }
         }
 
-        ExceptionHelper.ThrowDeserializationFailed(typeof(TEnum));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(TEnum), rootNode);
         return default!;
     }
 

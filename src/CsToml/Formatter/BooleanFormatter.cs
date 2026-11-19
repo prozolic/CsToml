@@ -20,7 +20,7 @@ internal sealed class BooleanFormatter : ITomlValueFormatter<bool>
             return value;
         }
 
-        ExceptionHelper.ThrowDeserializationFailed(typeof(bool));
+        ExceptionHelper.ThrowDeserializationFailed(typeof(bool), rootNode);
         return default;
     }
 
@@ -37,11 +37,17 @@ internal sealed class NullableBooleanFormatter : ITomlValueFormatter<bool?>
 
     public bool? Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
     {
+        if (!rootNode.HasValue)
+        {
+            return default;
+        }
+
         if (rootNode.TryGetBool(out var value))
         {
             return value;
         }
-        return null;
+        ExceptionHelper.ThrowDeserializationFailed(typeof(bool), rootNode);
+        return default;
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, bool? target, CsTomlSerializerOptions options)

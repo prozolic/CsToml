@@ -190,12 +190,12 @@ var document2 = CsTomlSerializer.Deserialize<TomlDocument>(serializedDocumentTom
     var valuekeyValue2 = document!
         .RootNode["fruit"u8]["apple"u8]["color"u8]
         .GetString();
-    var valueKeyValue3 = document!.RootNode["array"u8]["of"u8]["tables"u8][1]["arr"u8].GetArrayValue(1).GetString();
+    var valueKeyValue3 = document!.RootNode["array"u8]["of"u8]["tables"u8][1]["arr"u8][1].GetString();
     var valueKeyValue4 = document!.RootNode["array"]["of"]["tables"][2]["name"u8]["last"u8].GetString();
     var valueKeyValue5 = document!.RootNode["contributors"u8][1]["name"u8].GetString();
     var valueKeyValue6 = document!
         .RootNode["array"u8]["of"u8]["tables"u8][2]["name"u8]["array"u8][1]["z"u8]
-        .GetArrayValue(0).GetInt64();
+        [0].GetInt64();
 
     if (document.RootNode["array"u8]["of"u8]["tables"][2]["name"]["last"].TryGetString(out var str))
     {
@@ -203,7 +203,7 @@ var document2 = CsTomlSerializer.Deserialize<TomlDocument>(serializedDocumentTom
     }
 }
 {
-    var value = document.RootNode["integers"u8].GetArrayValue(0);
+    var value = document.RootNode["integers"u8][0];
     var value2 = document!.RootNode["nested_mixed_array"u8][0][1].GetInt64();
     var _ = document!.RootNode["integers"u8].TryGetArray(out var value12);
     var valu3 = document!.RootNode["Name\\tJos\\u00E9"].GetTomlValue();
@@ -342,7 +342,7 @@ a = 4564
 
     var _ = testDocument.RootNode["Dict2"u8]["a"u8]["a"u8].GetInt64();
     var __ = testDocument.RootNode["Dict3"u8]["b"u8][1]["a"u8].GetInt64();
-    var ___ = testDocument.RootNode["guid"].GetValue<Guid>();
+    var ___ = Guid.Parse(testDocument.RootNode["guid"].GetString());
 
     var dict = testDocument.RootNode["Dict"u8]["abc"u8].GetArray();
 
