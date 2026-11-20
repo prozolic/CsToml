@@ -49,7 +49,8 @@ internal static class TomlStringHelper
                                 continue;
                             case TomlCodes.Alphabet.u:
                                 sequenceReader.Advance(1);
-                                if (sequenceReader.TryFullSpan(4, out var value))
+                                var value = sequenceReader.UnreadSpan;
+                                if (value.Length >= 4)
                                 {
                                     if (!TomlCodes.IsHex(value[0])) continue;
                                     if (!TomlCodes.IsHex(value[1])) continue;
@@ -62,7 +63,8 @@ internal static class TomlStringHelper
                                 continue;
                             case TomlCodes.Alphabet.U:
                                 sequenceReader.Advance(1);
-                                if (sequenceReader.TryFullSpan(8, out var value2))
+                                var value2 = sequenceReader.UnreadSpan;
+                                if (value2.Length >= 8)
                                 {
                                     if (!TomlCodes.IsHex(value2[0])) continue;
                                     if (!TomlCodes.IsHex(value2[1])) continue;
@@ -130,21 +132,17 @@ internal static class TomlStringHelper
         // check newline
         if (newline)
         {
-            if (Utf8Helper.ContainsEscapeChar(utf8String, true))
-            {
-                return TomlStringType.MultiLineLiteral;
-            }
             return TomlStringType.MultiLineBasic;
         }
 
-        // If the key contains escape sequences or singleQuoted, it is basic string.
-        if ((backslashCount == escapeSequenceCount && escapeSequenceCount > 0) || singleQuoted)
+        // If the key contains escape sequences, singleQuoted or control characters, it is basic string.
+        if ((backslashCount == escapeSequenceCount && escapeSequenceCount > 0) || singleQuoted || Utf8Helper.ContainsEscapeChar(utf8String))
         {
             return TomlStringType.Basic;
         }
 
         // If the key contains backslash or doubleQuoted, it is literal string.
-        if (backslashCount > 0 || (doubleQuoted && !singleQuoted) || Utf8Helper.ContainsEscapeChar(utf8String, false))
+        if (backslashCount > 0 || (doubleQuoted && !singleQuoted))
         {
             return TomlStringType.Literal;
         }

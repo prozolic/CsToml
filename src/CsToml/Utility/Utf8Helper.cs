@@ -259,18 +259,12 @@ internal static class Utf8Helper
         Utf8Helper.ParseFromCodePointToUtf8(codePoint, destination, out writtenCount);
     }
 
-    public static bool ContainsEscapeChar(ReadOnlySpan<byte> bytes, bool newline)
+    public static bool ContainsEscapeChar(ReadOnlySpan<byte> bytes)
     {
         if (bytes.ContainsAnyInRange((byte)0x0, (byte)0x8))
             return true;
         if (bytes.ContainsAnyInRange((byte)0xa, (byte)0x1f))
-        {
-            if (newline && (bytes.Contains((byte)0xa) || bytes.Contains((byte)0xd)))
-            {
-                return false;
-            }
             return true;
-        }
         if (bytes.Contains((byte)0x7F))
             return true;
 

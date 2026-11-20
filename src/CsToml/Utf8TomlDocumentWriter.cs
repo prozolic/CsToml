@@ -105,7 +105,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void PushKeyForPrimitive<T>(T value)
     {
-        dottedKeys.Add(TomlDottedKeyHelper.ParseKeyForPrimitive(value, options.Spec.SupportsEscapeSequenceE, options.Spec.SupportsEscapeSequenceX));
+        dottedKeys.Add(TomlDottedKeyHelper.ParseKeyForPrimitive(value, options));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

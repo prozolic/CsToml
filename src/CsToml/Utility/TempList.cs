@@ -38,14 +38,6 @@ internal ref struct TempList<T>
         }
     }
 
-    public void RemoveLastIfFound(T key)
-    {
-        if (count > 0 && EqualityComparer<T>.Default.Equals(itemsSpan[count - 1], key))
-        {
-            count--;
-        }
-    }
-
     public void Clear()
     {
         count = 0;

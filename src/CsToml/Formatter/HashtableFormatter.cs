@@ -124,7 +124,7 @@ internal sealed class HashtableFormatter : ITomlValueFormatter<Hashtable>
                     case 15:
                         writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
                         writer.WriteDateOnly((DateOnly)key);
-
+                        writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
                         break;
                     case 16:
                         writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
@@ -214,7 +214,7 @@ internal sealed class HashtableFormatter : ITomlValueFormatter<Hashtable>
                         case 15:
                             writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
                             writer.WriteDateOnly((DateOnly)key);
-
+                            writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
                             break;
                         case 16:
                             writer.Write(TomlCodes.Symbol.DOUBLEQUOTED);
