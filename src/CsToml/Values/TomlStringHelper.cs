@@ -18,113 +18,79 @@ internal static class TomlStringHelper
         if (Utf8Helper.ContainInvalidSequences(utf8String))
             ExceptionHelper.ThrowInvalidCodePoints();
 
-        var escapeChar = false;
         var backslashCount = 0L;
         var escapeSequenceCount = 0L;
         var singleQuoted = false;
         var doubleQuoted = false;
         var newline = false;
 
-        var sequenceReader = new Utf8SequenceReader(utf8String);
-        while (sequenceReader.TryPeek(out var ch))
+        for (var i = 0; i < utf8String.Length; i++)
         {
-            switch (ch)
+            switch (utf8String[i])
             {
                 case TomlCodes.Symbol.BACKSLASH:
                     backslashCount++;
-                    sequenceReader.Advance(1);
-                    if (sequenceReader.TryPeek(out var ch2))
+                    var next = i + 1;
+                    if ((uint)next >= (uint)utf8String.Length)
+                        break;
+
+                    switch (utf8String[next])
                     {
-                        switch (ch2)
-                        {
-                            case TomlCodes.Symbol.DOUBLEQUOTED:
-                            case TomlCodes.Symbol.BACKSLASH:
-                            case TomlCodes.Alphabet.b:
-                            case TomlCodes.Alphabet.t:
-                            case TomlCodes.Alphabet.n:
-                            case TomlCodes.Alphabet.f:
-                            case TomlCodes.Alphabet.r:
+                        case TomlCodes.Symbol.DOUBLEQUOTED:
+                        case TomlCodes.Symbol.BACKSLASH:
+                        case TomlCodes.Alphabet.b:
+                        case TomlCodes.Alphabet.t:
+                        case TomlCodes.Alphabet.n:
+                        case TomlCodes.Alphabet.f:
+                        case TomlCodes.Alphabet.r:
+                            escapeSequenceCount++;
+                            i = next;
+                            break;
+                        case TomlCodes.Alphabet.u:
+                            i = next;
+                            var value = utf8String.Slice(next + 1);
+                            if (value.Length >= 4 &&
+                                TomlCodes.IsHex(value[0]) && TomlCodes.IsHex(value[1]) && TomlCodes.IsHex(value[2]) && TomlCodes.IsHex(value[3]))
+                            {
+                                i += 4;
                                 escapeSequenceCount++;
-                                sequenceReader.Advance(1);
-                                continue;
-                            case TomlCodes.Alphabet.u:
-                                sequenceReader.Advance(1);
-                                var value = sequenceReader.UnreadSpan;
-                                if (value.Length >= 4)
-                                {
-                                    if (!TomlCodes.IsHex(value[0])) continue;
-                                    if (!TomlCodes.IsHex(value[1])) continue;
-                                    if (!TomlCodes.IsHex(value[2])) continue;
-                                    if (!TomlCodes.IsHex(value[3])) continue;
-                                    sequenceReader.Advance(4);
-                                    escapeSequenceCount++;
-                                    continue;
-                                }
-                                continue;
-                            case TomlCodes.Alphabet.U:
-                                sequenceReader.Advance(1);
-                                var value2 = sequenceReader.UnreadSpan;
-                                if (value2.Length >= 8)
-                                {
-                                    if (!TomlCodes.IsHex(value2[0])) continue;
-                                    if (!TomlCodes.IsHex(value2[1])) continue;
-                                    if (!TomlCodes.IsHex(value2[2])) continue;
-                                    if (!TomlCodes.IsHex(value2[3])) continue;
-                                    if (!TomlCodes.IsHex(value2[4])) continue;
-                                    if (!TomlCodes.IsHex(value2[5])) continue;
-                                    if (!TomlCodes.IsHex(value2[6])) continue;
-                                    if (!TomlCodes.IsHex(value2[7])) continue;
-                                    sequenceReader.Advance(8);
-                                    escapeSequenceCount++;
-                                    continue;
-                                }
-                                continue;
-                            case TomlCodes.Alphabet.e:
-                                if (supportsEscapeSequenceE) // TOML v1.1.0
-                                {
-                                    sequenceReader.Advance(1);
-                                    escapeSequenceCount++;
-                                    continue;
-                                }
-                                continue;
-                            case TomlCodes.Alphabet.x:
-                                if (supportsEscapeSequenceX) // TOML v1.1.0
-                                {
-                                    sequenceReader.Advance(1);
-                                    escapeSequenceCount++;
-                                    continue;
-                                }
-                                continue;
-                            default:
-                                continue;
-                        }
+                            }
+                            break;
+                        case TomlCodes.Alphabet.U:
+                            i = next;
+                            var value2 = utf8String.Slice(next + 1);
+                            if (value2.Length >= 8 &&
+                                TomlCodes.IsHex(value2[0]) && TomlCodes.IsHex(value2[1]) && TomlCodes.IsHex(value2[2]) && TomlCodes.IsHex(value2[3]) &&
+                                TomlCodes.IsHex(value2[4]) && TomlCodes.IsHex(value2[5]) && TomlCodes.IsHex(value2[6]) && TomlCodes.IsHex(value2[7]))
+                            {
+                                i += 8;
+                                escapeSequenceCount++;
+                            }
+                            break;
+                        case TomlCodes.Alphabet.e:
+                            if (supportsEscapeSequenceE)
+                            {
+                                escapeSequenceCount++;
+                                i = next;
+                            }
+                            break;
+                        case TomlCodes.Alphabet.x:
+                            if (supportsEscapeSequenceX)
+                            {
+                                escapeSequenceCount++;
+                                i = next;
+                            }
+                            break;
                     }
                     break;
                 case TomlCodes.Symbol.SINGLEQUOTED:
                     singleQuoted = true;
-                    sequenceReader.Advance(1);
                     break;
                 case TomlCodes.Symbol.DOUBLEQUOTED:
                     doubleQuoted = true;
-                    sequenceReader.Advance(1);
                     break;
                 case TomlCodes.Symbol.LINEFEED:
                     newline = true;
-                    sequenceReader.Advance(1);
-                    break;
-                case TomlCodes.Symbol.CARRIAGE:
-                    sequenceReader.Advance(1);
-                    if (sequenceReader.TryPeek(out var linebreakCh) && TomlCodes.IsLf(linebreakCh))
-                    {
-                        newline = true;
-                    }
-                    break;
-                default:
-                    if (!escapeChar)
-                    {
-                        escapeChar = TomlCodes.IsEscape(ch);
-                    }
-                    sequenceReader.Advance(1);
                     break;
             }
         }
