@@ -1,6 +1,5 @@
 ﻿using CsToml.Error;
 using CsToml.Values;
-using System.Buffers;
 
 namespace CsToml.Formatter;
 
@@ -34,7 +33,7 @@ public sealed class KeyValuePairFormatter<TKey, TValue> : ITomlValueFormatter<Ke
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, KeyValuePair<TKey, TValue> target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         writer.BeginArray();
         options.Resolver.GetFormatter<TKey>()!.Serialize(ref writer, target.Key, options);

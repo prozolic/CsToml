@@ -1,6 +1,5 @@
 ﻿using CsToml.Error;
 using CsToml.Values;
-using System.Buffers;
 
 namespace CsToml.Formatter;
 
@@ -31,7 +30,7 @@ public sealed class PriorityQueueFormatter<TElement, TPriority> : ITomlValueForm
         return default!;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, PriorityQueue<TElement, TPriority> target, CsTomlSerializerOptions options) where TBufferWriter : IBufferWriter<byte>
+    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, PriorityQueue<TElement, TPriority> target, CsTomlSerializerOptions options) where TBufferWriter : IUtf8Writer, allows ref struct
     {
         if (target == null)
         {

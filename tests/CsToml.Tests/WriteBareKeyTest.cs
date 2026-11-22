@@ -31,7 +31,7 @@ public class WriteBareKeyTest
             => throw new NotSupportedException();
 
         public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, BareKeyHolder target, CsTomlSerializerOptions options)
-            where TBufferWriter : IBufferWriter<byte>
+            where TBufferWriter : IUtf8Writer, allows ref struct
         {
             var key = target.Key.AsSpan();
             switch (target.Mode)

@@ -1030,7 +1030,6 @@ using CsToml;
 using CsToml.Error;
 using CsToml.Formatter;
 using CsToml.Formatter.Resolver;
-using System.Buffers;
 """);
 
         var emittedClassNames = new Dictionary<string, UnionMeta>(StringComparer.Ordinal);
@@ -1080,7 +1079,7 @@ using System.Buffers;
 {{BuildUnionDeserializeBody(meta)}}        }
 
         public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, {{targetTypeNullable}} target, CsTomlSerializerOptions options)
-            where TBufferWriter : IBufferWriter<byte>
+            where TBufferWriter : IUtf8Writer, allows ref struct
         {
 {{BuildUnionSerializeBody(meta)}}        }
 

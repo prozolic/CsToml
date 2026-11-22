@@ -1,6 +1,5 @@
 ﻿using CsToml.Error;
 using CsToml.Values;
-using System.Buffers;
 using System.Buffers.Text;
 using System.Globalization;
 
@@ -59,7 +58,7 @@ internal sealed class DecimalFormatter : ITomlValueFormatter<decimal>
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, decimal target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         writer.WriteDecimal(target);
     }
@@ -93,7 +92,7 @@ internal sealed class NullableDecimalFormatter : ITomlValueFormatter<decimal?>
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, decimal? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         if (target.HasValue)
         {

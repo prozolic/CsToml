@@ -1,6 +1,5 @@
 ﻿using CsToml.Error;
 using CsToml.Values;
-using System.Buffers;
 
 namespace CsToml.Formatter;
 
@@ -27,7 +26,7 @@ internal sealed class GuidFormatter : ITomlValueFormatter<Guid>
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Guid target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         writer.WriteString(target.ToString());
     }
@@ -56,7 +55,7 @@ internal sealed class NullableGuidFormatter : ITomlValueFormatter<Guid?>
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Guid? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         if (target.HasValue)
         {

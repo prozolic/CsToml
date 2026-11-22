@@ -164,19 +164,17 @@ internal static class TomlDottedKeyExtensions
 {
     public static string GetJoinName(this ReadOnlySpan<TomlDottedKey> key)
     {
-        var bufferWriter = RecycleArrayPoolBufferWriter<byte>.Rent();
+        InlineArray4<TomlDottedKey> initialKeys = default;
+        ref InlineArray4<TomlDottedKey> initialKeysRef = ref Unsafe.AsRef(in initialKeys);
+        TempList<TomlDottedKey> keyList = new(initialKeysRef);
+
+        InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStates = default;
+        ref InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStatesRef = ref Unsafe.AsRef(in initialStates);
+        TempList<(TomlValueState state, int dottedKeyIndex)> stateList = new(initialStatesRef);
+
+        var writer = new Utf8TomlDocumentWriter<Utf8ArrayPoolWriter>(new Utf8ArrayPoolWriter(1024), in keyList, in stateList, false, CsTomlSerializerOptions.Default);
         try
         {
-            InlineArray4<TomlDottedKey> initialKeys = default;
-            ref InlineArray4<TomlDottedKey> initialKeysRef = ref Unsafe.AsRef(in initialKeys);
-            TempList<TomlDottedKey> keyList = new(initialKeysRef);
-
-            InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStates = default;
-            ref InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStatesRef = ref Unsafe.AsRef(in initialStates);
-            TempList<(TomlValueState state, int dottedKeyIndex)> stateList = new(initialStatesRef);
-
-            var writer = new Utf8TomlDocumentWriter<ArrayPoolBufferWriter<byte>>(ref bufferWriter, ref keyList, ref stateList, false, CsTomlSerializerOptions.Default);
-
             for (int i = 0; i < key.Length; i++)
             {
                 key[i].ToTomlString(ref writer);
@@ -184,11 +182,11 @@ internal static class TomlDottedKeyExtensions
                     writer.Write(TomlCodes.Symbol.DOT);
             }
 
-            return Utf8Helper.ToUtf16(bufferWriter.WrittenSpan); ;
+            return Utf8Helper.ToUtf16(writer.BufferWriter.WrittenSpan);
         }
         finally
         {
-            RecycleArrayPoolBufferWriter<byte>.Return(bufferWriter);
+            writer.BufferWriter.Dispose();
         }
     }
 }

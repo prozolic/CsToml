@@ -1,6 +1,5 @@
 ﻿using CsToml;
 using CsToml.Error;
-using System.Buffers;
 
 namespace CsToml.Formatter;
 
@@ -25,7 +24,7 @@ internal sealed class TimeOnlyFormatter : ITomlValueFormatter<TimeOnly>
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TimeOnly target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         writer.WriteTimeOnly(target);
     }
@@ -51,7 +50,7 @@ internal sealed class NullableTimeOnlyFormatter : ITomlValueFormatter<TimeOnly?>
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TimeOnly? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         if (target.HasValue)
         {

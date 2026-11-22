@@ -2,7 +2,6 @@
 using CsToml.Utility;
 using CsToml.Values;
 using System.Collections;
-using System.Buffers;
 
 namespace CsToml.Formatter;
 
@@ -53,7 +52,7 @@ public abstract class DictionaryBaseFormatter<TKey, TValue, TDictionary, TMediat
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TDictionary target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         if (target == null)
         {

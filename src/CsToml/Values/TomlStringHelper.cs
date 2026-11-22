@@ -15,8 +15,19 @@ internal static class TomlStringHelper
 
     public static TomlStringType GetTomlStringType(ReadOnlySpan<byte> utf8String, bool supportsEscapeSequenceE, bool supportsEscapeSequenceX)
     {
+        if (!utf8String.ContainsAnyExcept(TomlCodes.PlainBasicStringChars))
+            return TomlStringType.Basic;
+
+        return GetTomlStringTypeSlow(utf8String, supportsEscapeSequenceE, supportsEscapeSequenceX);
+    }
+
+    private static TomlStringType GetTomlStringTypeSlow(ReadOnlySpan<byte> utf8String, bool supportsEscapeSequenceE, bool supportsEscapeSequenceX)
+    {
         if (Utf8Helper.ContainInvalidSequences(utf8String))
             ExceptionHelper.ThrowInvalidCodePoints();
+
+        if (!utf8String.ContainsAny(TomlCodes.BasicStringStopChars))
+            return TomlStringType.Basic;
 
         var backslashCount = 0L;
         var escapeSequenceCount = 0L;

@@ -2,7 +2,6 @@
 using CsToml.Formatter.Resolver;
 using CsToml.Utility;
 using CsToml.Values;
-using System.Buffers;
 using System.Diagnostics;
 using System.Runtime.CompilerServices; // InlineArray16<T>
 
@@ -31,7 +30,7 @@ public partial class TomlDocument
     }
 
     internal bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         table.ToTomlString(ref writer);
         return true;

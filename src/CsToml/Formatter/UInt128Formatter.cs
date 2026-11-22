@@ -1,7 +1,6 @@
 ﻿using CsToml.Utility;
 using CsToml.Error;
 using CsToml.Values;
-using System.Buffers;
 using System.Globalization;
 
 namespace CsToml.Formatter;
@@ -26,7 +25,7 @@ internal sealed class UInt128Formatter : ITomlValueFormatter<UInt128>
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, UInt128 target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         writer.WriteInt64(IntegerRangeHelper.ConvertToInt64(target));
     }
@@ -52,7 +51,7 @@ internal sealed class NullableUInt128Formatter : ITomlValueFormatter<UInt128?>
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, UInt128? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         if (target.HasValue)
         {

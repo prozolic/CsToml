@@ -1,7 +1,6 @@
 ﻿using CsToml.Utility;
 using CsToml.Error;
 using CsToml.Values;
-using System.Buffers;
 using System.Collections;
 
 namespace CsToml.Formatter;
@@ -44,7 +43,7 @@ internal sealed class HashtableFormatter : ITomlValueFormatter<Hashtable>
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Hashtable target, CsTomlSerializerOptions options)
-            where TBufferWriter : IBufferWriter<byte>
+            where TBufferWriter : IUtf8Writer, allows ref struct
     {
         if (target == null)
         {

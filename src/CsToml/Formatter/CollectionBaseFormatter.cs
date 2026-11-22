@@ -1,6 +1,5 @@
 ﻿using CsToml.Error;
 using CsToml.Values;
-using System.Buffers;
 using System.ComponentModel;
 
 namespace CsToml.Formatter;
@@ -34,7 +33,7 @@ public abstract class CollectionBaseFormatter<TCollection, TElement, TMediator> 
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TCollection? target, CsTomlSerializerOptions options) 
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         if (target == null)
         {
@@ -46,10 +45,10 @@ public abstract class CollectionBaseFormatter<TCollection, TElement, TMediator> 
     }
 
     protected abstract void SerializeCollection<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TCollection target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>;
+        where TBufferWriter : IUtf8Writer, allows ref struct;
 
     public bool TrySerialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, TCollection? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         if (target == null)
         {
@@ -61,7 +60,7 @@ public abstract class CollectionBaseFormatter<TCollection, TElement, TMediator> 
     }
 
     protected abstract bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, TCollection target, CsTomlSerializerOptions options)
-         where TBufferWriter : IBufferWriter<byte>;
+         where TBufferWriter : IUtf8Writer, allows ref struct;
 
     protected abstract TMediator CreateCollection(int capacity);
     protected abstract void AddValue(TMediator mediator, TElement element);

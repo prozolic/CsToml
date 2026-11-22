@@ -24,7 +24,7 @@ public class PushBareKeyTest
             => throw new NotSupportedException();
 
         public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, KeyHolder target, CsTomlSerializerOptions options)
-            where TBufferWriter : IBufferWriter<byte>
+            where TBufferWriter : IUtf8Writer, allows ref struct
         {
             if (target.PushAsSpan)
             {

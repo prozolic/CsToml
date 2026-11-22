@@ -13,7 +13,7 @@ public class FormatterResolverTest
             => throw new NotSupportedException();
 
         public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, object target, CsTomlSerializerOptions options)
-            where TBufferWriter : IBufferWriter<byte>
+            where TBufferWriter : IUtf8Writer, allows ref struct
             => throw new NotSupportedException();
     }
 
@@ -23,7 +23,7 @@ public class FormatterResolverTest
             => throw new NotSupportedException();
 
         public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, int target, CsTomlSerializerOptions options)
-            where TBufferWriter : IBufferWriter<byte>
+            where TBufferWriter : IUtf8Writer, allows ref struct
             => throw new NotSupportedException();
     }
 
@@ -35,7 +35,7 @@ public class FormatterResolverTest
             => throw new NotSupportedException();
 
         public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Marker target, CsTomlSerializerOptions options)
-            where TBufferWriter : IBufferWriter<byte>
+            where TBufferWriter : IUtf8Writer, allows ref struct
             => throw new NotSupportedException();
     }
 
@@ -47,7 +47,7 @@ public class FormatterResolverTest
             => throw new NotSupportedException();
 
         public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, LateMarker target, CsTomlSerializerOptions options)
-            where TBufferWriter : IBufferWriter<byte>
+            where TBufferWriter : IUtf8Writer, allows ref struct
             => throw new NotSupportedException();
     }
 
@@ -66,7 +66,7 @@ public class FormatterResolverTest
             => throw new NotSupportedException();
 
         public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, LazyMarker target, CsTomlSerializerOptions options)
-            where TBufferWriter : IBufferWriter<byte>
+            where TBufferWriter : IUtf8Writer, allows ref struct
             => throw new NotSupportedException();
     }
 
@@ -83,7 +83,7 @@ public class FormatterResolverTest
             => throw new NotSupportedException();
 
         public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, int target, CsTomlSerializerOptions options)
-            where TBufferWriter : IBufferWriter<byte>
+            where TBufferWriter : IUtf8Writer, allows ref struct
             => throw new NotSupportedException();
     }
 
@@ -175,7 +175,7 @@ public class FormatterResolverTest
             => throw new NotSupportedException();
 
         public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, BeginMarker target, CsTomlSerializerOptions options)
-            where TBufferWriter : IBufferWriter<byte>
+            where TBufferWriter : IUtf8Writer, allows ref struct
             => throw new NotSupportedException();
     }
 
@@ -197,5 +197,37 @@ public class FormatterResolverTest
         thread2.Start();
         thread2.Join();
         afterRegister.ShouldBeFalse();
+    }
+
+    private sealed class RootMarker { }
+
+    private sealed class RootMarkerFormatter : ITomlValueFormatter<RootMarker>
+    {
+        public RootMarker Value { get; } = new();
+
+        public RootMarker Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
+            => Value;
+
+        public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, RootMarker target, CsTomlSerializerOptions options)
+            where TBufferWriter : IUtf8Writer, allows ref struct
+            => writer.WriteBytes("root = true"u8);
+    }
+
+    private sealed class RootMarkerResolver(RootMarkerFormatter formatter) : ITomlValueFormatterResolver
+    {
+        public ITomlValueFormatter<T>? GetFormatter<T>()
+            => formatter as ITomlValueFormatter<T> ?? TomlValueFormatterResolver.Instance.GetFormatter<T>();
+    }
+
+    [Test]
+    public void OptionsResolverResolvesRootType()
+    {
+        var formatter = new RootMarkerFormatter();
+        var options = CsTomlSerializerOptions.Default with { Resolver = new RootMarkerResolver(formatter) };
+
+        using var result = CsTomlSerializer.Serialize(formatter.Value, options);
+        result.ByteSpan.ToArray().ShouldBe("root = true"u8.ToArray());
+        CsTomlSerializer.Deserialize<RootMarker>("root = true"u8, options).ShouldBeSameAs(formatter.Value);
+        CsTomlSerializer.Deserialize<RootMarker>(new ReadOnlySequence<byte>("root = true"u8.ToArray()), options).ShouldBeSameAs(formatter.Value);
     }
 }

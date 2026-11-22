@@ -57,7 +57,7 @@ Installation
 > [!NOTE]
 > The official release version is v1.1.0 or higher. Less than v1.1.0 is deprecated.
 
-This library is distributed via NuGet. We target .NET 10, .NET 11.  
+This library is distributed via NuGet. We target .NET 10, .NET 11.
 
 > PM> Install-Package [CsToml](https://www.nuget.org/packages/CsToml/)
 
@@ -1009,7 +1009,7 @@ public class CustomFormatter : ITomlValueFormatter<Custom>
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Custom target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         writer.WriteInt64(target.Value);
     }

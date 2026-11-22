@@ -25,9 +25,8 @@ public sealed class ByteMemoryResult : IDisposable
         IsRent = true;
     }
 
-    internal static ByteMemoryResult Create(ArrayPoolBufferWriter<byte> bufferWriter)
+    internal static ByteMemoryResult Create(ReadOnlySpan<byte> span)
     {
-        var span = bufferWriter.WrittenSpan;
         var result = new ByteMemoryResult(MemoryPool<byte>.Shared.Rent(span.Length), span.Length);
         span.CopyTo(result.ByteSpan);
         return result;

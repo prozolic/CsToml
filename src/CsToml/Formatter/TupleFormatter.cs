@@ -1,6 +1,5 @@
 ﻿using CsToml.Error;
 using CsToml.Values;
-using System.Buffers;
 
 namespace CsToml.Formatter;
 
@@ -26,7 +25,7 @@ public sealed class TupleFormatter<T1> : ITomlValueFormatter<Tuple<T1>?>
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Tuple<T1>? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         if (target == null)
         {
@@ -68,7 +67,7 @@ public sealed class TupleFormatter<T1, T2> : ITomlValueFormatter<Tuple<T1, T2>?>
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Tuple<T1, T2>? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         if (target == null)
         {
@@ -119,7 +118,7 @@ public sealed class TupleFormatter<T1, T2, T3> : ITomlValueFormatter<Tuple<T1, T
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Tuple<T1, T2, T3>? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         if (target == null)
         {
@@ -175,7 +174,7 @@ public sealed class TupleFormatter<T1, T2, T3, T4> : ITomlValueFormatter<Tuple<T
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Tuple<T1, T2, T3, T4>? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         if (target == null)
         {
@@ -235,7 +234,7 @@ public sealed class TupleFormatter<T1, T2, T3, T4, T5> : ITomlValueFormatter<Tup
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Tuple<T1, T2, T3, T4, T5>? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         if (target == null)
         {
@@ -300,7 +299,7 @@ public sealed class TupleFormatter<T1, T2, T3, T4, T5, T6> : ITomlValueFormatter
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Tuple<T1, T2, T3, T4, T5, T6>? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         if (target == null)
         {
@@ -370,7 +369,7 @@ public sealed class TupleFormatter<T1, T2, T3, T4, T5, T6, T7> : ITomlValueForma
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Tuple<T1, T2, T3, T4, T5, T6, T7>? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         if (target == null)
         {
@@ -446,7 +445,7 @@ public sealed class TupleFormatter<T1, T2, T3, T4, T5, T6, T7, TRest> : ITomlVal
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Tuple<T1, T2, T3, T4, T5, T6, T7, TRest>? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         if (target == null)
         {

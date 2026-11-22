@@ -1,6 +1,5 @@
 ﻿using CsToml.Error;
 using CsToml.Values;
-using System.Buffers;
 using System.ComponentModel;
 
 namespace CsToml.Formatter;
@@ -32,7 +31,7 @@ public abstract class ArrayBaseFormatter<TArray, TElement> : ITomlValueFormatter
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TArray? target, CsTomlSerializerOptions options) where TBufferWriter : IBufferWriter<byte>
+    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TArray? target, CsTomlSerializerOptions options) where TBufferWriter : IUtf8Writer, allows ref struct
     {
         if (target == null)
         {

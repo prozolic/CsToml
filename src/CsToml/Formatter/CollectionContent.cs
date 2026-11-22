@@ -1,6 +1,5 @@
 ﻿using CsToml.Extension;
 using System;
-using System.Buffers;
 using System.Runtime.InteropServices;
 
 namespace CsToml.Formatter;
@@ -8,7 +7,7 @@ namespace CsToml.Formatter;
 internal static class IEnumerableSerializer<T>
 {
     public static void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, IEnumerable<T> enumerable, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         if (enumerable.TryGetNonEnumeratedCount2(out var count) && count == 0)
         {
@@ -47,7 +46,7 @@ internal static class IEnumerableSerializer<T>
         writer.EndArray();
     }
     public static bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, IEnumerable<T> enumerable, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         if (enumerable.TryGetNonEnumeratedCount2(out var count) && count == 0)
         {
@@ -84,7 +83,7 @@ internal static class IEnumerableSerializer<T>
 internal static class ArraySerializer<T>
 {
     public static void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, T[] array, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         writer.BeginArray();
         if (array.Length == 0)
@@ -114,7 +113,7 @@ internal static class ArraySerializer<T>
     }
 
     public static bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, T[] array, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         if (!writer.IsRoot)
         {
@@ -147,7 +146,7 @@ internal static class ArraySerializer<T>
 internal static class ListSerializer<T>
 {
     public static void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, List<T> list, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         writer.BeginArray();
         if (list.Count == 0)
@@ -177,7 +176,7 @@ internal static class ListSerializer<T>
     }
 
     public static bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, List<T> list, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         if (!writer.IsRoot)
         {
@@ -210,7 +209,7 @@ internal static class ListSerializer<T>
 internal static class IListSerializer<T> 
 {
     public static void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, IList<T> ilist, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         writer.BeginArray();
         if (ilist.Count == 0)
@@ -239,7 +238,7 @@ internal static class IListSerializer<T>
     }
 
     public static bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, IList<T> iList, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         if (!writer.IsRoot)
         {
@@ -271,7 +270,7 @@ internal static class IListSerializer<T>
 internal static class IReadOnlyListSerializer<T>
 {
     public static void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, IReadOnlyList<T> iReadonlyList, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         writer.BeginArray();
         if (iReadonlyList.Count == 0)
@@ -300,7 +299,7 @@ internal static class IReadOnlyListSerializer<T>
     }
 
     public static bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, IReadOnlyList<T> iReadonlyList, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         if (!writer.IsRoot)
         {

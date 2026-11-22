@@ -1,4 +1,5 @@
-﻿using CsToml.Utility;
+﻿using CsToml.Extension;
+using CsToml.Utility;
 using System.Buffers;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -133,7 +134,7 @@ internal sealed class TomlBasicString(string value) : TomlString(value), ITomlSt
     }
 
     internal static void ToTomlBasicString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> byteSpan)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         writer.WriteBytes("\""u8);
 
@@ -263,7 +264,7 @@ internal sealed class TomlMultiLineBasicString(string value) : TomlString(value)
     }
 
     internal static void ToTomlMultiLineBasicString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> byteSpan)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         writer.WriteBytes("\"\"\""u8);
 
@@ -392,11 +393,12 @@ internal sealed class TomlLiteralString(string value) : TomlString(value), IToml
     }
 
     internal static void ToTomlLiteralString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> byteSpan)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
-        writer.WriteBytes("'"u8);
-        writer.WriteBytes(byteSpan);
-        writer.WriteBytes("'"u8);
+        var destination = writer.BufferWriter.GetWrittenSpan(byteSpan.Length + 2);
+        destination.At(0) = TomlCodes.Symbol.SINGLEQUOTED;
+        byteSpan.CopyTo(destination.Slice(1));
+        destination.At(byteSpan.Length + 1) = TomlCodes.Symbol.SINGLEQUOTED;
     }
 
 }
@@ -461,11 +463,12 @@ internal sealed class TomlMultiLineLiteralString(string value) : TomlString(valu
     }
 
     internal static void ToTomlMultiLineLiteralString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> byteSpan)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
-        writer.WriteBytes("'''"u8);
-        writer.WriteBytes(byteSpan);
-        writer.WriteBytes("'''"u8);
+        var destination = writer.BufferWriter.GetWrittenSpan(byteSpan.Length + 6);
+        "'''"u8.CopyTo(destination);
+        byteSpan.CopyTo(destination.Slice(3));
+        "'''"u8.CopyTo(destination.Slice(byteSpan.Length + 3));
     }
 }
 
@@ -484,7 +487,7 @@ internal abstract partial class TomlString(string value) : TomlValue()
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected static void WriteUnicodeEscape<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, byte ch)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         writer.WriteBytes("\\u00"u8);
         writer.Write((byte)ToHexChar((ch >> 4) & 0xF));

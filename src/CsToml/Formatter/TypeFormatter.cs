@@ -1,5 +1,4 @@
 ﻿using CsToml.Error;
-using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
 
 namespace CsToml.Formatter;
@@ -26,7 +25,7 @@ public sealed class TypeFormatter : ITomlValueFormatter<Type?>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Type? target, CsTomlSerializerOptions options) where TBufferWriter : IBufferWriter<byte>
+    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Type? target, CsTomlSerializerOptions options) where TBufferWriter : IUtf8Writer, allows ref struct
     {
         if (target != null)
         {

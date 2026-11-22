@@ -1,7 +1,6 @@
 ﻿#if NET11_0_OR_GREATER
 
 using CsToml.Error;
-using System.Buffers;
 using System.Numerics;
 
 namespace CsToml.Formatter;
@@ -32,7 +31,7 @@ internal sealed class BFloat16Formatter : ITomlValueFormatter<BFloat16>
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, BFloat16 target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         writer.WriteDouble((double)target);
     }
@@ -63,7 +62,7 @@ internal sealed class NullableBFloat16Formatter : ITomlValueFormatter<BFloat16?>
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, BFloat16? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         if (target.HasValue)
         {

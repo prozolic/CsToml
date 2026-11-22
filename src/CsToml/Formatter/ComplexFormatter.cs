@@ -1,6 +1,5 @@
 ﻿using CsToml.Error;
 using CsToml.Values;
-using System.Buffers;
 using System.Numerics;
 
 namespace CsToml.Formatter;
@@ -30,7 +29,7 @@ internal sealed class ComplexFormatter : ITomlValueFormatter<Complex>
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Complex target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         writer.BeginArray();
         writer.WriteDouble(target.Real);
@@ -68,7 +67,7 @@ internal sealed class NullableComplexFormatter : ITomlValueFormatter<Complex?>
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Complex? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         if (target.HasValue)
         {
@@ -124,7 +123,7 @@ internal sealed class ComplexFormatter<T> : ITomlValueFormatter<Complex<T>>
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Complex<T> target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         var formatter = options.Resolver.GetFormatter<T>()!;
 

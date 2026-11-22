@@ -60,24 +60,23 @@ internal static class TomlDottedKeyHelper
 
     public static TomlDottedKey ParseKeyForPrimitive<T>(T value, CsTomlSerializerOptions options)
     {
-        var bufferWriter = RecycleArrayPoolBufferWriter<byte>.Rent();
+        InlineArray4<TomlDottedKey> initialKeys = default;
+        ref InlineArray4<TomlDottedKey> initialKeysRef = ref Unsafe.AsRef(in initialKeys);
+        TempList<TomlDottedKey> keyList = new(initialKeysRef);
+
+        InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStates = default;
+        ref InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStatesRef = ref Unsafe.AsRef(in initialStates);
+        TempList<(TomlValueState state, int dottedKeyIndex)> stateList = new(initialStatesRef);
+
+        var documentWriter = new Utf8TomlDocumentWriter<Utf8ArrayPoolWriter>(new Utf8ArrayPoolWriter(1024), in keyList, in stateList, false, options);
         try
         {
-            InlineArray4<TomlDottedKey> initialKeys = default;
-            ref InlineArray4<TomlDottedKey> initialKeysRef = ref Unsafe.AsRef(in initialKeys);
-            TempList<TomlDottedKey> keyList = new(initialKeysRef);
-
-            InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStates = default;
-            ref InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStatesRef = ref Unsafe.AsRef(in initialStates);
-            TempList<(TomlValueState state, int dottedKeyIndex)> stateList = new(initialStatesRef);
-
-            var documentWriter = new Utf8TomlDocumentWriter<ArrayPoolBufferWriter<byte>>(ref bufferWriter, ref keyList, ref stateList, false, options);
             documentWriter.WriteKeyForPrimitive(value);
-            return new TomlUnquotedDottedKey(bufferWriter.WrittenSpan);
+            return new TomlUnquotedDottedKey(documentWriter.BufferWriter.WrittenSpan);
         }
         finally
         {
-            RecycleArrayPoolBufferWriter<byte>.Return(bufferWriter);
+            documentWriter.BufferWriter.Dispose();
         }
     }
     public static TomlStringType GetTomlKeyType(ReadOnlySpan<byte> utf8String, bool supportsEscapeSequenceE, bool supportsEscapeSequenceX)

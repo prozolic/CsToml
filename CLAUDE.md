@@ -65,7 +65,7 @@ dotnet run -c Release --framework net10.0 -- --filter "*ParseBenchmark*"
 
 ```bash
 cd sandbox/ConsoleApp && dotnet run            # scratch target; also exercises the generator on build
-cd sandbox/ConsoleNativeAOT && dotnet publish -c Release   # PublishAot, net10.0, no RID pinned
+cd sandbox/ConsoleNativeAOT && dotnet publish -c Release   # PublishAot, net11.0, no RID pinned
 ```
 
 ## Architecture
@@ -102,7 +102,15 @@ Generated `Register()` bodies start with `BeginRegistration<T>()` — false once
 
 ### Writer
 
-`Utf8TomlDocumentWriter<TBufferWriter>` is a `ref struct` generic over `where TBufferWriter : IBufferWriter<byte>`. It tracks the current key path and value state in `TempList<T>`s backed by caller-stack `InlineArray4`, so nesting stays allocation-free until it overflows. Any method taking a caller `stackalloc` span must declare it `scoped ReadOnlySpan<byte>` — formatters are ordinary classes, and without `scoped` the compiler refuses to let stack memory cross into the ref struct.
+`Utf8TomlDocumentWriter<TBufferWriter>` is a `ref struct` generic over `where TBufferWriter : IUtf8Writer, allows ref struct` (formatters' `Serialize<TBufferWriter>` carries the same constraint). It holds the writer **by value** — a `ref` field to a type parameter that allows ref structs is illegal — so the caller's copy goes stale once writing starts; inside the library, read results back through the document writer's ref-returning `BufferWriter` property, while the public `Serialize<T, TWriter>` / `SerializeValueType<T, TWriter>` overloads (type parameters swapped because overloads cannot differ only by constraint) assign it back to the caller's `ref` argument in a `finally`. The writers are internal ref structs in `src/CsToml/Utility/`:
+
+- `Utf8ArrayPoolWriter` — grows via `ArrayPool`; used for the `ByteMemoryResult` path and internal key formatting.
+- `Utf8BufferWriter` — wraps a caller's `IBufferWriter<byte>` for the compat `Serialize<TBufferWriter, T>` / `SerializeValueType<TBufferWriter, T>` overloads. The non-generic one serves reference types; `Utf8BufferWriter<TBufferWriter>` holds a `ref` to a value-type writer. Pick with `typeof(TBufferWriter).IsValueType`, so a class writer avoids shared generic code and a struct writer is not boxed. Both defer `Advance` on the wrapped writer until the next request (the document writer fills a span after reserving it, and `IBufferWriter<byte>` forbids writing after `Advance`), so the entry point must call `Flush()` when serialization ends.
+- `Utf8SpanWriter` — writes into a fixed `Span<byte>`; no library entry point constructs it, but it works through the `IUtf8Writer` overloads.
+
+`Utf8TomlDocumentWriter.WrittenSize` counts from the start of the current serialization (the writer's `WrittenLength` when the document writer was constructed is subtracted), because `TomlTable` uses it to decide whether a blank line precedes a table header.
+
+`Utf8TomlDocumentWriter` tracks the current key path and value state in `TempList<T>`s backed by caller-stack `InlineArray4`, so nesting stays allocation-free until it overflows. Any method taking a caller `stackalloc` span must declare it `scoped ReadOnlySpan<byte>` — formatters are ordinary classes, and without `scoped` the compiler refuses to let stack memory cross into the ref struct.
 
 ### Spec versions
 

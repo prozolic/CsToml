@@ -1,6 +1,5 @@
 ﻿using CsToml.Debugger;
 using CsToml.Utility;
-using System.Buffers;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
@@ -35,7 +34,7 @@ internal sealed partial class TomlTable : TomlValue
     }
 
     private bool ToTomlStringCore<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ref TempList<TomlDottedKey> keyList, ref TempList<TomlDottedKey> tableHeaderKeyList, WriteTarget target)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         var headerWritten = false;
         var first = 0;
@@ -136,7 +135,7 @@ internal sealed partial class TomlTable : TomlValue
         => value is TomlTableArray || (value is TomlTable table && table.IsViaArrayOfTables);
 
     private void WriteArrayOfTables<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlTableArray tableArray, ref TempList<TomlDottedKey> tableHeaderKeyList)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         var skipNewLine = false;
         if (tableArray.CommentCount > 0)
@@ -169,7 +168,7 @@ internal sealed partial class TomlTable : TomlValue
     }
 
     private bool WriteChildTable<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, int index, ref TempList<TomlDottedKey> keyList, ref TempList<TomlDottedKey> tableHeaderKeyList, ref bool headerWritten, WriteTarget target)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         var key = entries[index].key;
         var value = entries[index].value;
@@ -212,7 +211,7 @@ internal sealed partial class TomlTable : TomlValue
     }
 
     private void WriteKeyValue<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, int index, ref TempList<TomlDottedKey> keyList, ref TempList<TomlDottedKey> tableHeaderKeyList, ref bool headerWritten)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         var key = entries[index].key;
         var value = entries[index].value;
@@ -275,7 +274,7 @@ internal sealed partial class TomlTable : TomlValue
     }
 
     private void WriterKey<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlDottedKey key, bool isGroupingProperty)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         key.ToTomlString(ref writer);
         if (isGroupingProperty)
@@ -285,7 +284,7 @@ internal sealed partial class TomlTable : TomlValue
     }
 
     private void WriteKeyValueAndNewLine<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlDottedKey key, TomlValue value)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         WriterKey(ref writer, key, false);
         writer.WriteEqual();
@@ -294,7 +293,7 @@ internal sealed partial class TomlTable : TomlValue
     }
 
     private void WriteTableHeader<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<TomlDottedKey> keysSpan)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         writer.BeginTableHeader();
         if (keysSpan.Length > 0)
@@ -310,7 +309,7 @@ internal sealed partial class TomlTable : TomlValue
     }
 
     private void WriteArrayOfTablesHeader<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<TomlDottedKey> keysSpan)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         writer.BeginArrayOfTablesHeader();
 
@@ -327,7 +326,7 @@ internal sealed partial class TomlTable : TomlValue
     }
 
     private void WriteComments<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<TomlString> comments)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         if (comments.Length == 0) return;
 

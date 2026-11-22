@@ -1,6 +1,5 @@
 ﻿using CsToml.Error;
 using CsToml.Values;
-using System.Buffers;
 
 namespace CsToml.Formatter;
 
@@ -26,7 +25,7 @@ public sealed class ValueTupleFormatter<T1> : ITomlValueFormatter<ValueTuple<T1>
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ValueTuple<T1> target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         options.Resolver.GetFormatter<T1>()!.Serialize(ref writer, target.Item1, options);
     }
@@ -62,7 +61,7 @@ public sealed class ValueTupleFormatter<T1, T2> : ITomlValueFormatter<ValueTuple
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ValueTuple<T1, T2> target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         writer.BeginArray();
         options.Resolver.GetFormatter<T1>()!.Serialize(ref writer, target.Item1, options);
@@ -107,7 +106,7 @@ public sealed class ValueTupleFormatter<T1, T2, T3> : ITomlValueFormatter<ValueT
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ValueTuple<T1, T2, T3> target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         writer.BeginArray();
         options.Resolver.GetFormatter<T1>()!.Serialize(ref writer, target.Item1, options);
@@ -157,7 +156,7 @@ public sealed class ValueTupleFormatter<T1, T2, T3, T4> : ITomlValueFormatter<Va
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ValueTuple<T1, T2, T3, T4> target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         writer.BeginArray();
         options.Resolver.GetFormatter<T1>()!.Serialize(ref writer, target.Item1, options);
@@ -211,7 +210,7 @@ public sealed class ValueTupleFormatter<T1, T2, T3, T4, T5> : ITomlValueFormatte
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ValueTuple<T1, T2, T3, T4, T5> target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         writer.BeginArray();
         options.Resolver.GetFormatter<T1>()!.Serialize(ref writer, target.Item1, options);
@@ -270,7 +269,7 @@ public sealed class ValueTupleFormatter<T1, T2, T3, T4, T5, T6> : ITomlValueForm
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ValueTuple<T1, T2, T3, T4, T5, T6> target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         writer.BeginArray();
         options.Resolver.GetFormatter<T1>()!.Serialize(ref writer, target.Item1, options);
@@ -334,7 +333,7 @@ public sealed class ValueTupleFormatter<T1, T2, T3, T4, T5, T6, T7> : ITomlValue
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ValueTuple<T1, T2, T3, T4, T5, T6, T7> target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         writer.BeginArray();
         options.Resolver.GetFormatter<T1>()!.Serialize(ref writer, target.Item1, options);
@@ -404,7 +403,7 @@ public sealed class ValueTupleFormatter<T1, T2, T3, T4, T5, T6, T7, TRest> : ITo
     }
 
     public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         writer.BeginArray();
         options.Resolver.GetFormatter<T1>()!.Serialize(ref writer, target.Item1, options);

@@ -1,5 +1,4 @@
 ﻿using CsToml.Utility;
-using System.Buffers;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -43,7 +42,7 @@ internal sealed partial class TomlInlineTable : TomlValue
     }
 
     private void ToTomlStringCore<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlTable parentTable, scoped ref TempList<TomlDottedKey> keyList)
-        where TBufferWriter : IBufferWriter<byte>
+        where TBufferWriter : IUtf8Writer, allows ref struct
     {
         var count = 0;
 
