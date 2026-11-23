@@ -25,8 +25,7 @@ internal sealed class GuidFormatter : ITomlValueFormatter<Guid>
         return default!;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Guid target, CsTomlSerializerOptions options)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    public void Serialize(ref Utf8TomlDocumentWriter writer, Guid target, CsTomlSerializerOptions options)
     {
         writer.WriteString(target.ToString());
     }
@@ -54,8 +53,7 @@ internal sealed class NullableGuidFormatter : ITomlValueFormatter<Guid?>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Guid? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    public void Serialize(ref Utf8TomlDocumentWriter writer, Guid? target, CsTomlSerializerOptions options)
     {
         if (target.HasValue)
         {

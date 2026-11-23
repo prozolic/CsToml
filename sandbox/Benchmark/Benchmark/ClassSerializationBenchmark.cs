@@ -63,7 +63,11 @@ public class ClassSerializationBenchmark
     public string CsToml_Serialize()
     {
         var bufferWriter = new ArrayBufferWriter<byte>();
+#if NUGET_CSTOML
         CsTomlSerializer.Serialize(ref bufferWriter, testTomlSerializedObject, options); //CsToml
+#else
+        CsTomlSerializer.Serialize(bufferWriter, testTomlSerializedObject, options); //CsToml
+#endif
         var text = utf8.GetString(bufferWriter.WrittenSpan);
         return text;
     }

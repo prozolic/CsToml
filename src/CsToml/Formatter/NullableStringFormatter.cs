@@ -22,8 +22,7 @@ internal sealed class NullableStringFormatter : ITomlValueFormatter<string?>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, string? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    public void Serialize(ref Utf8TomlDocumentWriter writer, string? target, CsTomlSerializerOptions options)
     {
         if (target != null)
         {

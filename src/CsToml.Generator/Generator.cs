@@ -208,7 +208,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.DeclarationTypeName}} : ITomlSeriali
     {
 {{GenerateDeserializePart(typeMeta, constructorMeta)}}    }
 
-    static void ITomlSerializedObject<{{typeMeta.GenericTypeParameterName}}>.Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, {{typeMeta.GenericTypeParameterName}} target, CsTomlSerializerOptions options)
+    static void ITomlSerializedObject<{{typeMeta.GenericTypeParameterName}}>.Serialize(ref Utf8TomlDocumentWriter writer, {{typeMeta.GenericTypeParameterName}} target, CsTomlSerializerOptions options)
     {
 {{GenerateSerializePart(typeMeta)}}    }
 
@@ -1078,8 +1078,7 @@ using CsToml.Formatter.Resolver;
         {
 {{BuildUnionDeserializeBody(meta)}}        }
 
-        public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, {{targetTypeNullable}} target, CsTomlSerializerOptions options)
-            where TBufferWriter : IUtf8Writer, allows ref struct
+        public void Serialize(ref Utf8TomlDocumentWriter writer, {{targetTypeNullable}} target, CsTomlSerializerOptions options)
         {
 {{BuildUnionSerializeBody(meta)}}        }
 

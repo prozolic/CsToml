@@ -30,8 +30,7 @@ internal sealed class BFloat16Formatter : ITomlValueFormatter<BFloat16>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, BFloat16 target, CsTomlSerializerOptions options)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    public void Serialize(ref Utf8TomlDocumentWriter writer, BFloat16 target, CsTomlSerializerOptions options)
     {
         writer.WriteDouble((double)target);
     }
@@ -61,8 +60,7 @@ internal sealed class NullableBFloat16Formatter : ITomlValueFormatter<BFloat16?>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, BFloat16? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    public void Serialize(ref Utf8TomlDocumentWriter writer, BFloat16? target, CsTomlSerializerOptions options)
     {
         if (target.HasValue)
         {

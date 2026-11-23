@@ -37,8 +37,7 @@ internal sealed class Decimal32Formatter : ITomlValueFormatter<Decimal32>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Decimal32 target, CsTomlSerializerOptions options)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    public void Serialize(ref Utf8TomlDocumentWriter writer, Decimal32 target, CsTomlSerializerOptions options)
     {
         writer.WriteDecimalFloatingPoint(target);
     }
@@ -71,8 +70,7 @@ internal sealed class NullableDecimal32Formatter : ITomlValueFormatter<Decimal32
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Decimal32? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    public void Serialize(ref Utf8TomlDocumentWriter writer, Decimal32? target, CsTomlSerializerOptions options)
     {
         if (target.HasValue)
         {

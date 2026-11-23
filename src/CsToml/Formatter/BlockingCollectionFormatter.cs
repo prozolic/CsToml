@@ -20,12 +20,12 @@ public sealed class BlockingCollectionFormatter<T> : CollectionBaseFormatter<Blo
         return new BlockingCollection<T>(capacity);
     }
 
-    protected override void SerializeCollection<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, BlockingCollection<T> target, CsTomlSerializerOptions options)
+    protected override void SerializeCollection(ref Utf8TomlDocumentWriter writer, BlockingCollection<T> target, CsTomlSerializerOptions options)
     {
         IEnumerableSerializer<T>.Serialize(ref writer, target, options);
     }
 
-    protected override bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, BlockingCollection<T> target, CsTomlSerializerOptions options)
+    protected override bool TrySerializeTomlArrayHeaderStyle(ref Utf8TomlDocumentWriter writer, ReadOnlySpan<byte> header, BlockingCollection<T> target, CsTomlSerializerOptions options)
     {
         return IEnumerableSerializer<T>.TrySerializeTomlArrayHeaderStyle(ref writer, header, target, options);
     }

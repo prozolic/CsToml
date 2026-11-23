@@ -33,7 +33,7 @@ public sealed class ImmutableArrayFormatter<T> : ITomlValueFormatter<ImmutableAr
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ImmutableArray<T> target, CsTomlSerializerOptions options) where TBufferWriter : IUtf8Writer, allows ref struct
+    public void Serialize(ref Utf8TomlDocumentWriter writer, ImmutableArray<T> target, CsTomlSerializerOptions options)
     {
         if (target == null)
         {
@@ -45,7 +45,7 @@ public sealed class ImmutableArrayFormatter<T> : ITomlValueFormatter<ImmutableAr
         ArraySerializer<T>.Serialize(ref writer, array!, options);
     }
 
-    public bool TrySerialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, ImmutableArray<T> target, CsTomlSerializerOptions options) where TBufferWriter : IUtf8Writer, allows ref struct
+    public bool TrySerialize(ref Utf8TomlDocumentWriter writer, ReadOnlySpan<byte> header, ImmutableArray<T> target, CsTomlSerializerOptions options)
     {
         if (target == null)
         {

@@ -32,8 +32,7 @@ public abstract class CollectionBaseFormatter<TCollection, TElement, TMediator> 
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TCollection? target, CsTomlSerializerOptions options) 
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    public void Serialize(ref Utf8TomlDocumentWriter writer, TCollection? target, CsTomlSerializerOptions options)
     {
         if (target == null)
         {
@@ -44,11 +43,9 @@ public abstract class CollectionBaseFormatter<TCollection, TElement, TMediator> 
         SerializeCollection(ref writer, target, options);
     }
 
-    protected abstract void SerializeCollection<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TCollection target, CsTomlSerializerOptions options)
-        where TBufferWriter : IUtf8Writer, allows ref struct;
+    protected abstract void SerializeCollection(ref Utf8TomlDocumentWriter writer, TCollection target, CsTomlSerializerOptions options);
 
-    public bool TrySerialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, TCollection? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    public bool TrySerialize(ref Utf8TomlDocumentWriter writer, ReadOnlySpan<byte> header, TCollection? target, CsTomlSerializerOptions options)
     {
         if (target == null)
         {
@@ -59,8 +56,7 @@ public abstract class CollectionBaseFormatter<TCollection, TElement, TMediator> 
         return TrySerializeTomlArrayHeaderStyle(ref writer, header, target, options);
     }
 
-    protected abstract bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, TCollection target, CsTomlSerializerOptions options)
-         where TBufferWriter : IUtf8Writer, allows ref struct;
+    protected abstract bool TrySerializeTomlArrayHeaderStyle(ref Utf8TomlDocumentWriter writer, ReadOnlySpan<byte> header, TCollection target, CsTomlSerializerOptions options);
 
     protected abstract TMediator CreateCollection(int capacity);
     protected abstract void AddValue(TMediator mediator, TElement element);

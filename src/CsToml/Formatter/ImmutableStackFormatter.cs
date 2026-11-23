@@ -24,7 +24,7 @@ public sealed class ImmutableStackFormatter<T> : CollectionBaseFormatter<Immutab
         return new List<T>(capacity);
     }
 
-    protected override void SerializeCollection<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ImmutableStack<T> target, CsTomlSerializerOptions options)
+    protected override void SerializeCollection(ref Utf8TomlDocumentWriter writer, ImmutableStack<T> target, CsTomlSerializerOptions options)
     {
         writer.BeginArray();
         if (target.IsEmpty)
@@ -57,7 +57,7 @@ public sealed class ImmutableStackFormatter<T> : CollectionBaseFormatter<Immutab
         writer.EndArray();
     }
 
-    protected override bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, ImmutableStack<T> target, CsTomlSerializerOptions options)
+    protected override bool TrySerializeTomlArrayHeaderStyle(ref Utf8TomlDocumentWriter writer, ReadOnlySpan<byte> header, ImmutableStack<T> target, CsTomlSerializerOptions options)
     {
         if (target.IsEmpty)
         {

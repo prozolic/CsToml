@@ -28,8 +28,7 @@ internal sealed class ComplexFormatter : ITomlValueFormatter<Complex>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Complex target, CsTomlSerializerOptions options)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    public void Serialize(ref Utf8TomlDocumentWriter writer, Complex target, CsTomlSerializerOptions options)
     {
         writer.BeginArray();
         writer.WriteDouble(target.Real);
@@ -66,8 +65,7 @@ internal sealed class NullableComplexFormatter : ITomlValueFormatter<Complex?>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Complex? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    public void Serialize(ref Utf8TomlDocumentWriter writer, Complex? target, CsTomlSerializerOptions options)
     {
         if (target.HasValue)
         {
@@ -122,8 +120,7 @@ internal sealed class ComplexFormatter<T> : ITomlValueFormatter<Complex<T>>
         return default!;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Complex<T> target, CsTomlSerializerOptions options)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    public void Serialize(ref Utf8TomlDocumentWriter writer, Complex<T> target, CsTomlSerializerOptions options)
     {
         var formatter = options.Resolver.GetFormatter<T>()!;
 

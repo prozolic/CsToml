@@ -1,6 +1,8 @@
 ﻿using CsToml.Error;
 using CsToml.Utility;
+using CsToml.Values;
 using System.Buffers;
+using System.Runtime.CompilerServices;
 
 namespace CsToml.Tests;
 
@@ -8,113 +10,266 @@ public class Utf8WriterTest
 {
     private static readonly byte[] Expected = "key = \"value\"\n"u8.ToArray();
 
-    private static void WriteExpected<TWriter>(ref TWriter writer)
-        where TWriter : IUtf8Writer, allows ref struct
+    private static void WriteExpected(ref Utf8TomlDocumentWriter writer)
     {
         "key"u8.CopyTo(writer.GetSpan(3));
         writer.Advance(3);
         " = "u8.CopyTo(writer.GetWrittenSpan(3));
-        "\"value\""u8.CopyTo(writer.GetWrittenSpan(7));
-        writer.GetWrittenSpan()[0] = (byte)'\n';
+        writer.WriteBytes("\"value\""u8);
+        writer.Write((byte)'\n');
     }
 
     [Test]
-    public void SpanWriter()
+    public void FixedSpan()
     {
-        Span<byte> destination = stackalloc byte[Expected.Length];
-        var writer = new Utf8SpanWriter(destination);
-        WriteExpected(ref writer);
+        var destination = new byte[Expected.Length];
+        long writtenSize = 0;
+        var throwsWhenFull = false;
+        DocumentWriterHelper.WithFixedSpan(destination, false, (ref Utf8TomlDocumentWriter writer) =>
+        {
+            WriteExpected(ref writer);
+            writtenSize = writer.WrittenSize;
+            writer.WrittenSpan.ToArray().ShouldBe(Expected);
+            try
+            {
+                writer.GetSpan(0);
+            }
+            catch (CsTomlException)
+            {
+                throwsWhenFull = true;
+            }
+        });
 
-        writer.WrittenLength.ShouldBe(Expected.Length);
-        writer.WrittenSpan.ToArray().ShouldBe(Expected);
-        writer.GetSpan().Length.ShouldBe(0);
+        writtenSize.ShouldBe(Expected.Length);
+        destination.ShouldBe(Expected);
+        throwsWhenFull.ShouldBeTrue();
     }
 
     [Test]
-    public void SpanWriterTooSmall()
+    public void FixedSpanTooSmall()
     {
-        Should.Throw<CsTomlException>(() =>
+        var operations = new DocumentWriterHelper.WriterAction[]
         {
-            var writer = new Utf8SpanWriter(new byte[2]);
-            writer.GetWrittenSpan(3);
-        });
-        Should.Throw<CsTomlException>(() =>
+            (ref Utf8TomlDocumentWriter writer) => writer.GetWrittenSpan(3),
+            (ref Utf8TomlDocumentWriter writer) => writer.GetSpan(3),
+            (ref Utf8TomlDocumentWriter writer) => writer.Advance(3),
+            (ref Utf8TomlDocumentWriter writer) => writer.WriteBytes("abc"u8),
+            (ref Utf8TomlDocumentWriter writer) =>
+            {
+                writer.WriteBytes("ab"u8);
+                writer.Write((byte)'c');
+            },
+        };
+
+        foreach (var operation in operations)
         {
-            var writer = new Utf8SpanWriter(new byte[2]);
-            writer.GetSpan(3);
-        });
-        Should.Throw<CsTomlException>(() =>
-        {
-            var writer = new Utf8SpanWriter(new byte[2]);
-            writer.Advance(3);
-        });
+            Should.Throw<CsTomlException>(() => DocumentWriterHelper.WithFixedSpan(new byte[2], false, operation));
+        }
     }
 
     [Test]
-    public void ArrayPoolWriterGrow()
+    public void ArrayPoolGrow()
     {
         var expected = new byte[5000];
         Random.Shared.NextBytes(expected);
 
-        var writer = new Utf8ArrayPoolWriter(16);
-        try
+        long writtenSize = 0;
+        long writtenSizeAfterDispose = -1;
+        DocumentWriterHelper.WithArrayPool(16, false, (ref Utf8TomlDocumentWriter writer) =>
         {
-            var first = writer.GetSpan().Length;
-            expected.AsSpan(0, first).CopyTo(writer.GetWrittenSpan(first));
-            writer.GetSpan().Length.ShouldBeGreaterThan(0);
-            expected.AsSpan(first, 990).CopyTo(writer.GetSpan(990));
-            writer.Advance(990);
-            expected.AsSpan(first + 990).CopyTo(writer.GetWrittenSpan(expected.Length - first - 990));
+            try
+            {
+                var first = writer.GetSpan(0).Length;
+                expected.AsSpan(0, first).CopyTo(writer.GetWrittenSpan(first));
+                writer.GetSpan(0).Length.ShouldBeGreaterThan(0);
+                expected.AsSpan(first, 990).CopyTo(writer.GetSpan(990));
+                writer.Advance(990);
+                writer.Write(expected[first + 990]);
+                writer.WriteBytes(expected.AsSpan(first + 991, 1000));
+                expected.AsSpan(first + 1991).CopyTo(writer.GetWrittenSpan(expected.Length - first - 1991));
 
-            writer.WrittenLength.ShouldBe(expected.Length);
-            writer.WrittenSpan.ToArray().ShouldBe(expected);
-        }
-        finally
-        {
+                writtenSize = writer.WrittenSize;
+                writer.WrittenSpan.ToArray().ShouldBe(expected);
+            }
+            finally
+            {
+                writer.Dispose();
+            }
+
+            writtenSizeAfterDispose = writer.WrittenSize;
             writer.Dispose();
-        }
+        });
 
-        writer.WrittenLength.ShouldBe(0);
-        writer.Dispose();
+        writtenSize.ShouldBe(expected.Length);
+        writtenSizeAfterDispose.ShouldBe(0);
     }
 
     [Test]
-    public void ArrayPoolWriterInvalidLength()
+    public void ArrayPoolInvalidLength()
     {
-        Should.Throw<CsTomlException>(() =>
+        Should.Throw<CsTomlException>(() => DocumentWriterHelper.WithArrayPool(16, false, (ref Utf8TomlDocumentWriter writer) =>
         {
-            using var writer = new Utf8ArrayPoolWriter(16);
-            writer.GetWrittenSpan(-1);
-        });
-        Should.Throw<CsTomlException>(() =>
+            try
+            {
+                writer.GetWrittenSpan(-1);
+            }
+            finally
+            {
+                writer.Dispose();
+            }
+        }));
+        Should.Throw<CsTomlException>(() => DocumentWriterHelper.WithArrayPool(16, false, (ref Utf8TomlDocumentWriter writer) =>
         {
-            using var writer = new Utf8ArrayPoolWriter(16);
-            writer.Advance(writer.GetSpan().Length + 1);
-        });
+            try
+            {
+                writer.Advance(writer.GetSpan(0).Length + 1);
+            }
+            finally
+            {
+                writer.Dispose();
+            }
+        }));
     }
 
     [Test]
     public void BufferWriter()
     {
         var bufferWriter = new ArrayBufferWriter<byte>();
-        var writer = new Utf8BufferWriter(bufferWriter);
-        WriteExpected(ref writer);
-        writer.Flush();
+        var writtenSize = DocumentWriterHelper.WithBufferWriter(bufferWriter, WriteExpected);
 
-        writer.WrittenLength.ShouldBe(Expected.Length);
+        writtenSize.ShouldBe(Expected.Length);
         bufferWriter.WrittenSpan.ToArray().ShouldBe(Expected);
     }
 
     [Test]
     public void BufferWriterValueType()
     {
-        var bufferWriter = new ValueBufferWriter(new byte[64]);
-        var writer = new Utf8BufferWriter<ValueBufferWriter>(ref bufferWriter);
-        WriteExpected(ref writer);
-        writer.Flush();
+        IBufferWriter<byte> boxed = new ValueBufferWriter(new byte[64]);
+        var writtenSize = DocumentWriterHelper.WithBufferWriter(boxed, WriteExpected);
 
-        writer.WrittenLength.ShouldBe(Expected.Length);
-        bufferWriter.WrittenSpan.ToArray().ShouldBe(Expected);
+        writtenSize.ShouldBe(Expected.Length);
+        ((ValueBufferWriter)boxed).WrittenSpan.ToArray().ShouldBe(Expected);
+    }
+
+    [Test]
+    public void BufferWriterStrict()
+    {
+        var expected = new byte[300];
+        Random.Shared.NextBytes(expected);
+
+        var bufferWriter = new StrictBufferWriter(3);
+        var writtenSize = DocumentWriterHelper.WithBufferWriter(bufferWriter, (ref Utf8TomlDocumentWriter writer) =>
+        {
+            writer.WrittenSize.ShouldBe(0);
+            for (var i = 0; i < 100; i++)
+            {
+                writer.Write(expected[i]);
+            }
+            writer.WrittenSize.ShouldBe(100);
+            writer.WriteBytes(expected.AsSpan(100, 50));
+            expected.AsSpan(150, 50).CopyTo(writer.GetWrittenSpan(50));
+            var span = writer.GetSpan(70);
+            span.Length.ShouldBeGreaterThanOrEqualTo(70);
+            expected.AsSpan(200, 70).CopyTo(span);
+            writer.Advance(70);
+            writer.WriteBytes(expected.AsSpan(270));
+            writer.WrittenSize.ShouldBe(expected.Length);
+        });
+
+        writtenSize.ShouldBe(expected.Length);
+        bufferWriter.Verify();
+        bufferWriter.WrittenSpan.ToArray().ShouldBe(expected);
+    }
+
+    [Test]
+    public void BufferWriterFlushesWithoutWriting()
+    {
+        var bufferWriter = new StrictBufferWriter(3);
+        var writtenSize = DocumentWriterHelper.WithBufferWriter(bufferWriter, (ref Utf8TomlDocumentWriter writer) => { });
+
+        writtenSize.ShouldBe(0);
+        bufferWriter.Verify();
+        bufferWriter.GetSpanCount.ShouldBe(0);
+        bufferWriter.WrittenSpan.Length.ShouldBe(0);
+    }
+}
+
+internal static class DocumentWriterHelper
+{
+    public delegate void WriterAction(ref Utf8TomlDocumentWriter writer);
+
+    public static void WithFixedSpan(Span<byte> destination, bool valueOnly, WriterAction action)
+    {
+        InlineArray4<TomlDottedKey> initialKeys = default;
+        ref InlineArray4<TomlDottedKey> initialKeysRef = ref Unsafe.AsRef(in initialKeys);
+        TempList<TomlDottedKey> keyList = new(initialKeysRef);
+
+        InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStates = default;
+        ref InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStatesRef = ref Unsafe.AsRef(in initialStates);
+        TempList<(TomlValueState state, int dottedKeyIndex)> stateList = new(initialStatesRef);
+
+        var writer = new Utf8TomlDocumentWriter(destination, in keyList, in stateList, valueOnly, CsTomlSerializer.DefaultOptions);
+        action(ref writer);
+    }
+
+    public static void WithArrayPool(int initialCapacity, bool valueOnly, WriterAction action)
+    {
+        InlineArray4<TomlDottedKey> initialKeys = default;
+        ref InlineArray4<TomlDottedKey> initialKeysRef = ref Unsafe.AsRef(in initialKeys);
+        TempList<TomlDottedKey> keyList = new(initialKeysRef);
+
+        InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStates = default;
+        ref InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStatesRef = ref Unsafe.AsRef(in initialStates);
+        TempList<(TomlValueState state, int dottedKeyIndex)> stateList = new(initialStatesRef);
+
+        var writer = new Utf8TomlDocumentWriter(new ArrayPoolBufferSource(initialCapacity), in keyList, in stateList, valueOnly, CsTomlSerializer.DefaultOptions);
+        action(ref writer);
+    }
+
+    public static long WithBufferWriter(IBufferWriter<byte> bufferWriter, WriterAction action)
+    {
+        InlineArray4<TomlDottedKey> initialKeys = default;
+        ref InlineArray4<TomlDottedKey> initialKeysRef = ref Unsafe.AsRef(in initialKeys);
+        TempList<TomlDottedKey> keyList = new(initialKeysRef);
+
+        InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStates = default;
+        ref InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStatesRef = ref Unsafe.AsRef(in initialStates);
+        TempList<(TomlValueState state, int dottedKeyIndex)> stateList = new(initialStatesRef);
+
+        var writer = new Utf8TomlDocumentWriter(new WriterBufferSource(bufferWriter), in keyList, in stateList, false, CsTomlSerializer.DefaultOptions);
+        try
+        {
+            action(ref writer);
+        }
+        finally
+        {
+            writer.Flush();
+        }
+        return writer.WrittenSize;
+    }
+
+    public static long SerializeToFixedSpan<T>(Span<byte> destination, T value, bool valueOnly)
+    {
+        long writtenSize = 0;
+        WithFixedSpan(destination, valueOnly, (ref Utf8TomlDocumentWriter writer) =>
+        {
+            try
+            {
+                if (value is TomlDocument document)
+                {
+                    document.ToTomlString(ref writer);
+                }
+                else
+                {
+                    CsTomlSerializer.DefaultOptions.Resolver.GetFormatter<T>()!.Serialize(ref writer, value, CsTomlSerializer.DefaultOptions);
+                }
+            }
+            finally
+            {
+                writtenSize = writer.WrittenSize;
+            }
+        });
+        return writtenSize;
     }
 }
 
@@ -135,4 +290,75 @@ internal struct ValueBufferWriter(byte[] buffer) : IBufferWriter<byte>
     public readonly Memory<byte> GetMemory(int sizeHint = 0) => scratch;
 
     public readonly Span<byte> GetSpan(int sizeHint = 0) => scratch;
+}
+
+internal sealed class StrictBufferWriter(int minimumSpanLength) : IBufferWriter<byte>
+{
+    private const byte Poison = 0xCC;
+
+    private readonly ArrayBufferWriter<byte> output = new();
+    private readonly List<byte[]> released = [];
+    private byte[]? current;
+    private bool lastCallWasGetSpan;
+
+    public ReadOnlySpan<byte> WrittenSpan => output.WrittenSpan;
+
+    public int GetSpanCount { get; private set; }
+
+    public void Advance(int count)
+    {
+        VerifyReleased();
+        if (current is null)
+        {
+            throw new InvalidOperationException("Advance was called without a preceding GetSpan.");
+        }
+        if ((uint)count > (uint)current.Length)
+        {
+            throw new InvalidOperationException("Advance was called past the end of the span.");
+        }
+
+        output.Write(current.AsSpan(0, count));
+        current.AsSpan().Fill(Poison);
+        released.Add(current);
+        current = null;
+        lastCallWasGetSpan = false;
+    }
+
+    public Memory<byte> GetMemory(int sizeHint = 0)
+        => throw new NotSupportedException();
+
+    public Span<byte> GetSpan(int sizeHint = 0)
+    {
+        VerifyReleased();
+        if (current is not null)
+        {
+            current.AsSpan().Fill(Poison);
+            released.Add(current);
+        }
+
+        GetSpanCount++;
+        current = new byte[Math.Max(sizeHint, minimumSpanLength)];
+        lastCallWasGetSpan = true;
+        return current;
+    }
+
+    public void Verify()
+    {
+        VerifyReleased();
+        if (lastCallWasGetSpan)
+        {
+            throw new InvalidOperationException("GetSpan was called after the last Advance.");
+        }
+    }
+
+    private void VerifyReleased()
+    {
+        foreach (var span in released)
+        {
+            if (span.AsSpan().ContainsAnyExcept(Poison))
+            {
+                throw new InvalidOperationException("A span was written after Advance or a later GetSpan.");
+            }
+        }
+    }
 }

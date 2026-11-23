@@ -191,7 +191,7 @@ partial class CsTomlClass : ITomlSerializedObject<CsTomlClass?>
         return target;
     }
 
-    static void ITomlSerializedObject<CsTomlClass?>.Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, CsTomlClass? target, CsTomlSerializerOptions options)
+    static void ITomlSerializedObject<CsTomlClass?>.Serialize(ref Utf8TomlDocumentWriter writer, CsTomlClass? target, CsTomlSerializerOptions options)
     {
         if (target == null) ThrowIfNull(nameof(target));
 
@@ -368,7 +368,7 @@ partial class TableClass : ITomlSerializedObject<TableClass?>
         return target;
     }
 
-    static void ITomlSerializedObject<TableClass?>.Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TableClass? target, CsTomlSerializerOptions options)
+    static void ITomlSerializedObject<TableClass?>.Serialize(ref Utf8TomlDocumentWriter writer, TableClass? target, CsTomlSerializerOptions options)
     {
         if (target == null) ThrowIfNull(nameof(target));
 
@@ -1008,8 +1008,7 @@ public class CustomFormatter : ITomlValueFormatter<Custom>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Custom target, CsTomlSerializerOptions options)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    public void Serialize(ref Utf8TomlDocumentWriter writer, Custom target, CsTomlSerializerOptions options)
     {
         writer.WriteInt64(target.Value);
     }
@@ -1103,7 +1102,7 @@ Serialize API
 
 ```csharp
 ByteMemoryResult Serialize<T>(T target, CsTomlSerializerOptions? options = null)
-void Serialize<TBufferWriter, T>(ref TBufferWriter bufferWriter, T target, CsTomlSerializerOptions? options = null)
+void Serialize<T>(IBufferWriter<byte> bufferWriter, T target, CsTomlSerializerOptions? options = null)
 void Serialize<T>(Stream stream, T value, CsTomlSerializerOptions? options = null)
 ValueTask SerializeAsync<T>(Stream stream, T value, CsTomlSerializerOptions? options = null, bool configureAwait = false, CancellationToken cancellationToken = default)
 ```
@@ -1113,7 +1112,7 @@ If `Span<byte>` or `Memory<byte>` is required, API that returns a `ByteMemoryRes
 
 ```csharp
 var bufferWriter = new ArrayBufferWriter<byte>();
-CsTomlSerializer.Serialize(ref bufferWriter, document);
+CsTomlSerializer.Serialize(bufferWriter, document);
 
 // The first is obtained by ByteMemoryResult.
 using var result = CsTomlSerializer.Serialize(document);
@@ -1140,7 +1139,7 @@ The object can be used with the type listed in [Built-in support type](#built-in
 T DeserializeValueType<T>(ReadOnlySpan<byte> tomlText, CsTomlSerializerOptions? options = null)
 T DeserializeValueType<T>(ReadOnlySequence<byte> tomlSequence, CsTomlSerializerOptions? options = null)
 ByteMemoryResult SerializeValueType<T>(T target, CsTomlSerializerOptions? options = null)
-void SerializeValueType<TBufferWriter, T>(ref TBufferWriter bufferWriter, T target, CsTomlSerializerOptions? options = null)
+void SerializeValueType<T>(IBufferWriter<byte> bufferWriter, T target, CsTomlSerializerOptions? options = null)
 ```
 
 ```csharp

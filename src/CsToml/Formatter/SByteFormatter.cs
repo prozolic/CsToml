@@ -23,8 +23,7 @@ internal sealed class SByteFormatter : ITomlValueFormatter<sbyte>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, sbyte target, CsTomlSerializerOptions options)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    public void Serialize(ref Utf8TomlDocumentWriter writer, sbyte target, CsTomlSerializerOptions options)
     {
         writer.WriteInt64(target);
     }
@@ -49,8 +48,7 @@ internal sealed class NullableSByteFormatter : ITomlValueFormatter<sbyte?>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, sbyte? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    public void Serialize(ref Utf8TomlDocumentWriter writer, sbyte? target, CsTomlSerializerOptions options)
     {
         if (target.HasValue)
         {

@@ -30,7 +30,7 @@ public sealed class PriorityQueueFormatter<TElement, TPriority> : ITomlValueForm
         return default!;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, PriorityQueue<TElement, TPriority> target, CsTomlSerializerOptions options) where TBufferWriter : IUtf8Writer, allows ref struct
+    public void Serialize(ref Utf8TomlDocumentWriter writer, PriorityQueue<TElement, TPriority> target, CsTomlSerializerOptions options)
     {
         if (target == null)
         {

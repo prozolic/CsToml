@@ -14,7 +14,7 @@ internal sealed partial class TomlLocalTime(TimeOnly value) : TomlValue
 
     public override TomlValueType Type => TomlValueType.LocalTime;
 
-    internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+    internal override void ToTomlString(ref Utf8TomlDocumentWriter writer)
     {
         writer.WriteTimeOnly(Value);
     }

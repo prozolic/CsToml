@@ -42,8 +42,7 @@ internal sealed class HashtableFormatter : ITomlValueFormatter<Hashtable>
         }
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Hashtable target, CsTomlSerializerOptions options)
-            where TBufferWriter : IUtf8Writer, allows ref struct
+    public void Serialize(ref Utf8TomlDocumentWriter writer, Hashtable target, CsTomlSerializerOptions options)
     {
         if (target == null)
         {

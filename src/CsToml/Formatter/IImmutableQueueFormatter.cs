@@ -24,7 +24,7 @@ public sealed class IImmutableQueueFormatter<T> : CollectionBaseFormatter<IImmut
         return new Queue<T>(capacity);
     }
 
-    protected override void SerializeCollection<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, IImmutableQueue<T> target, CsTomlSerializerOptions options)
+    protected override void SerializeCollection(ref Utf8TomlDocumentWriter writer, IImmutableQueue<T> target, CsTomlSerializerOptions options)
     {
         if (target is ImmutableQueue<T> immQueueTarget)
         {
@@ -93,7 +93,7 @@ public sealed class IImmutableQueueFormatter<T> : CollectionBaseFormatter<IImmut
         }
     }
 
-    protected override bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, IImmutableQueue<T> target, CsTomlSerializerOptions options)
+    protected override bool TrySerializeTomlArrayHeaderStyle(ref Utf8TomlDocumentWriter writer, ReadOnlySpan<byte> header, IImmutableQueue<T> target, CsTomlSerializerOptions options)
     {
         if (target.IsEmpty)
         {

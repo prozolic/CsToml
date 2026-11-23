@@ -23,8 +23,7 @@ internal sealed class Int32Formatter : ITomlValueFormatter<int>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, int target, CsTomlSerializerOptions options)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    public void Serialize(ref Utf8TomlDocumentWriter writer, int target, CsTomlSerializerOptions options)
     {
         writer.WriteInt64(target);
     }
@@ -49,8 +48,7 @@ internal sealed class NullableInt32Formatter : ITomlValueFormatter<int?>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, int? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    public void Serialize(ref Utf8TomlDocumentWriter writer, int? target, CsTomlSerializerOptions options)
     {
         if (target.HasValue)
         {

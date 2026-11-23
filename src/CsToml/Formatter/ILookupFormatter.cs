@@ -22,12 +22,12 @@ public sealed class ILookupFormatter<TKey, TValue> : CollectionBaseFormatter<ILo
         return new(capacity);
     }
 
-    protected override void SerializeCollection<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ILookup<TKey, TValue> target, CsTomlSerializerOptions options)
+    protected override void SerializeCollection(ref Utf8TomlDocumentWriter writer, ILookup<TKey, TValue> target, CsTomlSerializerOptions options)
     {
         IEnumerableSerializer<IGrouping<TKey, TValue>>.Serialize(ref writer, target, options);
     }
 
-    protected override bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, ILookup<TKey, TValue> target, CsTomlSerializerOptions options)
+    protected override bool TrySerializeTomlArrayHeaderStyle(ref Utf8TomlDocumentWriter writer, ReadOnlySpan<byte> header, ILookup<TKey, TValue> target, CsTomlSerializerOptions options)
     {
         return IEnumerableSerializer<IGrouping<TKey, TValue>>.TrySerializeTomlArrayHeaderStyle(ref writer, header, target, options);
     }

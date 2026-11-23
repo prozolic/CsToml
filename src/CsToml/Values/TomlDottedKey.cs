@@ -26,7 +26,7 @@ internal sealed class TomlUnquotedDottedKey : TomlDottedKey, ITomlStringParser<T
         return new TomlUnquotedDottedKey(value);
     }
 
-    internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+    internal override void ToTomlString(ref Utf8TomlDocumentWriter writer)
     {
         if (Value.Length > 0)
         {
@@ -55,7 +55,7 @@ internal sealed class TomlBasicDottedKey : TomlDottedKey, ITomlStringParser<Toml
         return new TomlBasicDottedKey(value);
     }
 
-    internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+    internal override void ToTomlString(ref Utf8TomlDocumentWriter writer)
     {
         TomlBasicString.ToTomlBasicString(ref writer, Value);
     }
@@ -81,7 +81,7 @@ internal sealed class TomlLiteralDottedKey : TomlDottedKey, ITomlStringParser<To
         return new TomlLiteralDottedKey(value);
     }
 
-    internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+    internal override void ToTomlString(ref Utf8TomlDocumentWriter writer)
     {
         TomlLiteralString.ToTomlLiteralString(ref writer, Value);
     }
@@ -172,7 +172,7 @@ internal static class TomlDottedKeyExtensions
         ref InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStatesRef = ref Unsafe.AsRef(in initialStates);
         TempList<(TomlValueState state, int dottedKeyIndex)> stateList = new(initialStatesRef);
 
-        var writer = new Utf8TomlDocumentWriter<Utf8ArrayPoolWriter>(new Utf8ArrayPoolWriter(1024), in keyList, in stateList, false, CsTomlSerializerOptions.Default);
+        var writer = new Utf8TomlDocumentWriter(new ArrayPoolBufferSource(1024), in keyList, in stateList, false, CsTomlSerializerOptions.Default);
         try
         {
             for (int i = 0; i < key.Length; i++)
@@ -182,11 +182,11 @@ internal static class TomlDottedKeyExtensions
                     writer.Write(TomlCodes.Symbol.DOT);
             }
 
-            return Utf8Helper.ToUtf16(writer.BufferWriter.WrittenSpan);
+            return Utf8Helper.ToUtf16(writer.WrittenSpan);
         }
         finally
         {
-            writer.BufferWriter.Dispose();
+            writer.Dispose();
         }
     }
 }

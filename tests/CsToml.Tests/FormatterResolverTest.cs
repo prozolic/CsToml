@@ -12,8 +12,7 @@ public class FormatterResolverTest
         public object Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
             => throw new NotSupportedException();
 
-        public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, object target, CsTomlSerializerOptions options)
-            where TBufferWriter : IUtf8Writer, allows ref struct
+        public void Serialize(ref Utf8TomlDocumentWriter writer, object target, CsTomlSerializerOptions options)
             => throw new NotSupportedException();
     }
 
@@ -22,8 +21,7 @@ public class FormatterResolverTest
         public int Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
             => throw new NotSupportedException();
 
-        public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, int target, CsTomlSerializerOptions options)
-            where TBufferWriter : IUtf8Writer, allows ref struct
+        public void Serialize(ref Utf8TomlDocumentWriter writer, int target, CsTomlSerializerOptions options)
             => throw new NotSupportedException();
     }
 
@@ -34,8 +32,7 @@ public class FormatterResolverTest
         public Marker Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
             => throw new NotSupportedException();
 
-        public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Marker target, CsTomlSerializerOptions options)
-            where TBufferWriter : IUtf8Writer, allows ref struct
+        public void Serialize(ref Utf8TomlDocumentWriter writer, Marker target, CsTomlSerializerOptions options)
             => throw new NotSupportedException();
     }
 
@@ -46,8 +43,7 @@ public class FormatterResolverTest
         public LateMarker Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
             => throw new NotSupportedException();
 
-        public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, LateMarker target, CsTomlSerializerOptions options)
-            where TBufferWriter : IUtf8Writer, allows ref struct
+        public void Serialize(ref Utf8TomlDocumentWriter writer, LateMarker target, CsTomlSerializerOptions options)
             => throw new NotSupportedException();
     }
 
@@ -65,8 +61,7 @@ public class FormatterResolverTest
         public LazyMarker Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
             => throw new NotSupportedException();
 
-        public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, LazyMarker target, CsTomlSerializerOptions options)
-            where TBufferWriter : IUtf8Writer, allows ref struct
+        public void Serialize(ref Utf8TomlDocumentWriter writer, LazyMarker target, CsTomlSerializerOptions options)
             => throw new NotSupportedException();
     }
 
@@ -82,8 +77,7 @@ public class FormatterResolverTest
         public int Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
             => throw new NotSupportedException();
 
-        public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, int target, CsTomlSerializerOptions options)
-            where TBufferWriter : IUtf8Writer, allows ref struct
+        public void Serialize(ref Utf8TomlDocumentWriter writer, int target, CsTomlSerializerOptions options)
             => throw new NotSupportedException();
     }
 
@@ -174,8 +168,7 @@ public class FormatterResolverTest
         public BeginMarker Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
             => throw new NotSupportedException();
 
-        public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, BeginMarker target, CsTomlSerializerOptions options)
-            where TBufferWriter : IUtf8Writer, allows ref struct
+        public void Serialize(ref Utf8TomlDocumentWriter writer, BeginMarker target, CsTomlSerializerOptions options)
             => throw new NotSupportedException();
     }
 
@@ -208,8 +201,7 @@ public class FormatterResolverTest
         public RootMarker Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
             => Value;
 
-        public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, RootMarker target, CsTomlSerializerOptions options)
-            where TBufferWriter : IUtf8Writer, allows ref struct
+        public void Serialize(ref Utf8TomlDocumentWriter writer, RootMarker target, CsTomlSerializerOptions options)
             => writer.WriteBytes("root = true"u8);
     }
 

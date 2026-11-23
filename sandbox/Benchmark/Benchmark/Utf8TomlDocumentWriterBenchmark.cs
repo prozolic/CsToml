@@ -25,7 +25,11 @@ public class Utf8TomlDocumentWriterBenchmark
     public string WriteString()
     {
         var bufferWriter = new ArrayBufferWriter<byte>();
+#if NUGET_CSTOML
         CsTomlSerializer.Serialize(ref bufferWriter, stringObject);
+#else
+        CsTomlSerializer.Serialize(bufferWriter, stringObject);
+#endif
         return utf8.GetString(bufferWriter.WrittenSpan);
     }
 }

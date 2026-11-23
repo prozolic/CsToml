@@ -23,21 +23,21 @@ public enum TomlValueState
 }
 
 [StructLayout(LayoutKind.Auto)]
-public ref struct Utf8TomlDocumentWriter<TBufferWriter>
-    where TBufferWriter : IUtf8Writer, allows ref struct
+public ref struct Utf8TomlDocumentWriter
 {
-    private TBufferWriter writer;
-    private readonly long start;
+    private Span<byte> buffer;
+    private int position;
+    private ArrayPoolBufferSource arrayPoolSource;
+    private WriterBufferSource writerSource;
     private TempList<TomlDottedKey> dottedKeys;
     private TempList<(TomlValueState state, int dottedKeyIndex)> valueStates;
     private int arrayOfTableDepth;
     private readonly bool valueOnly;
     private readonly CsTomlSerializerOptions options;
 
-    internal long WrittenSize => writer.WrittenLength - start;
+    internal readonly long WrittenSize => writerSource.CommittedLength + position;
 
-    [UnscopedRef]
-    internal ref TBufferWriter BufferWriter => ref writer;
+    internal readonly ReadOnlySpan<byte> WrittenSpan => buffer.Slice(0, position);
 
     internal readonly (TomlValueState state, int dottedKeyIndex) CurrentPreviousState => valueStates[^2];
 
@@ -48,19 +48,125 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
     public readonly bool IsRoot => valueStates.Count == 1 && !valueOnly;
 
     internal Utf8TomlDocumentWriter(
-        TBufferWriter bufferWriter,
+        ArrayPoolBufferSource arrayPoolSource,
         scoped in TempList<TomlDottedKey> dottedKeys,
         scoped in TempList<(TomlValueState state, int dottedKeyIndex)> valueStates,
         bool valueOnly,
         CsTomlSerializerOptions? options)
     {
-        writer = bufferWriter;
-        start = bufferWriter.WrittenLength;
+        this.arrayPoolSource = arrayPoolSource;
+        buffer = arrayPoolSource.Buffer;
         this.dottedKeys = dottedKeys;
         this.valueStates = valueStates;
         this.valueStates.Add((TomlValueState.Default, -1));
         this.valueOnly = valueOnly;
         this.options = options ?? CsTomlSerializerOptions.Default;
+    }
+
+    internal Utf8TomlDocumentWriter(
+        WriterBufferSource writerSource,
+        scoped in TempList<TomlDottedKey> dottedKeys,
+        scoped in TempList<(TomlValueState state, int dottedKeyIndex)> valueStates,
+        bool valueOnly,
+        CsTomlSerializerOptions? options)
+    {
+        this.writerSource = writerSource;
+        this.dottedKeys = dottedKeys;
+        this.valueStates = valueStates;
+        this.valueStates.Add((TomlValueState.Default, -1));
+        this.valueOnly = valueOnly;
+        this.options = options ?? CsTomlSerializerOptions.Default;
+    }
+
+    internal Utf8TomlDocumentWriter(
+        Span<byte> destination,
+        scoped in TempList<TomlDottedKey> dottedKeys,
+        scoped in TempList<(TomlValueState state, int dottedKeyIndex)> valueStates,
+        bool valueOnly,
+        CsTomlSerializerOptions? options)
+    {
+        buffer = destination;
+        this.dottedKeys = dottedKeys;
+        this.valueStates = valueStates;
+        this.valueStates.Add((TomlValueState.Default, -1));
+        this.valueOnly = valueOnly;
+        this.options = options ?? CsTomlSerializerOptions.Default;
+    }
+
+    internal void Flush()
+    {
+        if (!writerSource.IsActive) return;
+
+        var pos = position;
+        buffer = default;
+        position = 0;
+        writerSource.Commit(pos);
+    }
+
+    internal void Dispose()
+    {
+        buffer = default;
+        position = 0;
+        arrayPoolSource.Dispose();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal Span<byte> GetWrittenSpan(int length)
+    {
+        var pos = position;
+        if ((uint)length > (uint)(buffer.Length - pos))
+        {
+            Grow(length);
+            pos = position;
+        }
+
+        position = pos + length;
+        return MemoryMarshal.CreateSpan(ref Unsafe.Add(ref MemoryMarshal.GetReference(buffer), (nint)(uint)pos), length);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal Span<byte> GetSpan(int sizeHint)
+    {
+        if (sizeHint == 0)
+        {
+            sizeHint = 1;
+        }
+
+        var pos = position;
+        if ((uint)sizeHint > (uint)(buffer.Length - pos))
+        {
+            Grow(sizeHint);
+            pos = position;
+        }
+
+        return MemoryMarshal.CreateSpan(ref Unsafe.Add(ref MemoryMarshal.GetReference(buffer), (nint)(uint)pos), buffer.Length - pos);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void Advance(int count)
+    {
+        var pos = position;
+        if ((uint)count > (uint)(buffer.Length - pos))
+        {
+            ExceptionHelper.ThrowInvalidAdvance();
+        }
+
+        position = pos + count;
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void Grow(int sizeHint)
+    {
+        if (writerSource.IsActive)
+        {
+            var pos = position;
+            buffer = default;
+            position = 0;
+            buffer = writerSource.Next(pos, sizeHint);
+            return;
+        }
+
+        buffer = arrayPoolSource.Grow(position, sizeHint);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -173,7 +279,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
         var length = TomlCodes.Number.CountDigitsForInt64(value);
         if (value < 0) length++;
 
-        value.TryFormat(writer.GetWrittenSpan(length), out int bytesWritten, null, CultureInfo.InvariantCulture);
+        value.TryFormat(GetWrittenSpan(length), out int bytesWritten, null, CultureInfo.InvariantCulture);
     }
 
     internal void WriteInt64InBinaryFormat(long value)
@@ -187,7 +293,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
         WriteBytes("0b"u8);
 
         int digits = 64 - BitOperations.LeadingZeroCount((ulong)value);
-        var writtenSpan = writer.GetWrittenSpan(digits);
+        var writtenSpan = GetWrittenSpan(digits);
         var index = digits - 1;
 
         while (value > 0)
@@ -210,7 +316,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
 
         int bitLength = 64 - BitOperations.LeadingZeroCount((ulong)value);
         var digits = (bitLength + 2) / 3;
-        var writtenSpan = writer.GetWrittenSpan(digits);
+        var writtenSpan = GetWrittenSpan(digits);
         var index = digits - 1;
 
         while (value > 0)
@@ -233,7 +339,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
 
         int bitLength = 64 - BitOperations.LeadingZeroCount((ulong)value);
         var digits = (bitLength + 3) / 4;
-        var writtenSpan = writer.GetWrittenSpan(digits);
+        var writtenSpan = GetWrittenSpan(digits);
         var index = digits - 1;
 
         while (value > 0)
@@ -263,19 +369,19 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
                 var length = 32;
                 int bytesWritten;
 
-                var writtenSpan = writer.GetSpan(0);
+                var writtenSpan = GetSpan(0);
                 while (!value.TryFormat(writtenSpan, out bytesWritten, "G", CultureInfo.InvariantCulture))
                 {
-                    writtenSpan = writer.GetSpan(length);
+                    writtenSpan = GetSpan(length);
                     length *= 2;
                 }
 
                 var needsDotZero = !writtenSpan.Slice(0, bytesWritten).ContainsAny(ExponentialBytes);
-                writer.Advance(bytesWritten);
+                Advance(bytesWritten);
 
                 if (needsDotZero)
                 {
-                    var writtenSpanEx = writer.GetWrittenSpan(2);
+                    var writtenSpanEx = GetWrittenSpan(2);
                     writtenSpanEx[0] = TomlCodes.Symbol.DOT;
                     writtenSpanEx[1] = TomlCodes.Number.Zero;
                 }
@@ -287,13 +393,13 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
     {
         var length = 64;
         int bytesWritten;
-        var writtenSpan = writer.GetSpan(0);
+        var writtenSpan = GetSpan(0);
         while (!value.TryFormat(writtenSpan, out bytesWritten, default, CultureInfo.InvariantCulture))
         {
-            writtenSpan = writer.GetSpan(length);
+            writtenSpan = GetSpan(length);
             length *= 2;
         }
-        writer.Advance(bytesWritten);
+        Advance(bytesWritten);
     }
 
 #if NET11_0_OR_GREATER
@@ -315,10 +421,10 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
 
         var length = 64;
         int bytesWritten;
-        var writtenSpan = writer.GetSpan(0);
+        var writtenSpan = GetSpan(0);
         while (!value.TryFormat(writtenSpan, out bytesWritten, default, CultureInfo.InvariantCulture))
         {
-            writtenSpan = writer.GetSpan(length);
+            writtenSpan = GetSpan(length);
             length *= 2;
         }
 
@@ -328,11 +434,11 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
         var needsDotZero = bytesWritten > 18 &&
             !written.ContainsAny(ExponentialBytes) &&
             !long.TryParse(written, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out _);
-        writer.Advance(bytesWritten);
+        Advance(bytesWritten);
 
         if (needsDotZero)
         {
-            var writtenSpanEx = writer.GetWrittenSpan(2);
+            var writtenSpanEx = GetWrittenSpan(2);
             writtenSpanEx[0] = TomlCodes.Symbol.DOT;
             writtenSpanEx[1] = TomlCodes.Number.Zero;
         }
@@ -618,7 +724,7 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
 
     public void WriteDateOnly(DateOnly value)
     {
-        value.TryFormat(writer.GetWrittenSpan(TomlCodes.DateTime.LocalDateFormatLength), out int bytesWritten, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+        value.TryFormat(GetWrittenSpan(TomlCodes.DateTime.LocalDateFormatLength), out int bytesWritten, "yyyy-MM-dd", CultureInfo.InvariantCulture);
     }
 
     public void WriteTimeOnly(TimeOnly value)
@@ -691,33 +797,33 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
     {
         var length = 32;
         int bytesWritten;
-        Span<byte> buffer = writer.GetSpan(0);
-        while (!value.TryFormat(buffer, out bytesWritten, format, CultureInfo.InvariantCulture))
+        var span = GetSpan(0);
+        while (!value.TryFormat(span, out bytesWritten, format, CultureInfo.InvariantCulture))
         {
-            buffer = writer.GetSpan(length);
+            span = GetSpan(length);
             length *= 2;
         }
 
-        writer.Advance(bytesWritten);
+        Advance(bytesWritten);
     }
 
     private void WriteDateTimeCore(DateTime value, ReadOnlySpan<char> format)
     {
         var length = 32;
         int bytesWritten;
-        var buffer = writer.GetSpan(0);
-        while (!value.TryFormat(buffer, out bytesWritten, format, CultureInfo.InvariantCulture))
+        var span = GetSpan(0);
+        while (!value.TryFormat(span, out bytesWritten, format, CultureInfo.InvariantCulture))
         {
-            buffer = writer.GetSpan(length);
+            span = GetSpan(length);
             length *= 2;
         }
 
-        writer.Advance(bytesWritten);
+        Advance(bytesWritten);
     }
 
     private void WriteTimeOnlyCore(TimeOnly value, ReadOnlySpan<char> format)
     {
-        value.TryFormat(writer.GetWrittenSpan(format.Length), out var bytesWritten, format, CultureInfo.InvariantCulture);
+        value.TryFormat(GetWrittenSpan(format.Length), out var bytesWritten, format, CultureInfo.InvariantCulture);
     }
 
     private void WriteDottedKeyPrefix()
@@ -1056,8 +1162,15 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
     {
         if (bytes.Length == 0) return;
 
-        var destination = writer.GetWrittenSpan(bytes.Length);
-        bytes.CopyTo(destination);
+        var pos = position;
+        if ((uint)bytes.Length > (uint)(buffer.Length - pos))
+        {
+            Grow(bytes.Length);
+            pos = position;
+        }
+
+        bytes.CopyTo(MemoryMarshal.CreateSpan(ref Unsafe.Add(ref MemoryMarshal.GetReference(buffer), (nint)(uint)pos), bytes.Length));
+        position = pos + bytes.Length;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1077,8 +1190,18 @@ public ref struct Utf8TomlDocumentWriter<TBufferWriter>
         => WriteBytes(", "u8);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void Write(byte @byte)
-        => writer.GetWrittenSpan(1).At(0) = @byte;
+    internal void Write(byte value)
+    {
+        var pos = position;
+        if ((uint)pos >= (uint)buffer.Length)
+        {
+            Grow(1);
+            pos = position;
+        }
+
+        Unsafe.Add(ref MemoryMarshal.GetReference(buffer), (nint)(uint)pos) = value;
+        position = pos + 1;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BeginArray()

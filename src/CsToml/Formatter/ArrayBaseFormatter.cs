@@ -31,7 +31,7 @@ public abstract class ArrayBaseFormatter<TArray, TElement> : ITomlValueFormatter
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TArray? target, CsTomlSerializerOptions options) where TBufferWriter : IUtf8Writer, allows ref struct
+    public void Serialize(ref Utf8TomlDocumentWriter writer, TArray? target, CsTomlSerializerOptions options)
     {
         if (target == null)
         {
@@ -65,7 +65,7 @@ public abstract class ArrayBaseFormatter<TArray, TElement> : ITomlValueFormatter
         writer.EndArray();
     }
 
-    bool ITomlArrayHeaderFormatter<TArray?>.TrySerialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, TArray? target, CsTomlSerializerOptions options)
+    bool ITomlArrayHeaderFormatter<TArray?>.TrySerialize(ref Utf8TomlDocumentWriter writer, ReadOnlySpan<byte> header, TArray? target, CsTomlSerializerOptions options)
     {
         if (target == null)
         {

@@ -21,7 +21,7 @@ public sealed class IReadOnlyCollectionFormatter<T> : CollectionBaseFormatter<IR
         return new List<T>(capacity);
     }
 
-    protected override void SerializeCollection<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, IReadOnlyCollection<T> target, CsTomlSerializerOptions options)
+    protected override void SerializeCollection(ref Utf8TomlDocumentWriter writer, IReadOnlyCollection<T> target, CsTomlSerializerOptions options)
     {
         if (target.GetType() == typeof(T[]))
         {
@@ -45,7 +45,7 @@ public sealed class IReadOnlyCollectionFormatter<T> : CollectionBaseFormatter<IR
         }
     }
 
-    protected override bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, IReadOnlyCollection<T> target, CsTomlSerializerOptions options)
+    protected override bool TrySerializeTomlArrayHeaderStyle(ref Utf8TomlDocumentWriter writer, ReadOnlySpan<byte> header, IReadOnlyCollection<T> target, CsTomlSerializerOptions options)
     {
         if (target.GetType() == typeof(T[]))
         {

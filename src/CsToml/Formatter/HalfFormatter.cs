@@ -27,8 +27,7 @@ internal sealed class HalfFormatter : ITomlValueFormatter<Half>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Half target, CsTomlSerializerOptions options)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    public void Serialize(ref Utf8TomlDocumentWriter writer, Half target, CsTomlSerializerOptions options)
     {
         writer.WriteDouble((double)target);
     }
@@ -58,8 +57,7 @@ internal sealed class NullableHalfFormatter : ITomlValueFormatter<Half?>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Half? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    public void Serialize(ref Utf8TomlDocumentWriter writer, Half? target, CsTomlSerializerOptions options)
     {
         if (target.HasValue)
         {

@@ -54,8 +54,7 @@ internal sealed class DateTimeOffsetFormatter : ITomlValueFormatter<DateTimeOffs
         }
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, DateTimeOffset target, CsTomlSerializerOptions options)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    public void Serialize(ref Utf8TomlDocumentWriter writer, DateTimeOffset target, CsTomlSerializerOptions options)
     {
         writer.WriteDateTimeOffset(target);
     }
@@ -80,8 +79,7 @@ internal sealed class NullableDateTimeOffsetFormatter : ITomlValueFormatter<Date
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, DateTimeOffset? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    public void Serialize(ref Utf8TomlDocumentWriter writer, DateTimeOffset? target, CsTomlSerializerOptions options)
     {
         if (target.HasValue)
         {

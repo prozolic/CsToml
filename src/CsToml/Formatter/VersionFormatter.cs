@@ -25,8 +25,7 @@ internal sealed class VersionFormatter : ITomlValueFormatter<Version?>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Version? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    public void Serialize(ref Utf8TomlDocumentWriter writer, Version? target, CsTomlSerializerOptions options)
     {
         if (target != null)
         {

@@ -119,8 +119,7 @@ public partial class CsTomlFileSerializer
             directory.Create();
 
         using var bufferWriter = new ByteBufferSegmentWriter();
-        var tempWriter = bufferWriter;
-        CsTomlSerializer.Serialize<ByteBufferSegmentWriter, T>(ref tempWriter, value, options);
+        CsTomlSerializer.Serialize<T>(bufferWriter, value, options);
 
         using var tomlFileHandle = File.OpenHandle(tomlFilePath, FileMode.Create, FileAccess.ReadWrite, options: FileOptions.Asynchronous);
         var fileWriter = new RandomAccessFileWriter(tomlFileHandle);
@@ -144,8 +143,7 @@ public partial class CsTomlFileSerializer
         cancellationToken.ThrowIfCancellationRequested();
 
         using var bufferWriter = new ByteBufferSegmentWriter();
-        var tempWriter = bufferWriter;
-        CsTomlSerializer.Serialize<ByteBufferSegmentWriter, T>(ref tempWriter, value, options);
+        CsTomlSerializer.Serialize<T>(bufferWriter, value, options);
 
         using var tomlFileHandle = File.OpenHandle(tomlFilePath, FileMode.Create, FileAccess.ReadWrite, options: FileOptions.Asynchronous);
         var fileWriter = new RandomAccessFileWriter(tomlFileHandle);

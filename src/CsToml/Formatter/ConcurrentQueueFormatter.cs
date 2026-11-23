@@ -19,12 +19,12 @@ public sealed class ConcurrentQueueFormatter<T> : CollectionBaseFormatter<Concur
         return new ConcurrentQueue<T>();
     }
 
-    protected override void SerializeCollection<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ConcurrentQueue<T> target, CsTomlSerializerOptions options)
+    protected override void SerializeCollection(ref Utf8TomlDocumentWriter writer, ConcurrentQueue<T> target, CsTomlSerializerOptions options)
     {
         IEnumerableSerializer<T>.Serialize(ref writer, target, options);
     }
 
-    protected override bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, ConcurrentQueue<T> target, CsTomlSerializerOptions options)
+    protected override bool TrySerializeTomlArrayHeaderStyle(ref Utf8TomlDocumentWriter writer, ReadOnlySpan<byte> header, ConcurrentQueue<T> target, CsTomlSerializerOptions options)
     {
         return IEnumerableSerializer<T>.TrySerializeTomlArrayHeaderStyle(ref writer, header, target, options);
     }

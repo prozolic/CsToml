@@ -50,7 +50,7 @@ internal partial class TomlArray : TomlValue, IEnumerable<TomlValue>
         return span;
     }
 
-    internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+    internal override void ToTomlString(ref Utf8TomlDocumentWriter writer)
     {
         writer.BeginArray();
         if (Count == 0)

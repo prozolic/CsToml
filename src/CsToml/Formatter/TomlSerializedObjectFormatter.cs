@@ -8,8 +8,7 @@ public sealed class TomlSerializedObjectFormatter<T> : ITomlValueFormatter<T?>
         return T.Deserialize(ref rootNode, options);
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, T? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    public void Serialize(ref Utf8TomlDocumentWriter writer, T? target, CsTomlSerializerOptions options)
     {
         T.Serialize(ref writer, target, options);
     }
@@ -23,7 +22,7 @@ public sealed class StructTomlSerializedObjectFormatter<T> : ITomlValueFormatter
         return T.Deserialize(ref rootNode, options);
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, T target, CsTomlSerializerOptions options) where TBufferWriter : IUtf8Writer, allows ref struct
+    public void Serialize(ref Utf8TomlDocumentWriter writer, T target, CsTomlSerializerOptions options)
     {
         T.Serialize(ref writer, target, options);
     }

@@ -4,11 +4,10 @@ public interface ITomlValueFormatter<T>
 {
     T Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options);
 
-    void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, T target, CsTomlSerializerOptions options)
-        where TBufferWriter : IUtf8Writer, allows ref struct;
+    void Serialize(ref Utf8TomlDocumentWriter writer, T target, CsTomlSerializerOptions options);
 }
 
 public interface ITomlArrayHeaderFormatter<TArray>
 {
-    bool TrySerialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, TArray target, CsTomlSerializerOptions options) where TBufferWriter : IUtf8Writer, allows ref struct;
+    bool TrySerialize(ref Utf8TomlDocumentWriter writer, ReadOnlySpan<byte> header, TArray target, CsTomlSerializerOptions options);
 }

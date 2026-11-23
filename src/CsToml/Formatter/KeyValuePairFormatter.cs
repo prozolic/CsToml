@@ -32,8 +32,7 @@ public sealed class KeyValuePairFormatter<TKey, TValue> : ITomlValueFormatter<Ke
         return default!;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, KeyValuePair<TKey, TValue> target, CsTomlSerializerOptions options)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    public void Serialize(ref Utf8TomlDocumentWriter writer, KeyValuePair<TKey, TValue> target, CsTomlSerializerOptions options)
     {
         writer.BeginArray();
         options.Resolver.GetFormatter<TKey>()!.Serialize(ref writer, target.Key, options);

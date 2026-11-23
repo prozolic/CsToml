@@ -18,7 +18,7 @@ public sealed class IImmutableSetFormatter<T> : CollectionBaseFormatter<IImmutab
         return new HashSet<T>(capacity);
     }
 
-    protected override void SerializeCollection<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, IImmutableSet<T> target, CsTomlSerializerOptions options)
+    protected override void SerializeCollection(ref Utf8TomlDocumentWriter writer, IImmutableSet<T> target, CsTomlSerializerOptions options)
     {
         if (target is ImmutableHashSet<T> immHashSetTarget)
         {
@@ -36,7 +36,7 @@ public sealed class IImmutableSetFormatter<T> : CollectionBaseFormatter<IImmutab
         }
     }
 
-    protected override bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, IImmutableSet<T> target, CsTomlSerializerOptions options)
+    protected override bool TrySerializeTomlArrayHeaderStyle(ref Utf8TomlDocumentWriter writer, ReadOnlySpan<byte> header, IImmutableSet<T> target, CsTomlSerializerOptions options)
     {
         if (target is ImmutableHashSet<T> immutableHashSet)
         {

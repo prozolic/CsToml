@@ -68,15 +68,15 @@ internal static class TomlDottedKeyHelper
         ref InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStatesRef = ref Unsafe.AsRef(in initialStates);
         TempList<(TomlValueState state, int dottedKeyIndex)> stateList = new(initialStatesRef);
 
-        var documentWriter = new Utf8TomlDocumentWriter<Utf8ArrayPoolWriter>(new Utf8ArrayPoolWriter(1024), in keyList, in stateList, false, options);
+        var documentWriter = new Utf8TomlDocumentWriter(new ArrayPoolBufferSource(1024), in keyList, in stateList, false, options);
         try
         {
             documentWriter.WriteKeyForPrimitive(value);
-            return new TomlUnquotedDottedKey(documentWriter.BufferWriter.WrittenSpan);
+            return new TomlUnquotedDottedKey(documentWriter.WrittenSpan);
         }
         finally
         {
-            documentWriter.BufferWriter.Dispose();
+            documentWriter.Dispose();
         }
     }
     public static TomlStringType GetTomlKeyType(ReadOnlySpan<byte> utf8String, bool supportsEscapeSequenceE, bool supportsEscapeSequenceX)

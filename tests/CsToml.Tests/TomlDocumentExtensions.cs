@@ -139,7 +139,7 @@ internal static class TomlDocumentExtensions
         ref InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStatesRef = ref Unsafe.AsRef(in initialStates);
         TempList<(TomlValueState state, int dottedKeyIndex)> stateList = new(initialStatesRef);
 
-        var writer = new Utf8TomlDocumentWriter<Utf8ArrayPoolWriter>(new Utf8ArrayPoolWriter(1024), in keyList, in stateList, false, CsTomlSerializerOptions.Default);
+        var writer = new Utf8TomlDocumentWriter(new ArrayPoolBufferSource(1024), in keyList, in stateList, false, CsTomlSerializerOptions.Default);
         try
         {
             if (tomlValue.Type == TomlValueType.Integer)
@@ -152,11 +152,11 @@ internal static class TomlDocumentExtensions
             {
                 tomlValue.ToTomlString(ref writer);
             }
-            return Encoding.UTF8.GetString(writer.BufferWriter.WrittenSpan);
+            return Encoding.UTF8.GetString(writer.WrittenSpan);
         }
         finally
         {
-            writer.BufferWriter.Dispose();
+            writer.Dispose();
         }
     }
 

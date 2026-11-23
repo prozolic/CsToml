@@ -1032,8 +1032,7 @@ public class SpecialHashFormatter : ITomlValueFormatter<SpecialHash>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, SpecialHash target, CsTomlSerializerOptions options)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    public void Serialize(ref Utf8TomlDocumentWriter writer, SpecialHash target, CsTomlSerializerOptions options)
     {
         writer.WriteInt64(target.Hash);
     }

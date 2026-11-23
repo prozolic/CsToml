@@ -20,7 +20,7 @@ public sealed class IImmutableListFormatter<T> : CollectionBaseFormatter<IImmuta
         return new List<T>(capacity);
     }
 
-    protected override void SerializeCollection<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, IImmutableList<T> target, CsTomlSerializerOptions options)
+    protected override void SerializeCollection(ref Utf8TomlDocumentWriter writer, IImmutableList<T> target, CsTomlSerializerOptions options)
     {
         if (target is ImmutableArray<T> immArrayTarget)
         {
@@ -33,7 +33,7 @@ public sealed class IImmutableListFormatter<T> : CollectionBaseFormatter<IImmuta
         }
     }
 
-    protected override bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, IImmutableList<T> target, CsTomlSerializerOptions options)
+    protected override bool TrySerializeTomlArrayHeaderStyle(ref Utf8TomlDocumentWriter writer, ReadOnlySpan<byte> header, IImmutableList<T> target, CsTomlSerializerOptions options)
     {
         if (target is ImmutableArray<T> immArrayTarget)
         {

@@ -13,8 +13,7 @@ public abstract partial class TomlValue :
 
     public abstract TomlValueType Type { get; }
 
-    internal virtual void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer) // Write TOML format.
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    internal virtual void ToTomlString(ref Utf8TomlDocumentWriter writer) // Write TOML format.
     {
         ExceptionHelper.ThrowNotSupported(nameof(ToTomlString));
     }

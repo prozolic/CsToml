@@ -20,7 +20,7 @@ internal sealed partial class TomlTable : TomlValue
         this.state = state;
     }
 
-    internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+    internal override void ToTomlString(ref Utf8TomlDocumentWriter writer)
     {
         InlineArray4<TomlDottedKey> initialKeys = default;
         ref InlineArray4<TomlDottedKey> initialKeysRef = ref Unsafe.AsRef(in initialKeys);
@@ -33,8 +33,7 @@ internal sealed partial class TomlTable : TomlValue
         ToTomlStringCore(ref writer, ref keyList, ref tableHeaderKeyList, WriteTarget.All);
     }
 
-    private bool ToTomlStringCore<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ref TempList<TomlDottedKey> keyList, ref TempList<TomlDottedKey> tableHeaderKeyList, WriteTarget target)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    private bool ToTomlStringCore(ref Utf8TomlDocumentWriter writer, ref TempList<TomlDottedKey> keyList, ref TempList<TomlDottedKey> tableHeaderKeyList, WriteTarget target)
     {
         var headerWritten = false;
         var first = 0;
@@ -134,8 +133,7 @@ internal sealed partial class TomlTable : TomlValue
     private static bool IsArrayOfTables(TomlValue value)
         => value is TomlTableArray || (value is TomlTable table && table.IsViaArrayOfTables);
 
-    private void WriteArrayOfTables<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlTableArray tableArray, ref TempList<TomlDottedKey> tableHeaderKeyList)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    private void WriteArrayOfTables(ref Utf8TomlDocumentWriter writer, TomlTableArray tableArray, ref TempList<TomlDottedKey> tableHeaderKeyList)
     {
         var skipNewLine = false;
         if (tableArray.CommentCount > 0)
@@ -167,8 +165,7 @@ internal sealed partial class TomlTable : TomlValue
         }
     }
 
-    private bool WriteChildTable<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, int index, ref TempList<TomlDottedKey> keyList, ref TempList<TomlDottedKey> tableHeaderKeyList, ref bool headerWritten, WriteTarget target)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    private bool WriteChildTable(ref Utf8TomlDocumentWriter writer, int index, ref TempList<TomlDottedKey> keyList, ref TempList<TomlDottedKey> tableHeaderKeyList, ref bool headerWritten, WriteTarget target)
     {
         var key = entries[index].key;
         var value = entries[index].value;
@@ -210,8 +207,7 @@ internal sealed partial class TomlTable : TomlValue
         return hasTable;
     }
 
-    private void WriteKeyValue<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, int index, ref TempList<TomlDottedKey> keyList, ref TempList<TomlDottedKey> tableHeaderKeyList, ref bool headerWritten)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    private void WriteKeyValue(ref Utf8TomlDocumentWriter writer, int index, ref TempList<TomlDottedKey> keyList, ref TempList<TomlDottedKey> tableHeaderKeyList, ref bool headerWritten)
     {
         var key = entries[index].key;
         var value = entries[index].value;
@@ -273,8 +269,7 @@ internal sealed partial class TomlTable : TomlValue
         }
     }
 
-    private void WriterKey<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlDottedKey key, bool isGroupingProperty)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    private void WriterKey(ref Utf8TomlDocumentWriter writer, TomlDottedKey key, bool isGroupingProperty)
     {
         key.ToTomlString(ref writer);
         if (isGroupingProperty)
@@ -283,8 +278,7 @@ internal sealed partial class TomlTable : TomlValue
         }
     }
 
-    private void WriteKeyValueAndNewLine<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TomlDottedKey key, TomlValue value)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    private void WriteKeyValueAndNewLine(ref Utf8TomlDocumentWriter writer, TomlDottedKey key, TomlValue value)
     {
         WriterKey(ref writer, key, false);
         writer.WriteEqual();
@@ -292,8 +286,7 @@ internal sealed partial class TomlTable : TomlValue
         writer.WriteNewLine();
     }
 
-    private void WriteTableHeader<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<TomlDottedKey> keysSpan)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    private void WriteTableHeader(ref Utf8TomlDocumentWriter writer, ReadOnlySpan<TomlDottedKey> keysSpan)
     {
         writer.BeginTableHeader();
         if (keysSpan.Length > 0)
@@ -308,8 +301,7 @@ internal sealed partial class TomlTable : TomlValue
         writer.WriteNewLine();
     }
 
-    private void WriteArrayOfTablesHeader<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<TomlDottedKey> keysSpan)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    private void WriteArrayOfTablesHeader(ref Utf8TomlDocumentWriter writer, ReadOnlySpan<TomlDottedKey> keysSpan)
     {
         writer.BeginArrayOfTablesHeader();
 
@@ -325,8 +317,7 @@ internal sealed partial class TomlTable : TomlValue
         writer.WriteNewLine();
     }
 
-    private void WriteComments<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<TomlString> comments)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    private void WriteComments(ref Utf8TomlDocumentWriter writer, ReadOnlySpan<TomlString> comments)
     {
         if (comments.Length == 0) return;
 

@@ -30,8 +30,7 @@ public class WriteBareKeyTest
         public BareKeyHolder Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
             => throw new NotSupportedException();
 
-        public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, BareKeyHolder target, CsTomlSerializerOptions options)
-            where TBufferWriter : IUtf8Writer, allows ref struct
+        public void Serialize(ref Utf8TomlDocumentWriter writer, BareKeyHolder target, CsTomlSerializerOptions options)
         {
             var key = target.Key.AsSpan();
             switch (target.Mode)
@@ -73,7 +72,7 @@ public class WriteBareKeyTest
     private static byte[] SerializeToUtf8(ImmutableArray<byte> key, WriteMode mode)
     {
         var bufferWriter = new ArrayBufferWriter<byte>();
-        CsTomlSerializer.Serialize(ref bufferWriter, new BareKeyHolder() { Key = key, Mode = mode });
+        CsTomlSerializer.Serialize(bufferWriter, new BareKeyHolder() { Key = key, Mode = mode });
         return bufferWriter.WrittenSpan.ToArray();
     }
 

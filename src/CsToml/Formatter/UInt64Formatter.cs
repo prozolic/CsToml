@@ -22,8 +22,7 @@ internal sealed class UInt64Formatter : ITomlValueFormatter<ulong>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ulong target, CsTomlSerializerOptions options)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    public void Serialize(ref Utf8TomlDocumentWriter writer, ulong target, CsTomlSerializerOptions options)
     {
         writer.WriteInt64(IntegerRangeHelper.ConvertToInt64(target));
     }
@@ -48,8 +47,7 @@ internal sealed class NullableUInt64Formatter : ITomlValueFormatter<ulong?>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ulong? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    public void Serialize(ref Utf8TomlDocumentWriter writer, ulong? target, CsTomlSerializerOptions options)
     {
         if (target.HasValue)
         {

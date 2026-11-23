@@ -19,13 +19,13 @@ public sealed class QueueFormatter<T> : CollectionBaseFormatter<Queue<T>, T, Que
         return new Queue<T>(capacity);
     }
 
-    protected override void SerializeCollection<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Queue<T> target, CsTomlSerializerOptions options)
+    protected override void SerializeCollection(ref Utf8TomlDocumentWriter writer, Queue<T> target, CsTomlSerializerOptions options)
     {
         var serializer = new EnumeratorStructSerializer<T, Queue<T>.Enumerator>(target.Count, target.GetEnumerator());
         serializer.Serialize(ref writer, options);
     }
 
-    protected override bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, Queue<T> target, CsTomlSerializerOptions options)
+    protected override bool TrySerializeTomlArrayHeaderStyle(ref Utf8TomlDocumentWriter writer, ReadOnlySpan<byte> header, Queue<T> target, CsTomlSerializerOptions options)
     {
         var serializer = new EnumeratorStructSerializer<T, Queue<T>.Enumerator>(target.Count, target.GetEnumerator());
         return serializer.TrySerializeTomlArrayHeaderStyle(ref writer, header, options);

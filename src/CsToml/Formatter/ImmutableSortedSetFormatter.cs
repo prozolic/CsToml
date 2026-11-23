@@ -17,7 +17,7 @@ public sealed class ImmutableSortedSetFormatter<T> : CollectionBaseFormatter<Imm
         return new SortedSet<T>();
     }
 
-    protected override void SerializeCollection<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ImmutableSortedSet<T> target, CsTomlSerializerOptions options)
+    protected override void SerializeCollection(ref Utf8TomlDocumentWriter writer, ImmutableSortedSet<T> target, CsTomlSerializerOptions options)
     {
         writer.BeginArray();
         if (target.IsEmpty)
@@ -50,7 +50,7 @@ public sealed class ImmutableSortedSetFormatter<T> : CollectionBaseFormatter<Imm
         writer.EndArray();
     }
 
-    protected override bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, ImmutableSortedSet<T> target, CsTomlSerializerOptions options)
+    protected override bool TrySerializeTomlArrayHeaderStyle(ref Utf8TomlDocumentWriter writer, ReadOnlySpan<byte> header, ImmutableSortedSet<T> target, CsTomlSerializerOptions options)
     {
         if (target.IsEmpty)
         {

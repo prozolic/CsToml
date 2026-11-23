@@ -46,7 +46,7 @@ public sealed class IGroupingFormatter<TKey, TValue> : ITomlValueFormatter<IGrou
         return Grouping.Empty;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, IGrouping<TKey, TValue> target, CsTomlSerializerOptions options) where TBufferWriter : IUtf8Writer, allows ref struct
+    public void Serialize(ref Utf8TomlDocumentWriter writer, IGrouping<TKey, TValue> target, CsTomlSerializerOptions options)
     {
         if (target == null)
         {

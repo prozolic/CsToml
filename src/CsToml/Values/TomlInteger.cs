@@ -110,7 +110,7 @@ internal abstract partial class TomlInteger : TomlValue
             return new TomlDefaultInteger(value);
         }
 
-        internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+        internal override void ToTomlString(ref Utf8TomlDocumentWriter writer)
         {
             writer.WriteInt64(Value);
         }
@@ -152,7 +152,7 @@ internal abstract partial class TomlInteger : TomlValue
             return (long)result;
         }
 
-        internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+        internal override void ToTomlString(ref Utf8TomlDocumentWriter writer)
         {
             writer.WriteInt64InBinaryFormat(Value);
         }
@@ -219,7 +219,7 @@ internal abstract partial class TomlInteger : TomlValue
 
         }
 
-        internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+        internal override void ToTomlString(ref Utf8TomlDocumentWriter writer)
         {
             writer.WriteInt64InOctalFormat(Value);
         }
@@ -294,7 +294,7 @@ internal abstract partial class TomlInteger : TomlValue
 
         }
 
-        internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+        internal override void ToTomlString(ref Utf8TomlDocumentWriter writer)
         {
             writer.WriteInt64InHexFormat(Value);
         }

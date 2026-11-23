@@ -110,8 +110,7 @@ public sealed class PrimitiveObjectFormatter : ITomlValueFormatter<object>
         }
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, object target, CsTomlSerializerOptions options)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    public void Serialize(ref Utf8TomlDocumentWriter writer, object target, CsTomlSerializerOptions options)
     {
         var type = target.GetType();
         if (TypeToJumpCode.TryGetValue(type, out var jumpCode))

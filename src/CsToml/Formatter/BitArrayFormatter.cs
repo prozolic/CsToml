@@ -31,8 +31,7 @@ internal sealed class BitArrayFormatter : ITomlValueFormatter<BitArray?>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, BitArray? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IUtf8Writer, allows ref struct
+    public void Serialize(ref Utf8TomlDocumentWriter writer, BitArray? target, CsTomlSerializerOptions options)
     {
         if (target == null)
         {
