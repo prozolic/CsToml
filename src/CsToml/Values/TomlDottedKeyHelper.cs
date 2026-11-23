@@ -1,6 +1,7 @@
 ﻿using CsToml.Error;
 using CsToml.Utility;
 using System.Runtime.CompilerServices;
+using System.Text.Unicode;
 
 namespace CsToml.Values;
 
@@ -11,7 +12,7 @@ internal static class TomlDottedKeyHelper
         if (utf8String.Length == 0)
             ExceptionHelper.ThrowBareKeyIsEmpty();
 
-        if (!skipValidation && Utf8Helper.ContainInvalidSequences(utf8String))
+        if (!skipValidation && !Utf8.IsValid(utf8String))
             ExceptionHelper.ThrowInvalidCodePoints();
 
         return new TomlUnquotedDottedKey(utf8String);
@@ -22,7 +23,7 @@ internal static class TomlDottedKeyHelper
         if (utf8String.Length == 0)
             ExceptionHelper.ThrowBareKeyIsEmpty();
 
-        if (!skipValidation && Utf8Helper.ContainInvalidSequences(utf8String))
+        if (!skipValidation && !Utf8.IsValid(utf8String))
             ExceptionHelper.ThrowInvalidCodePoints();
 
         return new TomlUnquotedDottedKey(utf8String);
@@ -81,7 +82,7 @@ internal static class TomlDottedKeyHelper
     }
     public static TomlStringType GetTomlKeyType(ReadOnlySpan<byte> utf8String, bool supportsEscapeSequenceE, bool supportsEscapeSequenceX)
     {
-        if (Utf8Helper.ContainInvalidSequences(utf8String))
+        if (!Utf8.IsValid(utf8String))
             ExceptionHelper.ThrowInvalidCodePoints();
 
         var barekey = true;

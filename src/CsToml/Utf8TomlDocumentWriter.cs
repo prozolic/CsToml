@@ -10,6 +10,7 @@ using System.Globalization;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text.Unicode;
 
 namespace CsToml;
 
@@ -856,7 +857,7 @@ public ref struct Utf8TomlDocumentWriter
 
     public void WriteBareKey(ReadOnlySpan<byte> key, bool skipValidation)
     {
-        if (!skipValidation && Utf8Helper.ContainInvalidSequences(key))
+        if (!skipValidation && !Utf8.IsValid(key))
             ExceptionHelper.ThrowInvalidCodePoints();
 
         WriteDottedKeyPrefix();
@@ -921,7 +922,7 @@ public ref struct Utf8TomlDocumentWriter
                     }
                     else
                     {
-                        WriteBoolean(UnsafeHelper.BitCast<T, bool>(refValue));
+                        WriteBoolean(Unsafe.BitCast<T, bool>(refValue));
                     }
                     break;
                 case 1:
@@ -931,7 +932,7 @@ public ref struct Utf8TomlDocumentWriter
                     }
                     else
                     {
-                        WriteInt64(UnsafeHelper.BitCast<T, byte>(refValue));
+                        WriteInt64(Unsafe.BitCast<T, byte>(refValue));
                     }
                     break;
                 case 2:
@@ -941,7 +942,7 @@ public ref struct Utf8TomlDocumentWriter
                     }
                     else
                     {
-                        WriteInt64(UnsafeHelper.BitCast<T, sbyte>(refValue));
+                        WriteInt64(Unsafe.BitCast<T, sbyte>(refValue));
                     }
                     break;
                 case 3:
@@ -951,7 +952,7 @@ public ref struct Utf8TomlDocumentWriter
                     }
                     else
                     {
-                        WriteInt64(UnsafeHelper.BitCast<T, char>(refValue));
+                        WriteInt64(Unsafe.BitCast<T, char>(refValue));
                     }
                     break;
                 case 4:
@@ -961,7 +962,7 @@ public ref struct Utf8TomlDocumentWriter
                     }
                     else
                     {
-                        WriteInt64(UnsafeHelper.BitCast<T, short>(refValue));
+                        WriteInt64(Unsafe.BitCast<T, short>(refValue));
                     }
                     break;
                 case 5:
@@ -971,7 +972,7 @@ public ref struct Utf8TomlDocumentWriter
                     }
                     else
                     {
-                        WriteInt64(UnsafeHelper.BitCast<T, int>(refValue));
+                        WriteInt64(Unsafe.BitCast<T, int>(refValue));
                     }
                     break;
                 case 6:
@@ -981,7 +982,7 @@ public ref struct Utf8TomlDocumentWriter
                     }
                     else
                     {
-                        WriteInt64(UnsafeHelper.BitCast<T, long>(refValue));
+                        WriteInt64(Unsafe.BitCast<T, long>(refValue));
                     }
                     break;
                 case 7:
@@ -991,7 +992,7 @@ public ref struct Utf8TomlDocumentWriter
                     }
                     else
                     {
-                        WriteInt64(UnsafeHelper.BitCast<T, ushort>(refValue));
+                        WriteInt64(Unsafe.BitCast<T, ushort>(refValue));
                     }
                     break;
                 case 8:
@@ -1001,7 +1002,7 @@ public ref struct Utf8TomlDocumentWriter
                     }
                     else
                     {
-                        WriteInt64(UnsafeHelper.BitCast<T, uint>(refValue));
+                        WriteInt64(Unsafe.BitCast<T, uint>(refValue));
                     }
                     break;
                 case 9:
@@ -1011,7 +1012,7 @@ public ref struct Utf8TomlDocumentWriter
                     }
                     else
                     {
-                        WriteInt64(IntegerRangeHelper.ConvertToInt64(UnsafeHelper.BitCast<T, ulong>(refValue)));
+                        WriteInt64(IntegerRangeHelper.ConvertToInt64(Unsafe.BitCast<T, ulong>(refValue)));
                     }
                     break;
                 case 10:
@@ -1022,7 +1023,7 @@ public ref struct Utf8TomlDocumentWriter
                     }
                     else
                     {
-                        WriteDouble(UnsafeHelper.BitCast<T, float>(refValue));
+                        WriteDouble(Unsafe.BitCast<T, float>(refValue));
                     }
                     Write(TomlCodes.Symbol.DOUBLEQUOTED);
                     break;
@@ -1034,7 +1035,7 @@ public ref struct Utf8TomlDocumentWriter
                     }
                     else
                     {
-                        WriteDouble(UnsafeHelper.BitCast<T, double>(refValue));
+                        WriteDouble(Unsafe.BitCast<T, double>(refValue));
                     }
                     Write(TomlCodes.Symbol.DOUBLEQUOTED);
                     break;
@@ -1061,7 +1062,7 @@ public ref struct Utf8TomlDocumentWriter
                     }
                     else
                     {
-                        WriteDateTime(UnsafeHelper.BitCast<T, DateTime>(refValue));
+                        WriteDateTime(Unsafe.BitCast<T, DateTime>(refValue));
                     }
                     Write(TomlCodes.Symbol.DOUBLEQUOTED);
                     break;
@@ -1073,7 +1074,7 @@ public ref struct Utf8TomlDocumentWriter
                     }
                     else
                     {
-                        WriteDateTimeOffset(UnsafeHelper.BitCast<T, DateTimeOffset>(refValue));
+                        WriteDateTimeOffset(Unsafe.BitCast<T, DateTimeOffset>(refValue));
                     }
                     Write(TomlCodes.Symbol.DOUBLEQUOTED);
                     break;
@@ -1085,7 +1086,7 @@ public ref struct Utf8TomlDocumentWriter
                     }
                     else
                     {
-                        WriteDateOnly(UnsafeHelper.BitCast<T, DateOnly>(refValue));
+                        WriteDateOnly(Unsafe.BitCast<T, DateOnly>(refValue));
                     }
                     Write(TomlCodes.Symbol.DOUBLEQUOTED);
                     break;
@@ -1097,7 +1098,7 @@ public ref struct Utf8TomlDocumentWriter
                     }
                     else
                     {
-                        WriteTimeOnly(UnsafeHelper.BitCast<T, TimeOnly>(refValue));
+                        WriteTimeOnly(Unsafe.BitCast<T, TimeOnly>(refValue));
                     }
                     Write(TomlCodes.Symbol.DOUBLEQUOTED);
                     break;
@@ -1128,7 +1129,7 @@ public ref struct Utf8TomlDocumentWriter
 
     public void WriteBareTableHeader(ReadOnlySpan<byte> key, bool skipValidation = false)
     {
-        if (!skipValidation && Utf8Helper.ContainInvalidSequences(key))
+        if (!skipValidation && !Utf8.IsValid(key))
             ExceptionHelper.ThrowInvalidCodePoints();
 
         BeginTableHeader();

@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text.Unicode;
 
 namespace CsToml;
 
@@ -102,7 +103,7 @@ internal ref struct CsTomlReader
             }
 
         BREAK:
-            if (Utf8Helper.ContainInvalidSequences(bufferWriter.WrittenSpan))
+            if (!Utf8.IsValid(bufferWriter.WrittenSpan))
                 ExceptionHelper.ThrowInvalidCodePoints();
 
             return TomlStringHelper.Parse<TomlUnquotedString>(bufferWriter.WrittenSpan);
@@ -143,7 +144,7 @@ internal ref struct CsTomlReader
             }
 
         BREAK:
-            if (Utf8Helper.ContainInvalidSequences(bufferWriter.WrittenSpan))
+            if (!Utf8.IsValid(bufferWriter.WrittenSpan))
                 ExceptionHelper.ThrowInvalidCodePoints();
         }
         finally
@@ -763,7 +764,7 @@ internal ref struct CsTomlReader
                 comment = comment[..^1];
             }
 
-            if (!comment.ContainsAny(TomlCodes.ControlChars) && !Utf8Helper.ContainInvalidSequences(comment))
+            if (!comment.ContainsAny(TomlCodes.ControlChars) && Utf8.IsValid(comment))
             {
                 Advance(comment.Length + 1);
                 return;
@@ -908,7 +909,7 @@ internal ref struct CsTomlReader
             if (TomlCodes.IsDoubleQuoted(ch))
             {
                 var value = unreadSpan[..index];
-                if (Utf8Helper.ContainInvalidSequences(value))
+                if (!Utf8.IsValid(value))
                     ExceptionHelper.ThrowInvalidCodePoints();
 
                 Advance(index + 1);
@@ -975,7 +976,7 @@ internal ref struct CsTomlReader
             if (!closingQuotationMarks)
                 ExceptionHelper.ThrowBasicStringsIsNotClosedWithClosingQuotationMarks();
 
-            if (Utf8Helper.ContainInvalidSequences(bufferWriter.WrittenSpan))
+            if (!Utf8.IsValid(bufferWriter.WrittenSpan))
                 ExceptionHelper.ThrowInvalidCodePoints();
 
             return mirrorTable.GetKey<T>(bufferWriter.WrittenSpan);
@@ -1083,7 +1084,7 @@ internal ref struct CsTomlReader
 
         try
         {
-            if (Utf8Helper.ContainInvalidSequences(bufferWriter.WrittenSpan))
+            if (!Utf8.IsValid(bufferWriter.WrittenSpan))
                 ExceptionHelper.ThrowInvalidCodePoints();
 
             return TomlStringHelper.Parse<TomlMultiLineBasicString>(bufferWriter.WrittenSpan);
@@ -1214,7 +1215,7 @@ internal ref struct CsTomlReader
         {
             // A key is stored as raw bytes and never decoded, so it has to be validated here.
             var value = unreadSpan[..totalLength];
-            if (Utf8Helper.ContainInvalidSequences(value))
+            if (!Utf8.IsValid(value))
                 ExceptionHelper.ThrowInvalidCodePoints();
 
             return mirrorTable.GetKey<T>(value);
@@ -1222,7 +1223,7 @@ internal ref struct CsTomlReader
 
         try
         {
-            if (Utf8Helper.ContainInvalidSequences(bufferWriter!.WrittenSpan))
+            if (!Utf8.IsValid(bufferWriter!.WrittenSpan))
                 ExceptionHelper.ThrowInvalidCodePoints();
 
             return mirrorTable.GetKey<T>(bufferWriter!.WrittenSpan);
@@ -1358,7 +1359,7 @@ internal ref struct CsTomlReader
         {
             var written = bufferWriter!.WrittenSpan;
             var written2 = written.Slice(0, written.Length - 2);
-            if (Utf8Helper.ContainInvalidSequences(written2))
+            if (!Utf8.IsValid(written2))
                 ExceptionHelper.ThrowInvalidCodePoints();
 
             return TomlStringHelper.Parse<TomlMultiLineLiteralString>(written2);

@@ -1,6 +1,7 @@
 ﻿using CsToml.Error;
 using CsToml.Utility;
 using System.Runtime.CompilerServices;
+using System.Text.Unicode;
 
 namespace CsToml.Values;
 
@@ -23,7 +24,7 @@ internal static class TomlStringHelper
 
     private static TomlStringType GetTomlStringTypeSlow(ReadOnlySpan<byte> utf8String, bool supportsEscapeSequenceE, bool supportsEscapeSequenceX)
     {
-        if (Utf8Helper.ContainInvalidSequences(utf8String))
+        if (!Utf8.IsValid(utf8String))
             ExceptionHelper.ThrowInvalidCodePoints();
 
         if (!utf8String.ContainsAny(TomlCodes.BasicStringStopChars))
