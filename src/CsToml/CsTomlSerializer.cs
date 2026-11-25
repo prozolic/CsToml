@@ -1,6 +1,5 @@
 ﻿using CsToml.Error;
 using CsToml.Formatter;
-using CsToml.Formatter.Resolver;
 using CsToml.Utility;
 using CsToml.Values;
 using System.Buffers;
@@ -28,7 +27,7 @@ public static class CsTomlSerializer
         try
         {
             var rootNode = document.RootNode;
-            var formatter = TomlValueFormatterResolver.Instance.GetFormatter<T>()!;
+            var formatter = options.Resolver.GetFormatter<T>()!;
             using (formatter as IDisposable)
             {
                 return formatter.Deserialize(ref rootNode, options);
@@ -55,7 +54,7 @@ public static class CsTomlSerializer
         try
         {
             var rootNode = document.RootNode;
-            var formatter = TomlValueFormatterResolver.Instance.GetFormatter<T>()!;
+            var formatter = options.Resolver.GetFormatter<T>()!;
             using (formatter as IDisposable)
             {
                 return formatter.Deserialize(ref rootNode, options);
@@ -132,57 +131,15 @@ public static class CsTomlSerializer
     }
 
     public static ByteMemoryResult Serialize<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(T target, CsTomlSerializerOptions? options = null)
-    {
-        var bufferWriter = RecycleArrayPoolBufferWriter<byte>.Rent();
-        try
-        {
-            Serialize(ref bufferWriter, target, options);
-            return ByteMemoryResult.Create(bufferWriter);
-        }
-        finally
-        {
-            RecycleArrayPoolBufferWriter<byte>.Return(bufferWriter);
-        }
-    }
+        => SerializeToResult(target, options, false);
 
-    public static void Serialize<TBufferWriter, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(ref TBufferWriter bufferWriter, T target, CsTomlSerializerOptions? options = null)
-        where TBufferWriter : IBufferWriter<byte>
-    {
-        options ??= DefaultOptions;
-        try
-        {
-            InlineArray4<TomlDottedKey> initialKeys = default;
-            ref InlineArray4<TomlDottedKey> initialKeysRef = ref Unsafe.AsRef(in initialKeys);
-            TempList<TomlDottedKey> keyList = new(initialKeysRef);
-
-            InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStates = default;
-            ref InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStatesRef = ref Unsafe.AsRef(in initialStates);
-            TempList<(TomlValueState state, int dottedKeyIndex)> stateList = new(initialStatesRef);
-
-            var documentWriter = new Utf8TomlDocumentWriter<TBufferWriter>(ref bufferWriter, ref keyList, ref stateList, false, options);
-            if (typeof(T) == typeof(TomlDocument))
-            {
-                Unsafe.As<T, TomlDocument>(ref target).ToTomlString(ref documentWriter);
-                return;
-            }
-
-            var formatter = TomlValueFormatterResolver.Instance.GetFormatter<T>()!;
-            using (formatter as IDisposable)
-            {
-                formatter.Serialize(ref documentWriter, target, options);
-            }
-        }
-        catch (CsTomlException cte)
-        {
-            throw new CsTomlSerializeException("An exception was thrown while serializing TOML. See the 'ParseExceptions' property for details about any errors.", cte);
-        }
-    }
+    public static void Serialize<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(IBufferWriter<byte> bufferWriter, T target, CsTomlSerializerOptions? options = null)
+        => SerializeToBufferWriter(bufferWriter, target, options, false);
 
     public static void Serialize<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(Stream stream, T value, CsTomlSerializerOptions? options = null)
     {
         using var bufferWriter = new ByteBufferSegmentWriter();
-        var tempWriter = bufferWriter;
-        Serialize<ByteBufferSegmentWriter, T>(ref tempWriter, value, options);
+        SerializeToBufferWriter(bufferWriter, value, options, false);
 
         var streamByteWriter = new StreamByteWriter(stream);
         bufferWriter.WriteTo(streamByteWriter.ByteWriter);
@@ -193,49 +150,77 @@ public static class CsTomlSerializer
         cancellationToken.ThrowIfCancellationRequested();
 
         using var bufferWriter = new ByteBufferSegmentWriter();
-        var tempWriter = bufferWriter;
-        Serialize<ByteBufferSegmentWriter, T>(ref tempWriter, value, options);
+        SerializeToBufferWriter(bufferWriter, value, options, false);
 
         var streamByteWriter = new StreamByteWriter(stream);
         await bufferWriter.WriteToAsync(streamByteWriter.ByteWriter, configureAwait, cancellationToken);
     }
 
     public static ByteMemoryResult SerializeValueType<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(T target, CsTomlSerializerOptions? options = null)
+        => SerializeToResult(target, options, true);
+
+    public static void SerializeValueType<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(IBufferWriter<byte> bufferWriter, T target, CsTomlSerializerOptions? options = null)
+        => SerializeToBufferWriter(bufferWriter, target, options, true);
+
+    private static ByteMemoryResult SerializeToResult<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(T target, CsTomlSerializerOptions? options, bool valueOnly)
     {
-        var bufferWriter = RecycleArrayPoolBufferWriter<byte>.Rent();
+        options ??= DefaultOptions;
+
+        InlineArray4<TomlDottedKey> initialKeys = default;
+        ref InlineArray4<TomlDottedKey> initialKeysRef = ref Unsafe.AsRef(in initialKeys);
+        TempList<TomlDottedKey> keyList = new(initialKeysRef);
+
+        InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStates = default;
+        ref InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStatesRef = ref Unsafe.AsRef(in initialStates);
+        TempList<(TomlValueState state, int dottedKeyIndex)> stateList = new(initialStatesRef);
+
+        var documentWriter = new Utf8TomlDocumentWriter(new ArrayPoolBufferSource(1024), in keyList, in stateList, valueOnly, options);
         try
         {
-            SerializeValueType(ref bufferWriter, target, options);
-            return ByteMemoryResult.Create(bufferWriter);
+            SerializeCore(ref documentWriter, target, options);
+            return ByteMemoryResult.Create(documentWriter.WrittenSpan);
         }
         finally
         {
-            RecycleArrayPoolBufferWriter<byte>.Return(bufferWriter);
+            documentWriter.Dispose();
         }
     }
 
-    public static void SerializeValueType<TBufferWriter, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(ref TBufferWriter bufferWriter, T target, CsTomlSerializerOptions? options = null)
-        where TBufferWriter : IBufferWriter<byte>
+    private static void SerializeToBufferWriter<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(IBufferWriter<byte> bufferWriter, T target, CsTomlSerializerOptions? options, bool valueOnly)
     {
+        ArgumentNullException.ThrowIfNull(bufferWriter);
         options ??= DefaultOptions;
+
+        InlineArray4<TomlDottedKey> initialKeys = default;
+        ref InlineArray4<TomlDottedKey> initialKeysRef = ref Unsafe.AsRef(in initialKeys);
+        TempList<TomlDottedKey> keyList = new(initialKeysRef);
+
+        InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStates = default;
+        ref InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStatesRef = ref Unsafe.AsRef(in initialStates);
+        TempList<(TomlValueState state, int dottedKeyIndex)> stateList = new(initialStatesRef);
+
+        var documentWriter = new Utf8TomlDocumentWriter(new WriterBufferSource(bufferWriter), in keyList, in stateList, valueOnly, options);
         try
         {
-            InlineArray4<TomlDottedKey> initialKeys = default;
-            ref InlineArray4<TomlDottedKey> initialKeysRef = ref Unsafe.AsRef(in initialKeys);
-            TempList<TomlDottedKey> keyList = new(initialKeysRef);
+            SerializeCore(ref documentWriter, target, options);
+        }
+        finally
+        {
+            documentWriter.Flush();
+        }
+    }
 
-            InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStates = default;
-            ref InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStatesRef = ref Unsafe.AsRef(in initialStates);
-            TempList<(TomlValueState state, int dottedKeyIndex)> stateList = new(initialStatesRef);
-
-            var documentWriter = new Utf8TomlDocumentWriter<TBufferWriter>(ref bufferWriter, ref keyList, ref stateList, true, options);
+    private static void SerializeCore<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(ref Utf8TomlDocumentWriter documentWriter, T target, CsTomlSerializerOptions options)
+    {
+        try
+        {
             if (typeof(T) == typeof(TomlDocument))
             {
                 Unsafe.As<T, TomlDocument>(ref target).ToTomlString(ref documentWriter);
                 return;
             }
 
-            var formatter = TomlValueFormatterResolver.Instance.GetFormatter<T>()!;
+            var formatter = options.Resolver.GetFormatter<T>()!;
             using (formatter as IDisposable)
             {
                 formatter.Serialize(ref documentWriter, target, options);

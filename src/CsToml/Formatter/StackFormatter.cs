@@ -25,13 +25,13 @@ public sealed class StackFormatter<T> : CollectionBaseFormatter<Stack<T>, T, Lis
         return new List<T>(capacity);
     }
 
-    protected override void SerializeCollection<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Stack<T> target, CsTomlSerializerOptions options)
+    protected override void SerializeCollection(ref Utf8TomlDocumentWriter writer, Stack<T> target, CsTomlSerializerOptions options)
     {
         var serializer = new EnumeratorStructSerializer<T, Stack<T>.Enumerator>(target.Count, target.GetEnumerator());
         serializer.Serialize(ref writer, options);
     }
 
-    protected override bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, Stack<T> target, CsTomlSerializerOptions options)
+    protected override bool TrySerializeTomlArrayHeaderStyle(ref Utf8TomlDocumentWriter writer, ReadOnlySpan<byte> header, Stack<T> target, CsTomlSerializerOptions options)
     {
         var serializer = new EnumeratorStructSerializer<T, Stack<T>.Enumerator>(target.Count, target.GetEnumerator());
         return serializer.TrySerializeTomlArrayHeaderStyle(ref writer, header, options);

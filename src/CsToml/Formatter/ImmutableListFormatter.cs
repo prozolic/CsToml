@@ -19,12 +19,12 @@ public sealed class ImmutableListFormatter<T> : StructuralCollectionBaseFormatte
         return new List<T>(capacity);
     }
 
-    public override void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ImmutableList<T> target, CsTomlSerializerOptions options)
+    public override void Serialize(ref Utf8TomlDocumentWriter writer, ImmutableList<T> target, CsTomlSerializerOptions options)
     {
         IReadOnlyListSerializer<T>.Serialize(ref writer, target, options);
     }
 
-    public override bool TrySerialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, ImmutableList<T> target, CsTomlSerializerOptions options)
+    public override bool TrySerialize(ref Utf8TomlDocumentWriter writer, ReadOnlySpan<byte> header, ImmutableList<T> target, CsTomlSerializerOptions options)
     {
         return IReadOnlyListSerializer<T>.TrySerializeTomlArrayHeaderStyle(ref writer, header, target, options);
     }

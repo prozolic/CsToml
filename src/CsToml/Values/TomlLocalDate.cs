@@ -13,7 +13,7 @@ internal sealed partial class TomlLocalDate(DateOnly value) : TomlValue
 
     public override TomlValueType Type => TomlValueType.LocalDate;
 
-    internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+    internal override void ToTomlString(ref Utf8TomlDocumentWriter writer)
     {
         writer.WriteDateOnly(Value);
     }

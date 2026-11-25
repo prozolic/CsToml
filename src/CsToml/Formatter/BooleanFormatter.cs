@@ -1,5 +1,4 @@
 ﻿using CsToml.Error;
-using System.Buffers;
 using System.Numerics;
 
 namespace CsToml.Formatter;
@@ -24,8 +23,7 @@ internal sealed class BooleanFormatter : ITomlValueFormatter<bool>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, bool target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, bool target, CsTomlSerializerOptions options)
     {
         writer.WriteBoolean(target);
     }
@@ -50,8 +48,7 @@ internal sealed class NullableBooleanFormatter : ITomlValueFormatter<bool?>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, bool? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, bool? target, CsTomlSerializerOptions options)
     {
         if (target.HasValue)
         {

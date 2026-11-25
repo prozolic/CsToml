@@ -1,7 +1,6 @@
 ﻿using CsToml.Utility;
 using CsToml.Error;
 using CsToml.Values;
-using System.Buffers;
 using System.Collections;
 using System.Collections.Frozen;
 using System.Runtime.CompilerServices;
@@ -111,8 +110,7 @@ public sealed class PrimitiveObjectFormatter : ITomlValueFormatter<object>
         }
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, object target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, object target, CsTomlSerializerOptions options)
     {
         var type = target.GetType();
         if (TypeToJumpCode.TryGetValue(type, out var jumpCode))

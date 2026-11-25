@@ -18,7 +18,7 @@ internal sealed partial class TomlFloat(double value) : TomlValue
 
     public override TomlValueType Type => TomlValueType.Float;
 
-    internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+    internal override void ToTomlString(ref Utf8TomlDocumentWriter writer)
     {
         writer.WriteDouble(Value);
     }

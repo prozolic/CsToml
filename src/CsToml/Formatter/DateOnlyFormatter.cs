@@ -1,5 +1,4 @@
 ﻿using CsToml.Error;
-using System.Buffers;
 
 namespace CsToml.Formatter;
 
@@ -23,8 +22,7 @@ internal sealed class DateOnlyFormatter : ITomlValueFormatter<DateOnly>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, DateOnly target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, DateOnly target, CsTomlSerializerOptions options)
     {
         writer.WriteDateOnly(target);
     }
@@ -49,8 +47,7 @@ internal sealed class NullableDateOnlyFormatter : ITomlValueFormatter<DateOnly?>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, DateOnly? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, DateOnly? target, CsTomlSerializerOptions options)
     {
         if (target.HasValue)
         {

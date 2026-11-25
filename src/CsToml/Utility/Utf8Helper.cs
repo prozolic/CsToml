@@ -9,12 +9,6 @@ namespace CsToml.Utility;
 
 internal static class Utf8Helper
 {
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool ContainInvalidSequences(ReadOnlySpan<byte> bytes)
-    {
-        return !Utf8.IsValid(bytes);
-    }
-
     public static bool ContainInvalidSequencesInUnquotedKey(ReadOnlySpan<byte> bytes)
     {
         ref var refBytes = ref MemoryMarshal.GetReference(bytes);
@@ -77,7 +71,7 @@ internal static class Utf8Helper
                 if ((b3 & 0xc0) != 0x80) return true;
 
                 if (!((codePoint >= 0x800 && codePoint <= 0x1fff) || (codePoint >= 0x200c && codePoint <= 0x200d) ||
-                    (codePoint >= 0x203f && codePoint <= 0x2040) || (codePoint >= 0x203f && codePoint <= 0x2040) ||
+                    (codePoint >= 0x203f && codePoint <= 0x2040) ||
                     (codePoint >= 0x2070 && codePoint <= 0x218f) || (codePoint >= 0x2460 && codePoint <= 0x24ff) ||
                     (codePoint >= 0x2c00 && codePoint <= 0x2fef) || (codePoint >= 0x3001 && codePoint <= 0xd7ff) ||
                     (codePoint >= 0xf900 && codePoint <= 0xfdcf) || (codePoint >= 0xfdf0 && codePoint <= 0xfffd)))
@@ -127,6 +121,12 @@ internal static class Utf8Helper
 
     public static void ParseFromCodePointToUtf8(int utf32CodePoint, Span<byte> utf8Bytes, out int writtenCount)
     {
+        if (!Rune.IsValid(utf32CodePoint))
+        {
+            writtenCount = 0;
+            ExceptionHelper.ThrowInvalidUnicodeScalarValue();
+        }
+
         // unicode -> utf8
         if ((uint)utf32CodePoint < 0x80)
         {
@@ -149,7 +149,7 @@ internal static class Utf8Helper
             writtenCount = 3;
             return;
         }
-        else if ((uint)utf32CodePoint < 0x110000)
+        else
         {
             utf8Bytes[0] = (byte)(0xF0 | utf32CodePoint >> 18);
             utf8Bytes[1] = (byte)(0x80 | (utf32CodePoint & 0x3F000) >> 12);
@@ -158,9 +158,6 @@ internal static class Utf8Helper
             writtenCount = 4;
             return;
         }
-
-        writtenCount = 0;
-        ExceptionHelper.NotReturnThrow<int>(ExceptionHelper.ThrowInvalidUnicodeScalarValue);
     }
 
     public static void ParseFrom8bitCodePointToUtf8(Span<byte> destination, ReadOnlySpan<byte> source, out int writtenCount)

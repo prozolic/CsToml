@@ -1,5 +1,4 @@
 ﻿using CsToml.Error;
-using System.Buffers;
 
 namespace CsToml.Formatter;
 
@@ -28,8 +27,7 @@ internal sealed class FloatFormatter : ITomlValueFormatter<float>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, float target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, float target, CsTomlSerializerOptions options)
     {
         writer.WriteDouble(target);
     }
@@ -59,8 +57,7 @@ internal sealed class NullableFloatFormatter : ITomlValueFormatter<float?>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, float? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, float? target, CsTomlSerializerOptions options)
     {
         if (target.HasValue)
         {

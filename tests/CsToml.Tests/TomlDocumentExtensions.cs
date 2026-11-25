@@ -1,6 +1,5 @@
 ﻿using CsToml.Utility;
 using CsToml.Values;
-using System.Buffers;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json.Nodes;
@@ -132,8 +131,6 @@ internal static class TomlDocumentExtensions
 
     private static string ToTomlUtf16String(this TomlValue tomlValue)
     {
-        var bufferWriter = new ArrayBufferWriter<byte>();
-
         InlineArray4<TomlDottedKey> initialKeys = default;
         ref InlineArray4<TomlDottedKey> initialKeysRef = ref Unsafe.AsRef(in initialKeys);
         TempList<TomlDottedKey> keyList = new(initialKeysRef);
@@ -142,19 +139,25 @@ internal static class TomlDocumentExtensions
         ref InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStatesRef = ref Unsafe.AsRef(in initialStates);
         TempList<(TomlValueState state, int dottedKeyIndex)> stateList = new(initialStatesRef);
 
-        var writer = new Utf8TomlDocumentWriter<ArrayBufferWriter<byte>>(ref bufferWriter, ref keyList, ref stateList, false, CsTomlSerializerOptions.Default);
-
-        if (tomlValue.Type == TomlValueType.Integer)
+        var writer = new Utf8TomlDocumentWriter(new ArrayPoolBufferSource(1024), in keyList, in stateList, false, CsTomlSerializerOptions.Default);
+        try
         {
-            // Not in literal format.
-            var integerValue = tomlValue.GetInt64();
-            writer.WriteInt64(integerValue);
+            if (tomlValue.Type == TomlValueType.Integer)
+            {
+                // Not in literal format.
+                var integerValue = tomlValue.GetInt64();
+                writer.WriteInt64(integerValue);
+            }
+            else
+            {
+                tomlValue.ToTomlString(ref writer);
+            }
+            return Encoding.UTF8.GetString(writer.WrittenSpan);
         }
-        else
+        finally
         {
-            tomlValue.ToTomlString(ref writer);
+            writer.Dispose();
         }
-        return Encoding.UTF8.GetString(bufferWriter.WrittenSpan);
     }
 
 }

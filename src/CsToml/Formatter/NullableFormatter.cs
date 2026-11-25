@@ -1,5 +1,4 @@
 ﻿using CsToml.Error;
-using System.Buffers;
 
 namespace CsToml.Formatter;
 
@@ -15,7 +14,7 @@ public sealed class NullableFormatter<T> : ITomlValueFormatter<T?>, ITomlArrayHe
         return options.Resolver.GetFormatter<T>()!.Deserialize(ref rootNode, options);
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, T? target, CsTomlSerializerOptions options) where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, T? target, CsTomlSerializerOptions options)
     {
         if (target.HasValue)
         {
@@ -27,7 +26,7 @@ public sealed class NullableFormatter<T> : ITomlValueFormatter<T?>, ITomlArrayHe
         }
     }
 
-    bool ITomlArrayHeaderFormatter<T?>.TrySerialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, T? target, CsTomlSerializerOptions options)
+    bool ITomlArrayHeaderFormatter<T?>.TrySerialize(ref Utf8TomlDocumentWriter writer, ReadOnlySpan<byte> header, T? target, CsTomlSerializerOptions options)
     {
         if (target.HasValue)
         {

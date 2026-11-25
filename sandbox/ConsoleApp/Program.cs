@@ -257,7 +257,7 @@ using var result = CsTomlSerializer.Serialize(document);
 Console.WriteLine(Encoding.UTF8.GetString(result.ByteSpan));
 
 var buffer = new ArrayBufferWriter<byte>();
-CsTomlSerializer.Serialize(ref buffer, document);
+CsTomlSerializer.Serialize(buffer, document);
 
 
 var tomlText2 = @"
@@ -333,7 +333,7 @@ a = 4564
     var testClass = CsTomlSerializer.Deserialize<TestClass>(tomlText);
 
     var buffer = new ArrayBufferWriter<byte>();
-    CsTomlSerializer.Serialize(ref buffer, testClass, CsTomlSerializerOptions.Default);
+    CsTomlSerializer.Serialize(buffer, testClass, CsTomlSerializerOptions.Default);
 
     var test = Encoding.UTF8.GetString(buffer.WrittenSpan);
 

@@ -1,5 +1,4 @@
 ﻿using CsToml.Error;
-using System.Buffers;
 
 namespace CsToml.Formatter;
 
@@ -42,8 +41,7 @@ internal sealed class DateTimeFormatter : ITomlValueFormatter<DateTime>
         return false;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, DateTime target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, DateTime target, CsTomlSerializerOptions options)
     {
         writer.WriteDateTime(target);
     }
@@ -68,8 +66,7 @@ internal sealed class NullableDateTimeFormatter : ITomlValueFormatter<DateTime?>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, DateTime? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, DateTime? target, CsTomlSerializerOptions options)
     {
         if (target.HasValue)
         {

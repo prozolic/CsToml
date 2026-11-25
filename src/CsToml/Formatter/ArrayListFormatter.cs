@@ -1,7 +1,6 @@
 ﻿using CsToml.Error;
 using CsToml.Values;
 using System;
-using System.Buffers;
 using System.Collections;
 
 namespace CsToml.Formatter;
@@ -33,7 +32,7 @@ public sealed class ArrayListFormatter : ITomlValueFormatter<ArrayList?>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ArrayList? target, CsTomlSerializerOptions options) where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, ArrayList? target, CsTomlSerializerOptions options)
     {
         if (target == null)
         {

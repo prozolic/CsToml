@@ -1,6 +1,4 @@
-﻿using System.Buffers;
-
-namespace CsToml.Formatter;
+﻿namespace CsToml.Formatter;
 
 public sealed class TomlSerializedObjectFormatter<T> : ITomlValueFormatter<T?>
     where T : class, ITomlSerializedObject<T?>
@@ -10,8 +8,7 @@ public sealed class TomlSerializedObjectFormatter<T> : ITomlValueFormatter<T?>
         return T.Deserialize(ref rootNode, options);
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, T? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, T? target, CsTomlSerializerOptions options)
     {
         T.Serialize(ref writer, target, options);
     }
@@ -25,7 +22,7 @@ public sealed class StructTomlSerializedObjectFormatter<T> : ITomlValueFormatter
         return T.Deserialize(ref rootNode, options);
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, T target, CsTomlSerializerOptions options) where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, T target, CsTomlSerializerOptions options)
     {
         T.Serialize(ref writer, target, options);
     }

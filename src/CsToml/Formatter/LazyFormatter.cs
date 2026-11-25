@@ -1,5 +1,4 @@
 ﻿using CsToml.Error;
-using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
 
 namespace CsToml.Formatter;
@@ -20,8 +19,7 @@ public sealed class LazyFormatter<[DynamicallyAccessedMembers(DynamicallyAccesse
         return new Lazy<T>(() => value);
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Lazy<T>? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, Lazy<T>? target, CsTomlSerializerOptions options)
     {
         if (target != null)
         {

@@ -1,6 +1,5 @@
 ﻿using CsToml.Error;
 using CsToml.Values;
-using System.Buffers;
 using System.ComponentModel;
 
 namespace CsToml.Formatter;
@@ -32,11 +31,9 @@ public abstract class StructuralCollectionBaseFormatter<TCollection, TElement, T
         return default;
     }
 
-    public abstract void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TCollection target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>;
+    public abstract void Serialize(ref Utf8TomlDocumentWriter writer, TCollection target, CsTomlSerializerOptions options);
 
-    public abstract bool TrySerialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, TCollection target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>;
+    public abstract bool TrySerialize(ref Utf8TomlDocumentWriter writer, ReadOnlySpan<byte> header, TCollection target, CsTomlSerializerOptions options);
 
     protected abstract TMediator CreateCollection(int capacity);
     protected abstract void AddValue(TMediator mediator, TElement element);

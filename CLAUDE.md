@@ -65,7 +65,7 @@ dotnet run -c Release --framework net10.0 -- --filter "*ParseBenchmark*"
 
 ```bash
 cd sandbox/ConsoleApp && dotnet run            # scratch target; also exercises the generator on build
-cd sandbox/ConsoleNativeAOT && dotnet publish -c Release   # PublishAot, net10.0, no RID pinned
+cd sandbox/ConsoleNativeAOT && dotnet publish -c Release   # PublishAot, net11.0, no RID pinned
 ```
 
 ## Architecture
@@ -102,7 +102,16 @@ Generated `Register()` bodies start with `BeginRegistration<T>()` — false once
 
 ### Writer
 
-`Utf8TomlDocumentWriter<TBufferWriter>` is a `ref struct` generic over `where TBufferWriter : IBufferWriter<byte>`. It tracks the current key path and value state in `TempList<T>`s backed by caller-stack `InlineArray4`, so nesting stays allocation-free until it overflows. Any method taking a caller `stackalloc` span must declare it `scoped ReadOnlySpan<byte>` — formatters are ordinary classes, and without `scoped` the compiler refuses to let stack memory cross into the ref struct.
+`Utf8TomlDocumentWriter` is a non-generic `ref struct`, so formatters' `Serialize(ref Utf8TomlDocumentWriter writer, T target, CsTomlSerializerOptions options)` is an ordinary interface method. (With a writer type parameter on the method it was a generic virtual method: resolved at run time on every call, and compiled once per writer type for every formatter under NativeAOT.) The writer owns the buffer state itself — `Span<byte> buffer` and `int position` — and every write touches only those two with a single capacity compare. Where the buffer comes from is the job of a *buffer source*, consulted only in the non-inlined `Grow`, in `Flush` and in `Dispose`; never route individual writes through it. The buffer sources are internal structs in `src/CsToml/Utility/` that hand spans to the writer and do not write anything themselves. Both are held by value with at most one active, and they are reached through plain fields and a branch (function pointers were ruled out for safety):
+
+- `ArrayPoolBufferSource` — owns the pooled array and grows it via `ArrayPool`; used for the `ByteMemoryResult` path and internal key formatting. The entry point must call `Dispose()`.
+- `WriterBufferSource` — wraps a caller's `IBufferWriter<byte>` for `Serialize<T>(IBufferWriter<byte>, ...)`, `SerializeValueType<T>(IBufferWriter<byte>, ...)` and the `Stream` overloads. `Next` commits what was written with `Advance` and asks for the next span; `Commit` does only the final `Advance`. `Advance` therefore happens only when the current span is used up and once at the end, because `IBufferWriter<byte>` forbids writing into a span after `Advance`, and `GetSpan` is never called after the final `Advance`. The entry point must call the document writer's `Flush()` in a `finally`.
+
+A third internal constructor takes a fixed `Span<byte>` (neither source active, so running out of room throws); only tests use it. The `IBufferWriter<byte>` overloads take the interface by value, so a struct writer is boxed at the call site and the caller's copy is not advanced.
+
+`Utf8TomlDocumentWriter.WrittenSize` counts from the start of the current serialization (bytes already advanced on the `IBufferWriter<byte>` plus `position`), because `TomlTable` uses it to decide whether a blank line precedes a table header.
+
+`Utf8TomlDocumentWriter` tracks the current key path and value state in `TempList<T>`s backed by caller-stack `InlineArray4`, so nesting stays allocation-free until it overflows. Any method taking a caller `stackalloc` span must declare it `scoped ReadOnlySpan<byte>` — formatters are ordinary classes, and without `scoped` the compiler refuses to let stack memory cross into the ref struct.
 
 ### Spec versions
 

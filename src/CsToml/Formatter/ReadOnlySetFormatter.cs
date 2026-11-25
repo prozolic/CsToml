@@ -19,7 +19,7 @@ public sealed class ReadOnlySetFormatter<T> : CollectionBaseFormatter<ReadOnlySe
         return new HashSet<T>(capacity);
     }
 
-    protected override void SerializeCollection<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySet<T> target, CsTomlSerializerOptions options)
+    protected override void SerializeCollection(ref Utf8TomlDocumentWriter writer, ReadOnlySet<T> target, CsTomlSerializerOptions options)
     {
         writer.BeginArray();
         if (target.Count == 0)
@@ -52,7 +52,7 @@ public sealed class ReadOnlySetFormatter<T> : CollectionBaseFormatter<ReadOnlySe
         writer.EndArray();
     }
 
-    protected override bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, ReadOnlySet<T> target, CsTomlSerializerOptions options)
+    protected override bool TrySerializeTomlArrayHeaderStyle(ref Utf8TomlDocumentWriter writer, ReadOnlySpan<byte> header, ReadOnlySet<T> target, CsTomlSerializerOptions options)
     {
         if (target.Count == 0)
         {

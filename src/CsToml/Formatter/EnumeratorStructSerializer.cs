@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Buffers;
 
 namespace CsToml.Formatter;
 
 internal struct EnumeratorStructSerializer<TElement, TEnumerator>(int Count, TEnumerator EnumeratorStruct)
     where TEnumerator : struct, IEnumerator<TElement>
 {
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, CsTomlSerializerOptions options)
     {
         writer.BeginArray();
         if (Count == 0)
@@ -38,8 +36,7 @@ internal struct EnumeratorStructSerializer<TElement, TEnumerator>(int Count, TEn
         writer.EndArray();
     }
 
-    public bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public bool TrySerializeTomlArrayHeaderStyle(ref Utf8TomlDocumentWriter writer, ReadOnlySpan<byte> header, CsTomlSerializerOptions options)
     {
         if (!writer.IsRoot || Count == 0)
         {

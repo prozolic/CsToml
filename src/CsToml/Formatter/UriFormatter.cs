@@ -1,5 +1,4 @@
 ﻿using CsToml.Error;
-using System.Buffers;
 
 namespace CsToml.Formatter;
 
@@ -22,8 +21,7 @@ internal sealed class UriFormatter : ITomlValueFormatter<Uri?>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Uri? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, Uri? target, CsTomlSerializerOptions options)
     {
         if (target != null)
         {

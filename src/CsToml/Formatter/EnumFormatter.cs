@@ -1,5 +1,4 @@
 ﻿using CsToml.Error;
-using System.Buffers;
 using System.Collections.Frozen;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
@@ -71,8 +70,7 @@ public sealed class EnumFormatter<[DynamicallyAccessedMembers(DynamicallyAccesse
         return default!;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TEnum target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, TEnum target, CsTomlSerializerOptions options)
     {
         if (SerializedEnumMemberTable?.TryGetValue(target, out var enumMemberString) ?? false)
         {

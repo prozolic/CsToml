@@ -17,13 +17,13 @@ public sealed class ImmutableHashSetFormatter<T> : CollectionBaseFormatter<Immut
         return new HashSet<T>(capacity);
     }
 
-    protected override void SerializeCollection<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ImmutableHashSet<T> target, CsTomlSerializerOptions options)
+    protected override void SerializeCollection(ref Utf8TomlDocumentWriter writer, ImmutableHashSet<T> target, CsTomlSerializerOptions options)
     {
         var serializer = new EnumeratorStructSerializer<T, ImmutableHashSet<T>.Enumerator>(target.Count, target.GetEnumerator());
         serializer.Serialize(ref writer, options);
     }
 
-    protected override bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, ImmutableHashSet<T> target, CsTomlSerializerOptions options)
+    protected override bool TrySerializeTomlArrayHeaderStyle(ref Utf8TomlDocumentWriter writer, ReadOnlySpan<byte> header, ImmutableHashSet<T> target, CsTomlSerializerOptions options)
     {
         var serializer = new EnumeratorStructSerializer<T, ImmutableHashSet<T>.Enumerator>(target.Count, target.GetEnumerator());
         return serializer.TrySerializeTomlArrayHeaderStyle(ref writer, header, options);

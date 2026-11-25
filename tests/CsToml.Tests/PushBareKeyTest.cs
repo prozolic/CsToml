@@ -23,8 +23,7 @@ public class PushBareKeyTest
         public KeyHolder Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
             => throw new NotSupportedException();
 
-        public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, KeyHolder target, CsTomlSerializerOptions options)
-            where TBufferWriter : IBufferWriter<byte>
+        public void Serialize(ref Utf8TomlDocumentWriter writer, KeyHolder target, CsTomlSerializerOptions options)
         {
             if (target.PushAsSpan)
             {
@@ -50,7 +49,7 @@ public class PushBareKeyTest
     private static byte[] SerializeToUtf8(ImmutableArray<byte> key, bool skipValidation = false, bool pushAsSpan = false)
     {
         var bufferWriter = new ArrayBufferWriter<byte>();
-        CsTomlSerializer.Serialize(ref bufferWriter, new KeyHolder() { Key = key, SkipValidation = skipValidation, PushAsSpan = pushAsSpan });
+        CsTomlSerializer.Serialize(bufferWriter, new KeyHolder() { Key = key, SkipValidation = skipValidation, PushAsSpan = pushAsSpan });
         return bufferWriter.WrittenSpan.ToArray();
     }
 

@@ -4,7 +4,6 @@ using CsToml.Formatter;
 using CsToml.Formatter.Resolver;
 using CsToml.Values;
 using System;
-using System.Buffers;
 using System.Collections.Immutable;
 using System.IO;
 using System.Text;
@@ -325,8 +324,7 @@ public class TestStruct2Formatter : ITomlValueFormatter<TestStruct2>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TestStruct2 target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, TestStruct2 target, CsTomlSerializerOptions options)
     {
         writer.WriteInt64(target.Value);
     }
@@ -361,8 +359,7 @@ public class CustomFormatter : ITomlValueFormatter<Custom>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Custom target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, Custom target, CsTomlSerializerOptions options)
     {
         writer.WriteInt64(target.Value);
     }

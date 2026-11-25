@@ -1,6 +1,5 @@
 ﻿using CsToml.Utility;
 using CsToml.Error;
-using System.Buffers;
 using System.Numerics;
 
 namespace CsToml.Formatter;
@@ -25,8 +24,7 @@ internal sealed class ByteFormatter : ITomlValueFormatter<byte>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, byte target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, byte target, CsTomlSerializerOptions options)
     {
         writer.WriteInt64(target);
     }
@@ -51,8 +49,7 @@ internal sealed class NullableByteFormatter : ITomlValueFormatter<byte?>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, byte? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, byte? target, CsTomlSerializerOptions options)
     {
         if (target.HasValue)
         {

@@ -74,6 +74,13 @@ internal static class ExceptionHelper
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.NoInlining)]
+    internal static void ThrowBufferCapacityExceeded()
+    {
+        ThrowException($@"Cannot grow the buffer beyond the maximum array length.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.NoInlining)]
     internal static void ThrowFailedToParseToNumeric()
     {
         ThrowException($@"Failed to parse to numeric type because it is not syntactically valid.");
@@ -83,7 +90,7 @@ internal static class ExceptionHelper
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal static void ThrowInvalidUnicodeScalarValue()
     {
-        ThrowException($@"It contains Unicode code points outside the range U+0000 to U+10FFFF.");
+        ThrowException($@"It contains code points that are not Unicode scalar values (U+0000 to U+D7FF and U+E000 to U+10FFFF).");
     }
 
     [DoesNotReturn]

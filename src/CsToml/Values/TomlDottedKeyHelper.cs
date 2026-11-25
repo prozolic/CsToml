@@ -1,6 +1,7 @@
 ﻿using CsToml.Error;
 using CsToml.Utility;
 using System.Runtime.CompilerServices;
+using System.Text.Unicode;
 
 namespace CsToml.Values;
 
@@ -11,7 +12,7 @@ internal static class TomlDottedKeyHelper
         if (utf8String.Length == 0)
             ExceptionHelper.ThrowBareKeyIsEmpty();
 
-        if (!skipValidation && Utf8Helper.ContainInvalidSequences(utf8String))
+        if (!skipValidation && !Utf8.IsValid(utf8String))
             ExceptionHelper.ThrowInvalidCodePoints();
 
         return new TomlUnquotedDottedKey(utf8String);
@@ -22,7 +23,7 @@ internal static class TomlDottedKeyHelper
         if (utf8String.Length == 0)
             ExceptionHelper.ThrowBareKeyIsEmpty();
 
-        if (!skipValidation && Utf8Helper.ContainInvalidSequences(utf8String))
+        if (!skipValidation && !Utf8.IsValid(utf8String))
             ExceptionHelper.ThrowInvalidCodePoints();
 
         return new TomlUnquotedDottedKey(utf8String);
@@ -60,29 +61,28 @@ internal static class TomlDottedKeyHelper
 
     public static TomlDottedKey ParseKeyForPrimitive<T>(T value, CsTomlSerializerOptions options)
     {
-        var bufferWriter = RecycleArrayPoolBufferWriter<byte>.Rent();
+        InlineArray4<TomlDottedKey> initialKeys = default;
+        ref InlineArray4<TomlDottedKey> initialKeysRef = ref Unsafe.AsRef(in initialKeys);
+        TempList<TomlDottedKey> keyList = new(initialKeysRef);
+
+        InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStates = default;
+        ref InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStatesRef = ref Unsafe.AsRef(in initialStates);
+        TempList<(TomlValueState state, int dottedKeyIndex)> stateList = new(initialStatesRef);
+
+        var documentWriter = new Utf8TomlDocumentWriter(new ArrayPoolBufferSource(1024), in keyList, in stateList, false, options);
         try
         {
-            InlineArray4<TomlDottedKey> initialKeys = default;
-            ref InlineArray4<TomlDottedKey> initialKeysRef = ref Unsafe.AsRef(in initialKeys);
-            TempList<TomlDottedKey> keyList = new(initialKeysRef);
-
-            InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStates = default;
-            ref InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStatesRef = ref Unsafe.AsRef(in initialStates);
-            TempList<(TomlValueState state, int dottedKeyIndex)> stateList = new(initialStatesRef);
-
-            var documentWriter = new Utf8TomlDocumentWriter<ArrayPoolBufferWriter<byte>>(ref bufferWriter, ref keyList, ref stateList, false, options);
             documentWriter.WriteKeyForPrimitive(value);
-            return new TomlUnquotedDottedKey(bufferWriter.WrittenSpan);
+            return new TomlUnquotedDottedKey(documentWriter.WrittenSpan);
         }
         finally
         {
-            RecycleArrayPoolBufferWriter<byte>.Return(bufferWriter);
+            documentWriter.Dispose();
         }
     }
     public static TomlStringType GetTomlKeyType(ReadOnlySpan<byte> utf8String, bool supportsEscapeSequenceE, bool supportsEscapeSequenceX)
     {
-        if (Utf8Helper.ContainInvalidSequences(utf8String))
+        if (!Utf8.IsValid(utf8String))
             ExceptionHelper.ThrowInvalidCodePoints();
 
         var barekey = true;

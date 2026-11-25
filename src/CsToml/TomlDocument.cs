@@ -2,7 +2,6 @@
 using CsToml.Formatter.Resolver;
 using CsToml.Utility;
 using CsToml.Values;
-using System.Buffers;
 using System.Diagnostics;
 using System.Runtime.CompilerServices; // InlineArray16<T>
 
@@ -30,8 +29,7 @@ public partial class TomlDocument
         return TomlValueFormatterResolver.Instance.GetFormatter<IDictionary<TKey, TValue>>()!.Deserialize(ref rootNode, CsTomlSerializerOptions.Default);
     }
 
-    internal bool ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
-        where TBufferWriter : IBufferWriter<byte>
+    internal bool ToTomlString(ref Utf8TomlDocumentWriter writer)
     {
         table.ToTomlString(ref writer);
         return true;

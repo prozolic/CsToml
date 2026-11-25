@@ -3,7 +3,6 @@
 using CsToml.Error;
 using CsToml.Utility;
 using CsToml.Values;
-using System.Buffers;
 using System.Numerics;
 
 namespace CsToml.Formatter;
@@ -38,8 +37,7 @@ internal sealed class Decimal32Formatter : ITomlValueFormatter<Decimal32>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Decimal32 target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, Decimal32 target, CsTomlSerializerOptions options)
     {
         writer.WriteDecimalFloatingPoint(target);
     }
@@ -72,8 +70,7 @@ internal sealed class NullableDecimal32Formatter : ITomlValueFormatter<Decimal32
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Decimal32? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, Decimal32? target, CsTomlSerializerOptions options)
     {
         if (target.HasValue)
         {

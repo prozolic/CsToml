@@ -1,6 +1,5 @@
 ﻿using CsToml.Error;
 using CsToml.Values;
-using System.Buffers;
 using System.Collections;
 using System.Diagnostics;
 
@@ -47,7 +46,7 @@ public sealed class IGroupingFormatter<TKey, TValue> : ITomlValueFormatter<IGrou
         return Grouping.Empty;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, IGrouping<TKey, TValue> target, CsTomlSerializerOptions options) where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, IGrouping<TKey, TValue> target, CsTomlSerializerOptions options)
     {
         if (target == null)
         {

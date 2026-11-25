@@ -2,7 +2,6 @@ using CsToml.Error;
 using CsToml.Formatter;
 using CsToml.Formatter.Resolver;
 using Shouldly;
-using System.Buffers;
 using System.Text;
 using Utf8StringInterpolation;
 
@@ -377,8 +376,7 @@ public class UnionTest
         public FirstWinsUnion Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
             => new FirstWinsUnion(1L);
 
-        public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, FirstWinsUnion target, CsTomlSerializerOptions options)
-            where TBufferWriter : IBufferWriter<byte>
+        public void Serialize(ref Utf8TomlDocumentWriter writer, FirstWinsUnion target, CsTomlSerializerOptions options)
         {
             options.Resolver.GetFormatter<string>()!.Serialize(ref writer, "marker", options);
         }

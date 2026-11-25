@@ -1,6 +1,5 @@
 ﻿using CsToml.Error;
 using CsToml.Values;
-using System.Buffers;
 
 namespace CsToml.Formatter;
 
@@ -25,8 +24,7 @@ public sealed class TupleFormatter<T1> : ITomlValueFormatter<Tuple<T1>?>
         }
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Tuple<T1>? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, Tuple<T1>? target, CsTomlSerializerOptions options)
     {
         if (target == null)
         {
@@ -67,8 +65,7 @@ public sealed class TupleFormatter<T1, T2> : ITomlValueFormatter<Tuple<T1, T2>?>
         return default!;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Tuple<T1, T2>? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, Tuple<T1, T2>? target, CsTomlSerializerOptions options)
     {
         if (target == null)
         {
@@ -118,8 +115,7 @@ public sealed class TupleFormatter<T1, T2, T3> : ITomlValueFormatter<Tuple<T1, T
         return default!;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Tuple<T1, T2, T3>? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, Tuple<T1, T2, T3>? target, CsTomlSerializerOptions options)
     {
         if (target == null)
         {
@@ -174,8 +170,7 @@ public sealed class TupleFormatter<T1, T2, T3, T4> : ITomlValueFormatter<Tuple<T
         return default!;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Tuple<T1, T2, T3, T4>? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, Tuple<T1, T2, T3, T4>? target, CsTomlSerializerOptions options)
     {
         if (target == null)
         {
@@ -234,8 +229,7 @@ public sealed class TupleFormatter<T1, T2, T3, T4, T5> : ITomlValueFormatter<Tup
         return default!;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Tuple<T1, T2, T3, T4, T5>? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, Tuple<T1, T2, T3, T4, T5>? target, CsTomlSerializerOptions options)
     {
         if (target == null)
         {
@@ -299,8 +293,7 @@ public sealed class TupleFormatter<T1, T2, T3, T4, T5, T6> : ITomlValueFormatter
         return default!;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Tuple<T1, T2, T3, T4, T5, T6>? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, Tuple<T1, T2, T3, T4, T5, T6>? target, CsTomlSerializerOptions options)
     {
         if (target == null)
         {
@@ -369,8 +362,7 @@ public sealed class TupleFormatter<T1, T2, T3, T4, T5, T6, T7> : ITomlValueForma
         return default!;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Tuple<T1, T2, T3, T4, T5, T6, T7>? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, Tuple<T1, T2, T3, T4, T5, T6, T7>? target, CsTomlSerializerOptions options)
     {
         if (target == null)
         {
@@ -445,8 +437,7 @@ public sealed class TupleFormatter<T1, T2, T3, T4, T5, T6, T7, TRest> : ITomlVal
         return default!;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, Tuple<T1, T2, T3, T4, T5, T6, T7, TRest>? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, Tuple<T1, T2, T3, T4, T5, T6, T7, TRest>? target, CsTomlSerializerOptions options)
     {
         if (target == null)
         {

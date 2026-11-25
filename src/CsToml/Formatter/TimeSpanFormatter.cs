@@ -1,5 +1,4 @@
 ﻿using CsToml.Error;
-using System.Buffers;
 
 namespace CsToml.Formatter;
 
@@ -22,8 +21,7 @@ internal sealed class TimeSpanFormatter : ITomlValueFormatter<TimeSpan>
         return default!;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TimeSpan target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, TimeSpan target, CsTomlSerializerOptions options)
     {
         writer.WriteInt64(target.Ticks);
     }
@@ -49,8 +47,7 @@ internal sealed class NullableTimeSpanFormatter : ITomlValueFormatter<TimeSpan?>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TimeSpan? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, TimeSpan? target, CsTomlSerializerOptions options)
     {
         if (target.HasValue)
         {

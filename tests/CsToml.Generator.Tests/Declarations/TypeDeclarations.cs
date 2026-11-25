@@ -2,7 +2,6 @@
 
 using CsToml.Formatter;
 using CsToml.Values;
-using System.Buffers;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
@@ -1033,8 +1032,7 @@ public class SpecialHashFormatter : ITomlValueFormatter<SpecialHash>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, SpecialHash target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, SpecialHash target, CsTomlSerializerOptions options)
     {
         writer.WriteInt64(target.Hash);
     }

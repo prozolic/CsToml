@@ -26,7 +26,7 @@ internal sealed class TomlUnquotedDottedKey : TomlDottedKey, ITomlStringParser<T
         return new TomlUnquotedDottedKey(value);
     }
 
-    internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+    internal override void ToTomlString(ref Utf8TomlDocumentWriter writer)
     {
         if (Value.Length > 0)
         {
@@ -55,7 +55,7 @@ internal sealed class TomlBasicDottedKey : TomlDottedKey, ITomlStringParser<Toml
         return new TomlBasicDottedKey(value);
     }
 
-    internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+    internal override void ToTomlString(ref Utf8TomlDocumentWriter writer)
     {
         TomlBasicString.ToTomlBasicString(ref writer, Value);
     }
@@ -81,7 +81,7 @@ internal sealed class TomlLiteralDottedKey : TomlDottedKey, ITomlStringParser<To
         return new TomlLiteralDottedKey(value);
     }
 
-    internal override void ToTomlString<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer)
+    internal override void ToTomlString(ref Utf8TomlDocumentWriter writer)
     {
         TomlLiteralString.ToTomlLiteralString(ref writer, Value);
     }
@@ -164,19 +164,17 @@ internal static class TomlDottedKeyExtensions
 {
     public static string GetJoinName(this ReadOnlySpan<TomlDottedKey> key)
     {
-        var bufferWriter = RecycleArrayPoolBufferWriter<byte>.Rent();
+        InlineArray4<TomlDottedKey> initialKeys = default;
+        ref InlineArray4<TomlDottedKey> initialKeysRef = ref Unsafe.AsRef(in initialKeys);
+        TempList<TomlDottedKey> keyList = new(initialKeysRef);
+
+        InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStates = default;
+        ref InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStatesRef = ref Unsafe.AsRef(in initialStates);
+        TempList<(TomlValueState state, int dottedKeyIndex)> stateList = new(initialStatesRef);
+
+        var writer = new Utf8TomlDocumentWriter(new ArrayPoolBufferSource(1024), in keyList, in stateList, false, CsTomlSerializerOptions.Default);
         try
         {
-            InlineArray4<TomlDottedKey> initialKeys = default;
-            ref InlineArray4<TomlDottedKey> initialKeysRef = ref Unsafe.AsRef(in initialKeys);
-            TempList<TomlDottedKey> keyList = new(initialKeysRef);
-
-            InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStates = default;
-            ref InlineArray4<(TomlValueState state, int dottedKeyIndex)> initialStatesRef = ref Unsafe.AsRef(in initialStates);
-            TempList<(TomlValueState state, int dottedKeyIndex)> stateList = new(initialStatesRef);
-
-            var writer = new Utf8TomlDocumentWriter<ArrayPoolBufferWriter<byte>>(ref bufferWriter, ref keyList, ref stateList, false, CsTomlSerializerOptions.Default);
-
             for (int i = 0; i < key.Length; i++)
             {
                 key[i].ToTomlString(ref writer);
@@ -184,11 +182,11 @@ internal static class TomlDottedKeyExtensions
                     writer.Write(TomlCodes.Symbol.DOT);
             }
 
-            return Utf8Helper.ToUtf16(bufferWriter.WrittenSpan); ;
+            return Utf8Helper.ToUtf16(writer.WrittenSpan);
         }
         finally
         {
-            RecycleArrayPoolBufferWriter<byte>.Return(bufferWriter);
+            writer.Dispose();
         }
     }
 }

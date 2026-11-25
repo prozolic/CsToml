@@ -2,7 +2,6 @@
 using CsToml.Utility;
 using CsToml.Error;
 using CsToml.Values;
-using System.Buffers;
 using System.Globalization;
 using System.Numerics;
 
@@ -28,7 +27,7 @@ internal sealed class BigIntegerFormatter : ITomlValueFormatter<BigInteger>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, BigInteger target, CsTomlSerializerOptions options) where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, BigInteger target, CsTomlSerializerOptions options)
     {
         writer.WriteInt64(IntegerRangeHelper.ConvertToInt64(target));
     }
@@ -53,8 +52,7 @@ internal sealed class NullableBigIntegerFormatter : ITomlValueFormatter<BigInteg
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, BigInteger? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, BigInteger? target, CsTomlSerializerOptions options)
     {
         if (target.HasValue)
         {

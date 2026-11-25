@@ -19,12 +19,12 @@ public sealed class ListFormatter<T> : CollectionBaseFormatter<List<T>, T, List<
         return new List<T>(capacity);
     }
 
-    protected override void SerializeCollection<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, List<T> target, CsTomlSerializerOptions options)
+    protected override void SerializeCollection(ref Utf8TomlDocumentWriter writer, List<T> target, CsTomlSerializerOptions options)
     {
         ListSerializer<T>.Serialize(ref writer, target, options);
     }
 
-    protected override bool TrySerializeTomlArrayHeaderStyle<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, ReadOnlySpan<byte> header, List<T> target, CsTomlSerializerOptions options)
+    protected override bool TrySerializeTomlArrayHeaderStyle(ref Utf8TomlDocumentWriter writer, ReadOnlySpan<byte> header, List<T> target, CsTomlSerializerOptions options)
     {
         return ListSerializer<T>.TrySerializeTomlArrayHeaderStyle(ref writer, header, target, options);
     }

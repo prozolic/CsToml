@@ -208,7 +208,7 @@ partial {{typeMeta.TypeKeyword}} {{typeMeta.DeclarationTypeName}} : ITomlSeriali
     {
 {{GenerateDeserializePart(typeMeta, constructorMeta)}}    }
 
-    static void ITomlSerializedObject<{{typeMeta.GenericTypeParameterName}}>.Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, {{typeMeta.GenericTypeParameterName}} target, CsTomlSerializerOptions options)
+    static void ITomlSerializedObject<{{typeMeta.GenericTypeParameterName}}>.Serialize(ref Utf8TomlDocumentWriter writer, {{typeMeta.GenericTypeParameterName}} target, CsTomlSerializerOptions options)
     {
 {{GenerateSerializePart(typeMeta)}}    }
 
@@ -1030,7 +1030,6 @@ using CsToml;
 using CsToml.Error;
 using CsToml.Formatter;
 using CsToml.Formatter.Resolver;
-using System.Buffers;
 """);
 
         var emittedClassNames = new Dictionary<string, UnionMeta>(StringComparer.Ordinal);
@@ -1079,8 +1078,7 @@ using System.Buffers;
         {
 {{BuildUnionDeserializeBody(meta)}}        }
 
-        public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, {{targetTypeNullable}} target, CsTomlSerializerOptions options)
-            where TBufferWriter : IBufferWriter<byte>
+        public void Serialize(ref Utf8TomlDocumentWriter writer, {{targetTypeNullable}} target, CsTomlSerializerOptions options)
         {
 {{BuildUnionSerializeBody(meta)}}        }
 

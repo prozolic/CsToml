@@ -2,7 +2,6 @@
 using CsToml.Utility;
 using CsToml.Values;
 using System.Collections;
-using System.Buffers;
 
 namespace CsToml.Formatter;
 
@@ -52,8 +51,7 @@ public abstract class DictionaryBaseFormatter<TKey, TValue, TDictionary, TMediat
         }
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, TDictionary target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, TDictionary target, CsTomlSerializerOptions options)
     {
         if (target == null)
         {
@@ -101,7 +99,7 @@ public abstract class DictionaryBaseFormatter<TKey, TValue, TDictionary, TMediat
         if (!writer.IsRoot)
             writer.EndCurrentState();
 
-        static void SerializeKeyValue(ref Utf8TomlDocumentWriter<TBufferWriter> writer, bool applyHeaderStyle, KeyValuePair<TKey, TValue> pair, CsTomlSerializerOptions options)
+        static void SerializeKeyValue(ref Utf8TomlDocumentWriter writer, bool applyHeaderStyle, KeyValuePair<TKey, TValue> pair, CsTomlSerializerOptions options)
         {
             var (key, value) = pair;
 

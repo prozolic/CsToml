@@ -1,5 +1,4 @@
 ﻿using CsToml.Error;
-using System.Buffers;
 using System.Text;
 
 
@@ -25,8 +24,7 @@ internal sealed class StringBuilderFormatter : ITomlValueFormatter<StringBuilder
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, StringBuilder? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, StringBuilder? target, CsTomlSerializerOptions options)
     {
         if (target != null)
         {

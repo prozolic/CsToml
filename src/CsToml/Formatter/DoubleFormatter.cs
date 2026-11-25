@@ -1,5 +1,4 @@
 ﻿using CsToml.Error;
-using System.Buffers;
 
 namespace CsToml.Formatter;
 
@@ -23,8 +22,7 @@ internal sealed class DoubleFormatter : ITomlValueFormatter<double>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, double target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, double target, CsTomlSerializerOptions options)
     {
         writer.WriteDouble(target);
     }
@@ -49,8 +47,7 @@ internal sealed class NullableDoubleFormatter : ITomlValueFormatter<double?>
         return default;
     }
 
-    public void Serialize<TBufferWriter>(ref Utf8TomlDocumentWriter<TBufferWriter> writer, double? target, CsTomlSerializerOptions options)
-        where TBufferWriter : IBufferWriter<byte>
+    public void Serialize(ref Utf8TomlDocumentWriter writer, double? target, CsTomlSerializerOptions options)
     {
         if (target.HasValue)
         {
