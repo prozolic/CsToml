@@ -172,7 +172,7 @@ internal ref struct CsTomlParser
     internal void ReadEndComment()
     {
         CurrentState = endComment ? ParserState.EndComment : ParserState.Comment;
-        reader.ReadEndComment();
+        reader.SkipComment();
         endComment = false;
     }
 

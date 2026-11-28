@@ -77,34 +77,110 @@ internal ref struct CsTomlReader
     {
         Advance(1); // #
 
-        var bufferWriter = RecycleArrayPoolBufferWriter<byte>.Rent();
-        try
+        if (TryGetCommentInCurrentSpan(out var comment))
         {
-            while (TryPeek(out var ch))
+            Advance(comment.Length);
+            if (!Utf8.IsValid(comment))
+                ExceptionHelper.ThrowInvalidCodePoints();
+
+            return TomlStringHelper.Parse<TomlUnquotedString>(comment);
+        }
+
+        return ReadCommentSlow();
+    }
+
+    public void SkipComment()
+    {
+        Advance(1); // #
+
+        if (TryGetCommentInCurrentSpan(out var comment))
+        {
+            Advance(comment.Length);
+            if (!Utf8.IsValid(comment))
+            {
+                ExceptionHelper.ThrowInvalidCodePoints();
+            }
+
+            return;
+        }
+
+        SkipCommentSlow();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private bool TryGetCommentInCurrentSpan(out ReadOnlySpan<byte> comment)
+    {
+        var unreadSpan = sequenceReader.UnreadSpan;
+        var index = unreadSpan.IndexOfAny(TomlCodes.ControlChars);
+        if ((uint)index < (uint)unreadSpan.Length)
+        {
+            var ch = unreadSpan[index];
+            if (!TomlCodes.IsLf(ch))
             {
                 if (TomlCodes.IsCr(ch))
                 {
-                    if (TryPeek(1, out var lf) && TomlCodes.IsLf(lf))
+                    var next = index + 1;
+                    if ((uint)next < (uint)unreadSpan.Length)
                     {
-                        goto BREAK;
+                        if (TomlCodes.IsLf(unreadSpan[next]))
+                            goto FOUND;
+                    }
+                    else if (sequenceReader.Remaining != unreadSpan.Length)
+                    {
+                        goto NEXT_SEGMENT;
+                    }
+                }
+                Advance(index);
+                ExceptionHelper.ThrowEscapeCharactersIncluded(ch);
+            }
+
+        FOUND:
+            comment = unreadSpan.Slice(0, index);
+            return true;
+        }
+
+        if (sequenceReader.Remaining == unreadSpan.Length)
+        {
+            comment = unreadSpan;
+            return true;
+        }
+
+    NEXT_SEGMENT:
+        comment = default;
+        return false;
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private TomlString ReadCommentSlow()
+    {
+        var bufferWriter = RecycleArrayPoolBufferWriter<byte>.Rent();
+        try
+        {
+            while (Peek())
+            {
+                var unreadSpan = sequenceReader.UnreadSpan;
+                var index = unreadSpan.IndexOfAny(TomlCodes.ControlChars);
+                if ((uint)index < (uint)unreadSpan.Length)
+                {
+                    bufferWriter.Write(unreadSpan.Slice(0, index));
+                    Advance(index);
+
+                    var ch = unreadSpan[index];
+                    if (TomlCodes.IsLf(ch) || (TomlCodes.IsCr(ch) && TryPeek(1, out var lf) && TomlCodes.IsLf(lf)))
+                    {
+                        break;
                     }
                     ExceptionHelper.ThrowEscapeCharactersIncluded(ch);
                 }
-                else if (TomlCodes.IsLf(ch))
-                {
-                    goto BREAK;
-                }
-                else if (TomlCodes.IsEscape(ch))
-                {
-                    ExceptionHelper.ThrowEscapeCharactersIncluded(ch);
-                }
-                bufferWriter.Write(ch);
-                Advance(1);
+
+                bufferWriter.Write(unreadSpan);
+                Advance(unreadSpan.Length);
             }
 
-        BREAK:
             if (!Utf8.IsValid(bufferWriter.WrittenSpan))
+            {
                 ExceptionHelper.ThrowInvalidCodePoints();
+            }
 
             return TomlStringHelper.Parse<TomlUnquotedString>(bufferWriter.WrittenSpan);
         }
@@ -114,42 +190,38 @@ internal ref struct CsTomlReader
         }
     }
 
-    public void ReadEndComment()
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void SkipCommentSlow()
     {
-        Advance(1); // #
+        Span<byte> pending = stackalloc byte[4];
+        var pendingLength = 0;
+        var valid = true;
 
-        var bufferWriter = RecycleArrayPoolBufferWriter<byte>.Rent();
-        try
+        while (Peek())
         {
-            while (TryPeek(out var ch))
+            var unreadSpan = sequenceReader.UnreadSpan;
+            var index = unreadSpan.IndexOfAny(TomlCodes.ControlChars);
+            if ((uint)index < (uint)unreadSpan.Length)
             {
-                if (TomlCodes.IsCr(ch))
+                // Instead of copying the buffer, check it sequentially.
+                valid = valid && Utf8Helper.IsValidSegment(unreadSpan.Slice(0, index), pending, ref pendingLength);
+                Advance(index);
+
+                var ch = unreadSpan[index];
+                if (TomlCodes.IsLf(ch) || (TomlCodes.IsCr(ch) && TryPeek(1, out var lf) && TomlCodes.IsLf(lf)))
                 {
-                    if (TryPeek(1, out var lf) && TomlCodes.IsLf(lf))
-                    {
-                        goto BREAK;
-                    }
-                    ExceptionHelper.ThrowEscapeCharactersIncluded(ch);
+                    break;
                 }
-                else if (TomlCodes.IsLf(ch))
-                {
-                    goto BREAK;
-                }
-                else if (TomlCodes.IsEscape(ch))
-                {
-                    ExceptionHelper.ThrowEscapeCharactersIncluded(ch);
-                }
-                bufferWriter.Write(ch);
-                Advance(1);
+                ExceptionHelper.ThrowEscapeCharactersIncluded(ch);
             }
 
-        BREAK:
-            if (!Utf8.IsValid(bufferWriter.WrittenSpan))
-                ExceptionHelper.ThrowInvalidCodePoints();
+            valid = valid && Utf8Helper.IsValidSegment(unreadSpan, pending, ref pendingLength);
+            Advance(unreadSpan.Length);
         }
-        finally
+
+        if (!valid || pendingLength > 0)
         {
-            RecycleArrayPoolBufferWriter<byte>.Return(bufferWriter);
+            ExceptionHelper.ThrowInvalidCodePoints();
         }
     }
 
@@ -750,28 +822,6 @@ internal ref struct CsTomlReader
             SkipComment();
             SkipWhiteSpaceAndNewLine();
         }
-    }
-
-    private void SkipComment()
-    {
-        var unreadSpan = sequenceReader.UnreadSpan;
-        var lineFeedIndex = unreadSpan.IndexOf(TomlCodes.Symbol.LINEFEED);
-        if (lineFeedIndex > 0)
-        {
-            var comment = unreadSpan.Slice(1, lineFeedIndex - 1);
-            if (comment.Length > 0 && TomlCodes.IsCr(comment[^1]))
-            {
-                comment = comment[..^1];
-            }
-
-            if (!comment.ContainsAny(TomlCodes.ControlChars) && Utf8.IsValid(comment))
-            {
-                Advance(comment.Length + 1);
-                return;
-            }
-        }
-
-        ReadEndComment();
     }
 
     public bool TrySkipIfNewLine<TThrowControlCharacterMarker>(byte ch)
@@ -1594,7 +1644,7 @@ internal ref struct CsTomlReader
                 }
                 if (ch == TomlCodes.Symbol.NUMBERSIGN)
                 {
-                    ReadComment();
+                    SkipComment();
                     goto RESCAN;
                 }
                 // CR
