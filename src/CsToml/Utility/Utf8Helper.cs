@@ -160,6 +160,49 @@ internal static class Utf8Helper
         }
     }
 
+    public static bool IsValidSegment(ReadOnlySpan<byte> utf8Bytes, scoped Span<byte> pending, ref int pendingLength)
+    {
+        while (pendingLength > 0)
+        {
+            if (utf8Bytes.Length == 0)
+                return true;
+
+            pending[pendingLength++] = utf8Bytes[0];
+            utf8Bytes = utf8Bytes.Slice(1);
+
+            var status = Rune.DecodeFromUtf8(pending.Slice(0, pendingLength), out _, out _);
+            if (status == OperationStatus.Done)
+            {
+                pendingLength = 0;
+            }
+            else if (status != OperationStatus.NeedMoreData)
+            {
+                return false;
+            }
+        }
+
+        if (Utf8.IsValid(utf8Bytes))
+            return true;
+
+        for (var length = 1; length <= 3 && length <= utf8Bytes.Length; length++)
+        {
+            var tail = utf8Bytes.Slice(utf8Bytes.Length - length);
+            if ((tail[0] & 0xC0) == 0x80)
+                continue;
+
+            if (Rune.DecodeFromUtf8(tail, out _, out _) != OperationStatus.NeedMoreData)
+                return false;
+            if (!Utf8.IsValid(utf8Bytes.Slice(0, utf8Bytes.Length - length)))
+                return false;
+
+            tail.CopyTo(pending);
+            pendingLength = length;
+            return true;
+        }
+
+        return false;
+    }
+
     public static void ParseFrom8bitCodePointToUtf8(Span<byte> destination, ReadOnlySpan<byte> source, out int writtenCount)
     {
         if (destination.Length < 2)

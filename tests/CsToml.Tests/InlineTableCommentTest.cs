@@ -9,7 +9,7 @@ public class InlineTableCommentTest
 {
     private static readonly int[] SegmentSizes = [1, 7];
 
-    private static readonly byte[][] InvalidCommentBytes = [[0x00], [0x01], [0x7F], [0x0D], [0xFF], [0xFF, 0xFE]];
+    private static readonly byte[][] InvalidCommentBytes = [[0x00], [0x01], [0x7F], [0x0D], [0xFF], [0xFF, 0xFE], [0xE3, 0x81]];
 
     private static ReadOnlySequence<byte> CreateSequence(byte[] toml, int segmentSize)
     {

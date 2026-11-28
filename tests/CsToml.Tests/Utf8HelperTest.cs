@@ -203,4 +203,28 @@ public class Utf8HelperTest
     {
         Should.Throw<CsTomlSerializeException>(() => CsTomlSerializer.Deserialize<TomlDocument>(Encoding.UTF8.GetBytes(toml)));
     }
+
+    [Test]
+    [Arguments("41E38182F09F9880C3A942")]
+    [Arguments("E38182F09F98")]
+    [Arguments("E38141")]
+    [Arguments("4180")]
+    public void IsValidSegment_MatchesWholeValidation(string hex)
+    {
+        var bytes = Convert.FromHexString(hex);
+        var expected = System.Text.Unicode.Utf8.IsValid(bytes);
+        Span<byte> pending = stackalloc byte[4];
+
+        for (var size = 1; size <= bytes.Length; size++)
+        {
+            var pendingLength = 0;
+            var valid = true;
+            for (var i = 0; i < bytes.Length && valid; i += size)
+            {
+                valid = Utf8Helper.IsValidSegment(bytes.AsSpan(i, Math.Min(size, bytes.Length - i)), pending, ref pendingLength);
+            }
+
+            (valid && pendingLength == 0).ShouldBe(expected);
+        }
+    }
 }

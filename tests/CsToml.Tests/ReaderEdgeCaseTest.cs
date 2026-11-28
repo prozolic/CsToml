@@ -678,4 +678,16 @@ public class ReaderEdgeCaseTest
             Encoding.UTF8.GetBytes("abc" + delimiter + "\n"));
         Should.Throw<CsTomlSerializeException>(() => CsTomlSerializer.Deserialize<TomlDocument>(bareCr));
     }
+
+    [Test]
+    public void Comment_SplitAcrossSegments()
+    {
+        var document = CsTomlSerializer.Deserialize<TomlDocument>(CreateSequence(
+            "# com"u8.ToArray(),
+            "ment\r"u8.ToArray(),
+            "\nx = 1\n"u8.ToArray()));
+
+        using var serialized = CsTomlSerializer.Serialize(document);
+        Encoding.UTF8.GetString(serialized.ByteSpan).ReplaceLineEndings("\n").ShouldBe("# comment\nx = 1\n");
+    }
 }
